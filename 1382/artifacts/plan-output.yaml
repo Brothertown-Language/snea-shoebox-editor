@@ -1,0 +1,36 @@
+# Plan Output — Issue #1382
+# Generated against the 4-phase + gate DAG
+# Validate with: ./.opencode/tools/plan validate --problem .issues/1382/artifacts/plan-problem.yaml --plan .issues/1382/artifacts/plan-output.yaml
+
+plan length: 10
+actions:
+  - name: clean_seed_files
+    parameters:
+      - item1
+  - name: extend_normalization
+    parameters:
+      - item2
+  - name: add_scan_service
+    parameters:
+      - item4
+  - name: add_remediation_service
+    parameters:
+      - item5
+  - name: prove_review_semantics
+    parameters:
+      - item6
+  - name: prove_normalized_identity
+    parameters:
+      - item7
+  - name: prove_fts_equivalence
+    parameters:
+      - item8
+  - name: expose_ui_option
+    parameters:
+      - item9
+  - name: complete_ui_flow
+    parameters:
+      - item10
+  - name: full_suite_gate
+    parameters:
+      - item11
