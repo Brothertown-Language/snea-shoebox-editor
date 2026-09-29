@@ -1,0 +1,42 @@
+# Concern map for #1379
+# Backfilled: 2026-08-11
+# Source: .issues/1379/spec.md
+
+concerns:
+  - id: C1
+    name: Toolbox-to-JSON parsing
+    description: Parse the 8 marker types (\key, \shd, \txt, \ftx, \fxv, \cf, \nt, \typ) from MDFields19a_UTF8.txt into an intermediate JSON representation
+    scs: [SC-1, SC-2, SC-3]
+    phase: Phase 1
+  - id: C2
+    name: XeLaTeX PDF rendering
+    description: Render the JSON intermediate representation into a XeLaTeX document that compiles to PDF with all 108 keys
+    scs: [SC-1, SC-3]
+    phase: Phase 2
+  - id: C3
+    name: Multi-page HTML rendering
+    description: Render the JSON intermediate representation into a multi-page static HTML site with sidebar navigation and cross-reference hyperlinks
+    scs: [SC-2, SC-3]
+    phase: Phase 3
+  - id: C4
+    name: Build orchestration
+    description: Chain parser -> LaTeX -> HTML in a single build script producing all outputs under docs/mdf/build/
+    scs: [SC-4, SC-6]
+    phase: Phase 4
+  - id: C5
+    name: CI/CD deployment
+    description: GitHub Actions workflow that builds outputs, deploys HTML to GitHub Pages, and attaches PDF to release assets
+    scs: [SC-5]
+    phase: Phase 4
+
+phase_boundaries:
+  - concern: C1
+    boundary: Phase 1 -> Phase 2/3 (JSON intermediate representation is the handoff artifact)
+  - concern: C2
+    boundary: Phase 2 -> Phase 4 (master.tex/master.pdf are consumed by build orchestration)
+  - concern: C3
+    boundary: Phase 3 -> Phase 4 (site/ is consumed by build orchestration)
+  - concern: C4
+    boundary: Phase 4 (build script chains all prior phases)
+  - concern: C5
+    boundary: Phase 4 (CI/CD wraps the build script)

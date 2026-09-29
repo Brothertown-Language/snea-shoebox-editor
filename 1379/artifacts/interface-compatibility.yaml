@@ -1,0 +1,40 @@
+# Interface compatibility for #1379
+# Backfilled: 2026-08-11
+# Source: .issues/1379/spec.md
+
+interfaces:
+  - id: I1
+    name: Parser -> JSON
+    producer: scripts/convert_mdf_master.py (parse stage)
+    consumer: LaTeX renderer, HTML renderer
+    contract: JSON intermediate representation containing all 108 keys, 315 cross-refs, 444 examples
+    compatibility: internal to single converter script; no external interface boundary
+  - id: I2
+    name: JSON -> LaTeX
+    producer: LaTeX renderer
+    consumer: xelatex
+    contract: docs/mdf/build/master.tex compiles with exit 0 under xelatex
+    compatibility: xelatex must be available on CI runner (declared dependency)
+  - id: I3
+    name: JSON -> HTML
+    producer: HTML renderer
+    consumer: static site / GitHub Pages
+    contract: docs/mdf/build/site/ multi-page site with sidebar navigation and search
+    compatibility: static HTML, zero runtime dependencies, deployable to GitHub Pages
+  - id: I4
+    name: Build script -> outputs
+    producer: scripts/build_mdf_docs.sh
+    consumer: CI workflow, downstream specs
+    contract: single invocation produces master.pdf and site/index.html under docs/mdf/build/
+    compatibility: no-argument invocation; outputs tracked by git
+  - id: I5
+    name: CI workflow -> Pages/release
+    producer: .github/workflows/mdf-docs.yml
+    consumer: GitHub Pages, release assets
+    contract: deploys HTML to gh-pages, attaches PDF to latest release tag
+    compatibility: requires Pages + releases enabled (declared precondition)
+
+compatibility_notes:
+  - All interfaces are internal to the new conversion tooling; no existing module interfaces are modified
+  - The source file docs/mdf/MDFields19a_UTF8.txt is read-only input; no write interface to it
+  - Unicode IPA characters must survive byte-for-byte across all interface boundaries (no normalization)

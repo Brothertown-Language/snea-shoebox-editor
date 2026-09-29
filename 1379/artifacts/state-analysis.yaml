@@ -1,0 +1,41 @@
+# State analysis for #1379
+# Backfilled: 2026-08-11
+# Source: .issues/1379/spec.md
+
+state_transitions:
+  - sc: SC-1
+    from: source markers in MDFields19a_UTF8.txt
+    to: rendered text in master.pdf
+    transition: parse -> JSON -> LaTeX -> xelatex compile
+    verification: xelatex exit 0; pdftotext grep for all 108 keys
+  - sc: SC-2
+    from: \cf cross-references in source
+    to: hyperlinks resolving to anchors in site/*.html
+    transition: parse -> JSON -> HTML render
+    verification: build exit 0; script confirms every \cf target has an anchor
+  - sc: SC-3
+    from: 108 \key definitions in source
+    to: 1:1 presence in PDF text and HTML anchors
+    transition: parse -> JSON -> dual render
+    verification: grep PDF for 108 keys; grep HTML for 108 anchor IDs; 1:1 match
+  - sc: SC-4
+    from: no outputs
+    to: master.pdf + site/index.html present and non-empty
+    transition: single build script invocation
+    verification: run scripts/build_mdf_docs.sh in clean checkout; both outputs exist
+  - sc: SC-5
+    from: no deployed site / no release asset
+    to: HTML on gh-pages + PDF on latest release tag
+    transition: CI workflow on push to main
+    verification: Pages URL serves index.html; release tag has PDF asset
+  - sc: SC-6
+    from: generated outputs untracked
+    to: outputs under docs/mdf/build/ tracked by git
+    transition: build writes to docs/mdf/build/; git add/commit
+    verification: git ls-files docs/mdf/build/ lists master.tex, master.pdf, site/index.html
+
+edge_case_states:
+  - empty source / zero markers: fail fast with clear error (no empty output)
+  - malformed marker: emit warning, continue build without aborting
+  - cross-ref to missing target: emit visible placeholder anchor + log warning
+  - duplicate marker names: no duplicate anchors that break deep-linking

@@ -1,0 +1,30 @@
+# Analysis summary for #1379
+# Backfilled: 2026-08-11
+# Source: .issues/1379/spec.md
+
+spec_path: .issues/1379/spec.md
+sc_count: 6
+artifact_status:
+  blast-radius.yaml: backfilled
+  concern-map.yaml: backfilled
+  code-path-inventory.yaml: backfilled
+  cross-cutting-matrix.yaml: backfilled
+  interface-compatibility.yaml: backfilled
+  state-analysis.yaml: backfilled
+  testability-assessment.yaml: backfilled
+scope_summary: >
+  All 7 analytical artifacts were backfilled from the spec body. The spec defines a
+  documentation conversion pipeline (Toolbox-to-JSON parser, XeLaTeX PDF renderer,
+  multi-page HTML renderer, build orchestration, CI/CD deployment) with 6 success
+  criteria across 4 implementation phases. All affected files are new additions except
+  the read-only source input docs/mdf/MDFields19a_UTF8.txt.
+
+data_verification_notes:
+  - Verified source file docs/mdf/MDFields19a_UTF8.txt exists (133873 bytes, 3353 lines)
+  - Authoritative marker counts verified live against source (multiple grep methods):
+    - \key: 108 (matches spec)
+    - \cf: 315 standalone field (matches spec)
+    - \ftx: 425 total markers (414 non-empty + 11 empty)
+    - \fxv: 30
+    - formatting/printing examples: 414 non-empty \ftx + 30 \fxv = 444 (matches spec)
+  - The spec's figures (108 \key, 315 \cf, 444 examples) are correct and consistent with the authoritative source counts.

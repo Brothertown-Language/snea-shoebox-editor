@@ -1,0 +1,34 @@
+# Testability assessment for #1379
+# Backfilled: 2026-08-11
+# Source: .issues/1379/spec.md
+
+sc_evidence_types:
+  - sc: SC-1
+    evidence_type: behavioral
+    verification_method: Run xelatex master.tex in CI; verify exit 0; pdftotext + grep for all 108 keys
+    testability: high
+  - sc: SC-2
+    evidence_type: behavioral
+    verification_method: Run build; verify exit 0; parse HTML files; confirm every \cf target has an anchor
+    testability: high
+  - sc: SC-3
+    evidence_type: string + behavioral
+    verification_method: Grep PDF text for 108 keys; grep HTML for 108 anchor IDs; verify 1:1 match with source
+    testability: high
+  - sc: SC-4
+    evidence_type: behavioral
+    verification_method: Run scripts/build_mdf_docs.sh in clean checkout; verify both outputs exist and are non-empty
+    testability: high
+  - sc: SC-5
+    evidence_type: behavioral
+    verification_method: Trigger push to main on test branch; verify Pages URL serves index.html; verify release tag has PDF asset
+    testability: medium (requires CI + Pages + release infrastructure)
+  - sc: SC-6
+    evidence_type: behavioral
+    verification_method: Run build; verify outputs under docs/mdf/build/ exist and are non-empty; git ls-files confirms tracking
+    testability: high
+
+testability_notes:
+  - SC-1, SC-2, SC-3, SC-4, SC-6 are directly testable in a local/CI environment with xelatex, pdftotext, and the build script
+  - SC-5 requires live GitHub Actions + Pages + release infrastructure; testable only via a real push to main
+  - All evidence types are behavioral or string+behavioral, matching the declared verification methods (no EVIDENCE_TYPE_MISMATCH)

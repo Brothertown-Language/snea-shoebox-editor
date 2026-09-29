@@ -1,0 +1,49 @@
+# Blast-radius analysis for #1379
+# Backfilled: 2026-08-11
+# Source: .issues/1379/spec.md
+
+spec_path: .issues/1379/spec.md
+affected_files:
+  - path: scripts/convert_mdf_master.py
+    status: new
+    exists: false
+    blast_radius: high
+    consumers: [SC-1, SC-2, SC-3, SC-4]
+  - path: scripts/build_mdf_docs.sh
+    status: new
+    exists: false
+    blast_radius: high
+    consumers: [SC-4, SC-5, SC-6]
+  - path: docs/mdf/build/master.tex
+    status: new
+    exists: false
+    blast_radius: medium
+    consumers: [SC-1, SC-3, SC-6]
+  - path: docs/mdf/build/master.pdf
+    status: new
+    exists: false
+    blast_radius: medium
+    consumers: [SC-1, SC-3, SC-6]
+  - path: docs/mdf/build/master.json
+    status: new
+    exists: false
+    blast_radius: medium
+    consumers: [SC-1, SC-2, SC-3]
+  - path: docs/mdf/build/site/
+    status: new
+    exists: false
+    blast_radius: medium
+    consumers: [SC-2, SC-3, SC-6]
+  - path: .github/workflows/mdf-docs.yml
+    status: new
+    exists: false
+    blast_radius: high
+    consumers: [SC-5]
+  - path: docs/mdf/MDFields19a_UTF8.txt
+    status: existing
+    exists: true
+    blast_radius: none
+    consumers: [SC-1, SC-2, SC-3]
+    note: source input, read-only, untracked by git
+
+scope_summary: All affected files are new additions except the source input file, which is read-only. No existing production code is modified, so blast radius is confined to the new conversion tooling and its generated outputs under docs/mdf/build/.

@@ -1,0 +1,23 @@
+# Code path inventory for #1379
+# Backfilled: 2026-08-11
+# Source: .issues/1379/spec.md
+
+code_paths:
+  - sc: SC-1
+    path: scripts/convert_mdf_master.py -> docs/mdf/build/master.tex -> xelatex -> docs/mdf/build/master.pdf
+    description: Parser produces LaTeX; xelatex compiles to PDF; pdftotext extracts text for key-presence verification
+  - sc: SC-2
+    path: scripts/convert_mdf_master.py -> docs/mdf/build/site/*.html
+    description: Parser produces multi-page HTML; every \cf cross-reference renders as a hyperlink resolving to an anchor
+  - sc: SC-3
+    path: docs/mdf/MDFields19a_UTF8.txt -> master.json -> master.tex/master.pdf + site/*.html
+    description: 1:1 key presence across source, PDF text, and HTML anchors
+  - sc: SC-4
+    path: scripts/build_mdf_docs.sh -> parser -> LaTeX -> HTML
+    description: Single-command build chains all phases producing master.pdf and site/index.html
+  - sc: SC-5
+    path: .github/workflows/mdf-docs.yml -> build -> gh-pages deploy + release asset upload
+    description: CI workflow builds outputs, deploys HTML to Pages, attaches PDF to latest release tag
+  - sc: SC-6
+    path: docs/mdf/build/ (master.tex, master.pdf, site/) -> git tracking
+    description: Generated outputs written under docs/mdf/build/ and tracked by git for downstream consumption
