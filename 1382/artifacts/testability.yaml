@@ -1,0 +1,25 @@
+testability:
+  issue: 1382
+  date: '2026-09-29'
+  test_infrastructure:
+    service_tests: pgserver fixture pattern verified live in test/test_upload_search_entries.py (pgserver.get_server, Base.metadata.create_all, sessionmaker); Postgres required for to_tsvector — pgserver provides it
+    ui_tests: test/ui/ StreamlitAppTest pattern (test_records_*.py)
+  fixture_strategy:
+    - Seed User (email test@example.com) per existing pattern
+    - Seed Source, then Records crafted with ∞ in lx only, ∞ in mdf_data only, ∞ in both, clean record, soft-deleted defective record
+    - Use direct Unicode literals in test source per AGENTS.md (no \-escapes in data)
+  sc_coverage:
+    SC-1: pure function unit test — generate_sort_lx("k∞"), generate_sort_lx("kꝏ")
+    SC-2: fixture DB — count_infinity_records/list_infinity_records vs seeded truth; soft-deleted excluded
+    SC-3: UI test — admin session shows option; non-admin session blocked by existing guard
+    SC-4: UI test — N defective fixture records → count displayed, no mutation until button click
+    SC-5: service test — remediate_all_records; assert raw columns clean, edit_history count, snapshots
+    SC-6: service test — remediate_record A, skip B; assert A remediated with history, B untouched
+    SC-7: service test — capture sort_lx/normalized_term before, remediate, compare after (identical)
+    SC-8: service test — FTS query on fixture DB post-remediation matches pre-remediation ∞ search results
+    SC-9: string — grep seed files for U+221E returns 0 (and ꝏ present)
+    SC-10: string — source contains "\u221e": "oozzz" in symbol_map
+  red_green_plan: write test/test_infinity_remediation_red.py first (RED — methods absent), implement (GREEN); UI tests after render function exists
+  testability_risks:
+    - pgserver skip: tests raise SkipTest when pgserver unavailable — behavioral SCs then cannot pass; ensure pgserver available locally (used by existing suite)
+    - FTS test (SC-8) must query fts_entries via to_tsvector('simple', generate_sort_lx(query)) matching populate path
