@@ -1,0 +1,59 @@
+# Artifact 5/7: Interface Compatibility — issue 36 spec analysis
+# Source: handoff preliminary/interface-compat.md (complete) + live signature verification
+interface_compatibility:
+  existing_consumed:
+    - interface: "LinguisticService.search_records(source_id, language_id, language_role, status, is_locked, search_term, search_mode: SearchMode, record_ids, limit, offset) -> RecordSearchResult"
+      location: "linguistic_service.py:391 (Literal SearchMode at :28)"
+      change: "EXTENDING SearchMode Literal with 'Semantic Gloss'/'Semantic All'"
+      compat_class: modified
+      backward_compatible: true
+      note: "additive literal values only; existing modes and kwargs untouched"
+    - interface: "PreferenceService.get_preference(user_email, view_name, key, default) / set_preference(...)"
+      location: "preference_service.py:17,37"
+      change: none
+      compat_class: unchanged
+      backward_compatible: true
+      consumers: ["UI spec only"]
+    - interface: "UploadService.reprocess_all_records(progress_callback)"
+      location: "upload_service.py (idiom verified table_maintenance.py:181-194)"
+      change: none (pattern copied for new sibling backfill method)
+      compat_class: unchanged
+    - interface: "populate_search_entries(record_ids: list[int], session=None) -> int"
+      location: "upload_service.py:1750"
+      change: "extended internally to embed new primary ge rows; signature unchanged"
+      compat_class: modified
+      backward_compatible: true
+    - interface: "MigrationManager._MIGRATIONS registry"
+      location: "migrations.py:72"
+      change: "2 appended versioned entries (YYYYMMDDSSSSS, append-only per in-file directive :67)"
+      compat_class: modified
+      backward_compatible: true
+    - interface: "GlossSearchEntry ORM model"
+      location: "models/search.py:63"
+      change: "+3 columns (embedding vector(384), entry_type, embedding_model); existing columns untouched"
+      compat_class: modified
+      backward_compatible: true
+    - interface: "records.py search panel state keys (search_mode_radio, search_query, current_page)"
+      location: "records.py"
+      change: "mode list + captions dict extended; keys preserved (UI spec)"
+      compat_class: modified
+      backward_compatible: true
+  new_interfaces:
+    - name: "search_semantic(mode: 'gloss'|'all', query: str, threshold: float|None = None, source_id: int|None = None, limit: int|None = None) -> SemanticSearchResult"
+      version: "v1 field list"
+      consumer: "UI spec (binds to this and nothing below)"
+    - name: "SemanticSearchEntry ORM model + semantic_search_entries table"
+    - name: "embedding_service.load_model() / encode(texts, batch<=64)"
+    - name: "backfill service method (reprocess sibling idiom)"
+  removed_interfaces: []
+  breaking_changes: []
+  breaking_assessment: "none — pure additive; schema change is additive columns + new table; Literal widening backward-compatible"
+  dependency_contract:
+    - source: "spec_ui_followup (records.py result rendering)"
+      target: "search_semantic / SemanticSearchResult"
+      type: "artifact schema"
+      constraint: "UI binds to v1 field list exactly: {results: list[(record_id:int, score:float)], status: ok|empty_query|no_embeddings|stale_model, message: str|None}; status enum extension = versioned migration of the contract"
+    - source: "spec_36_revision services"
+      target: "pgvector vector(384) column schema"
+      type: "artifact schema"
+      constraint: "dimension fixed at 384 by model pin (gte-small); changing model requires schema migration + full recompute (documented in spec)"

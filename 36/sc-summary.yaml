@@ -1,0 +1,42 @@
+sc_count: 10
+scs:
+  - id: "SC-1"
+    description: "Committed artifacts at models/gte-small/ (ONNX 34,118,638 B; tokenizer.json 711,661 B) match recorded SHA256 pins byte-for-byte"
+    evidence_type: "structural"
+    plan_item: 1
+  - id: "SC-2"
+    description: "embedding_service.encode(texts, batch<=64) returns float32 (1,384) unit-norm vectors via tokenize(512)→onnxruntime→mean-pool→L2-normalize"
+    evidence_type: "behavioral"
+    plan_item: 2
+  - id: "SC-3"
+    description: "Schema: gloss_search_entries +3 columns (embedding vector(384), entry_type, embedding_model) and new semantic_search_entries table (record_id FK CASCADE); existing columns untouched"
+    evidence_type: "structural"
+    plan_item: 3
+  - id: "SC-4"
+    description: "Two DDL-only migrations apply in order, version-gated idempotent, append-only YYYYMMDDSSSSS registry, pgvector extversion assert; no data writes, no renumbering"
+    evidence_type: "structural"
+    plan_item: 4
+  - id: "SC-5"
+    description: "search_semantic(mode, query, threshold=None, source_id=None, limit=None) → SemanticSearchResult v1 contract; full ranked list desc cosine, record_id-asc tie-break, None→0.80, pin-join exclusion; no streamlit imports"
+    evidence_type: "behavioral"
+    plan_item: 5
+  - id: "SC-6"
+    description: "Calibration anchors on freshly synced real data: positives (round/bed/house/peas/hunt) ≥ 0.85-0.90 floors; negatives ≥0.07 below positives; default threshold 0.80"
+    evidence_type: "behavioral"
+    plan_item: 6
+  - id: "SC-7"
+    description: "Degraded inputs (empty/whitespace query, no embeddings, stale pin, all-below-threshold) produce correct status+message, never an exception; degraded messages name the admin backfill remedy"
+    evidence_type: "behavioral"
+    plan_item: 7
+  - id: "SC-8"
+    description: "populate_search_entries (signature unchanged) embeds new primary ge rows inline during ingestion with pin-stamped embedding_model; batch ≤ 512; Unicode preserved exactly"
+    evidence_type: "behavioral"
+    plan_item: 8
+  - id: "SC-9"
+    description: "Admin-role Embedding Backfill button in Table Maintenance → Data Reprocessing re-embeds all records with st.progress + callback + st.status; non-admin rejected; errors surfaced via handle_ui_error"
+    evidence_type: "behavioral"
+    plan_item: 9
+  - id: "SC-10"
+    description: "Runtime deps gain onnxruntime + tokenizers; sentence-transformers stays dev-only; batch-64 load+encode profile fits 1 GB Streamlit Cloud envelope (measured 312 MiB)"
+    evidence_type: "structural"
+    plan_item: 10

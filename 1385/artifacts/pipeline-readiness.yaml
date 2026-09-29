@@ -1,0 +1,25 @@
+# Pipeline Readiness Gate — issue 36 spec analysis (Step 6)
+readiness:
+  atomicity:
+    rule: "Every SC maps to exactly one RED→GREEN→verify→COMMIT cycle"
+    check: "PASS — 10 items (D1-ITEM-1..10) map 1:1 to 10 SCs for #36 revision; 6 items (D2-ITEM-1..6) map 1:1 to 6 SCs for UI follow-up; no item covers multiple SCs (see decompose-output.yaml sc field per item)"
+  dependency_ordering:
+    rule: "SC dependency DAG is acyclic"
+    check: "PASS — deliverable_1 DAG verified acyclic (substrate 1-4 → services 5-9 → envelope 10); deliverable_2 DAG acyclic (modes/threshold/pagination/empty-states → mode-switching regression); no cycles detected in either graph"
+  single_concern:
+    rule: "Every SC targets one file category and one verification domain"
+    check: "PASS — verified in decompose-output.yaml: each item lists a single unit + interface; file categories: artifact/deps/schema/migration/service/UI-page/admin-page; verification domains: pytest-service, pytest-migration, Playwright, CI-hash, profiler"
+  phase_dependency:
+    rule: "Phase dependency graph is acyclic"
+    check: "PASS — #36 revision phases: substrate → services → admin UI; UI spec single phase sequenced after seam exists (cross-spec dependency recorded in interface-compat.yaml dependency_contract)"
+  three_tier_structure:
+    rule: "Multi-phase specs have pre/per-file/post structure"
+    check: "PASS — #36 revision: pre (D1-ITEM-1..4 substrate), per-file (D1-ITEM-5..9), post (D1-ITEM-10 envelope verification); UI spec: entry (modes), per-file (controls/rendering), post (regression switch check)"
+  sc_coherence:
+    rule: "SCs anchor to measured evidence and seam contract; no orphan requirements"
+    check: "PASS — every explicit/implicit requirement in requirements-output.yaml is consumed by ≥1 item; calibration anchors from REQ-E13 recorded as SC evidence"
+  dual_deliverable_note:
+    - "Deliverable 1 (issue-36 body revision) targets existing #36 — no new issue number needed"
+    - "Deliverable 2 (UI follow-up) requires REMOTE filing FIRST to obtain number before local spec folder exists (developer directive, handoff note_remote_first) — this constraint passed to create task"
+verdict: READY
+blockers: []

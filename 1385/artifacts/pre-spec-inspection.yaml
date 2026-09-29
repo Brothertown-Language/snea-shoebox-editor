@@ -1,0 +1,60 @@
+# Pre-Spec Inspection — #36 revision (db/embed) + search-UI follow-up
+# Source: brainstorming handoff (all 7 preliminary artifacts marked complete, used directly)
+# Live spot-verification performed this session (bounded reads, R-18): srclight signatures + rg + sed on target files
+inspection:
+  issue_number: 36
+  issue_state: OPEN
+  issue_body_length: 8967
+  issue_comments: []          # verified via gh issue view 2026-09-28
+  handoff_status: consumed_complete   # 7/7 artifacts complete; no re-investigation performed
+
+  verified_interfaces:
+    - target: "src/services/linguistic_service.py"
+      finding: "SearchMode = Literal['Lexeme', 'FTS', 'Headword', 'Gloss'] at line 28; search_records(search_mode: SearchMode = 'Lexeme') at line 391 region; dispatch-by-mode documented in file"
+      compatibility: "widening Literal with 'Semantic Gloss'/'Semantic All' is additive; existing modes untouched"
+    - target: "src/database/models/search.py"
+      finding: "GlossSearchEntry at lines 63-78 has columns id, record_id, term, normalized_term ONLY — no entry_type/embedding/embedding_model yet"
+      compatibility: "all spec'd column additions are genuinely additive; no existing column modification"
+      discrepancy: "live record_id FK uses ondelete=RESTRICT; original issue body + preliminary state-analysis say CASCADE for the NEW semantic_search_entries table (sibling gloss_search_entries uses RESTRICT). Spec intent stands (developer-approved); flagged for create task to document the difference explicitly."
+    - target: "src/database/migrations.py"
+      finding: "_MIGRATIONS registry at line 72; in-file directive line 67 mandates YYYYMMDDSSSSS version format, append-only (no renumber)"
+      compatibility: "2 new DDL migrations appended; version-gated idempotent by design"
+    - target: "src/frontend/pages/table_maintenance.py"
+      finding: "Data Reprocessing admin section at lines 169-196: st.button → st.empty + st.progress(0) + progress callback + st.status(...) + UploadService.reprocess_all_records(progress_callback=...)"
+      compatibility: "admin backfill button copies this proven idiom as a sibling section; role gate exists at lines 128-130 (user_role != admin → error)"
+    - target: "src/services/upload_service.py"
+      finding: "populate_search_entries(record_ids: list[int], session=None) -> int at lines 1750-1751 (index said 1758 for call region; live signature verified)"
+      compatibility: "extended in-place to embed new gloss rows; signature unchanged"
+    - target: "src/services/preference_service.py"
+      finding: "get_preference(user_email, view_name, key, default) at lines 16-17 verified fresh"
+      compatibility: "consumed as-is by UI follow-up spec; no code change in either spec"
+    - target: "src/database/connection.py"
+      finding: "pgvector extension ensured at lines 525-537 (_ensure_extensions region, logged enable/already-enabled paths)"
+      compatibility: "no new extension work needed; migration-level extversion assert is the only addition"
+    - target: "pyproject.toml"
+      finding: "runtime deps currently include sentence-transformers>=3.0.0 (line 32); no onnxruntime/tokenizers present"
+      compatibility: "revision moves sentence-transformers to dev group; adds onnxruntime + tokenizers to runtime deps"
+
+  affected_files:
+    spec_36_revision:
+      - "pyproject.toml"
+      - "src/database/models/search.py"
+      - "src/database/migrations.py"
+      - "src/services/embedding_service.py (new)"
+      - "src/services/semantic_search_service.py (new)"
+      - "src/services/upload_service.py"
+      - "src/frontend/pages/table_maintenance.py"
+      - "models/ (new dirs: onnx/model_qint8_avx512_vnni.onnx + tokenizer.json)"
+    spec_ui_followup:
+      - "src/frontend/pages/records.py"
+      - "src/frontend/ui_utils.py (possible shared threshold control)"
+      - "src/services/preference_service.py (consumed as-is, no change)"
+
+  callers_and_dependents:
+    - symbol: search_records
+      dependents: "src/frontend/pages/records.py result block, tests/services (call-pattern refs)"
+    - symbol: populate_search_entries
+      dependents: "UploadService.process_* paths called from upload_mdf.py ingestion"
+    - note: "Blast radius grounded from handoff artifacts first (R-18); bounded reads above confirm target surfaces. No deep implementation reading performed — not warranted since handoff scope sections are complete."
+
+  index_state: "srclight index stale for linguistic_service.py and upload_service.py — live rg/sed reads used as authoritative"

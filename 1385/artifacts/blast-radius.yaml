@@ -1,0 +1,58 @@
+# Artifact 1/7: Blast Radius — issue 36 spec analysis
+# Grounding: derived from handoff preliminary/blast-radius.md (complete) + spec scope sections + verified live reads (bounded, R-18)
+blast_radius:
+  grounding_coverage: "complete — derived from spec scope sections and handoff artifact first; bounded live reads confirmed target surfaces; no ungrounded assumptions remain"
+  spec_36_revision:
+    phases:
+      - phase: "substrate (artifact + deps + schema + migrations)"
+        affected:
+          - file: "models/gte-small/**"
+            change: "new committed binaries (34,118,638 B onnx + 711,661 B tokenizer.json)"
+            ripple: "repo size +34.8 MB; CI/checkout weight"
+            risk: low
+          - file: "pyproject.toml"
+            change: "+onnxruntime, +tokenizers runtime; sentence-transformers → dev"
+            ripple: "lock file regeneration; deployment image size"
+            risk: low
+          - file: "src/database/models/search.py"
+            change: "GlossSearchEntry +3 columns; new SemanticSearchEntry model"
+            ripple: "any consumer of GlossSearchEntry column list; queries with SELECT * — none found in spot-check scope"
+            risk: medium
+          - file: "src/database/migrations.py"
+            change: "2 appended DDL entries"
+            ripple: "all environments at next startup (version-gated; reversible drop statements documented)"
+            risk: medium
+      - phase: "services (embedding + semantic search + upload embed)"
+        affected:
+          - file: "src/services/embedding_service.py (new)"
+            ripple: "none existing — leaf component"
+            risk: low
+          - file: "src/services/semantic_search_service.py (new)"
+            ripple: "consumed later by UI spec (seam dependency_contract)"
+            risk: low
+          - file: "src/services/upload_service.py"
+            change: "populate_search_entries() extended"
+            ripple: "entire ingestion pipeline (upload_mdf → process_*) and reprocess_all records path; existing tests re-run"
+            risk: medium
+      - phase: "admin UI"
+        affected:
+          - file: "src/frontend/pages/table_maintenance.py"
+            change: "new sibling section in Data Reprocessing family"
+            ripple: "page layout only; role gate reused"
+            risk: low
+  spec_ui_followup:
+    phases:
+      - phase: "records page extension"
+        affected:
+          - file: "src/frontend/pages/records.py"
+            change: "mode list + captions; score badge/caption; pagination slicing; empty states"
+            ripple: "highest-traffic page — regression on existing modes guarded by SC-U6"
+            risk: medium
+          - file: "src/frontend/ui_utils.py"
+            change: "possible shared threshold control"
+            ripple: "none if new component; low risk"
+            risk: low
+  unaffected_but_worth_noting:
+    - "src/services/preference_service.py — consumed as-is, zero change (verified fresh)"
+    - "src/services/linguistic_service.py — SearchMode Literal widening ONLY at line 28; dispatch body extended per code-paths Path 1; existing branches untouched"
+    - "existing FTS/Lexeme/Headword/Gloss paths — unchanged per non-requirements"

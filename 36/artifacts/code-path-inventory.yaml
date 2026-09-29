@@ -1,0 +1,52 @@
+# Artifact 3/7: Code Path Inventory — issue 36 spec analysis
+# Source: handoff preliminary/code-paths.md (complete) + live signature verification
+code_path_inventory:
+  spec_36_revision:
+    - path_id: P1-search-execution
+      steps:
+        - "records.py radio sets session_state.search_mode (existing, :215 region — UI spec extends list)"
+        - "search trigger → set query → st.rerun() (existing)"
+        - "LinguisticService.search_records(search_mode=..., search_term=...) (existing, :384-391 verified)"
+        - "mode dispatch inside search_records → per-mode branch (existing)"
+        - "NEW: Semantic Gloss/Semantic All branch → semantic_search_service.search_semantic(...)"
+        - "inside service: load pin model (cached resource) → encode query → SQL cosine rank over gloss_search_entries/semantic_search_entries (embedding_model == pin) → threshold filter → full ranked list"
+      phases: ["services"]
+      files: ["src/services/linguistic_service.py (dispatch branch only)", "src/services/semantic_search_service.py (new)", "src/services/embedding_service.py (new)"]
+    - path_id: P2-ingestion-embedding
+      steps:
+        - "upload_mdf.py → UploadService.process_*"
+        - "populate_search_entries(record_ids, session) (verified :1750-1751)"
+        - "NEW: embed each produced gloss row via embedding_service (1-5 strings/record)"
+      phases: ["services"]
+      files: ["src/services/upload_service.py"]
+    - path_id: P3-admin-backfill
+      steps:
+        - "table_maintenance.py new admin section button"
+        - "backfill service method iterating all records"
+        - "embed + upsert embedding/embedding_model per row"
+        - "completion result + logged"
+      phases: ["admin UI", "services"]
+      files: ["src/frontend/pages/table_maintenance.py", "src/services/semantic_search_service.py (or backfill module)"]
+    - path_id: P4-startup
+      steps:
+        - "streamlit_app.py:91 @st.cache_resource _initialize_database()"
+        - "init_db() (connection.py:678) → MigrationManager.run_all()"
+        - "2 DDL-only migrations apply; NO backfill"
+      phases: ["schema"]
+      files: ["src/database/migrations.py", "src/database/connection.py (unchanged)"]
+  spec_ui_followup:
+    - path_id: U1-threshold-lifecycle
+      steps:
+        - "page load → PreferenceService.get_preference(user_email,'records','semantic_threshold','0.80')"
+        - "session_state init"
+        - "user adjusts slider/numeric (coupled; invalid rejected+snap-back)"
+        - "set_preference on change (:37)"
+      files: ["src/frontend/pages/records.py", "src/frontend/ui_utils.py (candidate)"]
+    - path_id: U2-result-rendering
+      steps:
+        - "records.py result block receives SemanticSearchResult"
+        - "badge/caption render per row (semantic rows only)"
+        - "pagination slices ranked list (rank-once)"
+        - "empty-state branch per status + message"
+      files: ["src/frontend/pages/records.py"]
+  unchanged_paths_note: "existing Lexeme/FTS/Headword/Gloss dispatch branches; MDF parsing; schema_version gating mechanics"

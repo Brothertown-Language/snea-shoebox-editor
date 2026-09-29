@@ -1,0 +1,45 @@
+# Artifact 2/7: Concern Map — issue 36 spec analysis
+# Source: handoff preliminary/concern-map.md (complete) — carried into spec-consumable form; verified against live structure
+concern_map:
+  layering:
+    - layer: "UI (src/frontend/pages/, ui_utils.py)"
+      owner: "spec_ui_followup (records.py, ui_utils.py) + spec_36_revision (table_maintenance.py backfill section ONLY)"
+      boundary: "no pgvector/ORM imports; #36 adds zero st. calls outside table_maintenance.py"
+    - layer: "Services (src/services/)"
+      owner: "spec_36_revision"
+      boundary: "no streamlit imports; deterministic, UI-agnostic contracts"
+    - layer: "Schema (src/database/models, migrations)"
+      owner: "spec_36_revision"
+      boundary: "additive-only schema changes"
+    - layer: "Artifact (models/)"
+      owner: "spec_36_revision"
+      boundary: "byte-pinned binaries, no code"
+  seam_contract:
+    function: "semantic_search_service.search_semantic(mode, query, threshold=None, source_id=None, limit=None)"
+    returns: "SemanticSearchResult{results: list[(record_id, score)], status: 'ok'|'empty_query'|'no_embeddings'|'stale_model', message: str|None}"
+    consumers: ["records.py (UI spec)"]
+    providers: ["spec_36_revision"]
+    rules:
+      - "service returns full ranked list; UI paginates by slice — service never pagination-aware"
+      - "threshold None → 0.80 service default"
+      - "UI binds to this contract and nothing below it (v1 field list)"
+  concern_boundaries:
+    - concern: "preference storage"
+      ui_spec: "slider+numeric control + persistence round-trip"
+      spec_36: "owns service-side default (0.80) only"
+    - concern: "upload latency"
+      spec_36: owns
+      ui_spec: notified via spec notes
+    - concern: "regression sync protocol"
+      spec_36: owns (SCs run on synced local DB)
+      ui_spec: consumes synced DB
+    - concern: "memory envelope"
+      spec_36: owns measured 312 MiB evidence
+      ui_spec: no memory-bearing additions
+    - concern: "model change/recompute"
+      spec_36: owns (backfill button + embedding_model pin)
+      ui_spec: none
+    - concern: "empty/degraded states"
+      spec_36: owns payload (status, message)
+      ui_spec: owns rendering
+  single_concern_per_sc_check: "each decomposition item targets one file category and one verification domain — verified in decompose-output.yaml"
