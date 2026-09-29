@@ -1,0 +1,24 @@
+code_path_inventory:
+  issue: 1382
+  date: '2026-09-29'
+  paths:
+    - file: src/services/linguistic_service.py
+      relevant_existing: [generate_sort_lx (lines 117-170, symbol_map 152-157), update_record (lines ~650-700, EditHistory pattern), LinguisticService class]
+      change: add "\ua74f": "oozzz" to symbol_map; add 4 new static/class methods (count_infinity_records, list_infinity_records, remediate_record, remediate_all_records)
+    - file: src/frontend/pages/table_maintenance.py
+      relevant_existing: [main (line 124, admin guard, sidebar radio lines 145-152, dispatch chain 155-162), render_data_reprocessing_maintenance (line 165, progress-bar pattern), handle_ui_error usage]
+      change: add radio option "∞→ꝏ Remediation"; add elif dispatch; add render_infinity_remediation()
+    - file: src/services/upload_service.py
+      relevant_existing: [populate_search_entries (line 1758) — reuse as-is for search-entry/FTS rebuild; reprocess_all_records (line 1847)]
+      change: NONE — consumed by remediation, not modified
+    - file: src/database/models/workflow.py
+      relevant_existing: [EditHistory model (line 48)]
+      change: NONE
+    - file: src/database/models/search.py
+      relevant_existing: [FTSEntry, SearchEntry, HeadwordSearchEntry, GlossSearchEntry]
+      change: NONE
+    - file: src/seed_data/natick_sample_100.txt
+      change: replace ∞ → ꝏ (364 occurrences)
+    - file: src/seed_data/natick_sample_100_no_diacritics.txt
+      change: replace ∞ → ꝏ (364 occurrences)
+  tests_location: test/ (pgserver unittest pattern), test/ui/ (StreamlitAppTest pattern)
