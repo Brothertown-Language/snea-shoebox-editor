@@ -1,0 +1,23 @@
+blast_radius:
+  issue: 1382
+  date: '2026-09-29'
+  direct_targets:
+    - file: src/services/linguistic_service.py
+      symbols: [generate_sort_lx, count_infinity_records (new), list_infinity_records (new), remediate_record (new), remediate_all_records (new)]
+      risk: LOW for generate_sort_lx (additive dict entry); MEDIUM for new methods (new code, no existing callers break)
+    - file: src/frontend/pages/table_maintenance.py
+      symbols: [main, render_infinity_remediation (new)]
+      risk: LOW — additive radio option + new render function; existing options untouched
+    - file: src/seed_data/natick_sample_100.txt
+      risk: LOW — fixture data only
+    - file: src/seed_data/natick_sample_100_no_diacritics.txt
+      risk: LOW — fixture data only
+  indirect_dependents:
+    - generate_sort_lx is called by upload_service.populate_search_entries (line 1777+), search normalization, reprocessing — adding "\ua74f" key is additive; existing ∞ inputs still map to oozzz
+    - EditHistory table grows; batch_rollback consumers unaffected (additive rows only)
+  protected_invariants:
+    - normalized columns must be byte-identical pre/post remediation (∞ and ꝏ both normalize to oozzz)
+    - FTS tsconfig must remain 'simple' — never 'english' (docs/lessons-learned/2026-06-13-postgres-fts-algonquian.md)
+    - soft-deleted records excluded from scan and remediation
+    - no automatic migration at startup — explicit admin action only
+  rollback_path: EditHistory prev_data snapshots allow per-record rollback; seed files revert via git
