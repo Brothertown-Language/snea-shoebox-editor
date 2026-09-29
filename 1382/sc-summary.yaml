@@ -1,0 +1,45 @@
+# SC Summary — Issue #1382
+# ∞ (U+221E) → ꝏ (U+A74F) remediation via Table Maintenance tool
+# 10 atomic SCs, 1:1 SC↔item mapping, 4 phases + post-implementation gate
+sc_count: 10
+scs:
+  - id: "SC-1"
+    description: "generate_sort_lx() maps ꝏ (U+A74F) to oozzz — unit assertion generate_sort_lx(\"kꝏ\") == \"koozzz\"."
+    evidence_type: "behavioral"
+    plan_item: 3
+  - id: "SC-2"
+    description: "count_infinity_records()/list_infinity_records() return exactly the non-deleted records with ∞ in lx or mdf_data (fixture DB: 2 of 4 seeded, soft-deleted defective record excluded, preview non-empty)."
+    evidence_type: "behavioral"
+    plan_item: 4
+  - id: "SC-3"
+    description: "Table Maintenance sidebar exposes the \"∞→ꝏ Remediation\" option; visible to admin, blocked for non-admin by the existing main() guard (StreamlitAppTest)."
+    evidence_type: "behavioral"
+    plan_item: 9
+  - id: "SC-4"
+    description: "The remediation view displays the detected record count before any action; zero-state shows informational message with no action buttons; no mutation occurs until a button is clicked."
+    evidence_type: "behavioral"
+    plan_item: 10
+  - id: "SC-5"
+    description: "remediate_all_records() remediates every detected record: raw columns contain ꝏ not ∞; exactly one EditHistory row per record with correct prev_data/current_data snapshots and version = current+1; search-entry terms remediated."
+    evidence_type: "behavioral"
+    plan_item: 5
+  - id: "SC-6"
+    description: "Review one-by-one semantics: remediating record A (calling remediate_record) and skipping B leaves A clean with history row, B unchanged with ∞ and no history row."
+    evidence_type: "behavioral"
+    plan_item: 6
+  - id: "SC-7"
+    description: "Normalized-identity: after remediation, sort_lx and all normalized_term values for the remediated record are byte-identical to pre-remediation values."
+    evidence_type: "behavioral"
+    plan_item: 7
+  - id: "SC-8"
+    description: "FTS equivalence: post-remediation query to_tsvector('simple', generate_sort_lx(\"kꝏ\")) returns the same result set as the pre-remediation query for \"k∞\" against fts_entries."
+    evidence_type: "behavioral"
+    plan_item: 8
+  - id: "SC-9"
+    description: "Both seed files (natick_sample_100.txt, natick_sample_100_no_diacritics.txt) contain zero U+221E occurrences and 364 U+A74F occurrences each."
+    evidence_type: "string"
+    plan_item: 1
+  - id: "SC-10"
+    description: "Existing ∞ → oozzz fallback preserved: \"\\u221e\": \"oozzz\" remains in symbol_map and generate_sort_lx(\"k∞\") == \"koozzz\" still passes after the ꝏ addition."
+    evidence_type: "string"
+    plan_item: 2
