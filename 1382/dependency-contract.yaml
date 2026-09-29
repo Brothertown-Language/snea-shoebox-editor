@@ -1,0 +1,96 @@
+# Dependency Contract — Issue #1382
+# Produced by: 🤖 OpenCode (ollama-cloud/glm-5.3) — 2026-09-29
+# Derived from interface-compat.yaml + structure.yaml
+# Z3 model layer for tools/solve + tools/plan consumption
+
+variables:
+  sc1_done: {type: bool}
+  sc2_done: {type: bool}
+  sc3_done: {type: bool}
+  sc4_done: {type: bool}
+  sc5_done: {type: bool}
+  sc6_done: {type: bool}
+  sc7_done: {type: bool}
+  sc8_done: {type: bool}
+  sc9_done: {type: bool}
+  sc10_done: {type: bool}
+  item1_committed: {type: bool}
+  item2_committed: {type: bool}
+  item4_committed: {type: bool}
+  item5_committed: {type: bool}
+  item6_committed: {type: bool}
+  item7_committed: {type: bool}
+  item8_committed: {type: bool}
+  item9_committed: {type: bool}
+  item10_committed: {type: bool}
+  seed_clean: {type: bool}
+  normalization_extended: {type: bool}
+  scan_ready: {type: bool}
+  remediation_ready: {type: bool}
+  review_semantics_proven: {type: bool}
+  normalized_identity_proven: {type: bool}
+  fts_equivalence_proven: {type: bool}
+  ui_exposed: {type: bool}
+  ui_flow_complete: {type: bool}
+  normalized_columns_stable: {type: bool}
+  simple_tsconfig_only: {type: bool}
+  no_auto_migration: {type: bool}
+
+preconditions:
+  - "z3.Or(z3.Not(item1_committed), item1_committed == True)"
+  - "z3.Or(z3.Not(item2_committed), item2_committed == True)"
+  - "z3.Or(z3.Not(item4_committed), item4_committed == True)"
+  - "z3.Or(z3.Not(item5_committed), item5_committed == True)"
+  - "z3.Or(z3.Not(item6_committed), item6_committed == True)"
+  - "z3.Or(z3.Not(item7_committed), item7_committed == True)"
+  - "z3.Or(z3.Not(item8_committed), item8_committed == True)"
+  - "z3.Or(z3.Not(item9_committed), item9_committed == True)"
+  - "z3.Or(z3.Not(item10_committed), item10_committed == True)"
+
+postconditions:
+  - "sc9_done == z3.If(seed_clean, sc9_done, False)"
+  - "sc1_done == z3.If(normalization_extended, sc1_done, False)"
+  - "sc10_done == z3.If(normalization_extended, sc10_done, False)"
+  - "sc2_done == z3.If(scan_ready, sc2_done, False)"
+  - "sc5_done == z3.If(remediation_ready, sc5_done, False)"
+  - "sc6_done == z3.If(review_semantics_proven, sc6_done, False)"
+  - "sc7_done == z3.If(normalized_identity_proven, sc7_done, False)"
+  - "sc8_done == z3.If(fts_equivalence_proven, sc8_done, False)"
+  - "sc3_done == z3.If(ui_exposed, sc3_done, False)"
+  - "sc4_done == z3.If(ui_flow_complete, sc4_done, False)"
+
+invariants:
+  - "normalized_columns_stable == True"
+  - "simple_tsconfig_only == True"
+  - "no_auto_migration == True"
+  - "z3.If(sc5_done, z3.And(remediation_ready, normalized_columns_stable), z3.BoolVal(True))"
+  - "z3.If(sc8_done, z3.And(fts_equivalence_proven, simple_tsconfig_only), z3.BoolVal(True))"
+
+phase_mapping:
+  phase-1: {scs: [SC-9, SC-1, SC-10], states: [seed_clean, normalization_extended], depends_on: []}
+  phase-2: {sc: SC-2, state: scan_ready, depends_on: [phase-1]}
+  phase-3: {scs: [SC-5, SC-6, SC-7, SC-8], states: [remediation_ready, review_semantics_proven, normalized_identity_proven, fts_equivalence_proven], depends_on: [phase-2]}
+  phase-4: {scs: [SC-3, SC-4], states: [ui_exposed, ui_flow_complete], depends_on: [phase-2, phase-3]}
+  phase-5: {scs: [all], state: suite_green, depends_on: [phase-1, phase-2, phase-3, phase-4]}
+
+dependency_contract:
+  - source: LinguisticService.count_infinity_records / list_infinity_records
+    target: records table (lx, mdf_data, is_deleted columns)
+    type: artifact-schema (query contract)
+    constraint: filter is_deleted == False; direct Unicode U+221E literal in LIKE/position query — no ASCII regex per docs/lessons-learned/2026-06-13-regex-linguistic-characters.md
+  - source: LinguisticService.remediate_record / remediate_all_records
+    target: UploadService.populate_search_entries(record_ids, session)
+    type: interface-reuse (search-entry + FTS rebuild)
+    constraint: consumed unmodified; session passed through; no new to_tsvector calls — 'simple' tsconfig only per docs/lessons-learned/2026-06-13-postgres-fts-algonquian.md
+  - source: LinguisticService.remediate_record / remediate_all_records
+    target: EditHistory model (workflow.py)
+    type: artifact-schema (audit snapshot)
+    constraint: prev_data snapshot before mutation; current_data after; version = record.current_version + 1; session_id = batch uuid4; change_summary fixed string
+  - source: render_infinity_remediation (table_maintenance.py)
+    target: LinguisticService.count/list/remediate_record/remediate_all_records
+    type: interface-consumption (UI → service)
+    constraint: admin guard inherited from main(); user_email from st.session_state; handle_ui_error with logger_name snea.pages.table_maintenance
+  - source: generate_sort_lx symbol_map addition
+    target: all generate_sort_lx callers (populate_search_entries, search normalization, reprocessing)
+    type: additive-extension
+    constraint: existing "U+221E maps to oozzz" mapping preserved (SC-10); ꝏ input now normalizes to oozzz
