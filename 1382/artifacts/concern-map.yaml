@@ -1,0 +1,32 @@
+concern_map:
+  issue: 1382
+  date: '2026-09-29'
+  concerns:
+    - id: C1
+      name: Normalization correctness
+      owner_location: src/services/linguistic_service.py generate_sort_lx()
+      note: add "\ua74f": "oozzz" to symbol_map; keep "\u221e" fallback; verified live at lines 152-157
+    - id: C2
+      name: Defect scan service
+      owner_location: src/services/linguistic_service.py (new methods count_infinity_records, list_infinity_records)
+      note: query non-deleted records where lx OR mdf_data contains U+221E; returns count and (id, lx, preview) list
+    - id: C3
+      name: Remediation write path
+      owner_location: src/services/linguistic_service.py remediate_record / remediate_all_records
+      note: prev_data snapshot → replace ∞→ꝏ in lx+mdf_data → EditHistory(version=current+1, session UUID) → update sort_lx → call UploadService.populate_search_entries([rid]) to rebuild term/normalized_term/fts_vector
+    - id: C4
+      name: Admin UI
+      owner_location: src/frontend/pages/table_maintenance.py
+      note: new radio option "∞→ꝏ Remediation" in main() sidebar; render_infinity_remediation() with scan count display, Apply All (confirm-gated), Review One-by-One (per-record Apply/Skip); admin guard already in main()
+    - id: C5
+      name: Seed data cleanup
+      owner_location: src/seed_data/natick_sample_100*.txt
+      note: replace all ∞ with ꝏ (364 occurrences each, verified)
+    - id: C6
+      name: Test fixtures
+      owner_location: test/test_infinity_remediation_red.py (new), test/ui/test_table_maintenance_infinity.py (new)
+      note: pgserver fixture pattern from test_upload_search_entries.py; test/ui pattern from test/ui/ records tests
+  cross_concern_risks:
+    - C3 depends on C1 (sort_lx update must use new normalization before populate_search_entries runs)
+    - C4 depends on C2+C3 (UI calls service methods)
+    - C6 depends on all others (tests target each concern)
