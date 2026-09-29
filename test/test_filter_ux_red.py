@@ -1,3 +1,4 @@
+
 """RED-phase tests for Records View Left Panel Filter UX Improvements.
 
 SC-1 (Phase 1): Sources dropdown shows "All Sources" instead of "All"
@@ -38,22 +39,44 @@ mock_upload.generate_mdf_filename.return_value = "test.mdf"
 mock_validator = MagicMock()
 mock_validator.diagnose_record.return_value = None
 
+# Patch the actual module paths that records() imports inside its function body.
+# Insert-only containment: save any pre-existing entries, then restore them at
+# scope-exit so this script never deletes entries owned by other tests that
+# installed real modules (or their own mocks) into sys.modules earlier.
 import sys
-sys.modules["src.services.linguistic_service"] = MagicMock()
-sys.modules["src.services.linguistic_service"].LinguisticService = mock_linguistic
-sys.modules["src.services.preference_service"] = MagicMock()
-sys.modules["src.services.preference_service"].PreferenceService = mock_preference
-sys.modules["src.services.identity_service"] = MagicMock()
-sys.modules["src.services.identity_service"].IdentityService = mock_identity
-sys.modules["src.services.navigation_service"] = MagicMock()
-sys.modules["src.services.navigation_service"].NavigationService = mock_nav
-sys.modules["src.services.upload_service"] = MagicMock()
-sys.modules["src.services.upload_service"].UploadService = mock_upload
-sys.modules["src.mdf.validator"] = MagicMock()
-sys.modules["src.mdf.validator"].MDFValidator = mock_validator
 
-from src.frontend.pages.records import records
-records()
+_MOCK_MODULE_PATHS = [
+    "src.services.linguistic_service",
+    "src.services.preference_service",
+    "src.services.identity_service",
+    "src.services.navigation_service",
+    "src.services.upload_service",
+    "src.mdf.validator",
+]
+_saved_modules = {p: sys.modules.get(p) for p in _MOCK_MODULE_PATHS}
+try:
+    sys.modules["src.services.linguistic_service"] = MagicMock()
+    sys.modules["src.services.linguistic_service"].LinguisticService = mock_linguistic
+    sys.modules["src.services.preference_service"] = MagicMock()
+    sys.modules["src.services.preference_service"].PreferenceService = mock_preference
+    sys.modules["src.services.identity_service"] = MagicMock()
+    sys.modules["src.services.identity_service"].IdentityService = mock_identity
+    sys.modules["src.services.navigation_service"] = MagicMock()
+    sys.modules["src.services.navigation_service"].NavigationService = mock_nav
+    sys.modules["src.services.upload_service"] = MagicMock()
+    sys.modules["src.services.upload_service"].UploadService = mock_upload
+    sys.modules["src.mdf.validator"] = MagicMock()
+    sys.modules["src.mdf.validator"].MDFValidator = mock_validator
+
+    from src.frontend.pages.records import records
+    records()
+finally:
+    # Restore only carrier-inserted entries; never delete pre-existing entries.
+    for _path, _saved in _saved_modules.items():
+        if _saved is not None:
+            sys.modules[_path] = _saved
+        else:
+            del sys.modules[_path]
 """
 
 
