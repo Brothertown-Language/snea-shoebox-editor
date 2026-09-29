@@ -1,0 +1,94 @@
+issue: 1386
+extracted_at: "2026-09-29"
+sources: [".issues/1386/issue.yaml body (stub)", "live code reads", "sibling specs .issues/36/spec.md and .issues/1385/spec.md"]
+
+explicit_requirements:
+  - id: REQ-E1
+    text: "Fine-tuned multilingual-e5-small embedding substrate for the Algonquian vernacular term space"
+    verification: "Stub scope bullet 1; codebase check: no e5 substrate exists (src/services has no embedding/semantic service; Record.embedding Vector(1536) column unpopulated). Note: #36 (English-gloss space) pins thenlper/gte-small, NOT e5-small. Both models listed in #36 R-2 measured memory references."
+    confirmed: true
+  - id: REQ-E2
+    text: "Config-driven tokenizer allowlist: full IPA + project diacritics + ꝏ(U+A76F)/∞(U+221E) in v1; syllabics deferred with a documented trigger for adding them"
+    verification: "Stub scope bullet 1 + Impact risk 1. Corpus inventory (natick_sample_100.txt live grep): 511× ∞, áóéôâúàñíèä etc.; ꝏ ZERO occurrences in sample — production distribution unverified. Lessons docs/lessons-learned/2026-06-13-infinity-symbol-normalization.md: ∞ is a letter (oozzz mapping); 2026-06-13-regex-linguistic-characters.md: never ASCII-strip."
+    confirmed: true
+  - id: REQ-E3
+    text: "One wide table in the SemanticTermEntry style — record_id FK, entry_type {term|phrase}, term, embedding, embedding_model pin, language_code, language_family constant 'Algonquian'"
+    verification: "Stub scope bullet 2. Pattern verified live: search tables in models/search.py (FTSEntry/SearchEntry/HeadwordSearchEntry/GlossSearchEntry) follow the wide-table one-concern-per-table pattern; derived-index-only (populated by code, Record is source of truth — hard_delete clears entries, linguistic_service.py:874-876)."
+    confirmed: true
+  - id: REQ-E4
+    text: "language_code derived from the \\so scan, enum xnt|xpq|wam|mjy|…|unknown"
+    verification: "Stub scope bullet 2 + Impact risk 3. Substrate verified: parser.py:29-34 _extract_iso_langs extracts 'Name [xxx]' ISO pattern from any line including \\so (:95-100 → source_page); upload_service._sync_languages persists record['lg']. ISO codes xnt/xpq/wam/mjy all present in iso-639-3.tab (:4075,:6976,:7367,:7398)."
+    confirmed: true
+  - id: REQ-E5
+    text: "Seam contract search_terms(query, threshold=None, source_id=None, limit=None) → TermSearchResult{results: list[(record_id, score, entry_type, language_code, source_id, term)], status ∈ {ok, empty_query, no_embeddings, stale_model}, message}"
+    verification: "Stub scope bullet 3. No existing search_terms symbol (live grep). Mirror of #36's search_semantic SemanticSearchResult{results[(record_id,score)], status 4-enum, message} — term contract extends tuples with entry_type/language_code/source_id/term per stub. DISCREPANCY FOUND: stub claims frontend spec #1385 'binds to the search_terms seam' but #1385 body (live read) binds exclusively to #36's search_semantic/SemanticSearchResult; #1385 contains zero references to search_terms or term modes. The cross-spec binding direction in the stub vs #1385's actual text must be reconciled before create."
+    confirmed: true
+  - id: REQ-E6
+    text: "Derived-index-only: primary data never mutated"
+    verification: "Stub scope bullet 2 + Out of scope. Matches existing architecture: search entry tables are derived, written by populate_search_entries/reprocess_all_records only; Record mutation path untouched."
+    confirmed: true
+  - id: REQ-E7
+    text: "Spike-proposed calibration anchors spanning ≥3 coded languages, with per-anchor floors — term and phrase floors independent"
+    verification: "Stub scope bullet 4 + Impact risk 3. ≥3 of the 4 coded languages (xnt/xpq/wam/mjy) required per anchor span. Pattern precedent from #36 SC-6 (per-anchor evidence artifact, recorded floors, re-baseline owns drift)."
+    confirmed: true
+  - id: REQ-E8
+    text: "Admin backfill as a sibling button in Table Maintenance → Data Reprocessing"
+    verification: "Stub scope bullet 5. Surface verified live: table_maintenance.py:147 radio ['Sources','Soft Deleted Records','Data Reprocessing'], render_data_reprocessing_maintenance() at :165-196 with st.progress+callback+st.status idiom, admin-only page gate :126-131. #36 delivers an identical 'Embedding Backfill' sibling here."
+    confirmed: true
+  - id: REQ-E9
+    text: "Re-train triggered by corpus + allowlist change, with a per-training-run manifest"
+    verification: "Stub scope bullet 6 + Impact risk 1 (allowlist gaps silently corrupt embeddings → allowlist config-driven, re-train on any allowlist change, manifest records run inputs). No existing manifest/train-pipeline code (live grep)."
+    confirmed: true
+
+implicit_requirements:
+  - id: REQ-I1
+    text: "Degradation semantics consistent with the #36 sibling: 4-status enum {ok, empty_query, no_embeddings, stale_model}; no exception escapes the seam on edge inputs"
+    inferred_from: "#36 SC-7 pattern; stub contract field list; #1385 R-6 assumes status+message payloads"
+    confirmed: true
+  - id: REQ-I2
+    text: "Embedding service/session singleton pattern carries over from #36 (process-wide onnxruntime session, streamlit-import-free service) — a second model (e5-small) must share the memory envelope; both resident must stay under 1 GiB"
+    inferred_from: "#36 R-2 measured references: e5-small INT8 ~472 MB, both-models-resident ~520 MB — the stub's e5 choice was pre-measured in the #36 spike envelope analysis"
+    confirmed: true
+  - id: REQ-I3
+    text: "DDL-only versioned migrations in the append-only YYYYMMDDSSSSS registry; no renumbering; pgvector extversion/ext assertion"
+    inferred_from: "migrations.py:65-72 in-file directive (live); #36 SC-4 precedent; R-12 sync protocol mandate in AGENTS.md must carry embeddings (sync_prod_to_local replicates vector columns — lesson 2026-06-14-pg-catalog-schema-replication)"
+    confirmed: true
+  - id: REQ-I4
+    text: "Unicode preservation exactly: no normalization/stripping of corpus characters anywhere in the pipeline (AGENTS.md Tier 1; lessons-learned regex/infinity cards); ∞ must remain searchable as a letter"
+    inferred_from: "Corpus evidence: 511 ∞ occurrences in sample; AGENTS.md unicode constraints"
+    confirmed: true
+  - id: REQ-I5
+    text: "Batch discipline ≤512 rows per write batch; tqdm for long-running backfill/train loops; fail-fast with no silent skip"
+    inferred_from: "090-data-integrity.md mandates; #36 R-8/R-11 exact precedent"
+    confirmed: true
+  - id: REQ-I6
+    text: "Term-space entries cover vernacular fields \lx, \va/\primary_va, \se, \cf, \ve (terms) and \xv example sentences or multi-word \lx/\se values (phrases) — entry_type {term|phrase} requires a derivation rule for phrase classification"
+    inferred_from: "Stub entry_type enum + parser.py extraction inventory (live: lx/va/se/cf/ve/xv fields); 'phrases down-weighted' in #36 approach and stub approach text"
+    confirmed: true
+
+constraint_requirements:
+  - id: REQ-C1
+    text: "No mutation of primary record data — derived index only"
+    boundary: "Out of scope bullet 2; DB writes confined to the new term-space table (and its embedding_model column)"
+  - id: REQ-C2
+    text: "Syllabics support NOT implemented in v1 — deferred with documented trigger"
+    boundary: "Out of scope bullet 3; trigger = evidence of syllabic-bearing records in corpus (per research card, syllabics belong to Cree/Ojibwe-family orthographies, absent from xnt/xpq/wam corpus Roman orthographies)"
+  - id: REQ-C3
+    text: "No end-user UI in this spec — #1385 owns records-page modes/threshold/scores/pagination/empty-states"
+    boundary: "Out of scope bullet 1; this spec delivers the backend seam + admin-only backfill button only"
+  - id: REQ-C4
+    text: "Memory envelope: adding e5-small substrate must keep combined resident models under the 1 GiB Streamlit Cloud budget shared with #36's gte-small"
+    boundary: "#36 SC-10/R-2 measured references; both-resident ~520 MB measured 2026-09-29"
+
+non_requirements:
+  - "No exact-text FTS/ILIKE mode changes (SearchMode Literal widening is #36's additive seam for glosses; whether term-space modes join SearchMode is a create-step decision — stub's seam is a standalone service function)"
+  - "No changes to preference_service (consumed as-is by #1385)"
+  - "No third-party embedding API — in-process ONNX only (offline-first precedent from #36)"
+  - "No renumbering or rewriting of existing migrations"
+  - "No MDF parser signature or format changes"
+  - "No synthetic training data — fine-tune corpus must come from real, verifiable sources (Global Absolute Prohibition; research-cards MANIFEST governs corpus provenance)"
+
+verification_gaps_for_create:
+  - "ꝏ (U+A76F) has 0 occurrences in the natick sample corpus; production distribution must be measured before the allowlist SC is frozen"
+  - "#1385 binding discrepancy: stub says '#1385 binds to search_terms' but #1385 binds only to search_semantic (#36). Neither cross-spec contract currently references term-space modes. Create must reconcile: either amend the binding description or file the UI-mode extension as a noted follow-up"
+  - "Fine-tune training corpus provenance: no data/models directory exists; meaning-adjacency data must be sourced from real corpus materials (cross-source comparison research cards) — no synthetic pairs"

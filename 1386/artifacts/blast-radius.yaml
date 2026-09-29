@@ -1,0 +1,64 @@
+issue: 1386
+artifact: blast-radius
+generated_at: "2026-09-29"
+grounding_note: "R-18 bounded grounding: derived from spec stub scope sections + live reads of the primary target surfaces performed during pre-spec inspection (search.py, core.py, migrations.py, linguistic_service.py, upload_service.py, parser.py, table_maintenance.py, pyproject.toml). No implementation-level deep reads added beyond these."
+
+affected_components:
+  - component: src/database/models/search.py
+    change: "add SemanticTermEntry-style model (new table: record_id FK, entry_type, term, embedding, embedding_model, language_code, language_family)"
+    ripple: "models/__init__.py export chain; Record relationship if added (optional); hard_delete_record cleanup path gains one more derived-table delete (linguistic_service.py)"
+    phase: schema
+  - component: src/database/migrations.py
+    change: "append DDL-only versioned migration(s) in YYYYMMDDSSSSS registry"
+    ripple: "SchemaVersion rows on deploy; _ensure_extensions pgvector already ensured"
+    phase: schema
+  - component: src/services (new embedding/term-search service modules)
+    change: "new term encode path + search_terms seam service"
+    ripple: "shares embedding_service singleton substrate with #36's gloss space; memory envelope shared (~520 MB both-resident measured)"
+    phase: services
+  - component: src/services/upload_service.py
+    change: "extend populate_search_entries() or sibling term-population method (inline ingestion) + backfill service method"
+    ripple: "reprocess_all_records consumers (table_maintenance button) gain term-space work per run"
+    phase: ingestion+admin
+  - component: src/frontend/pages/table_maintenance.py
+    change: "add sibling 'Term-space Backfill' button/section in render_data_reprocessing_maintenance() block"
+    ripple: "none beyond page-local; admin role gate unchanged"
+    phase: admin-ui
+  - component: config (allowlist key + threshold defaults)
+    change: "new config-driven tokenizer allowlist + language code set"
+    ripple: "validation at service-load; re-train trigger ties to this key's diffs"
+    phase: substrate
+
+ripple_effects_summary:
+  downstream_consumers:
+    - "#1385 (frontend sibling) — binds only to #36's search_semantic today; a term-space UI consumption would be a FUTURE extension (binding discrepancy recorded in requirements)"
+    - "reprocess_all_records pipeline — term-space population rides the existing reprocessing button when wired"
+    - "sync_prod_to_local replication — vector columns replicate; embeddings carried across sync (lesson 2026-06-14 pg-catalog replication)"
+  unaffected_surfaces:
+    - "Exact-search modes (Lexeme/FTS/Headword/Gloss) — untouched"
+    - "MDF parser signatures — read-only consumers; no format change"
+    - "preference_service — untouched (consumed as-is by #1385)"
+    - "Primary record mutation paths — strictly forbidden; derived-index-only"
+  risk_hotspots:
+    - "Table Maintenance render block is shared with #36's simultaneous backfill addition — merge-order coordination between two specs editing the same file"
+    - "populate_search_entries() already a hotspot (94 test symbols per index) — extension must keep signature unchanged per #36 precedent"
+
+per_phase_blast_radius:
+  - phase: "1 substrate"
+    affected: [models/gte-small-style dir for e5, pyproject deps if runtime additions needed, config allowlist key]
+    ripple_risk: LOW
+  - phase: "2 schema"
+    affected: [models/search.py, migrations.py, models/__init__.py]
+    ripple_risk: MEDIUM
+  - phase: "3 services"
+    affected: [new term search service, shared embedding service]
+    ripple_risk: MEDIUM
+  - phase: "4 ingestion"
+    affected: [upload_service.py]
+    ripple_risk: HIGH
+  - phase: "5 admin-ui"
+    affected: [table_maintenance.py]
+    ripple_risk: LOW
+  - phase: "6 calibration/post"
+    affected: [calibration module, manifest, evidence artifacts]
+    ripple_risk: LOW
