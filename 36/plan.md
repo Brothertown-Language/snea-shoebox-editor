@@ -166,3 +166,14 @@ Every SC maps to exactly one implementing item and one phase; per-item RED/GREEN
 - [ ] C12. The SearchMode Literal widens additively with 'Semantic Gloss'/'Semantic All', both dispatch to search_semantic(), and the four existing modes route unchanged (SC-11)
 - [ ] C13. All 12 SC verdicts are PASS at the pre-PR gate; post-regression sweep is clean
 - [ ] C14. No scope creep — every executed step traces to exactly one SC
+
+## lifecycle_events
+
+```yaml
+- event: plan_created
+  timestamp: 2026-09-29T18:27:02Z
+  issuer: OpenCode (ollama-cloud/glm-5.3-flash)
+  plan_file: ".issues/36/plan.md"
+  phase_count: 6
+  severity: info
+```
