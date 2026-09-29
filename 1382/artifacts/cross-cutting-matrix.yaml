@@ -1,0 +1,32 @@
+cross_cutting_matrix:
+  issue: 1382
+  date: '2026-09-29'
+  dimensions:
+    unicode_preservation:
+      requirement: ∞ (U+221E) and ꝏ (U+A74F) are first-class data; direct Unicode in source, no escape sequences in data files
+      applies_to: [linguistic_service.py symbol_map, seed files, remediation replace logic]
+      verification: AGENTS.md Unicode mandate; SC-1/SC-7 unit assertions
+    data_integrity:
+      requirement: no synthetic data; EditHistory audit trail for every mutation; no automatic production mutation — explicit admin action only
+      applies_to: [remediate_record, remediate_all_records, UI gating]
+      verification: SC-5/SC-6 EditHistory assertions; confirm-gated Apply All
+    fts_config:
+      requirement: to_tsvector('simple', ...) only — 'english' tsconfig corrupts Algonquian search
+      applies_to: [search entry rebuild path (populate_search_entries — already compliant)]
+      verification: no new to_tsvector calls introduced; SC-8 FTS behavioral test
+    access_control:
+      requirement: admin-only tool
+      applies_to: [table_maintenance.py main() guard]
+      verification: existing guard covers new option (same page); SC-3
+    soft_delete:
+      requirement: exclude is_deleted=True records from scan and remediation
+      applies_to: [count_infinity_records, list_infinity_records, remediate_all_records]
+      verification: SC-2 fixture with a soft-deleted defective record
+    logging:
+      requirement: logger name convention snea.<area>
+      applies_to: [new service methods (snea.remediation or snea.linguistic), UI error handling (handle_ui_error with logger_name)]
+      verification: follow get_logger pattern in upload_service.py
+  lessons_learned_consulted:
+    - docs/lessons-learned/2026-06-13-infinity-symbol-normalization.md — ∞ is a valid letter mapping to oozzz; this spec preserves that while fixing the raw-character defect
+    - docs/lessons-learned/2026-06-13-postgres-fts-algonquian.md — simple tsconfig mandate
+    - docs/lessons-learned/2026-06-13-regex-linguistic-characters.md — no ASCII-based regex on linguistic data
