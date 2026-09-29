@@ -1,16 +1,25 @@
 # SC Summary — Issue #1388
 # Remediate 5 pre-existing test-harness failures surfaced by #36 pre-regression baseline
-sc_count: 3
+# Revised 2026-09-29: 3 compound SCs decomposed to 5 atomic SCs (1:1 SC↔item mapping) per validate FAIL finding #2; Item-1 GREEN expectation and post-repair suite arithmetic corrected per findings #1/#3.
+sc_count: 5
 scs:
   - id: "SC-1"
-    description: "test_search_mode_ui_red.py's sys.modules mock installation is contained at source (save/restore, insert-only semantics), its 2 superseded stale-RED tests (test_grouping_separators_render, test_help_text_below_radio) are deleted, its 3 surviving tests pass, and the order-pair run (search_mode then migration tests) is green with no src.services.* MagicMock surviving module execution."
+    description: "A subprocess pytest run of test_search_mode_ui_red.py followed by test_migration_backfill_search_entries.py (experiment C shape) reports zero failures from the migration file, with residual failures confined to the three named stale-RED tests in the search-mode file."
     evidence_type: "behavioral"
     plan_item: 1
   - id: "SC-2"
-    description: "test_filter_ux_red.py's sys.modules mock installation is contained at source with the same save/restore semantics; the pairwise order run (filter_ux then migration tests, diagnosis experiment A shape) is green and a post-run sys.modules probe shows no src.services.* MagicMock leak."
+    description: "pytest --collect-only on the repaired test_search_mode_ui_red.py collects neither deleted stale-RED name (test_grouping_separators_render, test_help_text_below_radio)."
     evidence_type: "behavioral"
     plan_item: 2
   - id: "SC-3"
-    description: "test_header_shows_mode_name_and_count is rewritten to seed st.session_state.search_query non-empty before run() and assert the 'Search:' header across all markdown values (ordering-independent); it passes single-file and the full suite passes in default alphabetical order."
+    description: "A subprocess pytest run of test_filter_ux_red.py followed by test_migration_backfill_search_entries.py (experiment A shape) reports zero failures (experiment A/B equivalence), with a post-run sys.modules probe showing no src.services.* MagicMock leak."
     evidence_type: "behavioral"
     plan_item: 3
+  - id: "SC-4"
+    description: "The rewritten test_header_shows_mode_name_and_count — seeded via st.session_state.search_query non-empty before run(), asserting the 'Search:' header via an any-of scan across all collected markdown values — passes a single-file pytest run."
+    evidence_type: "behavioral"
+    plan_item: 4
+  - id: "SC-5"
+    description: "A full-suite pytest run in default alphabetical order reports the post-repair suite green: 52 passed, 0 failed (54 baseline minus 2 deleted stale-RED; 49 previously passing plus 3 repaired)."
+    evidence_type: "behavioral"
+    plan_item: 5

@@ -4,7 +4,7 @@
 
 ## interfaces
 - unchanged: sys.modules pollution mechanism (external contract: pytest in-process module registry) — change alters lifecycle, not interface: sys.modules entries restored instead of leaked
-- modified (internal, test-private): test_search_mode_ui_red.py RECORDS_TEST_SCRIPT — containment wrapper added around mock installation; no public API
+- modified (internal, test-private): test_search_mode_ui_red.py RECORDS_SCRIPT — containment wrapper added around mock installation; no public API
 - new: none
 - removed: test class methods test_grouping_separators_render, test_help_text_below_radio — leaf test methods; no importers (verified), so removal is internal-only
 

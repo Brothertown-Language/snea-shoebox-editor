@@ -10,8 +10,8 @@
 | R-1 | Delete `test_grouping_separators_render` (test_search_mode_ui_red.py:87-94) — superseded by intentional 3f54ad3 product change | VERIFIED: test asserts "Focused"/"Broad" markdown; product now renders dynamic `st.caption` (records.py:220); test is RED forever |
 | R-2 | Delete `test_help_text_below_radio` (test_search_mode_ui_red.py:109-117) — superseded | VERIFIED: asserts "HW:" in `at.markdown`; `st.caption` never surfaces in markdown collection |
 | R-3 | Rewrite `test_header_shows_mode_name_and_count` (test_search_mode_ui_red.py:97-106) — seed `st.session_state.search_query` directly, then `run()`; assert `"Search:"` against ALL markdown values (no `markdown[0]` indexing) | VERIFIED: header exists at records.py:191 (`f"Search: {mode} ({total_count} records)"`); `markdown[0]` is pagination markdown (records.py:307 area); `set_value` no longer propagates since 907843d (dynamic key + button-trigger, records.py:197/224-225) |
-| R-4 | Contain `sys.modules` mock leak at source in `test_filter_ux_red.py` (RECORDS_TEST_SCRIPT :41-53) | VERIFIED: 6 module-level `sys.modules[...] = MagicMock()` mutations, never restored |
-| R-5 | Contain `sys.modules` mock leak at source in `test_search_mode_ui_red.py` (RECORDS_TEST_SCRIPT :40-53) | VERIFIED: identical module-level mutation block |
+| R-4 | Contain `sys.modules` mock leak at source in `test_filter_ux_red.py` (RECORDS_SCRIPT :41-53) | VERIFIED: 6 module-level `sys.modules[...] = MagicMock()` mutations, never restored |
+| R-5 | Contain `sys.modules` mock leak at source in `test_search_mode_ui_red.py` (RECORDS_SCRIPT :40-53) | VERIFIED: identical module-level mutation block |
 | R-6 | Containment via save/restore semantics — `unittest.mock.patch.dict(sys.modules, ...)` or setUp/tearDown restore of prior entries | Pattern mandated by spec constraint; no existing conftest.py to host it |
 
 ## implicit_requirements

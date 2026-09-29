@@ -6,7 +6,7 @@
 
 - path_1_module_exec_time_mock_installation:
     entry: pytest collection/import of test_search_mode_ui_red.py / test_filter_ux_red.py
-    flow: RECORDS_SCRIPT/RECORDS_TEST_SCRIPT executed inside AppTest.from_string…exec (search_mode) or module import-time exec (filter_ux) → sys.modules["src.services.*"] = MagicMock() ×6 — module-level, never restored
+    flow: RECORDS_SCRIPT executed inside AppTest.from_string…exec (search_mode) or module import-time exec (filter_ux) → sys.modules["src.services.*"] = MagicMock() ×6 — module-level, never restored
     touched: test/test_search_mode_ui_red.py:40-53, test/test_filter_ux_red.py:41-53
     change: add save/restore containment (patch.dict or explicit save + teardown restore; insert semantics only)
 - path_2_cross_test_contamination:

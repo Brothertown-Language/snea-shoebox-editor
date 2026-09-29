@@ -8,7 +8,7 @@
     id: 1
     sc_id: SC-1
     title: Contain sys.modules mock leak in test_search_mode_ui_red.py + delete its 2 superseded stale-RED tests
-    interface: module test/test_search_mode_ui_red.py — RECORDS_TEST_SCRIPT gains save/restore containment (unittest.mock.patch.dict or exec-time save + per-class teardown restore); test_grouping_separators_render and test_help_text_below_radio removed
+    interface: module test/test_search_mode_ui_red.py — RECORDS_SCRIPT gains save/restore containment (unittest.mock.patch.dict or exec-time save + per-class teardown restore); test_grouping_separators_render and test_help_text_below_radio removed
     inputs: spec dispositions 1+3 (carrier 2 side), baseline-failure-diagnosis per-failure (a)
     outputs: file whose leak never escapes its execution and which contains only surviving-intent tests (4 remaining: SC-1/SC-2/SC-6/SC-9 originals — SC-6 pending item 3 rewrite)
     invariants: the 3 currently-passing siblings remain green; file no longer leaks src.services.* MagicMocks after its suite run
@@ -18,7 +18,7 @@
     id: 2
     sc_id: SC-2
     title: Contain sys.modules mock leak in test_filter_ux_red.py
-    interface: module test/test_filter_ux_red.py — RECORDS_TEST_SCRIPT :41-53 gains identical save/restore containment
+    interface: module test/test_filter_ux_red.py — RECORDS_SCRIPT :41-53 gains identical save/restore containment
     inputs: spec disposition 3 (carrier 1), diagnosis per-failure (b) mechanism
     outputs: filter_ux file stops leaking src.services/upload_service MagicMocks into subsequent test modules
     invariants: its 4 existing tests remain green

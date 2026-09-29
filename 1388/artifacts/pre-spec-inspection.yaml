@@ -10,7 +10,7 @@
 | File | Role | Verified live |
 |------|------|--------------|
 | `test/test_search_mode_ui_red.py` | 2 deletions (SC-8, SC-7 tests), 1 rewrite (SC-6 test), sys.modules leak carrier 2 (`:40-53`) | yes |
-| `test/test_filter_ux_red.py` | sys.modules leak carrier 1 (`RECORDS_TEST_SCRIPT :41-53`) | yes |
+| `test/test_filter_ux_red.py` | sys.modules leak carrier 1 (`RECORDS_SCRIPT` sys.modules block `:41-53`) | yes |
 | `src/database/migrations.py` | NO MODIFICATION — `_migrate_backfill_search_entries` lazy import at `:685-686` (call-time `from src.services.upload_service import UploadService`); vulnerable by design, harmless once pollution contained | yes |
 | `src/frontend/pages/records.py` | NO MODIFICATION — subject of assertions only (`:191` header, `:206` SEARCH_MODE_CAPTIONS, `:220` st.caption) | yes |
 
