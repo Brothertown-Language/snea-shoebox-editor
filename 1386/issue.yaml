@@ -7,7 +7,14 @@ labels:
 body: '# [SPEC] Algonquian term-space semantic search (backend/db)
 
 
-  > Full spec and plan artifacts: https://github.com/Brothertown-Language/snea-shoebox-editor/tree/issues-data/.issues/1386/
+  > **Full spec and artifacts: [`https://github.com/Brothertown-Language/snea-shoebox-editor/tree/issues-data/1386/`](https://github.com/Brothertown-Language/snea-shoebox-editor/tree/issues-data/1386/)**
+  — this issue is a condensed exec summary; the authoritative spec lives in the `issues-data`
+  branch.
+
+  >
+
+  > **Local artifacts:** `.issues/1386/` — analytical artifacts, sc-summary, plan,
+  audit findings
 
 
   ## Problem
@@ -18,16 +25,20 @@ body: '# [SPEC] Algonquian term-space semantic search (backend/db)
   the existing search surface — #36''s semantic entry indexes the English-gloss space
   only, and exact-text FTS misses variants. BLUF: the vernacular term space has no
   embedding substrate, so vernacular-form search falls back to exact-text FTS and
-  misses morphological/orthographic variants across sources.
+  misses morphological/orthographic variants across sources. This is the second consumer
+  of the substrate pattern #36 measured/spike-established (memory envelope measured
+  2026-09-29; #36''s shared embedding-service substrate items remain open/pending).
 
 
   ## Scope
 
 
   - Fine-tuned `multilingual-e5-small` embedding substrate for the Algonquian vernacular
-  term space, committed as SHA256-pinned INT8 ONNX + tokenizer artifacts, with a config-driven
-  tokenizer allowlist: full IPA + project diacritics + ꝏ (U+A76F) + ∞ (U+221E) in
-  v1; syllabics deferred with a documented evidence trigger.
+  term space, committed as SHA256-pinned INT8 ONNX + tokenizer artifacts (pin-integrity
+  SC-1), with a config-driven tokenizer allowlist consumed at run time by the tokenization
+  path — no hardcoded character literals in tokenization code (behavioral SC-11):
+  full IPA + project diacritics + ꝏ (U+A76F) + ∞ (U+221E) in v1; syllabics deferred
+  with a documented evidence trigger.
 
   - One wide derived-index table (SemanticTermEntry style): record_id FK, entry_type
   {term|phrase}, term, embedding vector(384), embedding_model pin, language_code derived
@@ -77,20 +88,22 @@ body: '# [SPEC] Algonquian term-space semantic search (backend/db)
   language scan (explicit `unknown`, never guessed); an embedding-model pin so staleness
   is an explicit, testable state rather than silent serving; a standalone `search_terms`
   seam mirroring #36''s `search_semantic` pattern; inline population during ingestion
-  (existing `populate_search_entries` signature unchanged, sibling method preferred);
-  calibration with real-data anchors and independent term/phrase floors; and corpus+allowlist-change-driven
+  (existing `populate_search_entries` signature unchanged; plan decides internal extension
+  vs sibling batched method, per the #36 signature-unchanged precedent); calibration
+  with real-data anchors and independent term/phrase floors; and corpus+allowlist-change-driven
   re-training with a per-run manifest for reproducibility. Tokens are unicode-exact
   throughout (AGENTS.md Tier 1 mandate; ∞→oozzz remains a sort-key-only transform).
-  Full spec: Intent/Not-Included/SC table/R-1–R-14/Items 1–10/Dependencies/Traceability/Cost
+  Full spec: Intent/Not-Included/SC table (SC-1..SC-11)/R-1–R-14/Items 1–11/Dependencies/Traceability/Cost
   Frame/Edge Cases live in the `issues-data` branch (`.issues/1386/spec.md`).
 
 
   ## Impact
 
 
-  - **Risk: tokenizer allowlist gaps silently corrupt embeddings.** Mitigation: allowlist
-  is config-driven (not hardcoded), re-train is triggered by any allowlist change,
-  and the manifest records each run''s inputs.
+  - **Risk: tokenizer allowlist gaps or hardcoding silently corrupt embeddings.**
+  Mitigation: allowlist is config-driven and consumed at run time (SC-11), re-train
+  is triggered by any allowlist change, and the manifest records each run''s inputs;
+  committed artifacts are hash-pinned (SC-1).
 
   - **Risk: stale model pin served against un-refreshed vectors.** Mitigation: `embedding_model`
   pin per row + `stale_model`/`no_embeddings` statuses in the seam contract make staleness
@@ -107,11 +120,18 @@ body: '# [SPEC] Algonquian term-space semantic search (backend/db)
   materials with provenance in the manifest.
 
 
-  Call to action: proceed to the spec-creation validate step, then plan creation.
+  Call to action: spec revised per validate findings (tier-1 iteration 1); re-validate,
+  then plan creation.
 
 
-  🤖 OpenCode (ollama-cloud/glm-5.3-flash) created'
+  🤖 OpenCode (ollama-cloud/glm-5.3-flash) revised
+
+
+  ---
+
+
+  *Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash)*'
 created_at: '2026-09-29T13:58:42+00:00'
-updated_at: '2026-09-29T14:19:02+00:00'
+updated_at: '2026-09-29T14:43:23+00:00'
 github_url: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1386
 remote_url: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1386
