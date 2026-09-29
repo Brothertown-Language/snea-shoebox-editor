@@ -1,7 +1,5 @@
 # SPEC-FIX: Remediate ∞ (U+221E) → ꝏ (U+A74F) via Table Maintenance tool
 
-> **Full spec and artifacts: [`.issues/1382/`](https://github.com/Brothertown-Language/snea-shoebox-editor/tree/issues-data/1382)** — this issue is a condensed exec summary; the authoritative spec lives in the `issues-data` branch.
-
 ## Intent / Executive Summary
 
 The database stores ∞ (U+221E, INFINITY) in raw data columns (`records.lx`, `records.mdf_data`, `*.term`) as a mis-encoding of the original typographic oo-ligature ꝏ (U+A74F, LATIN SMALL LETTER OO). Rather than a one-shot migration, this spec adds an interactive remediation tool as a new sidebar option under Admin → Table Maintenance (`src/frontend/pages/table_maintenance.py`). The tool queries and displays the number of records detected with the defect, then offers the admin two paths: **Apply All** (no review) or **Review One-by-One** with a per-record apply option. Every applied change writes a proper `EditHistory` entry.
