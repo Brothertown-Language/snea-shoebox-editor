@@ -1,0 +1,91 @@
+# Validate Findings — Issue #1388
+# Produced by: sub-agent (writing-plans --task validate) — 2026-09-29
+# Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash)
+
+issue: 1388
+overall_status: FAIL
+entry_criteria:
+  solve_output_present: true
+  solve_status: SAT
+  plan_present: true
+  dependency_contract_present: true
+  concern_map_present: true
+
+category_1_structural:
+  status: PASS
+  checks:
+    - check: phase_table_all_required_columns
+      result: PASS
+      detail: "Phase table has Phase | Name | Concern | SCs | Depends On | Step Range | Dispatch"
+    - check: each_phase_has_procedure_with_numbered_steps
+      result: PASS
+      detail: "All 4 phases have a Steps section with numbered checkbox steps (ranges 5-14, 15-19, 20-24, 25-35); 4 pre-implementation numbered steps included"
+    - check: exit_criteria_section_with_sc_phase_mapping
+      result: PASS
+      detail: "Exit Criteria C1-C7 map SC-1..SC-5 to phases 1-4 plus C6 (product freeze) and C7 (pipeline gates)"
+
+category_2_skill_task_validity:
+  status: PASS
+  checks:
+    - check: all_skill_task_references_match_reference_card
+      result: PASS
+      detail: "All dispatch strings match skills/writing-plans/reference/implementation-workflow.md: tdd phase-0/red/green/phase-4; verification-before-completion verify (5x); (orchestrator) commit-inline (4 direct steps); audit verification-audit (verbatim incl. backtick task-card path); (orchestrator) z3-check; finishing-a-development-branch checklist; verification-before-completion pre-pr-gate; tdd phase-4 regression-check; git-workflow-pr review-prep and create (verbatim); completion-core exec-summary"
+    - check: pre_cleanup_directives_present
+      result: PASS
+      detail: "Every task-card step carries its artifact pre-cleanup directive matching the reference card's Rule 3 table"
+
+category_3_sc_coverage:
+  status: PASS
+  checks:
+    - check: every_sc_covered_exit_criteria
+      result: PASS
+      detail: "SC-1 (P1), SC-2 (P1), SC-3 (P2), SC-4 (P3), SC-5 (P4); exit criteria C1-C5 mirror verbatim"
+    - check: no_triplet_split_across_phases
+      result: PASS
+      detail: "SC-1: RED 5 / GREEN 6 / COMMIT 9 in Phase 1; SC-2: RED 10 / GREEN 11 / COMMIT 14 in Phase 1; SC-3: RED 15 / GREEN 16 / COMMIT 19 in Phase 2; SC-4: RED 20 / GREEN 21 / COMMIT 24 in Phase 3; SC-5: RED 25 / GREEN 26 / verify 27 in Phase 4 (commit intentionally absent — spec Item 5 'commit: none', verification-only)"
+
+category_4_concern_separation:
+  status: FAIL
+  checks:
+    - check: each_phase_exactly_one_concern
+      result: FAIL
+      detail: "Phase 1's Concern column bundles two distinct concerns from the concern-map artifact: 'Contain sys.modules leak + delete 2 superseded stale-RED tests' (Mock-pollution containment AND Superseded-test removal)"
+    - check: no_two_phases_same_concern
+      result: FLAG
+      detail: "Phases 1 and 2 both address Mock-pollution containment — but on disjoint carrier files with disjoint SCs (SC-1 vs SC-3) per the spec's 1:1 SC-item mapping; per-file split is a legitimate specialization, not a duplicate-concern violation"
+  root_cause: "concern-map artifact is stale — it documents the pre-revision 3-item/3-SC layout (items 1-3, 'SC-1→item 1, SC-2→item 2, SC-3→item 3') while the spec was revised (2026-09-29 change control) to 5 atomic SCs and the plan to 4 phases; Mock-pollution owner items listed as 'items 1, 2' reflects stale numbering"
+  remediation:
+    - "Regenerate concern-map.yaml against the revised 5-SC spec (4 concerns: searchmode containment / stale-RED deletion / filterux containment / header rewrite, plus suite-gate verification); update single_concern_verified and owner-item columns"
+    - "Then either regenerate the plan's Phase 1 Concern column to name the primary concern (containment) with deletions as a serialized second item under the same-file serialization constraint, or split deletions into a separate phase"
+    - "Note: item-level commits are already 1:1 per SC (5 separate commits) — the concern separation defect is at phase granularity only; plan re-validation required after concern-map regeneration (writing-plans pipeline re-entry)"
+
+category_5_dag_validation:
+  status: PASS
+  checks:
+    - check: no_cycles
+      result: PASS
+      detail: "Edges: P1→P3 (same-file serialization), P1→P4, P2→P4, P3→P4; no back-edges, Z3 solve output SAT confirms"
+    - check: all_phases_reachable_from_start
+      result: PASS
+      detail: "P1 and P2 are start nodes (Depends On '—'); P3 via P1; P4 via P1/P2/P3"
+    - check: no_orphan_phases
+      result: PASS
+      detail: "Every phase has incoming (via dependency contract items) or outgoing edges; all 4 phases appear in plan-output.yaml state path"
+
+category_6_holistic_quality:
+  status: PASS
+  checks:
+    - check: no_tbd_todo_placeholders
+      result: PASS
+      detail: "No TBD/TODO/FIXME in plan body"
+    - check: all_steps_checkbox_format
+      result: PASS
+      detail: "All 39 items (4 pre-implementation, 31 phase steps, 11 completion assertions, 7 exit criteria) use '- [ ]' checkbox format"
+    - check: dispatch_mode_consistency
+      result: PASS
+      detail: "Direct steps are exactly the two orchestrator-owned step types from the reference card (commit-inline: steps 9/14/19/24; z3-check: step 29); all other steps marked (task-card) with canonical dispatch strings — no inline implementation steps in dispatched work, no dispatched steps for orchestrator-owned work"
+
+summary:
+  pass: 5
+  fail: 1
+  finding_summary: "Categories 1, 2, 3, 5, 6 PASS. Category 4 (concern separation) FAIL: Phase 1 bundles two concerns (containment + deletions) and the concern-map artifact is stale relative to the revised 5-SC spec — remediation is concern-map regeneration plus plan Phase-1 concern-column correction (or phase split), followed by plan re-validation."

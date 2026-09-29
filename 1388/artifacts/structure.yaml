@@ -1,14 +1,14 @@
 # Structure — writing-plans --task research (issue #1388)
 # Provenance: AI-generated
 # Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash)
+# Rev 2 (2026-09-29): category-4 FAIL remediation — Phase 1 split into concern-pure Phase 1 (containment, SC-1) and Phase 2 (deletions, SC-2); downstream phases renumbered; 5 phases 1:1 with the spec's 5 SCs.
 
 issue: 1388
 phases:
   - id: phase-1
-    title: Contain sys.modules mock leak + delete 2 superseded stale-RED tests in test_search_mode_ui_red.py
+    title: Contain sys.modules mock leak at source in test_search_mode_ui_red.py
     scs:
       - SC-1
-      - SC-2
     items:
       - item: 1
         sc: SC-1
@@ -32,6 +32,13 @@ phases:
             dispatch: "orchestrator runs git add test/test_search_mode_ui_red.py && git commit directly"
         sc_refs: ["SC-1"]
         triplet_co_located: true
+    depends_on: []
+
+  - id: phase-2
+    title: Delete the 2 superseded stale-RED tests from test_search_mode_ui_red.py
+    scs:
+      - SC-2
+    items:
       - item: 2
         sc: SC-2
         title: Delete the 2 superseded stale-RED tests from test_search_mode_ui_red.py
@@ -50,10 +57,12 @@ phases:
             task: "commit-inline"
         sc_refs: ["SC-2"]
         triplet_co_located: true
-    serialization_note: Items 1 → 2 same-file serialization (spec Item-1 enables Item 2)
-    depends_on: []
+    serialization_note: Same-file serialization — Phase 1 containment enables Phase 2 deletions on the contained module (spec: Item 1 enables Item 2)
+    depends_on:
+      - phase-1
+    dependency_reason: Same-file serialization — deletions land on test_search_mode_ui_red.py after Item 1's containment (spec: Item 1 enables Item 2)
 
-  - id: phase-2
+  - id: phase-3
     title: Contain sys.modules mock leak at source in test_filter_ux_red.py
     scs:
       - SC-3
@@ -78,7 +87,7 @@ phases:
         triplet_co_located: true
     depends_on: []
 
-  - id: phase-3
+  - id: phase-4
     title: Rewrite test_header_shows_mode_name_and_count — direct session_state seed + any-of markdown scan
     scs:
       - SC-4
@@ -102,10 +111,10 @@ phases:
         sc_refs: ["SC-4"]
         triplet_co_located: true
     depends_on:
-      - phase-1
-    dependency_reason: Same-file serialization — Item 4 lands on test_search_mode_ui_red.py after Item 2's deletions (spec: Item 2 enables Item 4)
+      - phase-2
+    dependency_reason: Same-file serialization — Item 4 lands on test_search_mode_ui_red.py after Phase 2's deletions (spec: Item 2 enables Item 4); Phase 1 containment applies transitively
 
-  - id: phase-4
+  - id: phase-5
     title: Full-suite default-order suite-health gate (verification-only)
     scs:
       - SC-5
@@ -132,20 +141,27 @@ phases:
       - phase-1
       - phase-2
       - phase-3
+      - phase-4
     dependency_reason: Full-suite green requires all repaired/deleted/healed items committed (spec: Item 5 depends on Items 1–4)
 
 dependency_dag_edges:
   - from: phase-1
-    to: phase-3
-    reason: Item 2 (SC-2, phase-1) enables Item 4 (SC-4, phase-3); same file test_search_mode_ui_red.py
-  - from: phase-1
-    to: phase-4
-    reason: SC-1 containment required before full-suite gate
+    to: phase-2
+    reason: Item 1 (SC-1, containment) enables Item 2 (SC-2, deletions); same file test_search_mode_ui_red.py
   - from: phase-2
     to: phase-4
-    reason: SC-3 containment required before full-suite gate
+    reason: Item 2 (SC-2, deletions) enables Item 4 (SC-4, header rewrite); same file test_search_mode_ui_red.py
+  - from: phase-1
+    to: phase-5
+    reason: SC-1 containment required before full-suite gate
+  - from: phase-2
+    to: phase-5
+    reason: SC-2 deletions required before full-suite gate
   - from: phase-3
-    to: phase-4
+    to: phase-5
+    reason: SC-3 containment required before full-suite gate
+  - from: phase-4
+    to: phase-5
     reason: SC-4 header rewrite required before full-suite gate
 
 triplet_colocation_check: PASS

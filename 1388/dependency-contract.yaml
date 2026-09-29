@@ -1,6 +1,9 @@
 # Dependency Contract — Issue #1388
 # Produced by: 🤖 OpenCode (ollama-cloud/glm-5.3-flash) — 2026-09-29
 # Derived from interface-compatibility.yaml (dependency_contract section, extracted as-is)
+# Revision 2 (2026-09-29): category-4 FAIL remediation — plan restructured to 5 phases 1:1 with 5 SCs
+# (Phase 1 containment SC-1 / Phase 2 deletions SC-2 / Phase 3 filter-ux SC-3 / Phase 4 header SC-4 / Phase 5 gate SC-5).
+# SC-to-state mapping unchanged — variables, preconditions, postconditions, invariants are valid for the revised DAG.
 # Z3 model layer added for tools/solve + tools/plan consumption
 
 variables:
@@ -39,6 +42,13 @@ invariants:
   - "z3.Or(z3.Not(sc3_done), filterux_leak_contained == True)"
   - "z3.Or(z3.Not(sc4_done), header_rewritten == True)"
   - "z3.If(sc5_done, z3.And(searchmode_leak_contained, filterux_leak_contained, stale_red_deleted, header_rewritten, no_src_changes), z3.BoolVal(True))"
+
+phase_mapping:
+  phase-1: {sc: SC-1, state: searchmode_leak_contained,   depends_on: []}
+  phase-2: {sc: SC-2, state: stale_red_deleted,           depends_on: [phase-1]}
+  phase-3: {sc: SC-3, state: filterux_leak_contained,     depends_on: []}
+  phase-4: {sc: SC-4, state: header_rewritten,            depends_on: [phase-2]}
+  phase-5: {sc: SC-5, state: suite_green,                 depends_on: [phase-1, phase-2, phase-3, phase-4]}
 
 dependency_contract:
   - source: test_search_mode_ui_red.py::test_header_shows_mode_name_and_count (rewritten)

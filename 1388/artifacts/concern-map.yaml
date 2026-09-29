@@ -1,20 +1,27 @@
 # Concern Map — Issue #1388
+# Rev 2 (2026-09-29): regenerated against the revised 5-SC spec and the revised 5-phase plan.
+# Remediation of validate-findings.yaml category_4_concern_separation FAIL:
+#   - phase-granularity defect fixed by plan restructure (Phase 1 split into concern-pure Phase 1/Phase 2);
+#   - stale 3-item/3-SC single_concern_verified corrected to the 5-item/5-SC layout.
 
 **Produced by:** 🤖 OpenCode (ollama-cloud/glm-5.3-flash) — 2026-09-29
 
 ## concerns
 
-| Concern | Boundary | Files | Owner items |
-|---------|----------|-------|-------------|
-| Mock-pollution containment | test harness execution environment only (sys.modules hygiene) | test_filter_ux_red.py, test_search_mode_ui_red.py | items 1, 2 |
-| Superseded-test removal | test assertions whose product feature was intentionally removed by 3f54ad3 | test_search_mode_ui_red.py (delete 2 methods) | item 1 |
-| Stale-stimulation-path rewrite | test assertion method using obsolete AppTest stimulation | test_search_mode_ui_red.py (rewrite 1 method) | item 3 |
+| Concern | Boundary | Files | Owner items | Phases |
+|---------|----------|-------|-------------|--------|
+| Mock-pollution containment (search-mode carrier) | test harness execution environment only (sys.modules hygiene) | test_search_mode_ui_red.py | item 1 | Phase 1 |
+| Superseded-test removal | test assertions whose product feature was intentionally removed by 3f54ad3 | test_search_mode_ui_red.py (delete 2 methods) | item 2 | Phase 2 |
+| Mock-pollution containment (filter-UX carrier) | test harness execution environment only (sys.modules hygiene) | test_filter_ux_red.py | item 3 | Phase 3 |
+| Stale-stimulation-path rewrite | test assertion method using obsolete AppTest stimulation | test_search_mode_ui_red.py (rewrite 1 method) | item 4 | Phase 4 |
+| Suite-health gate (verification-only) | full-suite default-order verification and post-implementation pipeline | (no file writes) | item 5 | Phase 5 |
 
 ## separation_rules
 
 - Product behavior (src/**) — OUT of all concerns (C-1 freeze); assertions may reference product contracts but never modify them.
 - Victim file (test_migration_backfill_search_entries.py) — no concern touches it; its healing is a verified side-effect.
 - test/ui/** sys.modules users — explicitly out of scope (N-2); concern boundary = the 2 carrier files from the spec dispositions.
+- Each phase owns exactly one concern (5 phases ↔ 5 SCs ↔ 5 items, 1:1); cross-file duplicates of the containment concern are phase-specialized per carrier file (disjoint files, disjoint SCs).
 
 ## single_concern_verified
-All 3 items target one file category (test harness) + one verification domain (order-dependent pytest behavioral). Per-SC mapping is 1:1 (SC-1→item 1, SC-2→item 2, SC-3→item 3).
+All 5 items target one file category (test harness) + one verification domain (order-dependent pytest behavioral). Per-SC mapping is 1:1: SC-1→item 1 (Phase 1), SC-2→item 2 (Phase 2), SC-3→item 3 (Phase 3), SC-4→item 4 (Phase 4), SC-5→item 5 (Phase 5).

@@ -1,5 +1,7 @@
 # Planning Problem — Issue #1388
-# Phase DAG: item1 (SC-1), item2 (SC-2) → item4 (SC-4); item3 (SC-3) independent; item5 (SC-5) terminal
+# Rev 2 (2026-09-29): revised 5-phase DAG 1:1 with 5 SCs.
+# Phase chain: item1 (SC-1, containment) → item2 (SC-2, deletions) → item4 (SC-4, header rewrite);
+# item3 (SC-3, filter-ux) independent; item5 (SC-5) terminal.
 domain: test-harness-repair-1388
 types:
   - name: item

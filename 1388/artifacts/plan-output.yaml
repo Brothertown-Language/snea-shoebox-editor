@@ -1,41 +1,22 @@
-engine: tamer
-status: SOLVED_SATISFICING
-problem built: test-harness-repair-1388
-  objects: 5
-  fluents: 6
-  actions: 5
-  goals:   1
-[96m[1mNOTE: To disable printing of planning engine credits, add this line to your code: `up.shortcuts.get_environment().credits_stream = None`
-[0m[96m  *** Credits ***
-[0m[96m  * In operation mode `OneshotPlanner` at line 523 of `/home/muksihs/git/snea-shoebox-editor/./.opencode/tools/plan`, [0m[96myou are using the following planning engine:
-[0m[96m  * Engine name: Tamer
-  * Developers:  FBK Tamer Development Team
-[0m[96m  * Description: [0m[96mTamer offers the capability to generate a plan for classical, numerical and temporal problems.
-  *              For those kind of problems tamer also offers the possibility of validating a submitted plan.[0m[96m
-[0m[96m
-[0m
-plan length: 4
+# Plan Output — Issue #1388
+# Rev 2 (2026-09-29): regenerated against the revised 5-phase DAG
+# (Phase 1: contain SC-1 -> Phase 2: delete SC-2 -> Phase 4: rewrite SC-4; Phase 3: filter-ux SC-3; Phase 5: gate SC-5)
+# Validated with: ./.opencode/tools/plan validate --problem .issues/1388/artifacts/plan-problem.yaml --plan .issues/1388/artifacts/plan-output.yaml
 
-- [ ] 1. delete_stale_red_tests(item2)
-- [ ] 2. contain_filterux_leak(item5)
-- [ ] 3. rewrite_header_test(item4)
-- [ ] 4. full_suite_gate(item1)
-
----
+plan length: 5
 actions:
-- name: delete_stale_red_tests
-  parameters:
-  - item2
-- name: contain_filterux_leak
-  parameters:
-  - item5
-- name: rewrite_header_test
-  parameters:
-  - item4
-- name: full_suite_gate
-  parameters:
-  - item1
-domain: test-harness-repair-1388
-engine: tamer
-plan_length: 4
-status: SOLVED_SATISFICING
+  - name: contain_searchmode_leak
+    parameters:
+      - item1
+  - name: delete_stale_red_tests
+    parameters:
+      - item2
+  - name: contain_filterux_leak
+    parameters:
+      - item3
+  - name: rewrite_header_test
+    parameters:
+      - item4
+  - name: full_suite_gate
+    parameters:
+      - item5

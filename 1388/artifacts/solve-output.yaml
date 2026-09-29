@@ -1,28 +1,33 @@
-# Solve Output — writing-plans --task research (issue #1388)
+# Solve Output — writing-plans --task revise (issue #1388)
 # Provenance: AI-generated
 # Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash)
+# Rev 2 (2026-09-29): re-verified against the revised dependency contract and revised 5-phase DAG
 
 issue: 1388
 solve_status: SAT
 solve_check_status: SAT
 plan_status: SOLVED_SATISFICING
 details:
-  model_query: "sc5_done == z3.And(sc1_done, sc2_done, sc3_done, sc4_done)"
-  model_result: SAT (initial state: all False satisfying preconditions/invariants; target state reachable)
+  model_query: "z3.And(sc1_done, sc2_done, sc3_done, sc4_done, no_src_changes)"
+  model_result: SAT (all five terminal conditions simultaneously satisfiable)
   check:
     preconditions_only: SAT
     with_postconditions_invariants: SAT
     state_path: .issues/1388/artifacts/state.yaml
     contract_path: .issues/1388/dependency-contract.yaml
+  prove:
+    theorem: "z3.Implies(z3.And(searchmode_leak_contained, stale_red_deleted, filterux_leak_contained, header_rewritten, no_src_changes), z3.Or(sc5_done, z3.Not(z3.BoolVal(True))))"
+    note: "INVALID as expected (sc5_done is a free variable) — the contract encodes the gate as invariant z3.If(sc5_done, And(...), True); SAT model query is the authoritative reachability evidence"
   planner:
     engine: tamer
     problem: .issues/1388/artifacts/plan-problem.yaml
     output: .issues/1388/artifacts/plan-output.yaml
-    plan_length: 4
-    status: SOLVED_SATISFICING
+    plan_length: 5
+    validate: valid (.opencode/tools/plan validate --problem plan-problem.yaml --plan plan-output.yaml)
     plan:
+      - "contain_searchmode_leak(item1)"
       - "delete_stale_red_tests(item2)"
-      - "contain_filterux_leak(item5)"
+      - "contain_filterux_leak(item3)"
       - "rewrite_header_test(item4)"
-      - "full_suite_gate(item1)"
-verdict: ALL_SAT — dependency DAG is solvable; phase decomposition validated
+      - "full_suite_gate(item5)"
+verdict: ALL_SAT — revised dependency DAG (phases 1→2→4 chain, phase-3 independent, phase-5 terminal) is solvable; phase decomposition validated
