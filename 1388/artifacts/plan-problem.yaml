@@ -1,0 +1,83 @@
+# Planning Problem — Issue #1388
+# Phase DAG: item1 (SC-1), item2 (SC-2) → item4 (SC-4); item3 (SC-3) independent; item5 (SC-5) terminal
+domain: test-harness-repair-1388
+types:
+  - name: item
+objects:
+  - name: item1
+    type: item
+  - name: item2
+    type: item
+  - name: item3
+    type: item
+  - name: item4
+    type: item
+  - name: item5
+    type: item
+fluents:
+  - name: item_done
+    params:
+      - name: i
+        type: item
+  - name: searchmode_contained
+  - name: filterux_contained
+  - name: stale_red_deleted
+  - name: header_rewritten
+  - name: suite_green
+actions:
+  - name: contain_searchmode_leak
+    params:
+      - name: i
+        type: item
+    preconditions:
+      - not item_done(i)
+    effects:
+      - item_done(i)
+      - searchmode_contained
+  - name: delete_stale_red_tests
+    params:
+      - name: i
+        type: item
+    preconditions:
+      - searchmode_contained
+      - not item_done(i)
+    effects:
+      - item_done(i)
+      - stale_red_deleted
+  - name: contain_filterux_leak
+    params:
+      - name: i
+        type: item
+    preconditions:
+      - not item_done(i)
+    effects:
+      - item_done(i)
+      - filterux_contained
+  - name: rewrite_header_test
+    params:
+      - name: i
+        type: item
+    preconditions:
+      - stale_red_deleted
+      - searchmode_contained
+      - not item_done(i)
+    effects:
+      - item_done(i)
+      - header_rewritten
+  - name: full_suite_gate
+    params:
+      - name: i
+        type: item
+    preconditions:
+      - searchmode_contained
+      - filterux_contained
+      - stale_red_deleted
+      - header_rewritten
+      - not item_done(i)
+    effects:
+      - item_done(i)
+      - suite_green
+init:
+  - not searchmode_contained
+goals:
+  - suite_green

@@ -1,0 +1,55 @@
+# Dependency Contract — Issue #1388
+# Produced by: 🤖 OpenCode (ollama-cloud/glm-5.3-flash) — 2026-09-29
+# Derived from interface-compatibility.yaml (dependency_contract section, extracted as-is)
+# Z3 model layer added for tools/solve + tools/plan consumption
+
+variables:
+  sc1_done: {type: bool}
+  sc2_done: {type: bool}
+  sc3_done: {type: bool}
+  sc4_done: {type: bool}
+  sc5_done: {type: bool}
+  item1_committed: {type: bool}
+  item2_committed: {type: bool}
+  item3_committed: {type: bool}
+  item4_committed: {type: bool}
+  searchmode_leak_contained: {type: bool}
+  filterux_leak_contained: {type: bool}
+  stale_red_deleted: {type: bool}
+  header_rewritten: {type: bool}
+  no_src_changes: {type: bool}
+
+preconditions:
+  - "z3.Or(z3.Not(item1_committed), item1_committed == True)"
+  - "z3.Or(z3.Not(item2_committed), item2_committed == True)"
+  - "z3.Or(z3.Not(item3_committed), item3_committed == True)"
+  - "z3.Or(z3.Not(item4_committed), item4_committed == True)"
+
+postconditions:
+  - "z3.Or(z3.Not(sc1_done), searchmode_leak_contained == True)"
+  - "sc2_done == z3.If(stale_red_deleted, sc2_done, False)"
+  - "sc3_done == z3.If(filterux_leak_contained, sc3_done, False)"
+  - "sc4_done == z3.If(header_rewritten, sc4_done, False)"
+  - "sc5_done == z3.And(sc1_done, sc2_done, sc3_done, sc4_done)"
+  - "no_src_changes == True"
+
+invariants:
+  - "z3.Or(z3.Not(sc1_done), searchmode_leak_contained == True)"
+  - "z3.Or(z3.Not(sc2_done), stale_red_deleted == True)"
+  - "z3.Or(z3.Not(sc3_done), filterux_leak_contained == True)"
+  - "z3.Or(z3.Not(sc4_done), header_rewritten == True)"
+  - "z3.If(sc5_done, z3.And(searchmode_leak_contained, filterux_leak_contained, stale_red_deleted, header_rewritten, no_src_changes), z3.BoolVal(True))"
+
+dependency_contract:
+  - source: test_search_mode_ui_red.py::test_header_shows_mode_name_and_count (rewritten)
+    target: src/frontend/pages/records.py header markdown (records.py:191) + AppTest markdown collection API
+    type: artifact-schema (assertion contract)
+    constraint: assertion must consume "Search:" via any-of-all-markdown-values (ordering-independent); stimulation via direct session_state seed (not text_input.set_value — broken by 907843d propagation change)
+  - source: migrations.py:686 lazy import
+    target: sys.modules (process-global registry)
+    type: artifact-schema (import resolution)
+    constraint: carriers must restore prior sys.modules entries (insert-only semantics); leaked MagicMock must never survive carrier module execution
+  - source: spec dispositions (delete×2)
+    target: pytest test discovery
+    type: artifact-schema (collection surface)
+    constraint: removed methods must have zero importers/references (verified via grep)

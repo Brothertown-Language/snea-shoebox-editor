@@ -1,0 +1,28 @@
+# Solve Output — writing-plans --task research (issue #1388)
+# Provenance: AI-generated
+# Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash)
+
+issue: 1388
+solve_status: SAT
+solve_check_status: SAT
+plan_status: SOLVED_SATISFICING
+details:
+  model_query: "sc5_done == z3.And(sc1_done, sc2_done, sc3_done, sc4_done)"
+  model_result: SAT (initial state: all False satisfying preconditions/invariants; target state reachable)
+  check:
+    preconditions_only: SAT
+    with_postconditions_invariants: SAT
+    state_path: .issues/1388/artifacts/state.yaml
+    contract_path: .issues/1388/dependency-contract.yaml
+  planner:
+    engine: tamer
+    problem: .issues/1388/artifacts/plan-problem.yaml
+    output: .issues/1388/artifacts/plan-output.yaml
+    plan_length: 4
+    status: SOLVED_SATISFICING
+    plan:
+      - "delete_stale_red_tests(item2)"
+      - "contain_filterux_leak(item5)"
+      - "rewrite_header_test(item4)"
+      - "full_suite_gate(item1)"
+verdict: ALL_SAT — dependency DAG is solvable; phase decomposition validated

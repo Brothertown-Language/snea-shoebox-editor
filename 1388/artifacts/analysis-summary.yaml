@@ -1,0 +1,50 @@
+# Analysis summary — writing-plans --task analyze (issue #1388)
+# Provenance: AI-generated
+# Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash)
+spec_path: .issues/1388/spec.md
+approval_status:
+  approved: true
+  labels:
+    - approved-for-for_pr
+    - spec-draft
+  halt_scope: pr_created
+success_criteria:
+  count: 5
+  ids:
+    - SC-1
+    - SC-2
+    - SC-3
+    - SC-4
+    - SC-5
+  evidence_types:
+    SC-1: behavioral
+    SC-2: behavioral
+    SC-3: behavioral
+    SC-4: behavioral
+    SC-5: behavioral
+artifacts:
+  directory: .issues/1388/artifacts/
+  required:
+    blast-radius.yaml: present
+    concern-map.yaml: present
+    code-path-inventory.yaml: present
+    cross-cutting-matrix.yaml: present
+    interface-compatibility.yaml: present
+    state-analysis.yaml: present
+    testability-assessment.yaml: present
+  additional:
+    pipeline-readiness.yaml: present
+    pre-spec-inspection.yaml: present
+    research-card-consultation.yaml: present
+scope_boundary_findings:
+  - path: test/test_search_mode_ui_red.py
+    exists: true
+  - path: test/test_filter_ux_red.py
+    exists: true
+  - path: test/test_migration_backfill_search_entries.py
+    exists: true
+notes: >-
+  All 7 required analytical artifacts present. Scope findings verified live: all
+  spec-referenced test files exist in the codebase. Out-of-scope guards documented
+  in spec (src/** freeze; test/ui/test_records_*.py boundary flag only). 5
+  behavioral SCs defined with 1:1 SC-to-item mapping. No blockers.
