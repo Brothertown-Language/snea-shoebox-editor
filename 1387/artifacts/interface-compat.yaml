@@ -1,0 +1,31 @@
+# Artifact 5/7: Interface compatibility — issue 1387
+interface_compatibility:
+  existing_consumed:
+    - interface: "PreferenceService.get_preference(user_email, view_name, key, default) / set_preference(...)"
+      location: "preference_service.py:17,37 (srclight verified-fresh)"
+      change: none
+      compat_class: unchanged
+      consumers: ["records.py page_size, structural_highlighting, selection_contents", "this spec's threshold"]
+    - interface: "records.py search panel state keys (search_mode_radio, search_query, current_page, page_size)"
+      change: "mode list + captions extended with 2 term-space entries; keys preserved"
+      compat_class: modified
+      backward_compatible: true
+  new_interfaces:
+    - name: "records.py term-mode dispatch branch"
+      shape: "mode in {<term-mode labels>} → calls search_terms(query, threshold=<pref>, source_id=None) → TermSearchResult"
+      consumer: "UI rendering + pagination branches"
+    - name: "threshold session/preference key"
+      shape: "records/<key> — provisional default '0.80' pending #1386 SC-6 calibration"
+      consumer: "seam call + widget coupling"
+  removed_interfaces: []
+  breaking_changes: []
+  breaking_assessment: "none — SearchMode Literal NOT widened; search_records untouched; pure additive records.py branches"
+  dependency_contract:
+    - source: "spec_1387_ui (records.py term dispatch/render)"
+      target: "search_terms / TermSearchResult (#1386 R-7)"
+      type: "artifact schema"
+      constraint: "UI binds v1 field list exactly: results: list[(record_id, score, entry_type, language_code, source_id, term)], status in {ok, empty_query, no_embeddings, stale_model}, message; status/field extension = versioned contract migration"
+    - source: "spec_1387_ui"
+      target: "#1385 gloss-space UI modes"
+      type: "coexistence"
+      constraint: "term modes must not alter existing modes' results, captions, or score display"

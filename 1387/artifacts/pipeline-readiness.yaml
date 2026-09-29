@@ -1,0 +1,19 @@
+# Pipeline readiness gate — issue 1387
+pipeline_readiness:
+  evaluated_at: "2026-09-29"
+  atomicity: pass
+  atomicity_note: "7 SC candidates each map to exactly one item (ITEM-1..ITEM-7); each item is a single verifiable claim"
+  dependency_ordering: pass
+  dependency_note: "ITEM-1 → ITEM-2 → ITEM-3 → ITEM-4 → ITEM-5 → ITEM-6 → ITEM-7; acyclic"
+  single_concern: pass
+  single_concern_note: "each SC targets one file (records.py) and one verification domain (radio / persistence+validation / dispatch / regression / pagination / empty-state / unicode-render)"
+  phase_dependency: pass
+  phase_dependency_note: "single-phase spec (records-page UI); no cross-phase cycles"
+  three_tier_structure: pass
+  three_tier_note: "two-phase shape acceptable: UI items are one phase; regression/unicode guards ride as dedicated SCs — consistent with #1385's 7-item flat phase-1 precedent; plan may introduce pre/post-file tiers"
+  findings: []
+  open_items_for_spec_body:
+    - "REQ-U1: mode labels unresolved (structural decision candidate — mirror #1385 naming)"
+    - "REQ-U2: provisional threshold default vs calibration-pending value (structural — name 0.80 provisional)"
+    - "REQ-U3: shared vs per-mode threshold key; entry_type filtering approach given seam v1 lacks entry_type param (structural — recommend client-side filtering or two seam calls)"
+    - "REQ-I1: explicit non-widening of SearchMode must appear as a spec requirement (regression-protection edge)"

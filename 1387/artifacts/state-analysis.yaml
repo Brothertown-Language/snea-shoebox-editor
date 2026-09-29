@@ -1,0 +1,21 @@
+# Artifact 6/7: State analysis — issue 1387
+state_analysis:
+  machines:
+    - machine: "search_mode session state"
+      states: ["Headword", "Gloss", "Lexeme", "FTS", "<term-mode-1>", "<term-mode-2>"]
+      transitions:
+        - "radio change → on_mode_change() → search_mode updated + current_page=1"
+      invariants: "stale session_state value not in radio list must not crash index lookup (guard or list membership)"
+    - machine: "term-mode request lifecycle"
+      states: ["idle", "query_entered", "seam_called", "rendered"]
+      transitions:
+        - "query entered (term mode) → seam call once → TermSearchResult → status-render or rows-render"
+        - "page nav → slice rendered ranked list (no seam re-call)"
+      failure_modes: "seam exception → handle_ui_error idiom (never crash); each degraded status → designated empty state"
+    - machine: "threshold preference row"
+      states: ["absent (default 0.80 provisional)", "stored (str value)"]
+      transitions: "widget edit (valid) → set_preference; invalid edit → snap-back, no write"
+      invariants: "value parses to float in [0,1]; parse failure never persists"
+  ui_state_notes:
+    - "current_page clamping (:174-176) reused for term-mode results"
+    - "term-mode result state lives as a session-scoped ranked list (rank-once)"

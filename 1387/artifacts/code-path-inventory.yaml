@@ -1,0 +1,22 @@
+# Artifact 3/7: Code path inventory — issue 1387
+code_path_inventory:
+  phase_1:
+    - path: "records() → mode radio + SEARCH_MODE_CAPTIONS (records.py :206-221)"
+      touch: "extend list/dict; index lookup keyed off st.session_state.search_mode"
+      note: "index= uses .index(st.session_state.search_mode) — term modes must be present in the same list or index raises ValueError on stale session state"
+    - path: "on_mode_change() (:108-110)"
+      touch: "unchanged — stores radio value into search_mode; term-mode values flow through it"
+    - path: "result calculation (:130-179) — search_records call at :157"
+      touch: "term modes must branch BEFORE this call: search_records would raise ValueError (linguistic_service.py :451-453) on unknown mode"
+      risk: "this is the critical dispatch fork"
+    - path: "result render (:540-543) — st.info empty / render_mdf_block loop"
+      touch: "term-mode branch renders rows with term metadata + score badges; exact modes unchanged"
+    - path: "pagination (:288-317) + page_size pref (:319-327)"
+      touch: "term branch slices ranked list with same current_page/page_size keys"
+    - path: "PreferenceService get/set (:48-53, :390-393 patterns)"
+      touch: "threshold persistence reuses identical call shape"
+  not_touched:
+    - "linguistic_service.py search paths"
+    - "upload_service.py"
+    - "table_maintenance.py"
+    - "export/get_all_records_for_export path (:453-534) — term modes may need export guard (flag for plan: semantic export of matched term records undefined; #1385 precedent did not solve this either)"

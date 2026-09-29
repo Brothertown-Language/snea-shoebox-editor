@@ -1,0 +1,15 @@
+# Artifact 7/7: Testability assessment — issue 1387
+testability:
+  strategy_per_phase:
+    - phase: "records-page UI (all items)"
+      strategy: mixed
+      unit_pytest:
+        - "dispatch branch: term-mode labels route to mockable seam binding, never search_records"
+        - "threshold persistence round-trip + snap-back (mock PreferenceService or fixture DB)"
+        - "status→empty-state mapping table completeness (4 statuses + zero-below-threshold)"
+        - "Unicode round-trip of term text through render structure"
+      behavioral:
+        - "Playwright/AppTest harness per test_search_mode_ui_red.py precedent (streamlit.testing.v1 + sys.modules mocks): radio options/captions, order stability across pages, per-status copy including Term-space Backfill remedy, existing modes unchanged"
+      risks:
+        - "#1386 search_terms does not exist yet — verification needs a mocked seam fixture shaped to TermSearchResult v1 contract; green-path integration against the real service arrives with #1386 landing"
+        - "#1385's harness may concurrently evolve — coordinate to avoid compounding red state (precedent note in #1385 dependencies)"

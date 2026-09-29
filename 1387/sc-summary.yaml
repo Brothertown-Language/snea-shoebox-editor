@@ -1,0 +1,32 @@
+# SC summary — issue 1387 (term-space semantic search end-user UI)
+# One plan_item per SC; sequential from 1; mirrors decompose-output.yaml ITEM-1..ITEM-7.
+sc_count: 7
+scs:
+  - id: "SC-1"
+    description: "Records-page mode radio renders the two new term-space entries (Semantic Term, Semantic Phrase) with captions while the existing four entries and captions remain unchanged"
+    evidence_type: "behavioral"
+    plan_item: 1
+  - id: "SC-2"
+    description: "Term-space threshold control (coupled slider+numeric) persists via PreferenceService under records/term_threshold, shared across both term modes with provisional default 0.80; invalid edits snap back without persisting"
+    evidence_type: "behavioral"
+    plan_item: 2
+  - id: "SC-3"
+    description: "Term-space mode selection invokes the #1386 search_terms seam (never search_records, never widening SearchMode) with the per-user threshold and renders rows with per-row term metadata + descending scores; selected entry type targeted by client-side filtering, one seam invocation per query"
+    evidence_type: "behavioral"
+    plan_item: 3
+  - id: "SC-4"
+    description: "Exact-match modes and #1385's gloss-space modes display no scores and return results identical to pre-extension behavior after the term-mode addition (regression guard)"
+    evidence_type: "behavioral"
+    plan_item: 4
+  - id: "SC-5"
+    description: "Pagination slices the full ranked term list rank-once; page navigation never re-invokes the seam and never reorders; page clamping preserved"
+    evidence_type: "behavioral"
+    plan_item: 5
+  - id: "SC-6"
+    description: "Each seam status (empty_query, no_embeddings, stale_model, zero-below-threshold) renders its designated clean empty state, never a crash; stale/no-embeddings copy names the Term-space Backfill remedy"
+    evidence_type: "behavioral"
+    plan_item: 6
+  - id: "SC-7"
+    description: "Term-mode result rows display Unicode term text byte-exact (IPA/diacritics/ꝏ/∞) with entry_type/language_code/source labels rendered, no normalization in the rendering path"
+    evidence_type: "behavioral"
+    plan_item: 7

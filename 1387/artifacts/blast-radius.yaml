@@ -1,0 +1,25 @@
+# Artifact 1/7: Blast radius — issue 1387
+# Bounded grounding (R-18): grounded from spec Scope/Approach/Impact sections + live records.py,
+# preference_service.py, linguistic_service.py reads. Deep implementation reading not warranted —
+# spec scope is sufficient to identify the affected surface.
+blast_radius:
+  grounded_from: "spec scope + approach + live reads 2026-09-29"
+  affected_components:
+    - phase: "records-page UI"
+      files:
+        - file: "src/frontend/pages/records.py"
+          change: "mode list + SEARCH_MODE_CAPTIONS extended (2 entries); threshold control; term-mode dispatch branch bypassing search_records; term-row render branch; pagination slicing; status→empty-state mapping"
+          ripple: "session_state keys added (threshold key); new imports must be lazy/in-function per file convention"
+    - phase: "test surface"
+      files:
+        - file: "test/test_search_mode_ui_red.py"
+          change: "extended or sibling harness for term modes (sys.modules mock pattern extended with mocked search_terms seam)"
+          ripple: "none"
+  explicitly_unaffected:
+    - "src/services/linguistic_service.py — SearchMode Literal (:28) and search_records (:391) untouched (spec out-of-scope + #1386 rejected widening)"
+    - "src/services/preference_service.py — consumed as-is"
+    - "src/frontend/pages/table_maintenance.py — remedy copy only, no modification"
+    - "all backend/db: models/, migrations.py, search entries — owned by #1386"
+    - "#1385's gloss-space UI behavior — coexistence-verified only"
+  risk_notes:
+    - "seam drift: UI specified against TermSearchResult v1 field list; #1386 pre-implementation — items need import-guard or mockable binding"

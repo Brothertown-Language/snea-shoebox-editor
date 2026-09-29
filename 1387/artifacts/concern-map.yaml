@@ -1,0 +1,19 @@
+# Artifact 2/7: Concern map — issue 1387
+concern_map:
+  phases:
+    - phase: "1 (records-page UI extension)"
+      boundaries:
+        - concern: "mode entry registration (radio + captions)"
+          file: "src/frontend/pages/records.py"
+          sep: "purely declarative additions to existing structures"
+        - concern: "threshold persistence UI"
+          boundary: "UI only touches PreferenceService static API; no SQL"
+        - concern: "term-mode search dispatch"
+          boundary: "UI binds to search_terms contract shape only; seam import-guarded/mockable; no pgvector/ORM imports"
+        - concern: "result rendering (term rows with metadata + scores vs exact rows without)"
+          sep: "one branch keyed on mode classification; exact modes share unchanged path"
+        - concern: "pagination + empty states"
+          sep: "reuses existing rank-once slice and status-driven rendering branches"
+  cross_phase:
+    - "Unicode display fidelity (item 7) is a rendering-layer concern only; storage/encoding stays #1386"
+    - "regression guard (item 4) spans dispatch + rendering — verified via harness, not code coupling"

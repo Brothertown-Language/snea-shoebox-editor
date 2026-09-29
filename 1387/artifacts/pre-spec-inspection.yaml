@@ -1,0 +1,39 @@
+# Pre-spec inspection — issue 1387 (Algonquian term-space semantic search, end-user UI)
+# Bounded grounding per R-18: spec scope sections read first; primary target surface (records.py,
+# preference_service.py, table_maintenance.py) + direct seams verified live 2026-09-29.
+pre_spec_inspection:
+  issue: 1387
+  inspected_at: "2026-09-29"
+  scope_source: ".issues/1387/spec.md (Scope, Approach, Impact sections)"
+  affected_surfaces:
+    - file: "src/frontend/pages/records.py"
+      role: "primary target — mode radio + SEARCH_MODE_CAPTIONS (live :206-221), threshold control site, result render block (:540-543), pagination state (:137-179)"
+      verified: "live read 2026-09-29"
+      note: "mode radio currently has exactly 4 entries: Headword/Gloss/Lexeme/FTS; captions dict at :206-211; term-space modes will append 2 entries"
+    - file: "src/services/preference_service.py"
+      role: "consumed as-is for per-user threshold persistence (get_preference :17, set_preference :37)"
+      verified: "live read 2026-09-29 (srclight signature verified-fresh)"
+    - file: "src/frontend/pages/table_maintenance.py"
+      role: "stale_model empty-state remedy reference (Data Reprocessing → Term-space Backfill per #1386 SC-9); NOT modified by this spec"
+      verified: "live read 2026-09-29 (:124-196 role guard + reprocessing idiom)"
+    - file: "src/services/linguistic_service.py"
+      role: "SearchMode Literal at :28 and search_records :391 — NOT modified by this spec (term-space modes must NOT widen SearchMode; #1386 ships standalone search_terms seam)"
+      verified: "live rg 2026-09-29"
+  seam_contract:
+    source: "#1386 spec R-7 / SC-5 (verbatim binding)"
+    signature: "search_terms(query, threshold=None, source_id=None, limit=None) -> TermSearchResult"
+    result_fields: "results: list[(record_id, score, entry_type, language_code, source_id, term)], status in {ok, empty_query, no_embeddings, stale_model}, message"
+    note: "note the seam takes NO search_mode argument — UI parameterizes by which mode entry is selected but the seam call itself is uniform; entry_type/language_code/source_id/term are per-row display fields unique to term-space (gloss-space SemanticSearchResult returns only (record_id, score))"
+  existing_patterns:
+    - "#1385's UI spec is the mirror precedent: threshold pref records/semantic_threshold default 0.80, rank-once pagination, scores on semantic rows only, per-status empty states"
+    - "test harness precedent: test/test_search_mode_ui_red.py (streamlit.testing.v1 AppTest with sys.modules mock injection)"
+    - "empty-state rendering precedent: records.py :540-541 st.info on empty records_batch"
+  dependencies_and_callers:
+    - "records() is the single entry point rendered by the router; no other callers of the mode radio/captions dict"
+    - "PreferenceService consumed by page_size (:48, :326) and structural_highlighting (:52, :390) — same pattern reusable for threshold key"
+  open_questions:
+    - "Mode labels: spec says 'two new mode entries' without naming them; mirror #1385's naming family ('Semantic Gloss'/'Semantic All') adapted to term space — candidate labels 'Semantic Term' / 'Semantic Phrase' or a single 'Semantic Terms' pair (term/phrase entry_type filter); plan decides — flagged for spec-creation"
+    - "Default threshold value: #1386 says default threshold comes from SC-6 calibration floors (not yet measured); #1385 UI default is 0.80. UI spec should name the fallback default and note it is provisional until #1386 SC-6 calibration lands"
+    - "Whether threshold applies per-mode or shared across both new mode entries (single preference key vs two)"
+  ungrounded_assumptions:
+    - "search_terms seam does not exist yet in src/ (rg 0 hits for search_terms|TermSearchResult) — #1386 is pre-implementation; UI is specified against the contract only"

@@ -1,0 +1,69 @@
+# Requirements output — issue 1387
+# Extracted from .issues/1387/spec.md (Problem, Scope, Approach, Impact); every requirement
+# verified against live code reads 2026-09-29 (records.py, preference_service.py, linguistic_service.py,
+# table_maintenance.py) and #1386 seam contract (R-7).
+requirements:
+  explicit:
+    - id: REQ-E1
+      text: "Two new mode entries in the records-page search mode radio"
+      verification: "records.py :206-221 — radio list ['Headword','Gloss','Lexeme','FTS'] + SEARCH_MODE_CAPTIONS dict exist and are additive-extendable"
+    - id: REQ-E2
+      text: "Per-user threshold preference via PreferenceService"
+      verification: "preference_service.py get_preference(:17)/set_preference(:37) consumed as-is by page_size (:48,:326) and structural_highlighting (:52,:390) — same pattern reusable"
+    - id: REQ-E3
+      text: "Score display on term-space modes only; exact-match modes (incl. #1385's gloss modes) show no scores"
+      verification: "records.py result render block :540-543 renders via render_mdf_block with no score surface today — a term-space branch is new"
+    - id: REQ-E4
+      text: "Pagination slicing of the full ranked list (rank-once; no re-invocation of search on page nav)"
+      verification: "records.py pagination state :137-179 (current_page, page_size, offset slicing at :138); term-space ranked list must slice the same way"
+    - id: REQ-E5
+      text: "Empty-state rendering per status, incl. stale_model naming the term-space admin backfill remedy (Table Maintenance → Data Reprocessing → Term-space Backfill)"
+      verification: "#1386 seam statuses {ok, empty_query, no_embeddings, stale_model}; table_maintenance.py :124-196 confirms the Data Reprocessing section exists as the remedy target"
+    - id: REQ-E6
+      text: "UI binds only to #1386's TermSearchResult v1 contract; no pgvector/ORM imports in the UI layer"
+      verification: "#1386 spec R-7 field list verified verbatim; rg 2026-09-29: zero pgvector/ORM imports in src/frontend/ today"
+  implicit:
+    - id: REQ-I1
+      text: "Term modes must NOT widen the SearchMode Literal in linguistic_service.py (:28) — #1386 explicitly rejected SearchMode widening; the records page dispatches term modes separately from search_records"
+      verification: "linguistic_service.py :28 SearchMode = Literal['Lexeme','FTS','Headword','Gloss'] live-read; search_records raises ValueError on unknown mode (:451-453)"
+    - id: REQ-I2
+      text: "The existing four modes' behavior and captions remain unchanged (regression guard)"
+      verification: "records.py :206-219 — captions dict and radio list; #1385 regression family test_search_mode_ui_red.py exists as harness precedent"
+    - id: REQ-I3
+      text: "Term-space result rows carry per-row metadata unique to the term seam (entry_type, language_code, source_id, term) which the UI should display; gloss-space rows have only (record_id, score)"
+      verification: "#1386 R-7 TermSearchResult field list vs #1385 R-8 SemanticSearchResult field list"
+    - id: REQ-I4
+      text: "Threshold control pattern mirrors #1385's approved widget contract (coupled slider+numeric, invalid-entry snap-back) — reused rather than invented"
+      verification: ".issues/1385/spec.md R-2/R-3 + SC-2/SC-3"
+    - id: REQ-I5
+      text: "Term text rendering preserves Unicode exactly (IPA/diacritics/ꝏ/∞ first-class data even in UI display)"
+      verification: "AGENTS.md Tier 1 Unicode mandate; roger-williams-key research card (diacritic repertoire, confidence 0.9)"
+  constraints:
+    - id: REQ-C1
+      text: "Out of scope: backend/db concerns (owned by #1386); gloss-space UI changes beyond adding term modes (owned by #1385); no pgvector/ORM imports in UI layer"
+      verification: ".issues/1387/spec.md Scope"
+    - id: REQ-C2
+      text: "Seam drift risk: UI consumes only TermSearchResult fields because #1386 may revise internals"
+      verification: ".issues/1387/spec.md Impact risk 1"
+    - id: REQ-C3
+      text: "Gloss-mode regression risk: new radio entries must not disturb #1385's existing gloss-space modes"
+      verification: ".issues/1387/spec.md Impact risk 2 — mitigated with existing UI test family"
+    - id: REQ-C4
+      text: "Depends on #1386 (search_terms service) and #1385 (UI pattern precedent)"
+      verification: ".issues/1387/spec.md Impact"
+  non_requirements:
+    - id: REQ-N1
+      text: "No backend search_terms implementation, no schema changes, no migration work (all #1386)"
+    - id: REQ-N2
+      text: "No changes to gloss-space modes/threshold/score UI beyond coexistence verification (#1385)"
+    - id: REQ-N3
+      text: "No admin backfill button work (Table Maintenance term-space button is #1386 SC-9); UI only cites it as remedy copy"
+    - id: REQ-N4
+      text: "No embedding/model artifacts or dependency changes"
+  missing_or_unclear:
+    - id: REQ-U1
+      text: "Mode entry labels not named in spec — candidates mirror #1385 family ('Semantic Term(s)'/'Semantic Phrase'); needs spec-creation decision (structural)"
+    - id: REQ-U2
+      text: "Default threshold value: #1385 uses 0.80, but #1386 says default comes from SC-6 calibration (not yet measured); UI spec should name a provisional default and mark it calibration-pending"
+    - id: REQ-U3
+      text: "Whether one threshold preference is shared across both term modes or keyed per mode; whether term modes filter by entry_type via the seam (source_id param exists; no entry_type param in v1 seam — filtering may be client-side or two calls)"

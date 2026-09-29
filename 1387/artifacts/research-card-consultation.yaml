@@ -1,0 +1,21 @@
+# Research card consultation — issue 1387 (term-space semantic search end-user UI)
+research_card_consultation:
+  consulted_at: "2026-09-29"
+  method: "glob .issues/research-cards/*.md + frontmatter/topic grep for term-space, semantic search, variant spelling, orthography evidence"
+  findings:
+    - card: ".issues/research-cards/cross-source-comparison.md"
+      confidence: 0.9
+      relevance: " grounds the Problem: variant spellings (Sachim/Sachimo/Sachem/Sagimore/Sótchĭm/Sogmŏ) across 4 sources are exactly what vernacular term-space similarity retrieval surfaces — the UI makes them reachable to end users"
+      used_for: "problem framing + empty-state copy needs (per-language display of term rows)"
+    - card: ".issues/research-cards/central-algonquian-dictionaries.md"
+      confidence: 0.85
+      relevance: "syllabics deferral (Roman-orthography-only corpus) — no UI impact for term modes in v1"
+      used_for: "confirms no syllabic display handling needed in the term-space UI modes"
+    - card: ".issues/research-cards/roger-williams-key-research.md"
+      confidence: 0.9
+      relevance: "diacritic repertoire of primary sources — term display on result rows must render Unicode diacritics exactly (UI is a Unicode consumer)"
+      used_for: "term-text display fidelity constraint on score rows (AGENTS.md Tier 1 Unicode mandate applies to rendering, not just storage)"
+  gaps:
+    - "No research card addresses UI-specific evidence (threshold UX, score display norms); #1385's approved UI decisions are the operative precedent, not research cards"
+    - "e5-small similarity floors not measured anywhere yet (#1386 SC-6 pending) — no card provides a calibrated default threshold; UI spec must name a provisional default pending calibration"
+  incorporation: "findings folded into pre-spec-inspection.yaml affected_surfaces + requirements extraction; no card reached confidence >= 0.7 with UI-mode-specific findings, so no direct SC evidence cites a research card beyond problem grounding"
