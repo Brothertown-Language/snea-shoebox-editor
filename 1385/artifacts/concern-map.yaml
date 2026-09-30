@@ -1,0 +1,50 @@
+# concern-map.yaml — issue #1385
+spec: .issues/1385/spec.md
+provenance: "backfilled by writing-plans/tasks/backfill.md (retroactive, 2026-09-30)"
+sc_count: 8
+
+concerns:
+  - concern: C1-mode-dispatch
+    description: "Mode radio entries + captions + mode-switch correctness (radio surface, mode dispatch semantics)"
+    sc: [SC-1, SC-7]
+    phase_boundary: 1
+  - concern: C2-threshold
+    description: "Threshold preference control — coupling, persistence, validation snap-back"
+    sc: [SC-2, SC-3]
+    phase_boundary: 1
+  - concern: C3-semantic-display
+    description: "Score badges on semantic rows (sorted desc, two-decimal, inline header line)"
+    sc: [SC-4]
+    phase_boundary: 1
+  - concern: C4-pagination
+    description: "Rank-once pagination slicing of the full ranked list"
+    sc: [SC-5]
+    phase_boundary: 1
+  - concern: C5-empty-states
+    description: "Degraded-status empty-state rendering per seam payload"
+    sc: [SC-6]
+    phase_boundary: 1
+  - concern: C6-filter-state
+    description: "Language filter disabled-in-semantic-mode state handling"
+    sc: [SC-8]
+    phase_boundary: 1
+
+concern_sc_matrix:
+  SC-1: C1-mode-dispatch
+  SC-7: C1-mode-dispatch
+  SC-2: C2-threshold
+  SC-3: C2-threshold
+  SC-4: C3-semantic-display
+  SC-5: C4-pagination
+  SC-6: C5-empty-states
+  SC-8: C6-filter-state
+
+phase_boundaries:
+  - phase: 1
+    concerns: [C1-mode-dispatch, C2-threshold, C3-semantic-display, C4-pagination, C5-empty-states, C6-filter-state]
+    rationale: "All 8 SCs target a single page component (records.py) with no deployable slice until the #36 seam lands; spec traceability maps R-1..R-9 all to Phase 1"
+
+seam_rules:
+  - "Pagination slices the service's full ranked list; service NOT re-invoked on page navigation (R-5)"
+  - "UI binds only to search_semantic/SemanticSearchResult v1 contract; no pgvector/ORM imports (R-8)"
+  - "Score display on semantic rows only; exact-match modes unchanged (R-4)"

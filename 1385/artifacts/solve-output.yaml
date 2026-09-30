@@ -1,0 +1,52 @@
+# Solve output — issue #1385 (research task)
+schema_version: "2.0"
+generated_at: "20260930137000"
+spec: ".issues/1385/spec.md"
+status: DONE
+finding_summary: "Z3 contract SAT (model query all_phases_done), solve check SAT both stages against state-analysis state, planner SOLVED_SATISFICING with a 2-action sequential plan over 2 phases and 8 SCs. Phase DAG: 1→2 chain; no cycles; every SC triplet co-located in one phase. dependency_contract extracted as-is from interface-compatibility.yaml (contains dependency_contract section — no auto-backfill needed)."
+
+artifact_path: ".issues/1385/artifacts/structure.yaml"
+solve_status: SAT
+plan_status: SOLVED_SATISFICING
+plan_length: 2
+
+checks:
+  solve_model:
+    command: "./.opencode/tools/solve model --contract-path .issues/1385/dependency-contract.yaml --query 'all_phases_done'"
+    result: SAT
+    output: |
+      all_phases_done = True
+      phase_1_done = True
+      phase_2_done = True
+    exit_code: 0
+  solve_check:
+    command: "./.opencode/tools/solve check --contract-path .issues/1385/dependency-contract.yaml --state-path .issues/1385/artifacts/state-analysis.yaml"
+    result_pre_postconditions: SAT
+    result_postconditions_invariants: "SAT (+ postconditions + invariants)"
+    exit_code: 0
+  plan_plan:
+    command: "./.opencode/tools/plan plan --problem tmp/issue-1385-planning-problem.yaml"
+    result: SOLVED_SATISFICING
+    exit_code: 0
+    output: ".issues/1385/artifacts/plan-output.yaml"
+    validation_note: "task card step 12 names --contract-path/--output flags; live CLI surface is (plan --problem, stdout capture) per plan help output — live tool interface used per 075-docs-verification; problem file authored from dependency-contract phase DAG (precedent #36 scratch problem is volatile/absent)"
+
+phase_decomposition:
+  phase_count: 2
+  structure_artifact: ".issues/1385/artifacts/structure.yaml"
+  dependency_contract: ".issues/1385/dependency-contract.yaml"
+  phases:
+    - {id: 1, scs: [SC-1, SC-2, SC-3, SC-8], concern: "UI surface scaffolding — mode entries, threshold control, language-filter disabled parity"}
+    - {id: 2, scs: [SC-7, SC-4, SC-5, SC-6], concern: "Seam consumption — mode dispatch, score display, pagination slicing, empty states"}
+
+verifications:
+  triplet_colocation: PASS
+  cross_phase_dependency: PASS
+  dag_acyclic: PASS
+  planner_reachability: PASS
+
+skill_task_selection:
+  source: ".opencode/skills/writing-plans/reference/implementation-workflow.md"
+  red_green_daisy_chain: [pre-regression, pre-regression-verify, red, green, post-regression, verify, commit-inline]
+  post_implementation: [audit, z3-check, structural-checks, pre-pr-gate, regression-check, review-prep, create-pr, exec-summary]
+  per_item_cycle: "Each SC = one item with RED/GREEN/verify/commit cycle (8 items; one item per SC per sc-summary.yaml plan_item mapping)"

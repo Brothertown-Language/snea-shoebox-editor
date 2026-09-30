@@ -1,0 +1,53 @@
+# state-analysis.yaml — issue #1385
+spec: .issues/1385/spec.md
+provenance: "backfilled by writing-plans/tasks/backfill.md (retroactive, 2026-09-30)"
+sc_count: 8
+
+state_transitions:
+  - sc: SC-1
+    states:
+      - from: "mode selection absent (radio without semantic entries)"
+        to: "mode selection includes 'Semantic Gloss' | 'Semantic All' (session_state mode key)"
+        persistence: "st.session_state (non-persistent)"
+  - sc: SC-2
+    states:
+      - from: "no semantic_threshold preference stored"
+        to: "preference 'records'/'semantic_threshold' = str(value in [0.0,1.0]) persisted per user"
+        persistence: "PreferenceService (database, per user)"
+        default: "0.80 on first read; widgets two-way coupled and always agree"
+  - sc: SC-3
+    states:
+      - from: "widget holds last accepted value"
+        to: "widget reverts to last accepted value on non-numeric/out-of-range edit; stored preference unchanged"
+        persistence: "st.session_state widget state (in-session revert)"
+  - sc: SC-4
+    states:
+      - from: "record card header line without score"
+        to: "header line includes fixed two-decimal score badge/caption when mode is semantic and results present"
+        persistence: "none (pure render)"
+  - sc: SC-5
+    states:
+      - from: "full ranked list in session + current_page state"
+        to: "current_page changes → page slice computed from stored list; ranked list and order unchanged"
+        persistence: "st.session_state current_page (non-persistent); existing max(1, total_pages) clamp preserved"
+  - sc: SC-6
+    states:
+      - from: "search returns status payload (empty_query | no_embeddings | stale_model | ok-with-zero-above-threshold)"
+        to: "MAIN panel renders designated st.info/st.warning empty state; no crash"
+        persistence: "none (pure render)"
+  - sc: SC-7
+    states:
+      - from: "mode A selected (any of 6)"
+        to: "mode switch → new search dispatch per mode semantics; result sets differ between exact-match and semantic; existing modes unchanged"
+        persistence: "session_state mode + result list replaced on new search invocation"
+  - sc: SC-8
+    states:
+      - from: "language selectbox/role radio enabled (exact-match modes) or disabled-with-help (FTS)"
+        to: "disabled-with-help also in semantic modes; previously-selected value preserved but inert (no leak into result expectations)"
+        persistence: "st.session_state filter values (preserved across mode switch)"
+
+invariants:
+  - "page navigation must never reorder the ranked list (rank-once; R-5)"
+  - "threshold preference persists across sessions per user (R-2)"
+  - "existing 4 modes' captions, results, and filter behavior unchanged after all additions (SC-7, SC-8)"
+  - "current_page beyond result count clamps via existing max(1, total_pages) behavior"

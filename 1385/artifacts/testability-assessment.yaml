@@ -1,0 +1,45 @@
+# testability-assessment.yaml — issue #1385
+spec: .issues/1385/spec.md
+provenance: "backfilled by writing-plans/tasks/backfill.md (retroactive, 2026-09-30)"
+sc_count: 8
+
+assessments:
+  - sc: SC-1
+    evidence_type: behavioral
+    instrument: "Playwright UI test — radio options include both new modes; selected-mode caption renders per selection; existing 4 options/captions untouched"
+    red_basis: "radio lacks semantic entries before GREEN"
+    precedent: "test_search_mode_ui_red.py harness"
+  - sc: SC-2
+    evidence_type: behavioral
+    instrument: "Playwright/pytest — two-way widget coupling sync; persistence round-trip via PreferenceService get/set_preference; stable-slot placement present in ALL modes; disabled + 'Applies only in Semantic modes.' help text in non-semantic modes"
+    red_basis: "no semantic_threshold preference control exists before GREEN"
+  - sc: SC-3
+    evidence_type: behavioral
+    instrument: "Playwright — invalid (non-numeric/out-of-range) threshold entry → widget reverts; stored preference unchanged"
+    red_basis: "snap-back validation absent before GREEN"
+  - sc: SC-4
+    evidence_type: behavioral
+    instrument: "Playwright — score badges present on semantic rows in descending order, fixed two decimals, inline in card header line; absent on exact-match rows"
+    red_basis: "no score badges render in any mode before GREEN"
+  - sc: SC-5
+    evidence_type: behavioral
+    instrument: "Playwright — page navigation preserves order deterministically; single search invocation asserted (no service re-invocation)"
+    red_basis: "navigation re-invokes search / reorders results before GREEN"
+  - sc: SC-6
+    evidence_type: behavioral
+    instrument: "Playwright with mocked seam payloads — each status (empty_query, no_embeddings, stale_model, zero-results-after-threshold) renders its designated st.info/st.warning MAIN-panel empty state; stale/none message names backfill remedy; no crash"
+    red_basis: "no status-crash-guard rendering exists before GREEN"
+  - sc: SC-7
+    evidence_type: behavioral
+    instrument: "Playwright behavioral harness (precedent test_search_mode_ui_red.py) — result sets differ per mode; existing 4 modes' results unchanged (regression-safe)"
+    red_basis: "semantic modes yield errors / existing modes regress before GREEN"
+    coordination: "avoid compounding #1347 red harness state"
+  - sc: SC-8
+    evidence_type: behavioral
+    instrument: "Playwright — language selectbox + role radio disabled with help text in both semantic modes; Headword/Gloss/Lexeme remain enabled; FTS stays disabled (exact existing idiom)"
+    red_basis: "filters remain enabled in semantic modes before GREEN"
+
+summary:
+  behavioral_sc: 8
+  structural_sc: 0
+  note: "All 8 SCs are UI-behavioral (spec Evidence Type column declares behavioral for every SC); none structural/string. Runtime-behavioral classification gate satisfied — behavioral evidence is the declared and substrate-consistent type."

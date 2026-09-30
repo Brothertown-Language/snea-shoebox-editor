@@ -1,0 +1,72 @@
+# Dependency contract for issue #1385 — Semantic Search end-user interface (records page UI)
+# Source: .issues/1385/artifacts/interface-compatibility.yaml dependency_contract section
+# (extracted as-is; file contains a dependency_contract section — no auto-backfill needed)
+# Structure augmentation: phase DAG from .issues/1385/artifacts/structure.yaml
+#
+# Use:
+#   ./.opencode/tools/solve model --contract-path .issues/1385/dependency-contract.yaml --query <expr>
+#   ./.opencode/tools/solve check --state-path <state> --contract-path .issues/1385/dependency-contract.yaml
+
+schema_version: "1.0"
+generated_at: "20260930136000"
+
+phases:
+  - id: 1
+    name: "UI surface scaffolding"
+    concern: "Mode radio entries + captions (SC-1), coupled threshold control with persistence + snap-back (SC-2, SC-3), language-filter disabled parity in semantic modes (SC-8)"
+    depends_on: []
+    scs: ["SC-1", "SC-2", "SC-3", "SC-8"]
+  - id: 2
+    name: "Seam consumption"
+    concern: "SearchMode widened dispatch through search_records (SC-7), score badges inline two-decimal descending (SC-4), rank-once pagination slicing (SC-5), per-status empty-state rendering (SC-6)"
+    depends_on: [1]
+    scs: ["SC-7", "SC-4", "SC-5", "SC-6"]
+
+# Dependency contract extracted verbatim from interface-compatibility.yaml
+description: "Concrete dependency data derived from spec affected files and SCs (real sources, real targets, real type constraints)."
+external_packages: []
+internal_modules:
+  - source: "src/frontend/pages/records.py (threshold control)"
+    target: "src/services/preference_service.py get_preference/set_preference"
+    sc: "SC-2"
+    type_constraint: "get_preference('records', 'semantic_threshold', default 0.80) → str; set_preference('records', 'semantic_threshold', str(value: float in [0.0, 1.0]))"
+    reason: "per-user threshold persistence round-trip (R-2)"
+  - source: "src/frontend/pages/records.py (semantic dispatch)"
+    target: "search_semantic seam via search_records widened SearchMode (src/services/linguistic_service.py; backend owned by #36)"
+    sc: "SC-4, SC-5, SC-7"
+    type_constraint: "consumes SemanticSearchResult: results list[(record_id, float score)], status str ∈ {ok, empty_query, no_embeddings, stale_model}, message str"
+    reason: "semantic search reachability + display data"
+  - source: "records.py empty-state copy (SC-6)"
+    target: "table_maintenance.py Data Reprocessing → Embedding Backfill path (naming reference only)"
+    sc: "SC-6"
+    type_constraint: "message text names 'Table Maintenance → Data Reprocessing → Embedding Backfill' — no code dependency"
+    reason: "stale_model / no_embeddings remedy guidance"
+cross_spec:
+  consumer: "#1385 (this spec)"
+  sc: "SC-4, SC-5, SC-6, SC-7"
+  contract: "#36 freezes SemanticSearchResult v1 field list + status enum; #1385 consumes only that surface and owns all threshold/pagination/empty-state/score-display UI"
+
+# --- Solver sections (Z3) ---
+variables:
+  phase_1_done:
+    type: bool
+  phase_2_done:
+    type: bool
+  all_phases_done:
+    type: bool
+
+# Dependency ordering: phase X completes only after all its depends_on phases
+preconditions:
+  - "phase_1_done"
+  - "z3.Implies(phase_2_done, phase_1_done)"
+
+# Invariants: no backward edges — later phase cannot complete before earlier producer
+invariants:
+  - "all_phases_done == z3.And(phase_1_done, phase_2_done)"
+  - "z3.Not(z3.And(phase_2_done, z3.Not(phase_1_done)))"
+
+postconditions:
+  - "all_phases_done"
+
+queries:
+  - "all_phases_done"

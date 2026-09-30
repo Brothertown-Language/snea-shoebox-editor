@@ -1,0 +1,53 @@
+# code-path-inventory.yaml — issue #1385
+spec: .issues/1385/spec.md
+provenance: "backfilled by writing-plans/tasks/backfill.md (retroactive, 2026-09-30)"
+sc_count: 8
+
+code_paths:
+  - sc: SC-1
+    file: src/frontend/pages/records.py
+    paths:
+      - "sidebar search-controls block: mode radio creation call (st.radio over mode list)"
+      - "SEARCH_MODE_CAPTIONS dict — add 'Semantic Gloss' and 'Semantic All' entries; single selected-mode st.caption under radio unchanged"
+  - sc: SC-2
+    file: src/frontend/pages/records.py
+    paths:
+      - "threshold control render: st.slider + st.number_input two-way coupled, in stable slot below mode caption, above search/clear buttons, present in ALL modes, disabled= in non-semantic modes"
+      - "init: st.session_state threshold key seeded from PreferenceService.get_preference('records', 'semantic_threshold', default 0.80)"
+      - "persist: set_preference('records', 'semantic_threshold', str(value)) matching page_size string idiom"
+    consumed_symbols:
+      - "get_preference in src/services/preference_service.py"
+      - "set_preference in src/services/preference_service.py"
+  - sc: SC-3
+    file: src/frontend/pages/records.py
+    paths:
+      - "threshold numeric-input validation guard: reject non-numeric/out-of-range, snap widget back to last accepted value, leave preference unchanged"
+  - sc: SC-4
+    file: src/frontend/pages/records.py
+    paths:
+      - "record-card render loop header line ('Record #id (Source: X)'): append similarity score badge/caption in semantic branch — fixed two decimals; skip in exact-match modes"
+    data_source: "SemanticSearchResult.results list[(record_id, score)] — already sorted desc by seam (record_id asc tie-break), rendered in order"
+  - sc: SC-5
+    file: src/frontend/pages/records.py
+    paths:
+      - "pagination state keys (current_page): slice stored full ranked list per page; NO re-invocation of search dispatch on navigation; existing max(1, total_pages) clamping preserved"
+  - sc: SC-6
+    file: src/frontend/pages/records.py
+    paths:
+      - "empty-state branch keyed on seam status: empty_query (st.info), no_embeddings (st.warning + backfill remedy Table Maintenance → Data Reprocessing → Embedding Backfill), stale_model (st.warning + remedy), zero-results-after-threshold (st.info, reuses existing empty-batch rendering branch with status-specific copy); MAIN panel full-width blocks"
+  - sc: SC-7
+    file: src/frontend/pages/records.py
+    paths:
+      - "search dispatch entry: mode value passed through to search_records with widened SearchMode Literal (additive, owned by #36); existing 4 modes' dispatch path untouched"
+    consumed_symbols:
+      - "SearchMode Literal in src/services/linguistic_service.py (module top)"
+      - "search_records entry in src/services/linguistic_service.py"
+  - sc: SC-8
+    file: src/frontend/pages/records.py
+    paths:
+      - "language selectbox + language-role radio render: add disabled state + explanatory help text in Semantic Gloss / Semantic All modes, mirroring existing FTS disabled-filter idiom; selected value preserved but inert; source_id filter stays live"
+
+not_modified:
+  - src/services/preference_service.py: "consumed as-is (spec Not Included)"
+  - src/services/linguistic_service.py: "SearchMode widening + search_semantic owned by #36"
+  - src/frontend/pages/table_maintenance.py: "referenced for remedy copy only"

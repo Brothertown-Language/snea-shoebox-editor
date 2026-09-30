@@ -1,0 +1,115 @@
+# Structure artifact — issue #1385 (verify plan preconditions → research)
+# Decompose SCs into phases with dependency DAG + skill/task selection
+project_root: /home/muksihs/git/snea-shoebox-editor
+issues_prefix: .issues
+issue_number: 1385
+generated_at: "20260930136000"
+spec: .issues/1385/spec.md
+analysis_summary: .issues/1385/artifacts/analysis-summary.yaml
+
+phases:
+  - id: 1
+    name: "UI surface scaffolding — mode entries, threshold control, language-filter disabled parity"
+    concern: "records.py additive UI surface that does NOT depend on seam result data: SEARCH_MODE_CAPTIONS + mode radio entries (SC-1), coupled threshold slider+numeric with PreferenceService persistence and snap-back (SC-2, SC-3), language selectbox/role-radio disabled state in semantic modes mirroring FTS idiom (SC-8)"
+    depends_on: []
+    scs: [SC-1, SC-2, SC-3, SC-8]
+    items:
+      - sc: SC-1
+        red: "Playwright: mode radio lacks Semantic Gloss/Semantic All; SEARCH_MODE_CAPTIONS missing keys"
+        green: "Add Semantic Gloss/Semantic All entries to SEARCH_MODE_CAPTIONS + mode radio in src/frontend/pages/records.py; single selected-mode caption pattern unchanged"
+        commit_ref: "records.py mode list only"
+      - sc: SC-2
+        red: "Widget test: no semantic_threshold preference control exists on records page"
+        green: "Render coupled slider+numeric in stable sidebar slot (below mode caption, above search/clear buttons), disabled+help text in non-semantic modes; persist via get/set_preference('records','semantic_threshold', default '0.80')"
+        commit_ref: "records.py (or ui_utils.py shared component) threshold control"
+      - sc: SC-3
+        red: "Test: invalid threshold edit persists (no snap-back)"
+        green: "Validation guard rejecting non-numeric/out-of-range with widget snap-back to last accepted value"
+        commit_ref: "threshold control validation"
+      - sc: SC-8
+        red: "Playwright: language selectbox + role radio remain enabled in semantic modes"
+        green: "Disabled state + explanatory help text in both semantic modes mirroring FTS disabled-filter idiom; previously-selected value preserved but inert"
+        commit_ref: "records.py language-filter disabled state"
+
+  - id: 2
+    name: "Seam consumption — mode dispatch, score display, pagination slicing, empty states"
+    concern: "records.py render/dispatch paths that consume the #36 search_semantic seam: SearchMode widened dispatch through search_records (SC-7 wired first inside phase), score badges inline fixed two-decimal descending (SC-4), rank-once pagination slicing (SC-5), per-status empty-state rendering in MAIN panel (SC-6)"
+    depends_on: [1]
+    scs: [SC-7, SC-4, SC-5, SC-6]
+    seam_dependency: "#36 must have delivered search_semantic + SemanticSearchResult v1 (verified stable on disk; consumed as frozen contract per interface-compatibility.yaml)"
+    items:
+      - sc: SC-7
+        red: "Behavioral harness: semantic modes yield errors / existing modes regress"
+        green: "Dispatch by widened SearchMode Literal through search_records entry; wire results per mode"
+        commit_ref: "dispatch wiring + regression test"
+      - sc: SC-4
+        red: "Test: no score badges render for any mode"
+        green: "Consume seam results scores in semantic branch; render descending, inline in record-card header line, fixed two decimals; skip exact-match modes"
+        commit_ref: "records.py record-card render loop"
+      - sc: SC-5
+        red: "Test: page navigation re-invokes search or reorders results"
+        green: "Slice already-returned ranked list on page change; no service re-invocation; max(1, total_pages) clamping preserved"
+        commit_ref: "records.py pagination slicing"
+      - sc: SC-6
+        red: "Test: no crash-guard rendering exists for seam statuses"
+        green: "Map each status+message to MAIN-panel empty state (st.info informational, st.warning remedy-required; zero-results reuses empty-batch branch); stale/none message names backfill remedy"
+        commit_ref: "records.py empty-state branch"
+
+dependency_dag:
+  edges:
+    - from: 1
+      to: 2
+      reason: "Phase 2 RED/GREEN assertions operate on Semantic Gloss/Semantic All mode entries and the threshold stable slot created in phase 1; SC-7 dispatch requires selectable semantic modes (SC-1)"
+  triplet_colocation: "PASS — every SC's RED/GREEN/COMMIT steps live entirely in its single assigned phase (8/8 colocated; zero splits)"
+  cross_phase_dependencies: "NONE — no RED test in any phase depends on SC output committed in a later phase; phase 2 REDs depend only on phase 1 SCs"
+
+skill_task_selection:
+  per_phase_workflow: "implementation-workflow reference card (skills/writing-plans/reference/implementation-workflow.md)"
+  pre_implementation:
+    - step: pre-regression
+      skill: test-driven-development
+      dispatch: 'task(..., prompt: "execute phase-0 task from test-driven-development")'
+    - step: pre-regression-verify
+      skill: verification-before-completion
+      dispatch: 'task(..., prompt: "execute verify task from verification-before-completion")'
+  red_green_daisy_chain:
+    - step: red
+      skill: test-driven-development
+      dispatch: 'task(..., prompt: "execute red task from test-driven-development")'
+    - step: green
+      skill: test-driven-development
+      dispatch: 'task(..., prompt: "execute green task from test-driven-development")'
+    - step: post-regression
+      skill: test-driven-development
+      dispatch: 'task(..., prompt: "execute phase-4 task from test-driven-development")'
+    - step: verify
+      skill: verification-before-completion
+      dispatch: 'task(..., prompt: "execute verify task from verification-before-completion")'
+    - step: commit-inline
+      skill: (orchestrator)
+      dispatch: "orchestrator runs git add <files> && git commit -m <message> directly"
+  post_implementation:
+    - step: audit
+      skill: audit
+      dispatch: 'task(..., prompt: "execute verification-audit DiMo investigator from audit. Read audit/tasks/verification-audit-investigator.md first")'
+    - step: z3-check
+      skill: (orchestrator)
+      dispatch: ".opencode/tools/solve check --state-path ... --contract-path .issues/1385/dependency-contract.yaml"
+    - step: structural-checks
+      skill: finishing-a-development-branch
+      dispatch: 'task(..., prompt: "execute checklist task from finishing-a-development-branch")'
+    - step: pre-pr-gate
+      skill: verification-before-completion
+      dispatch: 'task(..., prompt: "execute verify task from verification-before-completion")'
+    - step: regression-check
+      skill: test-driven-development
+      dispatch: 'task(..., prompt: "execute phase-4 task from test-driven-development")'
+    - step: review-prep
+      skill: git-workflow-pr
+      dispatch: 'task(..., prompt: "execute review-prep from git-workflow-pr. Read git-workflow-pr/tasks/review-prep.md first")'
+    - step: create-pr
+      skill: git-workflow-pr
+      dispatch: 'task(..., prompt: "execute create task from git-workflow-pr")'
+    - step: exec-summary
+      skill: completion-core
+      dispatch: 'task(..., prompt: "execute completion task from completion-core")'

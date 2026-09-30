@@ -1,0 +1,67 @@
+# interface-compatibility.yaml — issue #1385
+spec: .issues/1385/spec.md
+provenance: "backfilled by writing-plans/tasks/backfill.md (retroactive, 2026-09-30; dependency_contract populated from #36 frozen seam contract verified on disk)"
+
+boundaries:
+  - boundary: "search_semantic() seam (owned by #36, consumed by #1385)"
+    consumers: ["records.py semantic search panel (#1385)"]
+    sc: "SC-4, SC-5, SC-6, SC-7"
+    compat_class: "CONSUMED_FROZEN_CONTRACT"
+    contract: "search_semantic(mode: 'gloss'|'all', query: str, threshold: float|None=None, source_id: int|None=None, limit: int|None=None) → SemanticSearchResult{results: list[(record_id, score)], status ∈ {ok, empty_query, no_embeddings, stale_model}, message: str}"
+    breaking_risk: "NONE — UI binds only to v1 field list (R-8); no pgvector/ORM imports in UI layer"
+
+  - boundary: "PreferenceService get_preference/set_preference"
+    consumers: ["records.py threshold control (SC-2)"]
+    sc: "SC-2"
+    compat_class: "PRESERVE_SIGNATURE"
+    contract: "get_preference(view_name, key[, default]) → str|None; set_preference(view_name, key, value: str) — stored as str(value) matching page_size string idiom under view 'records', key 'semantic_threshold', default '0.80'"
+    breaking_risk: "NONE — consumed as-is, no code change (spec Not Included)"
+
+  - boundary: "records.py SEARCH_MODE_CAPTIONS dict + mode radio"
+    consumers: ["all search modes' UI surface"]
+    sc: "SC-1"
+    compat_class: "EXTEND_ONLY"
+    contract: "add 'Semantic Gloss' + 'Semantic All' entries; existing 4 keys and captions unchanged; single selected-mode caption pattern preserved"
+    breaking_risk: "NONE — additive dict entries only (SC-7 regression test guards existing modes)"
+
+  - boundary: "records.py pagination/session_state keys (current_page)"
+    consumers: ["existing FTS/exact-match pagination + new semantic-mode pagination"]
+    sc: "SC-5"
+    compat_class: "PRESERVE_BEHAVIOR"
+    contract: "slice-only pagination of returned ranked list; existing max(1, total_pages) clamping preserved; service NOT re-invoked on navigation"
+    breaking_risk: "NONE — existing modes' pagination path unchanged"
+
+  - boundary: "records.py language-filter render (selectbox + role radio)"
+    consumers: ["all modes' filter surface"]
+    sc: "SC-8"
+    compat_class: "EXTEND_ONLY"
+    contract: "add disabled state + help text in semantic modes mirroring the existing FTS disabled-filter idiom; Headword/Gloss/Lexeme remain enabled, FTS stays disabled; selected value preserved but inert in semantic modes"
+    breaking_risk: "NONE — existing modes' filter behavior unchanged (asserted by SC-8)"
+
+dependency_contract:
+  description: "Concrete dependency data derived from spec affected files and SCs (real sources, real targets, real type constraints)."
+  external_packages: []
+  internal_modules:
+    - source: "src/frontend/pages/records.py (threshold control)"
+      target: "src/services/preference_service.py get_preference/set_preference"
+      sc: "SC-2"
+      type_constraint: "get_preference('records', 'semantic_threshold', default 0.80) → str; set_preference('records', 'semantic_threshold', str(value: float in [0.0, 1.0]))"
+      reason: "per-user threshold persistence round-trip (R-2)"
+    - source: "src/frontend/pages/records.py (semantic dispatch)"
+      target: "search_semantic seam via search_records widened SearchMode (src/services/linguistic_service.py; backend owned by #36)"
+      sc: "SC-4, SC-5, SC-7"
+      type_constraint: "consumes SemanticSearchResult: results list[(record_id, float score)], status str ∈ {ok, empty_query, no_embeddings, stale_model}, message str"
+      reason: "semantic search reachability + display data"
+    - source: "records.py empty-state copy (SC-6)"
+      target: "table_maintenance.py Data Reprocessing → Embedding Backfill path (naming reference only)"
+      sc: "SC-6"
+      type_constraint: "message text names 'Table Maintenance → Data Reprocessing → Embedding Backfill' — no code dependency"
+      reason: "stale_model / no_embeddings remedy guidance"
+  cross_spec:
+    consumer: "#1385 (this spec)"
+    sc: "SC-4, SC-5, SC-6, SC-7"
+    contract: "#36 freezes SemanticSearchResult v1 field list + status enum; #1385 consumes only that surface and owns all threshold/pagination/empty-state/score-display UI"
+
+interface_compat_notes:
+  - "#36 interface-compatibility.yaml verified on disk 2026-09-30 — seam contract, status enum, and SearchMode widening target cross-checked verbatim"
+  - "preference_service get/set_preference re-verified stable names 2026-09-30 (spec Documentation Sources)"
