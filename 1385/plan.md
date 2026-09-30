@@ -4,10 +4,10 @@ issue: 1385
 title: "Semantic Search end-user interface — records page modes, threshold, scores, pagination, empty states"
 authorization_scope: for_pr
 pr_strategy: stacked
-phase_count: 2
+phase_count: 1
 dispatch:
-  - "test-driven-development: pre-regression (pre), red+green+post-regression (phases 1-2), regression-check (post)"
-  - "verification-before-completion: pre-regression-verify (pre), verify (phases 1-2), pre-pr-gate (post)"
+  - "test-driven-development: pre-regression (pre), red+green+post-regression (phase 1), regression-check (post)"
+  - "verification-before-completion: pre-regression-verify (pre), verify (phase 1), pre-pr-gate (post)"
   - "orchestrator: commit-inline (per item), z3-check (post)"
   - "audit: verification-audit (post)"
   - "finishing-a-development-branch: checklist (post)"
@@ -38,9 +38,8 @@ The UI binds ONLY to the `search_semantic` / `SemanticSearchResult` v1 contract 
 
 ## Dispatch
 
-- Phase 1: direct (1) + task-card (2-8)
-- Phase 2: task-card (9-17)
-- Post-implementation: task-card (18-22) + direct (23)
+- Phase 1: direct (1, 7, 11, 20) + task-card (2-6, 8-10, 12-14, 16-18)
+- Post-implementation: task-card (19, 21-24) + direct (25)
 
 ## Blast Radius
 
@@ -66,8 +65,7 @@ Single primary modification: `src/frontend/pages/records.py` (additive UI work).
 
 | Phase | Name | Concern | SCs | Depends On | Step Range | Dispatch |
 |---|---|---|---|---|---|---|
-| 1 | UI surface scaffolding — mode entries, threshold control, language-filter disabled parity | Additive UI surface not dependent on seam result data: mode radio + captions (SC-1), coupled threshold w/ persistence + snap-back (SC-2, SC-3), language-filter disabled-parity mirroring FTS idiom (SC-8) | SC-1, SC-2, SC-3, SC-8 | — | 2-8 | direct (1) + task-card (2-8) |
-| 2 | Seam consumption — mode dispatch, score display, pagination slicing, empty states | Render/dispatch paths consuming the #36 `search_semantic` seam: widened SearchMode dispatch (SC-7 wired first), score badges (SC-4), rank-once pagination (SC-5), per-status empty states (SC-6) | SC-7, SC-4, SC-5, SC-6 | 1 | 9-17 | task-card (9-17) |
+| 1 | Semantic search UI — mode entries, threshold control, seam consumption, score display, pagination, empty states | records.py additive UI surface and seam-consumption paths for the #36 `search_semantic` contract: mode radio + captions (SC-1) with mode dispatch through the seam (SC-7) — both in C1-mode-dispatch, coupled threshold w/ persistence + snap-back (SC-2, SC-3), score badges (SC-4), rank-once pagination (SC-5), per-status empty states (SC-6), language-filter disabled parity (SC-8) | SC-1, SC-2, SC-3, SC-8, SC-7, SC-4, SC-5, SC-6 | — | 1-18 | direct (1, 7, 11, 15) + task-card (all dispatch steps) |
 
 ## Self-Remediation Protocol
 
@@ -76,52 +74,56 @@ Single primary modification: `src/frontend/pages/records.py` (additive UI work).
 ## Exit Criteria
 
 - [ ] C1. All 8 SCs verified PASS with behavioral evidence matching each SC's declared evidence type (all behavioral; structural substitution is EVIDENCE_TYPE_MISMATCH → FAIL)
-- [ ] C2. Phase-1 SCs (SC-1, SC-2, SC-3, SC-8) pass before Phase-2 RED steps begin
-- [ ] C3. Each SC has its own RED/GREEN/COMMIT cycle with test + implementation in one atomic commit
-- [ ] C4. Existing four search modes verified regression-safe (SC-7 regression harness)
-- [ ] C5. UI imports no pgvector/ORM internals; binds only to `search_semantic`/`SemanticSearchResult` v1 (R-8)
-- [ ] C6. Z3 dependency-check passes against `.issues/1385/dependency-contract.yaml`
-- [ ] C7. Audit executed; all findings remediated or explicitly dispositioned
-- [ ] C8. PR created (human-only merge; no auto-close keywords for stakeholder issues)
+- [ ] C2. Each SC has its own RED/GREEN/COMMIT cycle with test + implementation in one atomic commit
+- [ ] C3. Existing four search modes verified regression-safe (SC-7 regression harness)
+- [ ] C4. UI imports no pgvector/ORM internals; binds only to `search_semantic`/`SemanticSearchResult` v1 (R-8)
+- [ ] C5. Z3 dependency-check passes against `.issues/1385/dependency-contract.yaml`
+- [ ] C6. Audit executed; all findings remediated or explicitly dispositioned
+- [ ] C7. PR created (human-only merge; no auto-close keywords for stakeholder issues)
 
-# Phase 1 — UI surface scaffolding — mode entries, threshold control, language-filter disabled parity
+# Phase 1 — Semantic search UI — mode entries, threshold control, seam consumption, score display, pagination, empty states
 
-- **Concern:** records.py additive UI surface independent of seam result data.
-- **Files:** `src/frontend/pages/records.py`
-- **SCs:** SC-1, SC-2, SC-3, SC-8
-- **Dependencies:** none
+- **Concern:** records.py additive UI surface + render/dispatch paths consuming the #36 `search_semantic` seam. All 6 artifact concerns (C1-mode-dispatch, C2-threshold, C3-semantic-display, C4-pagination, C5-empty-states, C6-filter-state) are addressed in this phase, matching `concern-map.yaml` phase_boundary=1 for every concern and the spec traceability table (all SCs → phase 1). C1-mode-dispatch covers both SC-1 (radio surface) and SC-7 (dispatch semantics); SC-7 is scheduled after SC-1, SC-2, SC-3, SC-8 because its RED/GREEN assertions require selectable semantic modes and the threshold slot.
+- **Files:** `src/frontend/pages/records.py` (primary), `test/` Playwright harness (tests)
+- **SCs:** SC-1, SC-2, SC-3, SC-8, SC-7, SC-4, SC-5, SC-6
+- **Dependencies:** none — seam dependency: #36 must have delivered `search_semantic` + `SemanticSearchResult` v1 (verified stable on disk; consumed as a frozen contract per `.issues/1385/artifacts/interface-compatibility.yaml`)
 - **Entry condition:** clean pre-regression baseline on the feature branch.
-- **Exit condition:** SC-1, SC-2, SC-3, SC-8 verified PASS and committed.
+- **Exit condition:** All 8 SCs verified PASS and committed.
 
-## Code Path Coverage (Phase 1)
+## Code Path Coverage
 
 - SC-1: sidebar search-controls block — mode radio creation call; `SEARCH_MODE_CAPTIONS` dict ADDs "Semantic Gloss" and "Semantic All"; single selected-mode `st.caption` under the radio unchanged.
 - SC-2: threshold control render — `st.slider` + `st.number_input` two-way coupled in stable slot below mode caption, above search/clear buttons, present in ALL modes, `disabled=` in non-semantic modes; init seeds session state from `PreferenceService.get_preference('records', 'semantic_threshold', default 0.80)`; persist via `set_preference('records', 'semantic_threshold', str(value))` matching page_size string idiom.
 - SC-3: threshold numeric-input validation guard — reject non-numeric/out-of-range, snap back, leave preference unchanged.
 - SC-8: language selectbox + language-role radio — disabled state + explanatory help text in both semantic modes, mirroring FTS idiom; previously-selected value preserved but inert.
+- SC-7: `search_records` entry dispatch widened SearchMode Literal; wire results per mode; regression coverage for the existing four modes.
+- SC-4: record-card render loop header line ("Record #id (Source: X)") — append score in semantic branch; fixed two decimals; skip in exact-match modes; data already sorted desc with record_id-asc tie-break.
+- SC-5: pagination — slice already-returned ranked list on page change; no service re-invocation; `max(1, total_pages)` clamping preserved.
+- SC-6: empty-state branch — map status + message to MAIN-panel blocks (st.info informational; st.warning remedy-required); zero-results reuses empty-batch branch with status-specific copy.
 
-## Cross-Cutting SCs (Phase 1)
+## Cross-Cutting SCs
 
-- R-8 binding constraint (no pgvector/ORM imports) applies to every Phase-1 GREEN step; none of Phase 1 touches `linguistic_service.py` or imports below the seam.
+- R-8 binding constraint (no pgvector/ORM imports) applies to every GREEN step; none of the items touches `linguistic_service.py` or imports below the seam; SC-6 empty-state copy cross-references `table_maintenance.py` Data Reprocessing → Embedding Backfill (naming reference only, no code coupling).
 
-## Interface Boundaries (Phase 1)
+## Interface Boundaries
 
 - `get_preference('records', 'semantic_threshold', default 0.80)` → str; `set_preference('records', 'semantic_threshold', str(value))` with value float in [0.0, 1.0].
-- No seam calls in Phase 1 — the `search_semantic` contract is consumed only in Phase 2.
+- `search_semantic(mode, query, threshold, source_id, limit)` → SemanticSearchResult v1 (results list[(record_id, score)], status, message). Frozen contract; UI consumes `results` + `status` + `message` and nothing below the seam.
+- Only `source_id` passes through — no language_id, no language_role (drives SC-8 disabled state).
 
-## State Transitions (Phase 1)
+## State Transitions
 
 - Session state: threshold key seeded once from stored-or-default preference; radio selection state extends with two new keys in the existing mode list; language/role session-state keys unchanged (values preserved but inert in semantic modes).
+- Session state `current_page`: page navigation slices the stored ranked list (desc score, record_id asc tie-break); clamping `max(1, total_pages)` preserved; single search invocation per query.
 
-## Steps (Phase 1)
+## Steps
 
-- [ ] 1. (**direct**) Coherence gate — confirm plan is faithful to spec (R-1..R-9 mapped to items below; DAG 1→2 acyclic; all 8 SCs colocated in their assigned phase per structure.yaml triplet-colocation PASS)
+Item 1 (SC-1): Mode radio entries + captions
+- [ ] 1. (**direct**) Coherence gate — confirm plan is faithful to spec (R-1..R-9 mapped to items below; all 8 SCs colocated in phase 1 per structure.yaml triplet-colocation PASS; concern-map phase boundaries and spec traceability both map all SCs to phase 1)
   - Spec: `.issues/1385/spec.md`; structure: `.issues/1385/artifacts/structure.yaml`
 - [ ] 2. (**task-card**) Baseline check — dispatch `task(..., prompt: "execute pre-regression from test-driven-development. Read test-driven-development/tasks/pre-regression.md first")`
   - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-pre-regression-*`
   - Confirms existing mode radio, captions, filters, pagination behavior green before any edit
-
-Item 1 (SC-1): Mode radio entries + captions
 - [ ] 3. (**task-card**) RED — dispatch `task(..., prompt: "execute red task from test-driven-development. Read test-driven-development/tasks/red.md first")`
   - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-red-*`
   - Playwright test asserts the mode radio lacks "Semantic Gloss" and "Semantic All" and SEARCH_MODE_CAPTIONS lacks the two keys — test FAILS (change doesn't exist yet). SC: SC-1
@@ -156,55 +158,8 @@ Item 4 (SC-8): Language filters disabled in semantic modes
   - Verify: Playwright disabled + help-text assertions in both semantic modes; existing modes' filter state unchanged
   - Commit: language-filter disabled state. SC: SC-8
 
-## Phase 1 Completion Block
-
-- [ ] 11. (**task-card**) Phase-1 completion verification — dispatch `task(..., prompt: "execute verify task from verification-before-completion. Read verification-before-completion/tasks/verify.md first")`
-  - Assert SC-1, SC-2, SC-3, SC-8 all PASS with behavioral evidence; any FAIL → self-remediation protocol before Phase 2
-
-## Phase 1 Cost Frame
-
-Computation frame: Cost is measured in defect-discovery-latency, not tool calls. Correctness is the only metric.
-- Action cost: Four behavioral cycles (mode entries, threshold coupling + persistence, snap-back guard, disabled-filter parity) each cost minutes of Playwright execution — every sidebar control on the app's highest-traffic page is touched correctly.
-- Skipping cost: Skipping any Phase-1 verification costs days-to-weeks of user-reported defect latency — a broken radio silently wrong-returns results, thresholds reset per session and erode linguist trust, a typo corrupts stored preferences silently, and enabled-but-ignored language filters produce a silent wrong-result class found in support tickets.
-- Identity anchor: Correctness is the only metric.
-
-## Concern Transition — Phase 1 → Phase 2
-
-Phase 2's RED/GREEN assertions operate on the Semantic Gloss/Semantic All mode entries and the stable threshold slot created in Phase 1; SC-7 dispatch requires selectable semantic modes (SC-1). Phase 1's committed state is the precondition for Phase 2's first RED.
-
-# Phase 2 — Seam consumption — mode dispatch, score display, pagination slicing, empty states
-
-- **Concern:** records.py render/dispatch paths consuming the #36 `search_semantic` seam.
-- **Files:** `src/frontend/pages/records.py` (primary), `test/` Playwright harness (tests)
-- **SCs:** SC-7, SC-4, SC-5, SC-6
-- **Dependencies:** Phase 1
-- **Seam dependency:** #36 must have delivered `search_semantic` + `SemanticSearchResult` v1 (verified stable on disk; consumed as a frozen contract per `.issues/1385/artifacts/interface-compatibility.yaml`)
-- **Entry condition:** Phase 1 completion block PASS.
-- **Exit condition:** SC-7, SC-4, SC-5, SC-6 verified PASS and committed.
-
-## Code Path Coverage (Phase 2)
-
-- SC-7: `search_records` entry dispatch widened SearchMode Literal; wire results per mode; regression coverage for the existing four modes.
-- SC-4: record-card render loop header line ("Record #id (Source: X)") — append score in semantic branch; fixed two decimals; skip in exact-match modes; data already sorted desc with record_id-asc tie-break.
-- SC-5: pagination — slice already-returned ranked list on page change; no service re-invocation; `max(1, total_pages)` clamping preserved.
-- SC-6: empty-state branch — map status + message to MAIN-panel blocks (st.info informational; st.warning remedy-required); zero-results reuses empty-batch branch with status-specific copy.
-
-## Cross-Cutting SCs (Phase 2)
-
-- R-8 binding constraint: no pgvector/ORM imports; SC-6 empty-state copy cross-references `table_maintenance.py` Data Reprocessing → Embedding Backfill (naming reference only, no code coupling).
-
-## Interface Boundaries (Phase 2)
-
-- `search_semantic(mode, query, threshold, source_id, limit)` → SemanticSearchResult v1 (results list[(record_id, score)], status, message). Frozen contract; UI consumes `results` + `status` + `message` and nothing below the seam.
-- Only `source_id` passes through — no language_id, no language_role (drives SC-8 disabled state).
-
-## State Transitions (Phase 2)
-
-- Session state `current_page`: page navigation slices the stored ranked list (desc score, record_id asc tie-break); clamping `max(1, total_pages)` preserved; single search invocation per query.
-
-## Steps (Phase 2)
-
 Item 5 (SC-7): Mode dispatch through the seam
+- [ ] 11. (**direct**) Commit-inline precondition check — prior items committed cleanly (clean `git status`, SC-1/SC-2/SC-3/SC-8 verdicts available); selectable semantic modes + threshold slot present are the RED/GREEN preconditions for SC-7. Direct step — no dispatch.
 - [ ] 12. (**task-card**) RED — dispatch `task(..., prompt: "execute red task from test-driven-development. Read test-driven-development/tasks/red.md first")`
   - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-red-*`
   - Behavioral harness asserts semantic modes yield errors / existing modes regress (fails). Harness precedent: `test_search_mode_ui_red.py`. SC: SC-7
@@ -235,30 +190,35 @@ Item 8 (SC-6): Empty-state rendering per status payload
   - Verify: Playwright mocked-payload per-status rendering assertions; never a crash
   - Commit: "feat(records): render per-status semantic empty states in main panel". SC: SC-6
 
-# Post-Implementation
+## Phase 1 Completion Block
 
-- [ ] 18. (**task-card**) Adversarial audit — dispatch `task(..., prompt: "execute verification-audit DiMo investigator from audit. Read audit/tasks/verification-audit-investigator.md first")`, followed by validator, evaluator, arbiter in sequence
-  - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-audit-*`; DONE_WITH_CONCERNS coerces to FAIL; findings demand remediation before PR
-- [ ] 19. (**direct**) Z3 dependency check — `./.opencode/tools/solve check --state-path .issues/1385/artifacts/solve-output.yaml --contract-path .issues/1385/dependency-contract.yaml`
-  - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-z3-check-*`; phase DAG 1→2 must verify
-- [ ] 20. (**task-card**) Structural checks — dispatch `task(..., prompt: "execute checklist task from finishing-a-development-branch. Read finishing-a-development-branch/tasks/checklist.md first")`
-  - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-structural-checks-*`; lint/typecheck/format checks on modified files
-- [ ] 21. (**task-card**) Pre-PR gate — dispatch `task(..., prompt: "execute verify task from verification-before-completion. Read verification-before-completion/tasks/verify.md first")`
-  - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-pre-pr-gate-*`; reads all SC verdicts; BLOCKs if any FAIL
-- [ ] 22. (**task-card**) Final regression check — dispatch `task(..., prompt: "execute phase-4 task from test-driven-development")`
-  - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-regression-check-*`; full-suite regression before PR
-- [ ] 23. (**task-card**) Review prep — dispatch `task(..., prompt: "execute review-prep from git-workflow-pr. Read git-workflow-pr/tasks/review-prep.md first")`
-  - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-review-prep-*` if present; reviewer context from all SC evidence
-- [ ] 24. (**task-card**) Create PR — dispatch `task(..., prompt: "execute create task from git-workflow-pr. Read git-workflow-pr/tasks/create.md first")`
-  - Stacked strategy; targets trunk; body MUST NOT contain auto-closing keywords for stakeholder issues; then dispatch `task(..., prompt: "execute completion task from completion-core")` for the executive summary
-  - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-pr-*`
+- [ ] 18. (**task-card**) Phase-1 completion verification — dispatch `task(..., prompt: "execute verify task from verification-before-completion. Read verification-before-completion/tasks/verify.md first")`
+  - Assert all 8 SCs PASS with behavioral evidence; any FAIL → self-remediation protocol before post-implementation
 
-## Post-Implementation Cost Frame
+## Cost Frame
 
 Computation frame: Cost is measured in defect-discovery-latency, not tool calls. Correctness is the only metric.
-- Action cost: Audit + pre-PR gate + final regression cost minutes-to-hours of execution — every SC verdict re-read with behavioral evidence before merge.
-- Skipping cost: Skipping these gates costs 1000× DDL multiplier at merge — a crashed degraded state or reordered pages surfacing in production support tickets instead of the Playwright harness where they are found in minutes.
+- Action cost: Eight behavioral cycles (mode entries, threshold coupling + persistence, snap-back guard, disabled-filter parity, mode dispatch, score badges, pagination slicing, empty states) each cost minutes of Playwright execution — every sidebar control and result-rendering path on the app's highest-traffic page is touched correctly.
+- Skipping cost: Skipping any verification costs days-to-weeks of user-reported defect latency — a broken radio silently wrong-returns results, thresholds reset per session and erode linguist trust, a typo corrupts stored preferences silently, enabled-but-ignored language filters produce a silent wrong-result class found in support tickets, and crashed degraded states or reordered pages surface in production tickets (1000× DDL multiplier) instead of the Playwright harness where they are found in minutes.
 - Identity anchor: Correctness is the only metric.
+
+# Post-Implementation
+
+- [ ] 19. (**task-card**) Adversarial audit — dispatch `task(..., prompt: "execute verification-audit DiMo investigator from audit. Read audit/tasks/verification-audit-investigator.md first")`, followed by validator, evaluator, arbiter in sequence
+  - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-audit-*`; DONE_WITH_CONCERNS coerces to FAIL; findings demand remediation before PR
+- [ ] 20. (**direct**) Z3 dependency check — `./.opencode/tools/solve check --state-path .issues/1385/artifacts/solve-output.yaml --contract-path .issues/1385/dependency-contract.yaml`
+  - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-z3-check-*`; single-phase contract must verify
+- [ ] 21. (**task-card**) Structural checks — dispatch `task(..., prompt: "execute checklist task from finishing-a-development-branch. Read finishing-a-development-branch/tasks/checklist.md first")`
+  - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-structural-checks-*`; lint/typecheck/format checks on modified files
+- [ ] 22. (**task-card**) Pre-PR gate — dispatch `task(..., prompt: "execute verify task from verification-before-completion. Read verification-before-completion/tasks/verify.md first")`
+  - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-pre-pr-gate-*`; reads all SC verdicts; BLOCKs if any FAIL
+- [ ] 23. (**task-card**) Final regression check — dispatch `task(..., prompt: "execute phase-4 task from test-driven-development")`
+  - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-regression-check-*`; full-suite regression before PR
+- [ ] 24. (**task-card**) Review prep — dispatch `task(..., prompt: "execute review-prep from git-workflow-pr. Read git-workflow-pr/tasks/review-prep.md first")`
+  - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-review-prep-*` if present; reviewer context from all SC evidence
+- [ ] 25. (**task-card**) Create PR — dispatch `task(..., prompt: "execute create task from git-workflow-pr. Read git-workflow-pr/tasks/create.md first")`
+  - Stacked strategy; targets trunk; body MUST NOT contain auto-closing keywords for stakeholder issues; then dispatch `task(..., prompt: "execute completion task from completion-core")` for the executive summary
+  - Pre-clean `tmp/{issue-1385}/artifacts/pipeline-pr-*`
 
 ## Pre-Flight Guard (Mandatory)
 
@@ -270,3 +230,6 @@ Check your tool list for a tool named `task`.
 ---
 
 *Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash)*
+## Lifecycle Events
+
+- 2026-09-30T18:06:47Z — `plan_created` — plan file: `.issues/1385/plan.md`; phase count: 1 (dependency-contract.yaml single-phase DAG); execution strategy: Phase 1 direct steps (1, 7, 11, 20, 25) + task-card dispatch steps (2-6, 8-10, 12-14, 16-18, 19, 21-24); all 8 SCs (SC-1..SC-8) colocated in phase 1 per concern-map and spec traceability.

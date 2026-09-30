@@ -1,7 +1,10 @@
 # Dependency contract for issue #1385 — Semantic Search end-user interface (records page UI)
 # Source: .issues/1385/artifacts/interface-compatibility.yaml dependency_contract section
 # (extracted as-is; file contains a dependency_contract section — no auto-backfill needed)
-# Structure augmentation: phase DAG from .issues/1385/artifacts/structure.yaml
+# Structure augmentation: phase DAG — revised 2026-09-30, single-phase decomposition
+# (revision: validate-findings.yaml category_4 concern-separation FAILs — concern-map
+# maps all 6 concerns to phase 1 and spec traceability maps all SCs to phase 1; the
+# former 2-phase split is collapsed so plan == concern-map == spec traceability)
 #
 # Use:
 #   ./.opencode/tools/solve model --contract-path .issues/1385/dependency-contract.yaml --query <expr>
@@ -12,15 +15,10 @@ generated_at: "20260930136000"
 
 phases:
   - id: 1
-    name: "UI surface scaffolding"
-    concern: "Mode radio entries + captions (SC-1), coupled threshold control with persistence + snap-back (SC-2, SC-3), language-filter disabled parity in semantic modes (SC-8)"
+    name: "Semantic search UI — mode entries, threshold control, seam consumption, score display, pagination, empty states"
+    concern: "records.py additive UI surface + seam-consumption paths: mode radio entries + captions (SC-1) and mode dispatch through search_records (SC-7) — C1-mode-dispatch; coupled threshold control with persistence + snap-back (SC-2, SC-3) — C2-threshold; score badges inline two-decimal descending (SC-4) — C3-semantic-display; rank-once pagination slicing (SC-5) — C4-pagination; per-status empty-state rendering (SC-6) — C5-empty-states; language-filter disabled parity in semantic modes (SC-8) — C6-filter-state. All 6 concerns have phase_boundary=1 in concern-map.yaml and all 8 SCs map to phase 1 in spec traceability."
     depends_on: []
-    scs: ["SC-1", "SC-2", "SC-3", "SC-8"]
-  - id: 2
-    name: "Seam consumption"
-    concern: "SearchMode widened dispatch through search_records (SC-7), score badges inline two-decimal descending (SC-4), rank-once pagination slicing (SC-5), per-status empty-state rendering (SC-6)"
-    depends_on: [1]
-    scs: ["SC-7", "SC-4", "SC-5", "SC-6"]
+    scs: ["SC-1", "SC-2", "SC-3", "SC-8", "SC-7", "SC-4", "SC-5", "SC-6"]
 
 # Dependency contract extracted verbatim from interface-compatibility.yaml
 description: "Concrete dependency data derived from spec affected files and SCs (real sources, real targets, real type constraints)."
@@ -50,20 +48,16 @@ cross_spec:
 variables:
   phase_1_done:
     type: bool
-  phase_2_done:
-    type: bool
   all_phases_done:
     type: bool
 
-# Dependency ordering: phase X completes only after all its depends_on phases
+# Dependency ordering: single phase, no inter-phase edges
 preconditions:
   - "phase_1_done"
-  - "z3.Implies(phase_2_done, phase_1_done)"
 
-# Invariants: no backward edges — later phase cannot complete before earlier producer
+# Invariants: completion equals the single phase completing
 invariants:
-  - "all_phases_done == z3.And(phase_1_done, phase_2_done)"
-  - "z3.Not(z3.And(phase_2_done, z3.Not(phase_1_done)))"
+  - "all_phases_done == phase_1_done"
 
 postconditions:
   - "all_phases_done"

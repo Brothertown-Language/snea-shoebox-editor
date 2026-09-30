@@ -1,0 +1,89 @@
+# Validation findings — issue #1385 plan structure
+schema_version: "1.0"
+validated_at: "20260930141000"
+issue: 1385
+plan: ".issues/1385/plan.md"
+solve_output: ".issues/1385/artifacts/solve-output.yaml"
+solve_status: SAT
+dependency_contract: ".issues/1385/dependency-contract.yaml"
+
+overall_status: PASS
+
+category_1_structural:
+  status: PASS
+  checks:
+    phase_table_required_columns:
+      result: PASS
+      detail: "Phase table has all required columns: Phase, Name, Concern, SCs, Depends On, Step Range, Dispatch"
+    phase_procedure_section:
+      result: PASS
+      detail: "Phase 1 has Steps section (Items 1-8) with numbered checkbox steps 1-25"
+    exit_criteria_sc_mapping:
+      result: PASS
+      detail: "Exit Criteria section C1-C7 present; SC-to-phase mapping in Phase Table (all 8 SCs -> phase 1) and plan Items section per-SC"
+
+category_2_skill_task_validity:
+  status: PASS
+  checks:
+    all_skill_task_pairs_valid:
+      result: PASS
+      detail: "Every skill+task reference matches implementation-workflow.md reference card: pre-regression (tdd phase-0), pre-regression-verify (vbc), red/green/post-regression (tdd), verify (vbc), commit-inline (orchestrator direct), audit, z3-check (orchestrator direct), structural-checks (finishing-a-development-branch checklist), pre-pr-gate (vbc), regression-check (tdd phase-4), review-prep + create (git-workflow-pr), completion (completion-core)"
+    dispatch_strings_canonical:
+      result: PASS
+      detail: "Step dispatch prompts match canonical strings in the reference card TDT"
+
+category_3_sc_coverage:
+  status: PASS
+  checks:
+    all_scs_covered:
+      result: PASS
+      detail: "All 8 SCs (SC-1..SC-8) from spec.md appear in Phase Table, plan Items, and Exit Criteria C1"
+    triplet_split_detection:
+      result: PASS
+      detail: "No SC has RED/GREEN/COMMIT split across phases — single-phase plan; every SC's triplet colocated (SC-7 steps 11-14 all in phase 1; other SCs one item each with daisy-chain within the item)"
+
+category_4_concern_separation:
+  status: PASS
+  checks:
+    phases_address_concern_map_concerns:
+      result: PASS
+      detail: "Phase 1 addresses all 6 concern-map concerns (C1..C6), each of which has phase_boundary=1 in concern-map.yaml — plan matches the concern-map artifact"
+    no_two_phases_same_concern:
+      result: PASS
+      detail: "Single-phase plan; no overlap possible"
+  note: "Plan header documents the 2-phase -> 1-phase collapse: concern-map maps all 6 concerns to phase 1 and spec traceability maps all SCs/R-1..R-9 to phase 1. The former multi-phase split was a concern-separation defect; the collapse aligns plan == concern-map == spec traceability."
+
+category_5_dag_validation:
+  status: PASS
+  checks:
+    acyclic:
+      result: PASS
+      detail: "Single phase with depends_on: []; no cycle possible"
+    all_phases_reachable:
+      result: PASS
+      detail: "Phase 1 is the start node; solve model query all_phases_done = True (SAT)"
+    no_orphan_phases:
+      result: PASS
+      detail: "Phase 1 has solver wiring (preconditions/invariants/postconditions/queries in dependency-contract.yaml); not an orphan"
+  supporting_evidence:
+    - "solve model: SAT (all_phases_done = True, phase_1_done = True)"
+    - "solve check: SAT both stages (pre+postconditions; postconditions+invariants) vs state-analysis.yaml"
+
+category_6_holistic_quality:
+  status: PASS
+  checks:
+    no_tbd_todo_placeholders:
+      result: PASS
+      detail: "No TODO/TBD/placeholder strings in plan body"
+    checkbox_format:
+      result: PASS
+      detail: "All execution steps (1-25) use `- [ ]` checkbox format"
+    dispatch_mode_consistency:
+      result: PASS
+      detail: "Single phase; every step carries explicit (direct)/(task-card) mode. Orchestrator-direct steps (7, 11, 20) correspond to commit-inline/precondition/z3-check which the reference card designates orchestrator-direct; no clean-room/inline vocabulary collisions"
+
+non_blocking_warnings:
+  - id: W-1
+    detail: "solve-output.yaml phase_decomposition section is stale — it describes the superseded 2-phase decomposition (phases 1-2, DAG 1->2) while plan.md and dependency-contract.yaml were revised to the 1-phase structure (contract header documents the revision dated 2026-09-30). The solve_status (SAT) remains valid for the current single-phase contract; no re-solve required. Recommend annotating solve-output on next pipeline touch, not blocking."
+  - id: W-2
+    detail: "dependency-contract.yaml generated_at timestamp '20260930136000' is 13 digits (schema examples use 12-digit YYYYMMDDHHMMSS); cosmetic schema_value format drift only."
