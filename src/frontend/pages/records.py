@@ -224,6 +224,12 @@ def records():
     search_result = None
     semantic_scores: dict[int, float] = {}
 
+    # SC-6 (Issue #1385, R-6): degraded-state payload from the semantic seam.
+    # Non-"ok" statuses render a designated clean empty state in the MAIN
+    # panel and never fall through to record rendering or a crash.
+    semantic_status = None
+    semantic_status_message = ""
+
     if is_semantic_mode:
         if search_term:
             mode_key = "gloss" if st.session_state.search_mode == "Semantic Gloss" else "all"
@@ -246,12 +252,40 @@ def records():
                     source_id=source_filter_id,
                     limit=None,
                 )
-                cached_ranked = (
-                    semantic_digest,
-                    sorted(semantic_result.results, key=lambda p: (-p[1], p[0])),
+                # SC-6: a degraded (non-ok) payload is never cached as a
+                # ranked list — re-search retries the seam.
+                if getattr(semantic_result, "status", "ok") == "ok":
+                    cached_ranked = (
+                        semantic_digest,
+                        sorted(semantic_result.results, key=lambda p: (-p[1], p[0])),
+                    )
+                    st.session_state._semantic_ranked_cache = cached_ranked
+                    semantic_status = None
+                else:
+                    semantic_status = semantic_result.status
+                    semantic_status_message = getattr(semantic_result, "message", "") or ""
+                    cached_ranked = (semantic_digest, [])
+                    st.session_state._semantic_ranked_cache = cached_ranked
+            elif cached_ranked[1]:
+                ranked_pairs = cached_ranked[1]
+            else:
+                # Degraded payload cached from this same digest — re-consume
+                # the seam once to re-derive the status for rendering.
+                semantic_result = LinguisticService.search_semantic(
+                    mode=mode_key,
+                    query=search_term,
+                    threshold=st.session_state.semantic_threshold,
+                    source_id=source_filter_id,
+                    limit=None,
                 )
-                st.session_state._semantic_ranked_cache = cached_ranked
-            ranked_pairs = cached_ranked[1]
+                if getattr(semantic_result, "status", "ok") != "ok":
+                    semantic_status = semantic_result.status
+                    semantic_status_message = getattr(semantic_result, "message", "") or ""
+                ranked_pairs = []
+            if semantic_status is None and cached_ranked is not None:
+                ranked_pairs = cached_ranked[1]
+            else:
+                ranked_pairs = []
             semantic_scores = dict(ranked_pairs)
             # Rank-once pagination (R-5, SC-5): slice the cached ranked list
             # first, then hydrate only the current page's records — the
@@ -738,8 +772,41 @@ def records():
         render_back_to_main_button()
 
     # --- 4. Main Panel: Records List ---
-    if not records_batch:
-        st.info("No records found matching your criteria.")
+    # SC-6 (Issue #1385, R-6): per-status clean empty states in the MAIN
+    # panel records area — never a crash, never sidebar rendering. st.info
+    # for informational states, st.warning for remedy-required states.
+    # Theme-aware native elements only (no hex/rgba, no st.html).
+    _BACKFILL_REMEDY = "Table Maintenance → Data Reprocessing → Embedding Backfill"
+
+    if is_semantic_mode and search_term and semantic_status is not None:
+        if semantic_status == "empty_query":
+            st.info("Enter a query to search semantically.")
+        elif semantic_status == "no_embeddings":
+            st.warning(
+                "No records have embeddings yet, so semantic search cannot match this query."
+                f" An administrator can generate them via {_BACKFILL_REMEDY}."
+            )
+        elif semantic_status == "stale_model":
+            st.warning(
+                "The embedding model has changed since records were last processed, so"
+                f" semantic results are unavailable. An administrator can resolve this"
+                f" via {_BACKFILL_REMEDY}."
+            )
+        else:
+            # Unknown status: fail clean, never crash.
+            st.info("No records found matching your criteria.")
+    elif not records_batch:
+        if is_semantic_mode and search_term:
+            # Zero-results-after-threshold (ok payload, empty ranking):
+            # reuses the existing empty-batch branch with status-specific
+            # copy naming the active threshold.
+            st.info(
+                "No records scored above the semantic threshold"
+                f" ({float(st.session_state.semantic_threshold):.2f})."
+                " Lower the Semantic threshold to widen the search."
+            )
+        else:
+            st.info("No records found matching your criteria.")
     else:
         for record in records_batch:
             record_id = record["id"]
