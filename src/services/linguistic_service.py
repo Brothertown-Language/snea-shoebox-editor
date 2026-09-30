@@ -19,13 +19,14 @@ from src.database.models.identity import UserActivityLog
 from src.database.models.search import GlossSearchEntry, HeadwordSearchEntry, SearchEntry
 from src.database.models.workflow import EditHistory, MatchupQueue
 from src.logging_config import get_logger
+from src.services.semantic_search_service import search_semantic as _search_semantic
 
 logger = get_logger("snea.linguistic_service")
 
 _TSQUERY_UNSAFE = re.compile(r"[|&!()]+")
 
 # Search mode literal type
-SearchMode = Literal["Lexeme", "FTS", "Headword", "Gloss"]
+SearchMode = Literal["Lexeme", "FTS", "Headword", "Gloss", "Semantic Gloss", "Semantic All"]
 
 
 def _search_lexeme(query, search_term: str):
@@ -81,6 +82,8 @@ _search_strategies: dict[str, callable] = {
     "FTS": _search_fts,
     "Headword": _search_headword,
     "Gloss": _search_gloss,
+    "Semantic Gloss": _search_semantic,
+    "Semantic All": _search_semantic,
 }
 
 

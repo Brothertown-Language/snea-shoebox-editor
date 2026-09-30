@@ -195,6 +195,33 @@ def render_data_reprocessing_maintenance():
         except Exception as e:
             handle_ui_error(e, "Reprocessing failed.", logger_name="snea.pages.table_maintenance")
 
+    # ── Admin Embedding Backfill (SC-9) ─────────────────────────────
+    from src.services.semantic_search_service import backfill_embeddings
+
+    st.divider()
+    st.subheader("Embedding Backfill")
+    st.info(
+        "Re-embeds search entries whose embedding is missing or stale "
+        f"(model pin changed). Uses the current pin: gte-small."
+    )
+
+    if st.button("Start Embedding Backfill"):
+        status_container = st.empty()
+        progress_bar = st.progress(0)
+
+        def update_backfill_progress(current, total):
+            progress_bar.progress(min(1.0, current / total) if total else 1.0)
+            status_container.text(f"Backfilled entry {current} of {total}...")
+
+        try:
+            with st.status("Backfilling embeddings...", expanded=True) as status:
+                results = backfill_embeddings(progress_callback=update_backfill_progress)
+                status.update(label="Backfill complete!", state="complete", expanded=False)
+
+            st.success(f"Successfully backfilled {results['backfilled']} of {results['total']} entries.")
+        except Exception as e:
+            handle_ui_error(e, "Embedding backfill failed.", logger_name="snea.pages.table_maintenance")
+
 
 def render_deleted_records_maintenance():
     from src.frontend.ui_utils import handle_ui_error

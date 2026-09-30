@@ -59,11 +59,10 @@ The app now automatically handles its own schema initialization. If you are usin
 
 ## Running Tests
 
-Run the test suite with local dependencies:
-
-```bash
-uv run --extra local python -m unittest discover tests
-```
+Run the test suite with `uv run pytest test/`. Live-app browser E2E tests
+(`playwright_e2e` marker) require the app running on :8501 and `SNEA_E2E=1` —
+see the UI Testing Standard (`ui_testing_standard.md`: Playwright with vision
+is the preferred UI verification method; AppTest is for in-process smoke only).
 
 ## Architecture Details
 
