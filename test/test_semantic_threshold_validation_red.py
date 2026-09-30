@@ -22,7 +22,6 @@ validation guard exists in the threshold edit path).
 """
 
 import unittest
-from unittest.mock import MagicMock
 
 from streamlit.testing.v1 import AppTest
 

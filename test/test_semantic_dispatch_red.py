@@ -19,7 +19,6 @@ modules via sys.modules insert-only containment).
 Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash)
 """
 import unittest
-from unittest.mock import MagicMock
 
 from streamlit.testing.v1 import AppTest
 
@@ -57,7 +56,9 @@ try:
         )
         if isinstance(_rec.get, MagicMock):
             _rec.get.side_effect = (
-                lambda k, default=None, _id=_rid: {"id": _id, "is_locked": False, "source_name": "S", "mdf_data": ""}.get(k, default)
+                lambda k, default=None, _id=_rid: {
+                    "id": _id, "is_locked": False, "source_name": "S", "mdf_data": ""
+                }.get(k, default)
             )
     mock_linguistic.get_record.side_effect = lambda rid: {
         "id": rid, "is_locked": False, "source_name": "S", "mdf_data": "", "languages": [],
@@ -122,7 +123,6 @@ class TestSemanticDispatchRED(unittest.TestCase):
         semantic seam (search_semantic) with the session threshold forwarded,
         NOT route through search_records. RED: current page always calls
         search_records and never passes threshold to a seam."""
-        from streamlit.testing.v1 import AppTest
 
         self.at.session_state["search_query"] = "water"
         self.at.session_state["search_mode"] = "Semantic Gloss"
@@ -130,7 +130,7 @@ class TestSemanticDispatchRED(unittest.TestCase):
         self.at.run()
         # Fail collection check: page must not raise.
         self.assertEqual(len(self.at.exception), 0, f"Page raised: {self.at.exception}")
-        sys_modules_ls = None
+
         # Assert seam consumed with threshold — via mocked service calls.
         # The mocked LinguisticService.search_semantic must have been called.
         # Access the mock indirectly: inspect the rendered main panel for the

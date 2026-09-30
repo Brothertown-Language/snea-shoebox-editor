@@ -162,7 +162,7 @@ class TestSemanticScoresRED(unittest.TestCase):
                 at.session_state["search_mode"] = mode
                 at.run()
                 self.assertEqual(len(at.exception), 0, f"Page raised: {at.exception}")
-                body = "\n".join(m.value or "" for m in at.markdown)
+
                 for line in at.markdown:
                     if "Record #" in (line.value or ""):
                         self.assertNotIn("0.92", line.value, f"{mode} header must not show a score")

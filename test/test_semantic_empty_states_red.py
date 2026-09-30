@@ -25,9 +25,7 @@ modules via sys.modules insert-only containment).
 
 Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash)
 """
-import sys
 import unittest
-from unittest.mock import MagicMock
 
 from streamlit.testing.v1 import AppTest
 
