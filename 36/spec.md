@@ -49,7 +49,7 @@
 | SC-3 | Schema contains `gloss_search_entries` +3 new columns (`embedding vector(384)`, `entry_type`, `embedding_model`) and new `semantic_search_entries` table (id, record_id FK CASCADE, entry_type, term, embedding vector(384), embedding_model); existing columns untouched | structural | `models/search.py:63-78` + `state-analysis.yaml`; `interface-compat.yaml` v1 field list | schema introspection after migration on synced DB |
 | SC-4 | Two DDL-only migrations (CREATE TABLE + ALTER TABLE ADD COLUMN) apply in order, version-gated idempotent, in the append-only `YYYYMMDDSSSSS` registry with a pgvector extversion assertion; no data writes, no renumbering | behavioral | `migrations.py:67-72` directive (verified live); #1346 flake isolation pattern | isolated migration test: version rows advanced; objects created; rerun is no-op |
 | SC-5 | `search_semantic(mode: 'gloss'\|'all', query, threshold=None, source_id=None, limit=None) → SemanticSearchResult{results: list[(record_id, score)], status ∈ {ok, empty_query, no_embeddings, stale_model}, message}` returns the full ranked list desc cosine with record_id-asc tie-break, threshold-filtered (None → 0.80), excluding NULL/stale rows via the pin join; service never imports streamlit | behavioral | `concern-map.yaml` seam contract; `interface-compat.yaml` dependency_contract | pytest service-layer vs freshly synced local DB |
-| SC-6 | Calibration anchors on freshly synced real data: positives (round/bed/house/peas/hunt) score ≥ their 0.85-0.90 recorded floors; unrelated negatives score ≥0.07 below the positive floor; default threshold 0.80 | behavioral | `handoff.yaml` calibration (6,266 unique terms, measured 2026-09-28); REQ-E13 | pytest calibration module producing per-anchor evidence artifact (per-anchor floor values recorded per-anchor in the calibration evidence artifact — not a blanket floor; the 0.85-0.90 band is the recorded summary bound); re-baseline procedure owns drift |
+| SC-6 | RETIRED (2026-09-29, developer directive): calibration-anchor pytest discarded. The model is vendor-trained and hash-pinned; calibration is not model work. The Sep 28 spike measurements in `tmp/spike-gte/` (positives 0.85-0.90 band, negatives ≥0.07 lower, threshold 0.80) stand as the evidentiary record; no pytest calibration module is delivered | behavioral | spike artifacts `tmp/spike-gte/` (measured 2026-09-28); `handoff.yaml` | none — spike artifacts stand as evidence of record; no test written |
 | SC-7 | Degraded inputs produce the correct status+message and never an exception: empty/whitespace query → `empty_query` before model invocation; no embedded rows → `no_embeddings`; pin mismatch rows → `stale_model`; all-below-threshold → `ok` with empty results; `stale_model`/`no_embeddings` message names the admin backfill remedy | behavioral | `state-analysis.yaml` state machine invariants; `decompose-output.yaml` D1-ITEM-7 | pytest edge-input matrix on service |
 | SC-8 | `populate_search_entries(record_ids, session=None) → int` (signature unchanged) embeds the new primary `ge` rows inline during ingestion (1-5 strings/record, measured 10-60 ms/record) with `embedding_model` set to the pin; batch ≤ 512; Unicode preserved exactly | behavioral | `upload_service.py:1758` (`populate_search_entries()` — stable anchor); `test_upload_search_entries.py` | extend existing test with real synced records; assert embeddings + pin + Unicode fidelity |
 | SC-9 | An admin-role Embedding Backfill button in Table Maintenance → Data Reprocessing re-embeds all records with `st.progress` + progress callback + `st.status`, surfacing completion results and errors via `handle_ui_error`; non-admin role is rejected | behavioral | `table_maintenance.py:125-130,:169-196` idiom (verified live); Role gate reused | Playwright click-through on synced DB; rate reference 6,266 terms/72.2 s |
@@ -69,7 +69,7 @@ R-4. Schema changes SHALL ship as DDL-only versioned migrations appended to the 
 
 R-5. The system SHALL expose `search_semantic(mode, query, threshold=None, source_id=None, limit=None) → SemanticSearchResult` per the v1 seam contract: full ranked list desc cosine score with record_id-asc tie-break, default threshold 0.80, NULL/stale rows excluded via the `embedding_model == pin` join, no streamlit imports.
 
-R-6. Calibration anchors SHALL hold on freshly synced real data — positive query floors (round/bed/house/peas/hunt) 0.85-0.90, negatives ≥0.07 below positives — and a material distribution shift SHALL trigger re-baseline via the owned calibration procedure rather than silent threshold changes.
+R-6. RECORD OF EVIDENCE (retired as a deliverable 2026-09-29, developer directive): the spike measurements in `tmp/spike-gte/` stand as the calibration record — positive queries (round/bed/house/peas/hunt) measured in the 0.85-0.90 band, negatives ≥0.07 below, default threshold 0.80. No calibration pytest is delivered; distribution shifts are addressed by re-measuring via the spike procedure if ever needed.
 
 R-7. Semantic search SHALL degrade safely: `empty_query`, `no_embeddings`, `stale_model`, and zero-below-threshold states return the designated status+message payloads without exceptions; degraded-state messages name the admin backfill remedy.
 
@@ -119,11 +119,8 @@ R-14. `load_model()` SHALL return a process-wide single `onnxruntime.InferenceSe
 - verify: pytest service-layer vs freshly synced DB; contract field list exact
 - commit: semantic search service
 
-### Item 6 (SC-6): Calibration anchor floors
-- RED: calibration pytest asserting seam against unimplemented floors → fails
-- GREEN: calibration module asserting recorded anchors on freshly synced data; per-anchor evidence artifact
-- verify: pytest produces calibration evidence with per-anchor scores
-- commit: calibration test + evidence
+### Item 6 (SC-6): RETIRED — calibration anchor floors
+- RETIRED 2026-09-29 (developer directive): no RED/GREEN/verify/commit cycle; spike artifacts stand as the SC-6 evidence of record. No renumbering — Item 6 is removed, not replaced.
 
 ### Item 7 (SC-7): Degraded status semantics
 - RED: pytest asserting exceptions on edge inputs → fails
@@ -181,13 +178,13 @@ R-14. `load_model()` SHALL return a process-wide single `onnxruntime.InferenceSe
 | R-3 | SC-3 | 2 (substrate) |
 | R-4 | SC-4 | 3 (substrate) |
 | R-5 | SC-5 | 4 (services) |
-| R-6 | SC-6 | 5 (services) |
+| R-6 | SC-6 (retired) | — |
 | R-7 | SC-7 | 5 (services) |
 | R-8 | SC-8 | 6 (services) |
 | R-9 | SC-9 | 7 (admin UI) |
 | R-10 | SC-10 | 8 (envelope) |
 | R-11 | SC-8, SC-9 | 6-7 |
-| R-12 | SC-5, SC-6, SC-9 | 4-8 |
+| R-12 | SC-5, SC-7, SC-9 | 4-8 |
 | R-13 | SC-11 | 4 (services) |
 | R-14 | SC-12 | 2 (substrate) |
 
@@ -221,7 +218,7 @@ Cost is measured in defect-discovery-latency, not tool calls. Correctness is the
 - **SC-3:** Schema introspection costs minutes. Skipping means a schema/model mismatch breaks every semantic query at runtime — production failure (1000×).
 - **SC-4:** Isolated migration test costs minutes. Skipping means a non-idempotent or wrongly-versioned migration bricks startup for every environment simultaneously.
 - **SC-5:** Seam pytest costs minutes. Skipping means the contract the whole UI spec binds to is wrong → cross-spec rework (compound escalation).
-- **SC-6:** Calibration run costs minutes against real synced data. Skipping means an uncalibrated threshold ships and linguists tune blind — correctness of the feature itself is unverifiable.
+- **SC-6 (retired):** Spike measurements already recorded (2026-09-28); no deliverable. Zero additional cost either way.
 - **SC-7:** Edge pytest costs minutes. Skipping means production support tickets for every missing-embedding state — highest-frequency failure surface (1000×).
 - **SC-8:** Extended upload test costs minutes. Skipping means silently unsearchable new records — data-integrity defect discovered only by absence of results.
 - **SC-9:** Playwright click-through costs minutes. Skipping means a broken admin tool is discovered during the first real backfill attempt, under operational pressure.
@@ -259,6 +256,8 @@ Cost is measured in defect-discovery-latency, not tool calls. Correctness is the
 | 2026-09-29 | Validation revision (tier-1 iteration 2, 2 hard FAILs + secondary + warnings). F1/BEH-EV uplift: SC-11 Evidence Type corrected structural → behavioral — dispatch routing of 'Semantic Gloss'/'Semantic All' to search_semantic() is runtime-behavioral substrate (auto-uplift); verification method already behavioral-grade (pytest dispatch routing), kept as-is; SC-11 evidence type updated in sc-summary.yaml. F2/completeness: full 64-hex tokenizer.json SHA256 (da0e79933b9ed51798a3ae27893d3c5fa4a201126cef75586296df9b4d2c62a0, verified live from tmp/spike-gte/tokenizer.json, 711,661 B) recorded everywhere the truncated form appeared (Model pin Key Decision, SC-1 verification method); hash-check method now executable from the spec text alone. Secondary: SC-6 verification method + criterion clarified — per-anchor floor values MUST be recorded per-anchor in the SC-6 calibration evidence artifact (not a blanket floor); 0.85-0.90 retained as the recorded summary bound; thresholds unchanged. W3: '1 GB' normalized to '1 GiB' (3 occurrences, same envelope). W4: R-13 phase label corrected to '4 (services)' matching neighboring service-layer entries. W2/W1 artifact-text drift: state-analysis ONNX-session location updated to module-level holder per R-14 (drop @st.cache_resource wording); blast-radius sentence-transformers wording corrected to 'already dev-only (verified)' — artifacts re-created from spec-consumable sources. NO renumbering: SCs 1–12, Items 1–12, R-1–R-14 identities intact; gloss-space scope, model pins (commit + ONNX SHA), schema, #1385 boundary, OOM amendment untouched. | Spec-validation FAIL findings F1 (evidence_type_method) and F2 (completeness) from tier-1 iteration 2 validate step; secondary SC-6 recording clarification and zero-risk warning fixes (W1-W4) per revision_reason scope cap | Developer-authorized revision scope (revise dispatch, 2026-09-29) |
 
 | 2026-09-29 | Validation revision (tier-1 iteration 3, 1 hard FAIL). F3/BEH-EV uplift: SC-4 Evidence Type corrected structural → behavioral — migration execution outcomes (apply-in-order, version-gated idempotency, rerun no-op) are runtime-behavioral substrate (auto-uplift per BEH-EV); verification method already behavioral-grade (isolated migration test: version rows advanced; objects created; rerun is no-op), kept unchanged; SC-4 evidence type updated in sc-summary.yaml. No other SC text changes; no renumbering (SCs 1–12, Items 1–12, R-1–R-14 identities intact); model pins, schema, #1385 boundary, OOM amendment, gloss-space scope untouched. | Spec-validation FAIL finding F3 (evidence_type_method) from tier-1 iteration 3 validate step | Developer-authorized revision scope (revise dispatch, 2026-09-29) |
+
+| 2026-09-29 | SC-6 retirement (developer directive): calibration-anchor pytest discarded — the model is vendor-trained and hash-pinned, not trained or fine-tuned here; the Sep 28 spike measurements in `tmp/spike-gte/` stand as the calibration evidence of record. SC-6 criterion replaced with RETIRED status; R-6 rewritten as record-of-evidence; Item 6 cycle removed; Cost Frame SC-6 entry updated. NO renumbering (SCs 1–12, Items 1–12, R-1–R-14 identities intact); all other SCs, schema, #1385 boundary, model pins, phases untouched. | Developer chat directive: "fix the spec and plan then continue" following "the work is wasted as it will be discarded" — calibration pytest judged duplicative of spike evidence | Developer directive (2026-09-29, chat) |
 
 ---
 

@@ -21,9 +21,10 @@ scs:
     evidence_type: "behavioral"
     plan_item: 5
   - id: "SC-6"
-    description: "Calibration anchors on freshly synced real data: positives (round/bed/house/peas/hunt) >= 0.85-0.90 floors (per-anchor floor values recorded per-anchor in the SC-6 evidence artifact; 0.85-0.90 is the recorded summary bound); negatives >=0.07 below positives; default threshold 0.80"
-    evidence_type: "behavioral"
+    description: "RETIRED (2026-09-29, developer directive): calibration-anchor pytest discarded — model is vendor-trained and hash-pinned; spike artifacts (tmp/spike-gte/, measured 2026-09-28) stand as the evidence of record. No pytest delivered."
+    evidence_type: "structural"
     plan_item: 6
+    status: retired
   - id: "SC-7"
     description: "Degraded inputs (empty/whitespace query, no embeddings, stale pin, all-below-threshold) produce correct status+message, never an exception; degraded messages name the admin backfill remedy"
     evidence_type: "behavioral"

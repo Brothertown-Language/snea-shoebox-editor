@@ -28,7 +28,7 @@ Check your tool list for a tool named `task`.
 - Absent ⇒ sub-agent — do NOT execute any instruction below. Return `BLOCKED` with `ORCHESTRATOR_ONLY_SKILL_CARD` (cards) or `ORCHESTRATOR_ONLY_PLAN` (plans) and halt.
 
 - **Issue:** `.issues/36/spec.md` (https://github.com/Brothertown-Language/snea-shoebox-editor/tree/issues-data/.issues/36/)
-- **Goal:** Deliver semantic search over English glosses — byte-pinned gte-small INT8 ONNX artifacts, a load-once embedding service whose process-wide session singleton keeps multi-user memory flat, an additive two-table pgvector schema built by DDL-only migrations, a UI-agnostic `search_semantic()` seam backend-reachable through additive SearchMode widening, inline upload-path embedding, and a role-gated admin Embedding Backfill — with all 12 success criteria passing on fresh production-synced data.
+- **Goal:** Deliver semantic search over English glosses — byte-pinned gte-small INT8 ONNX artifacts, a load-once embedding service whose process-wide session singleton keeps multi-user memory flat, an additive two-table pgvector schema built by DDL-only migrations, a UI-agnostic `search_semantic()` seam backend-reachable through additive SearchMode widening, inline upload-path embedding, and a role-gated admin Embedding Backfill — with the 11 active success criteria passing on fresh production-synced data (SC-6 retired 2026-09-29, spike artifacts stand as its evidence of record).
 - **Architecture:** Six strictly sequential phases following the concern chain substrate → schema → services → calibration → data plane. The embedding model ships as git-committed byte-exact binaries verified by SHA256 hash check; it runs in-process via onnxruntime behind a process-wide load-once session singleton (module-level holder in `embedding_service.py`, streamlit-import-free, one-at-a-time in-flight lock) because Streamlit runs one script thread per user session. pgvector `vector(384)` storage spans two additive tables (`gloss_search_entries` gains 3 columns; new `semantic_search_entries` table) created by append-only versioned migrations with a pgvector extversion assertion and no startup backfill. Rows are searchable only when `embedding_model` matches the committed pin — NULL/stale rows degrade to safe statuses, never errors. The `SearchMode` Literal widening and its two dispatch entries are additive-only (the seam #1385 binds to); the sole `st.*` surface in this spec is the admin backfill section in `table_maintenance.py`.
 - **Files:**
   - `models/gte-small/` (new committed bytes: ONNX + tokenizer.json)
@@ -71,9 +71,9 @@ Untouched by directive: Lexeme/FTS/Headword/Gloss strategies, `search_records` s
 | 2 | Embedding service substrate (encode + singleton) | embedding_service encode pipeline + load-once process-wide session singleton | SC-2, SC-12 | 1 | 10-19 | task-card (10-18) + direct (19) |
 | 3 | pgvector schema + DDL migrations + dependency manifest | Additive two-table schema models, DDL-only versioned migrations, dependency manifest + memory envelope | SC-3, SC-4, SC-10 | 2 | 20-34 | task-card (20-33) + direct (34) |
 | 4 | Search semantic seam + mode dispatch | search_semantic() v1 contract service + additive SearchMode widening and dispatch entries | SC-5, SC-11 | 1, 2, 3 | 35-44 | task-card (35-43) + direct (44) |
-| 5 | Calibration + degraded semantics | Calibration anchor floors on freshly synced data + degraded status edge semantics | SC-6, SC-7 | 4 | 45-54 | task-card (45-53) + direct (54) |
+| 5 | Calibration + degraded semantics | SC-6 retired (spike evidence of record); degraded status edge semantics | SC-7 (SC-6 retired) | 4 | 50-54 | task-card (50-53) + direct (54) |
 | 6 | Data plane — upload inline embedding + admin backfill UI | Inline embedding inside populate_search_entries() + admin Embedding Backfill in Table Maintenance | SC-8, SC-9 | 2, 3, 4, 5 | 55-64 | task-card (55-63) + direct (64) |
-| Post | Verification, audit, review, PR | Final gates after all phases | SC-1..SC-12 | 1-6 | 65-72 | task-card (65, 67-72) + direct (66) |
+| Post | Verification, audit, review, PR | Final gates after all phases | SC-1..SC-12 (SC-6 retired) | 1-6 | 65-72 | task-card (65, 67-72) + direct (66) |
 
 ## SC Coverage
 
@@ -89,7 +89,7 @@ Every SC maps to exactly one implementing item and one phase; per-item RED/GREEN
 | SC-10 | structural | Item 10 | 3 |
 | SC-5 | behavioral | Item 5 | 4 |
 | SC-11 | behavioral | Item 11 | 4 |
-| SC-6 | behavioral | Item 6 | 5 |
+| SC-6 | structural | Item 6 | 5 | *(RETIRED 2026-09-29 — spike artifacts stand as evidence of record; no pytest delivered)* |
 | SC-7 | behavioral | Item 7 | 5 |
 | SC-8 | behavioral | Item 8 | 6 |
 | SC-9 | behavioral | Item 9 | 6 |
@@ -121,9 +121,9 @@ Every SC maps to exactly one implementing item and one phase; per-item RED/GREEN
 
 (Phase file: `plan-04-semantic-seam-dispatch.md` — steps 35-44)
 
-## Phase 5 — Calibration + degraded semantics
+## Phase 5 — Degraded semantics
 
-(Phase file: `plan-05-calibration-degraded.md` — steps 45-54)
+(Item 6 retired 2026-09-29, developer directive — spike artifacts stand as SC-6 evidence of record. Phase file `plan-05-calibration-degraded.md` reduced to Item 7 only, steps 50-54.)
 
 ## Phase 6 — Data plane — upload inline embedding + admin backfill UI
 
@@ -131,13 +131,13 @@ Every SC maps to exactly one implementing item and one phase; per-item RED/GREEN
 
 ## Post-Implementation Steps (end of plan, after Phase 6)
 
-- [ ] 65. **audit (**task-card**).** Dispatch the adversarial audit chain — `audit` verification-audit DiMo investigator first (read `audit/tasks/verification-audit-investigator.md` before dispatch), then validator, evaluator, arbiter in sequence — over the delivered artifacts against the 12 SCs.
+- [ ] 65. **audit (**task-card**).** Dispatch the adversarial audit chain — `audit` verification-audit DiMo investigator first (read `audit/tasks/verification-audit-investigator.md` before dispatch), then validator, evaluator, arbiter in sequence — over the delivered artifacts against the 11 active SCs (SC-6 retired).
   - Sub-bullet: pre-clean first: `rm -f ./tmp/issue-36/artifacts/pipeline-audit-*`.
 - [ ] 66. **z3-check (**direct**).** Run `.opencode/tools/solve check --state-path ./tmp/issue-36/artifacts/state.yaml --contract-path ./tmp/issue-36/artifacts/contract.yaml` to verify phase ordering and state consistency.
   - Sub-bullet: pre-clean first: `rm -f ./tmp/issue-36/artifacts/pipeline-z3-check-*`; a solver failure reports BLOCKED with the inconsistent phase.
 - [ ] 67. **structural-checks (**task-card**).** Dispatch `finishing-a-development-branch` checklist task — lint (`uvx ruff check src/ test/`), format check, typecheck (`uvx pyright src/`), targeted regression suites.
   - Sub-bullet: pre-clean first: `rm -f ./tmp/issue-36/artifacts/pipeline-structural-checks-*`.
-- [ ] 68. **pre-pr-gate (**task-card**).** Dispatch `verification-before-completion` verify task reading all 12 SC verdicts; the gate BLOCKs PR creation if any SC verdict is FAIL, DONE_WITH_CONCERNS (coerced to FAIL per the workflow coercion rules), or EVIDENCE_TYPE_MISMATCH.
+- [ ] 68. **pre-pr-gate (**task-card**).** Dispatch `verification-before-completion` verify task reading all 11 active SC verdicts (SC-6 retired — spike artifacts stand as its evidence); the gate BLOCKs PR creation if any SC verdict is FAIL, DONE_WITH_CONCERNS (coerced to FAIL per the workflow coercion rules), or EVIDENCE_TYPE_MISMATCH.
   - Sub-bullet: pre-clean first: `rm -f ./tmp/issue-36/artifacts/pipeline-pre-pr-gate-*`.
 - [ ] 69. **regression-check (**task-card**).** Dispatch `test-driven-development` phase-4 task for the final regression sweep across all suites after the last GREEN.
   - Sub-bullet: pre-clean first: `rm -f ./tmp/issue-36/artifacts/pipeline-regression-check-*`.
@@ -158,13 +158,13 @@ Every SC maps to exactly one implementing item and one phase; per-item RED/GREEN
 - [ ] C4. Schema introspection on the synced DB shows `gloss_search_entries` +3 columns and the new `semantic_search_entries` table with existing columns untouched (SC-3)
 - [ ] C5. The two DDL-only migrations apply in order, version rows advance, rerun is a no-op, and the pgvector extversion assertion is present in the append-only registry (SC-4)
 - [ ] C6. `search_semantic` returns the full ranked list desc cosine with record_id-asc tie-break, None→0.80 threshold, pin-join exclusion, exact SemanticSearchResult field list, and no streamlit import (SC-5)
-- [ ] C7. Calibration evidence artifact records per-anchor floors for round/bed/house/peas/hunt within the 0.85-0.90 summary band with negatives ≥0.07 below and default threshold 0.80 on freshly synced data (SC-6)
+- [ ] C7. RETIRED (SC-6, 2026-09-29): calibration-anchor pytest discarded; spike measurements in `tmp/spike-gte/` (positives 0.85-0.90, negatives ≥0.07 lower, threshold 0.80) stand as the evidence of record — no test deliverable
 - [ ] C8. The degraded-input matrix yields empty_query/no_embeddings/stale_model/ok+empty statuses with backfill-remedy messages and zero exceptions (SC-7)
 - [ ] C9. `populate_search_entries` (signature unchanged) embeds new primary ge rows inline with pin-stamped embedding_model, batch ≤512, and exact Unicode preservation on real synced records (SC-8)
 - [ ] C10. The admin-role Embedding Backfill button passes the Playwright role-gated click-through with st.progress + callback + st.status and handle_ui_error surfacing (SC-9)
 - [ ] C11. Runtime dependencies gain onnxruntime + tokenizers with sentence-transformers still dev-only, and the batch-64 profile evidence fits the 1 GiB envelope (SC-10)
 - [ ] C12. The SearchMode Literal widens additively with 'Semantic Gloss'/'Semantic All', both dispatch to search_semantic(), and the four existing modes route unchanged (SC-11)
-- [ ] C13. All 12 SC verdicts are PASS at the pre-PR gate; post-regression sweep is clean
+- [ ] C13. All 11 active SC verdicts are PASS at the pre-PR gate (SC-6 retired); post-regression sweep is clean
 - [ ] C14. No scope creep — every executed step traces to exactly one SC
 
 ## lifecycle_events
@@ -176,4 +176,10 @@ Every SC maps to exactly one implementing item and one phase; per-item RED/GREEN
   plan_file: ".issues/36/plan.md"
   phase_count: 6
   severity: info
+- event: plan_revision
+  timestamp: 2026-09-29T21:55:00Z
+  issuer: OpenCode (ollama-cloud/glm-5.3-flash)
+  plan_file: ".issues/36/plan.md"
+  severity: info
+  change: SC-6/Item 6 retirement (developer directive) — calibration pytest discarded, spike artifacts stand as evidence of record; Phase 5 reduced to Item 7 (steps 50-54); exit criteria C7/C13 and gates 65/68 updated to 11 active SCs; SC/Item identities intact (no renumbering)
 ```

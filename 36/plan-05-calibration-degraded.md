@@ -1,22 +1,20 @@
-# Phase 5 — Calibration + degraded semantics
+# Phase 5 — Degraded semantics (Item 7 only; Item 6 RETIRED)
 
-**Concern:** Verify the calibration anchor floors against freshly synced real data and harden the seam's degraded status edge semantics — every degraded input yields the correct status+message, never an exception (R-6, R-7, SC-6, SC-7, CG-3 part 2).
+**Concern:** ~~Verify the calibration anchor floors against freshly synced real data~~ (RETIRE 2026-09-29, developer directive — the model is vendor-trained and hash-pinned; the Sep 28 spike measurements in `tmp/spike-gte/` stand as the calibration evidence of record; no calibration pytest is delivered) and harden the seam's degraded status edge semantics — every degraded input yields the correct status+message, never an exception (R-7, SC-7, CG-3 part 2).
 
 **Files:**
-- calibration module (new) + per-anchor evidence artifact (new)
-- `src/services/semantic_search_service.py` (edge guards)
+- ~~calibration module (new) + per-anchor evidence artifact (new)~~ — retired
 
-**SCs:** SC-6 (behavioral), SC-7 (behavioral)
+**SCs:** SC-7 (behavioral) — SC-6 retired
 
-**Dependencies:** Phase 4 — calibration and edge-matrix tests exercise the Phase 4 seam. SC-6/SC-7 RED+GREEN+COMMIT both complete inside this phase.
+**Dependencies:** Phase 4 — edge-matrix tests exercise the Phase 4 seam. SC-7 RED+GREEN+COMMIT completes inside this phase.
 
 **Entry Conditions:**
 - Phase 4 committed and VbC consolidated: seam green, dispatch entries routing
 - Feature branch clean at Phase 4's last commit
 
 **Exit Conditions:**
-- Calibration module passes on freshly synced real data: positives (round/bed/house/peas/hunt) score ≥ their per-anchor recorded floors (0.85-0.90 recorded summary band; per-anchor values recorded per-anchor in the evidence artifact), unrelated negatives score ≥0.07 below the positive floor, default threshold 0.80
-- Per-anchor calibration evidence artifact produced
+- ~~Calibration module passes on freshly synced real data~~ — RETIRED: spike artifacts (`tmp/spike-gte/`, measured 2026-09-28) stand as SC-6 evidence of record
 - Degraded inputs produce empty_query/no_embeddings/stale_model/ok+empty statuses with messages naming the admin backfill remedy — zero exceptions across the edge matrix
 - Commits per item
 
@@ -32,24 +30,7 @@
 
 ---
 
-- [ ] 45. **pre-cleanup + R-12 re-sync — Item 6 (**direct**).** Clean Item 6 artifacts and re-sync the regression database from production before the SC-6 calibration cycle.
-  - Sub-bullet: `rm -f ./tmp/issue-36/artifacts/pipeline-red-*` then `bash scripts/sync_prod_to_local.sh` (from the branch under test)
-  - Sub-bullet: R-12 gate — calibration MUST run against a fresh production replica carrying real gloss distributions
-  - Sub-bullet: SC reference — SC-6
-- [ ] 46. **RED — Item 6 (**task-card**).** Dispatch the red task: write the failing calibration pytest asserting the seam scores against the unimplemented per-anchor floors — positives must meet per-anchor floors and negatives must stay ≥0.07 below; default threshold 0.80.
-  - Sub-bullet: dispatch — `task(..., prompt: "execute red task from test-driven-development")`
-  - Sub-bullet: RED describes what fails — no calibration module/evidence artifact exists, so per-anchor assertions cannot hold
-  - Sub-bullet: SC reference — SC-6 (behavioral: calibration pytest producing the per-anchor evidence artifact)
-- [ ] 47. **GREEN — Item 6 (**task-card**).** Dispatch the green task: implement the calibration module asserting the recorded anchors on freshly synced data and producing the per-anchor evidence artifact — per-anchor floor values recorded per-anchor (not a blanket floor), with the 0.85-0.90 band as the recorded summary bound for positives round/bed/house/peas/hunt; negatives ≥0.07 below the positive floor; default threshold 0.80.
-  - Sub-bullet: dispatch — `task(..., prompt: "execute green task from test-driven-development")`
-  - Sub-bullet: distribution-shift rule — a material distribution shift routes to the owned re-baseline procedure, never a silent threshold change (R-6)
-  - Sub-bullet: SC reference — SC-6
-- [ ] 48. **post-regression + verify — Item 6 (**task-card**).** Dispatch the phase-4 regression task and the verify task: pytest produces the calibration evidence with per-anchor scores; verify floors, margin, and threshold against the synced data.
-  - Sub-bullet: regression dispatch — `task(..., prompt: "execute phase-4 task from test-driven-development")`; verify dispatch — `task(..., prompt: "execute verify task from verification-before-completion")`; pre-clean both artifact sets
-  - Sub-bullet: SC reference — SC-6
-- [ ] 49. **commit-inline — Item 6 (**direct**).** Commit the Item 6 calibration test and evidence as one atomic slice.
-  - Sub-bullet: `git add <calibration module> <evidence artifact> <test file> && git commit -m "issue#36: calibration anchor floors on synced data (SC-6)"`
-  - Sub-bullet: no co-author trailers during implementation commits
+- [ ] 45. **RETIRED — Item 6 steps 45-49 (2026-09-29, developer directive).** No calibration cycle is executed; steps 45-49 are removed. Spike artifacts stand as SC-6 evidence of record.
 - [ ] 50. **pre-cleanup + R-12 re-sync + RED — Item 7 (**direct**, then **task-card**).** Clean Item 7 artifacts, re-sync the DB, then dispatch the red task for the degraded-status contract.
   - Sub-bullet: `rm -f ./tmp/issue-36/artifacts/pipeline-red-*` then `bash scripts/sync_prod_to_local.sh`
   - Sub-bullet: dispatch — `task(..., prompt: "execute red task from test-driven-development")`
@@ -65,13 +46,13 @@
 - [ ] 53. **commit-inline — Item 7 (**direct**).** Commit the Item 7 test and edge handling as one atomic slice.
   - Sub-bullet: `git add src/services/semantic_search_service.py <test file> && git commit -m "issue#36: degraded status semantics with backfill remedy messages (SC-7)"`
   - Sub-bullet: no co-author trailers during implementation commits
-- [ ] 54. **Phase regression sweep (**task-card**).** Dispatch the phase-4 regression task once more after the Item 7 commit to confirm SC-6 and SC-7 suites pass together.
+- [ ] 54. **Phase regression sweep (**task-card**).** Dispatch the phase-4 regression task once more after the Item 7 commit to confirm the SC-7 suite passes.
   - Sub-bullet: dispatch — `task(..., prompt: "execute phase-4 task from test-driven-development")`; pre-clean: `rm -f ./tmp/issue-36/artifacts/pipeline-post-regression-*`
 
 #### Phase 5 VbC
 
-- Calibration: per-anchor evidence artifact records each positive anchor's score ≥ its per-anchor floor (within the recorded 0.85-0.90 summary bound), negatives ≥0.07 below, default threshold 0.80, on freshly synced real data — SC-6 behavioral evidence recorded PASS.
+- ~~Calibration~~ — RETIRED: spike artifacts stand as SC-6 evidence of record; no deliverable.
 - Degraded semantics: the edge matrix yields empty_query (pre-model), no_embeddings, stale_model, ok+empty — all with backfill-remedy messages, zero exceptions — SC-7 behavioral evidence recorded PASS.
-- Re-baseline procedure available and referenced by the calibration module for future distribution shifts (R-6).
+- ~~Re-baseline procedure available and referenced by the calibration module for future distribution shifts (R-6).~~ — retired with Item 6; R-6 stands as record-of-evidence only.
 
 **Concern transition:** Leaving calibration + degraded semantics → entering the data plane. Phase 6 depends on Phase 5's proven exclusion behavior (backfill recompute semantics) plus the encode substrate and schema.
