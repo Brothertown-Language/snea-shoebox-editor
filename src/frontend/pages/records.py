@@ -8,6 +8,19 @@ import zipfile
 import streamlit as st
 
 
+class _RecordSearchResultLike:
+    """Page-local container matching the RecordSearchResult field contract
+    (records, total_count, limit, offset) for seam-consumed semantic results.
+    UI-level shim only — binds to the SemanticSearchResult contract (R-8),
+    never to pgvector or ORM internals."""
+
+    def __init__(self, records, total_count, limit, offset):
+        self.records = records
+        self.total_count = total_count
+        self.limit = limit
+        self.offset = offset
+
+
 def records():
     from src.frontend.ui_utils import (
         apply_standard_layout_css,
@@ -200,17 +213,69 @@ def records():
     language_role_map = {"Any": None, "Primary": "primary", "Secondary": "secondary"}
     language_role_val = language_role_map.get(st.session_state.language_role_filter)
 
-    search_result = LinguisticService.search_records(
-        source_id=source_filter_id,
-        language_id=language_filter_id,
-        language_role=language_role_val,
-        is_locked=is_locked_bool,
-        search_term=search_term,
-        search_mode=st.session_state.search_mode,
-        record_ids=selection_record_ids,
-        limit=limit,
-        offset=offset,
-    )
+    # SC-7 (Issue #1385, R-7/R-8): per-mode dispatch. Semantic modes consume
+    # the #36 seam (search_semantic → SemanticSearchResult) directly — the
+    # page passes the session threshold and maps the ranked (record_id, score)
+    # list to full records; exact-match modes keep the existing search_records
+    # path byte-identical. The UI binds to the seam contract only — no
+    # pgvector or ORM imports.
+    is_semantic_mode = st.session_state.search_mode in ("Semantic Gloss", "Semantic All")
+
+    search_result = None
+    semantic_scores: dict[int, float] = {}
+
+    if is_semantic_mode:
+        if search_term:
+            mode_key = "gloss" if st.session_state.search_mode == "Semantic Gloss" else "all"
+            semantic_result = LinguisticService.search_semantic(
+                mode=mode_key,
+                query=search_term,
+                threshold=st.session_state.semantic_threshold,
+                source_id=source_filter_id,
+                limit=None,
+            )
+            semantic_scores = dict(semantic_result.results)
+            # Rank-once pagination (R-5, SC-5): slice the ranked list first,
+            # then hydrate only the current page's records — the service is
+            # not re-invoked on page navigation.
+            page_pairs = semantic_result.results[offset : offset + limit]
+            page_records = []
+            for record_id, _score in page_pairs:
+                rec = LinguisticService.get_record(record_id)
+                if rec:
+                    page_records.append(rec)
+            search_result = _RecordSearchResultLike(
+                records=page_records,
+                total_count=len(semantic_result.results),
+                limit=limit,
+                offset=offset,
+            )
+        else:
+            # No query in a semantic mode: match exact-mode empty-query
+            # behavior (search term None → no strategy, unfiltered browse).
+            search_result = LinguisticService.search_records(
+                source_id=source_filter_id,
+                language_id=None,
+                language_role=None,
+                is_locked=is_locked_bool,
+                search_term=None,
+                search_mode=st.session_state.search_mode,
+                record_ids=selection_record_ids,
+                limit=limit,
+                offset=offset,
+            )
+    else:
+        search_result = LinguisticService.search_records(
+            source_id=source_filter_id,
+            language_id=language_filter_id,
+            language_role=language_role_val,
+            is_locked=is_locked_bool,
+            search_term=search_term,
+            search_mode=st.session_state.search_mode,
+            record_ids=selection_record_ids,
+            limit=limit,
+            offset=offset,
+        )
 
     records_batch = search_result.records
     total_count = search_result.total_count
@@ -269,7 +334,6 @@ def records():
         )
         st.caption(SEARCH_MODE_CAPTIONS.get(st.session_state.search_mode, ""))
         is_fts_mode = st.session_state.search_mode == "FTS"
-        is_semantic_mode = st.session_state.search_mode in ("Semantic Gloss", "Semantic All")
 
         threshold_help = None if is_semantic_mode else "Applies only in Semantic modes."
 
