@@ -197,7 +197,7 @@ def search_semantic(mode="gloss", query="", threshold=None, source_id=None, limi
     )
 
 
-def backfill_embeddings(progress_callback=None, batch_size=512, session=None):
+def backfill_embeddings(progress_callback=None, batch_size=1, session=None):
     """Re-embed stale search entries with the currently pinned model.
 
     Rows in gloss_search_entries whose embedding is NULL or whose
@@ -210,7 +210,8 @@ def backfill_embeddings(progress_callback=None, batch_size=512, session=None):
     Args:
         progress_callback: Optional callable(current, total) invoked as
             entries are re-embedded.
-        batch_size: Batch cap for encode calls (max 512).
+        batch_size: Batch cap for encode calls (max 512; default 1 so
+            each row is embedded sequentially and RAM never balloons).
         session: Unused (kept for call-compatibility); raw SQL via engine.
 
     Returns:

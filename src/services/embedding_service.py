@@ -55,6 +55,10 @@ class _SessionHolder:
 
 _SESSION_HOLDER = _SessionHolder()
 _LOAD_LOCK = threading.Lock()
+# Global encode lock: serializes every encode() caller end-to-end so
+# concurrent Streamlit reruns (search query + backfill) never run ONNX
+# inference in parallel — prevents RAM ballooning on constrained hosts.
+_ENCODE_LOCK = threading.RLock()
 
 
 def load_model():
@@ -102,8 +106,11 @@ def _load_session():
     tokenizer = Tokenizer.from_file(str(TOKENIZER_PATH))
     tokenizer.enable_truncation(max_length=MAX_LENGTH)
     tokenizer.enable_padding(pad_id=0, pad_token="[PAD]", length=None)
+    options = onnxruntime.SessionOptions()
+    options.intra_op_num_threads = 1
+    options.inter_op_num_threads = 1
     session = onnxruntime.InferenceSession(
-        str(MODEL_PATH), providers=["CPUExecutionProvider"]
+        str(MODEL_PATH), sess_options=options, providers=["CPUExecutionProvider"]
     )
     return tokenizer, session
 
@@ -120,23 +127,25 @@ def encode(text):
 
     texts = _validate_input(text)
 
-    load_model()
-    tokenizer = _SESSION_HOLDER._tokenizer
-    session = _SESSION_HOLDER.get()
+    with _ENCODE_LOCK:
+        load_model()
+        tokenizer = _SESSION_HOLDER._tokenizer
+        session = _SESSION_HOLDER.get()
 
-    encodings = tokenizer.encode_batch(texts)
-    input_ids = np.array([e.ids for e in encodings], dtype=np.int64)
-    attention_mask = np.array([e.attention_mask for e in encodings], dtype=np.int64)
-    token_type_ids = np.zeros_like(input_ids)
+        encodings = tokenizer.encode_batch(texts)
+        input_ids = np.array([e.ids for e in encodings], dtype=np.int64)
+        attention_mask = np.array([e.attention_mask for e in encodings], dtype=np.int64)
+        token_type_ids = np.zeros_like(input_ids)
 
-    outputs = session.run(
-        None,
-        {
-            "input_ids": input_ids,
-            "attention_mask": attention_mask,
-            "token_type_ids": token_type_ids,
-        },
-    )
+        outputs = session.run(
+            None,
+            {
+                "input_ids": input_ids,
+                "attention_mask": attention_mask,
+                "token_type_ids": token_type_ids,
+            },
+        )
+
     last_hidden = outputs[0].astype(np.float32)
 
     mask = attention_mask.astype(np.float32)[:, :, None]
