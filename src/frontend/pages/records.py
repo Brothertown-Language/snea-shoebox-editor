@@ -227,18 +227,36 @@ def records():
     if is_semantic_mode:
         if search_term:
             mode_key = "gloss" if st.session_state.search_mode == "Semantic Gloss" else "all"
-            semantic_result = LinguisticService.search_semantic(
-                mode=mode_key,
-                query=search_term,
-                threshold=st.session_state.semantic_threshold,
-                source_id=source_filter_id,
-                limit=None,
+            # Rank-once pagination (R-5, SC-5): the seam ranks the full
+            # result list once per distinct (mode, query, threshold, source)
+            # digest; page navigation slices the cached ranked list — the
+            # service is NOT re-invoked on navigation.
+            semantic_digest = (
+                mode_key,
+                search_term,
+                float(st.session_state.semantic_threshold),
+                source_filter_id,
             )
-            semantic_scores = dict(semantic_result.results)
-            # Rank-once pagination (R-5, SC-5): slice the ranked list first,
-            # then hydrate only the current page's records — the service is
-            # not re-invoked on page navigation.
-            page_pairs = semantic_result.results[offset : offset + limit]
+            cached_ranked = st.session_state.get("_semantic_ranked_cache")
+            if cached_ranked is None or cached_ranked[0] != semantic_digest:
+                semantic_result = LinguisticService.search_semantic(
+                    mode=mode_key,
+                    query=search_term,
+                    threshold=st.session_state.semantic_threshold,
+                    source_id=source_filter_id,
+                    limit=None,
+                )
+                cached_ranked = (
+                    semantic_digest,
+                    sorted(semantic_result.results, key=lambda p: (-p[1], p[0])),
+                )
+                st.session_state._semantic_ranked_cache = cached_ranked
+            ranked_pairs = cached_ranked[1]
+            semantic_scores = dict(ranked_pairs)
+            # Rank-once pagination (R-5, SC-5): slice the cached ranked list
+            # first, then hydrate only the current page's records — the
+            # service is not re-invoked on page navigation.
+            page_pairs = ranked_pairs[offset : offset + limit]
             page_records = []
             for record_id, _score in page_pairs:
                 rec = LinguisticService.get_record(record_id)
@@ -246,7 +264,7 @@ def records():
                     page_records.append(rec)
             search_result = _RecordSearchResultLike(
                 records=page_records,
-                total_count=len(semantic_result.results),
+                total_count=len(ranked_pairs),
                 limit=limit,
                 offset=offset,
             )
