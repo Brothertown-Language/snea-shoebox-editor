@@ -85,6 +85,7 @@ service-account.json
 *credentials*
 *secrets*
 *token*
+!models/**/tokenizer.json
 !docs/**/*token*
 !**/plan_*token*
 !.junie/security-secrets.md

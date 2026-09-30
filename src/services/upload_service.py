@@ -21,6 +21,7 @@ from src.database.models.workflow import EditHistory, MatchupQueue
 from src.logging_config import get_logger
 from src.mdf.parser import format_mdf_record, normalize_nt_record, parse_mdf
 from src.services.audit_service import AuditService
+from src.services import embedding_service
 from src.services.linguistic_service import LinguisticService
 
 logger = get_logger("snea.upload")
@@ -1818,11 +1819,21 @@ class UploadService:
                         session.add(HeadwordSearchEntry(record_id=rid, entry_type="va", term=val, normalized_term=norm))
                         total += 1
 
-                # Populate gloss_search_entries (PRIMARY ge)
+                # Populate gloss_search_entries (PRIMARY ge), embedding inline
                 if entry.get("ge"):
                     term = entry["ge"]
                     norm = LinguisticService.generate_sort_lx(term)
-                    session.add(GlossSearchEntry(record_id=rid, term=term, normalized_term=norm))
+                    vectors = embedding_service.encode([term])
+                    session.add(
+                        GlossSearchEntry(
+                            record_id=rid,
+                            entry_type="ge",
+                            term=term,
+                            normalized_term=norm,
+                            embedding=vectors[0].tolist(),
+                            embedding_model=embedding_service.PIN,
+                        )
+                    )
                     total += 1
 
                 # Populate fts_entries for FTS mode (guard: table may not exist yet)

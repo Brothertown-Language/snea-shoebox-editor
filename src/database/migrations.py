@@ -134,6 +134,16 @@ class MigrationManager:
             "_migrate_backfill_search_entries",
             "Backfill HeadwordSearchEntry and GlossSearchEntry for existing records",
         ),
+        (
+            20260929200606,
+            "_migrate_create_semantic_search_entries",
+            "Create semantic_search_entries table with vector(384) embedding column",
+        ),
+        (
+            20260929200607,
+            "_migrate_add_gloss_search_entries_embedding",
+            "Add embedding, entry_type, embedding_model columns to gloss_search_entries",
+        ),
     ]
 
     def __init__(self, engine):
@@ -1053,4 +1063,89 @@ class MigrationManager:
             conn.execute(text("DROP INDEX IF EXISTS idx_records_fts;"))
             # 5. Drop old generated column
             conn.execute(text("ALTER TABLE records DROP COLUMN IF EXISTS fts_vector;"))
+            conn.commit()
+
+    def _assert_vector_extension_available(self, conn) -> str:
+        """Assert that the pgvector extension is available in this environment.
+
+        Queries pg_available_extensions to confirm a packaged extension version
+        exists before installing. Returns the available extension version string.
+        Raises RuntimeError if the extension is not packaged in this environment.
+        """
+        available = conn.execute(
+            text("SELECT default_version FROM pg_catalog.pg_available_extensions WHERE name = 'vector';")
+        ).scalar()
+        if not available:
+            raise RuntimeError(
+                "pgvector extension is not available in this PostgreSQL environment; "
+                "cannot apply vector-column migrations."
+            )
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        conn.commit()
+        installed = conn.execute(
+            text("SELECT extversion FROM pg_catalog.pg_extension WHERE extname = 'vector';")
+        ).scalar()
+        return str(installed)
+
+    def _migrate_create_semantic_search_entries(self):
+        """Migration 20260929200606: Create semantic_search_entries table mirroring the ORM.
+
+        Column layout matches SemanticSearchEntry in src/database/models/search.py:
+        id autoincrement, record_id FK->records.id ON DELETE CASCADE,
+        entry_type VARCHAR NOT NULL, term VARCHAR NOT NULL,
+        embedding vector(384) NOT NULL, embedding_model VARCHAR NOT NULL.
+
+        Reversible with:
+            DROP INDEX IF EXISTS idx_semantic_search_entries_record_id;
+            DROP TABLE IF EXISTS semantic_search_entries;
+        """
+        with self._engine.connect() as conn:
+            ext_version = self._assert_vector_extension_available(conn)
+            logger.info("pgvector extension version: %s", ext_version)
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS semantic_search_entries (
+                    id SERIAL PRIMARY KEY,
+                    record_id INTEGER NOT NULL REFERENCES records(id) ON DELETE CASCADE,
+                    entry_type VARCHAR NOT NULL,
+                    term VARCHAR NOT NULL,
+                    embedding vector(384) NOT NULL,
+                    embedding_model VARCHAR NOT NULL
+                );
+            """)
+            )
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_semantic_search_entries_record_id "
+                    "ON semantic_search_entries (record_id);"
+                )
+            )
+            conn.commit()
+
+    def _migrate_add_gloss_search_entries_embedding(self):
+        """Migration 20260929200607: Add embedding, entry_type, embedding_model to gloss_search_entries.
+
+        Mirrors GlossSearchEntry new columns in src/database/models/search.py:
+        entry_type VARCHAR NOT NULL (backfilled to 'ge'), embedding vector(384)
+        (nullable), embedding_model VARCHAR (nullable).
+
+        Reversible with:
+            DROP INDEX IF EXISTS idx_gloss_search_entries_entry_type;
+            ALTER TABLE gloss_search_entries DROP COLUMN IF EXISTS entry_type;
+            ALTER TABLE gloss_search_entries DROP COLUMN IF EXISTS embedding_model;
+            ALTER TABLE gloss_search_entries DROP COLUMN IF EXISTS embedding;
+        """
+        with self._engine.connect() as conn:
+            self._assert_vector_extension_available(conn)
+            conn.execute(text("ALTER TABLE gloss_search_entries ADD COLUMN IF NOT EXISTS entry_type VARCHAR;"))
+            conn.execute(text("ALTER TABLE gloss_search_entries ADD COLUMN IF NOT EXISTS embedding vector(384);"))
+            conn.execute(text("ALTER TABLE gloss_search_entries ADD COLUMN IF NOT EXISTS embedding_model VARCHAR;"))
+            conn.execute(text("UPDATE gloss_search_entries SET entry_type = 'ge' WHERE entry_type IS NULL;"))
+            conn.execute(text("ALTER TABLE gloss_search_entries ALTER COLUMN entry_type SET NOT NULL;"))
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_gloss_search_entries_entry_type "
+                    "ON gloss_search_entries (entry_type);"
+                )
+            )
             conn.commit()

@@ -1,5 +1,6 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import relationship
@@ -71,7 +72,38 @@ class GlossSearchEntry(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     record_id = Column(Integer, ForeignKey("records.id", ondelete="RESTRICT"), nullable=False)
+    entry_type = Column(String, nullable=False)  # Origin tag: 'lx', 'va', 'se', 'cf', 've'
     term = Column(String, nullable=False)
     normalized_term = Column(String, nullable=False)
+    embedding = Column(Vector(384))  # Semantic vector for gloss matching
+    embedding_model = Column(String)  # Name of the embedding model that produced `embedding`
 
     record = relationship("Record", back_populates="gloss_entries")
+
+
+class SemanticSearchEntry(Base):
+    """
+    Semantic search entries: headword/gloss terms with embedding vectors.
+    Populated during embedding generation; deleted with their parent record
+    (record_id FK is ON DELETE CASCADE).
+    """
+
+    __tablename__ = "semantic_search_entries"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    record_id = Column(Integer, ForeignKey("records.id", ondelete="CASCADE"), nullable=False)
+    entry_type = Column(String, nullable=False)  # Origin tag: 'lx', 'va', 'ge', etc.
+    term = Column(String, nullable=False)
+    embedding = Column(Vector(384), nullable=False)
+    embedding_model = Column(String, nullable=False)
+
+
+class SemanticSearchResult:
+    """Result dataclass for a semantic search hit."""
+
+    def __init__(self, record_id: int, entry_type: str, term: str, similarity: float):
+        self.record_id = record_id
+        self.entry_type = entry_type
+        self.term = term
+        self.similarity = similarity
