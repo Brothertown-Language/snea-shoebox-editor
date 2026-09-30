@@ -1,11 +1,11 @@
-sc_count: 7
+sc_count: 8
 scs:
   - id: "SC-1"
     description: "Mode radio renders Semantic Gloss and Semantic All entries with developer-approved captions; existing entries/captions unchanged"
     evidence_type: "behavioral"
     plan_item: 1
   - id: "SC-2"
-    description: "Threshold slider+numeric two-way coupled; persists round-trip through PreferenceService (records/semantic_threshold, default 0.80)"
+    description: "Threshold slider+numeric two-way coupled; persists round-trip through PreferenceService (records/semantic_threshold, default 0.80); stable sidebar slot in ALL modes with disabled widgets + help text in non-semantic modes"
     evidence_type: "behavioral"
     plan_item: 2
   - id: "SC-3"
@@ -13,7 +13,7 @@ scs:
     evidence_type: "behavioral"
     plan_item: 3
   - id: "SC-4"
-    description: "Semantic-mode rows display similarity scores in descending sorted order; exact-match rows display none"
+    description: "Semantic-mode rows display similarity scores in descending sorted order, inline in each record card's header line as fixed two-decimal values; exact-match rows display none"
     evidence_type: "behavioral"
     plan_item: 4
   - id: "SC-5"
@@ -21,10 +21,14 @@ scs:
     evidence_type: "behavioral"
     plan_item: 5
   - id: "SC-6"
-    description: "Each seam status (empty_query, no_embeddings, stale_model, zero-after-threshold) renders designated clean empty state; stale/none message names backfill remedy"
+    description: "Each seam status (empty_query, no_embeddings, stale_model, zero-after-threshold) renders designated clean empty state in the MAIN panel (st.info informational / st.warning remedy-required); stale/none message names backfill remedy"
     evidence_type: "behavioral"
     plan_item: 6
   - id: "SC-7"
     description: "Mode switching changes results correctly; existing four modes regression-safe"
     evidence_type: "behavioral"
     plan_item: 7
+  - id: "SC-8"
+    description: "Language selectbox + language-role radio disabled with explanatory help text in Semantic Gloss/Semantic All modes (FTS disabled-filter idiom); existing modes' filter behavior unchanged"
+    evidence_type: "behavioral"
+    plan_item: 8
