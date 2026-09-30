@@ -55,6 +55,19 @@ def records():
     # Defaults if still missing
     if "page_size" not in st.session_state:
         st.session_state.page_size = 25
+    if "semantic_threshold" not in st.session_state:
+        saved_threshold = None
+        if user_email:
+            saved_threshold = PreferenceService.get_preference(user_email, "records", "semantic_threshold", "0.80")
+        if saved_threshold is None:
+            saved_threshold = "0.80"
+        try:
+            parsed_threshold = float(saved_threshold)
+        except (TypeError, ValueError):
+            parsed_threshold = 0.80
+        if not (0.0 <= parsed_threshold <= 1.0):
+            parsed_threshold = 0.80
+        st.session_state.semantic_threshold = parsed_threshold
     if "current_page" not in st.session_state:
         st.session_state.current_page = 1
     if "search_query" not in st.session_state:
@@ -223,6 +236,62 @@ def records():
         )
         st.caption(SEARCH_MODE_CAPTIONS.get(st.session_state.search_mode, ""))
         is_fts_mode = st.session_state.search_mode == "FTS"
+        is_semantic_mode = st.session_state.search_mode in ("Semantic Gloss", "Semantic All")
+
+        threshold_help = None if is_semantic_mode else "Applies only in Semantic modes."
+
+        # Two-way coupled threshold widgets: both keys are bound to the shared
+        # backing value st.session_state.semantic_threshold. Sync happens
+        # pre-instantiation (never after widget instantiation) and edits are
+        # propagated through on_change callbacks — no post-instantiation
+        # session_state writes to widget keys, no st.rerun().
+        if "semantic_threshold_slider" not in st.session_state:
+            st.session_state.semantic_threshold_slider = st.session_state.semantic_threshold
+        if "semantic_threshold_number" not in st.session_state:
+            st.session_state.semantic_threshold_number = st.session_state.semantic_threshold
+        if st.session_state.semantic_threshold_slider != st.session_state.semantic_threshold:
+            st.session_state.semantic_threshold_slider = st.session_state.semantic_threshold
+        if st.session_state.semantic_threshold_number != st.session_state.semantic_threshold:
+            st.session_state.semantic_threshold_number = st.session_state.semantic_threshold
+
+        def on_threshold_slider_change():
+            effective = float(st.session_state.semantic_threshold_slider)
+            st.session_state.semantic_threshold = effective
+            if user_email:
+                PreferenceService.set_preference(user_email, "records", "semantic_threshold", str(effective))
+
+        def on_threshold_number_change():
+            effective = float(st.session_state.semantic_threshold_number)
+            st.session_state.semantic_threshold = effective
+            if user_email:
+                PreferenceService.set_preference(user_email, "records", "semantic_threshold", str(effective))
+
+        threshold_slider = st.container()
+        threshold_slider.slider(
+            "Semantic threshold",
+            min_value=0.0,
+            max_value=1.0,
+            step=0.01,
+            key="semantic_threshold_slider",
+            value=st.session_state.semantic_threshold,
+            on_change=on_threshold_slider_change,
+            label_visibility="collapsed",
+            disabled=not is_semantic_mode,
+            help=threshold_help,
+        )
+        threshold_number = st.container()
+        threshold_number.number_input(
+            "Semantic threshold",
+            min_value=0.0,
+            max_value=1.0,
+            step=0.01,
+            key="semantic_threshold_number",
+            value=st.session_state.semantic_threshold,
+            on_change=on_threshold_number_change,
+            label_visibility="collapsed",
+            disabled=not is_semantic_mode,
+            help=threshold_help,
+        )
         search_col1, search_col2 = st.columns(2)
         if search_col1.button("", icon="🔍", key="search_trigger", help="Execute Search", use_container_width=True):
             input_key = f"search_query_input_{st.session_state.get('_search_input_key', 0)}"
