@@ -1128,6 +1128,25 @@ class MigrationManager:
                     "ON semantic_search_entries (record_id);"
                 )
             )
+            # Idempotent FK guard: a prod-synced replica can carry a pre-existing
+            # semantic_search_entries table lacking the constraint (the sync script
+            # only drops tables that exist in production, so CREATE TABLE IF NOT
+            # EXISTS silently skips re-adding the FK on drifted tables).
+            has_fk = conn.execute(
+                text(
+                    "SELECT EXISTS (SELECT 1 FROM pg_constraint "
+                    "WHERE conrelid = 'semantic_search_entries'::regclass "
+                    "AND contype = 'f' AND conname = 'semantic_search_entries_record_id_fkey')"
+                )
+            ).scalar()
+            if not has_fk:
+                conn.execute(
+                    text(
+                        "ALTER TABLE semantic_search_entries ADD CONSTRAINT "
+                        "semantic_search_entries_record_id_fkey "
+                        "FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE CASCADE"
+                    )
+                )
             conn.commit()
 
     def _migrate_add_gloss_search_entries_embedding(self):
