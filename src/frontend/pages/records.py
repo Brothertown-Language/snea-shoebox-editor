@@ -68,6 +68,39 @@ def records():
         if not (0.0 <= parsed_threshold <= 1.0):
             parsed_threshold = 0.80
         st.session_state.semantic_threshold = parsed_threshold
+
+    # SC-3 (Issue #1385, R-3): validation guard for the semantic threshold
+    # backing value. Runs on every page execution BEFORE widget instantiation
+    # and BEFORE any set_preference persistence step. Non-numeric or
+    # out-of-range backing values are rejected and the last accepted value is
+    # restored; the pre-instantiation sync block below then re-syncs both
+    # coupled widget keys from the corrected backing value. The guard itself
+    # never calls set_preference, so an invalid edit is never persisted.
+    _THRESHOLD_MIN = 0.0
+    _THRESHOLD_MAX = 1.0
+
+    if "_accepted_threshold" not in st.session_state:
+        st.session_state._accepted_threshold = st.session_state.semantic_threshold
+
+    def _validate_threshold():
+        """Reject a non-numeric or out-of-range semantic_threshold edit.
+
+        Returns True when the backing value is valid (and is recorded as the
+        last accepted value); False when an invalid value was rejected and the
+        last accepted value restored.
+        """
+        raw = st.session_state.get("semantic_threshold")
+        is_valid = (
+            not isinstance(raw, bool) and isinstance(raw, (int, float)) and _THRESHOLD_MIN <= raw <= _THRESHOLD_MAX
+        )
+        if not is_valid:
+            st.session_state.semantic_threshold = st.session_state._accepted_threshold
+            return False
+        st.session_state._accepted_threshold = raw
+        return True
+
+    _validate_threshold()
+
     if "current_page" not in st.session_state:
         st.session_state.current_page = 1
     if "search_query" not in st.session_state:
