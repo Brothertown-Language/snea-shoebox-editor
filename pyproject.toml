@@ -64,6 +64,9 @@ line-ending = "auto"
 where = ["src"]
 
 [tool.pytest.ini_options]
+markers = [
+    "playwright_e2e: live-app browser E2E (requires SNEA_E2E=1 and streamlit on :8501)",
+]
 pythonpath = ["."]
 
 [tool.uv]
