@@ -152,6 +152,14 @@ class MigrationManager:
     def run_all(self):
         """Public entry point. Runs extensions, migrations, and seeds in order."""
         self._ensure_extensions()
+        # Sequence self-heal runs BEFORE _run_migrations and idempotently on every
+        # startup — not as a version-gated migration (20260415000000) alone. A prod-synced
+        # replica carries the version rows of later migrations, so version gating skips
+        # the original sequence fix; synced DDL strips nextval defaults, and any new
+        # migration inserting a version row then fails with NotNullViolation on
+        # schema_version.id. Re-asserting sequence defaults before migrations keeps
+        # _run_migrations usable as the only schema-change mechanism after a sync.
+        self._migrate_ensure_sequences()
         self._run_migrations()
         self._seed_default_sources()
         self.seed_default_permissions()
