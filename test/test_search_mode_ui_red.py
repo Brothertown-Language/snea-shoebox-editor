@@ -94,16 +94,21 @@ class TestSearchModeUIRED(unittest.TestCase):
             "Default search mode should be Headword (RED: currently Lexeme)",
         )
 
-    # --- Item 2: Vertical radio with 4 options + separators (SC-2, SC-8) ---
-    def test_vertical_radio_shows_four_options(self):
-        """SC-2: RED — asserts 4 radio options, currently 2."""
+    # --- Item 2: Vertical radio with grouping (SC-2, SC-8) ---
+    def test_vertical_radio_shows_all_search_modes(self):
+        """SC-2/SC-8: GREEN invariant (post-#1385 SC-1) — radio renders all
+        available search modes, i.e. every key of SEARCH_MODE_CAPTIONS
+        (Headword, Gloss, Lexeme, FTS, Semantic Gloss, Semantic All = 6)."""
         self.at.run()
         radio = self.at.radio[0]
         self.assertEqual(
             len(radio.options),
-            4,
-            "Radio should have 4 options (RED: currently 2)",
+            6,
+            "Radio should render all SEARCH_MODE_CAPTIONS modes (6 options): "
+            "Headword, Gloss, Lexeme, FTS, Semantic Gloss, Semantic All",
         )
+        for option in ("Headword", "Gloss", "Lexeme", "FTS", "Semantic Gloss", "Semantic All"):
+            self.assertIn(option, radio.options, f"Radio missing mode: {option}")
 
     # --- Item 3: Search header shows mode name + count (SC-6) ---
     def test_header_shows_mode_name_and_count(self):

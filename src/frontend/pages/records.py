@@ -208,11 +208,15 @@ def records():
             "Gloss": "Primary English glosses (\\ge)",
             "Lexeme": "All Algonquian terms",
             "FTS": "Every field",
+            "Semantic Gloss": "Semantic search over English glosses",
+            "Semantic All": "Semantic search over all fields",
         }
         st.radio(
             "Search Mode",
-            ["Headword", "Gloss", "Lexeme", "FTS"],
-            index=["Headword", "Gloss", "Lexeme", "FTS"].index(st.session_state.search_mode),
+            ["Headword", "Gloss", "Lexeme", "FTS", "Semantic Gloss", "Semantic All"],
+            index=["Headword", "Gloss", "Lexeme", "FTS", "Semantic Gloss", "Semantic All"].index(
+                st.session_state.search_mode
+            ),
             key="search_mode_radio",
             label_visibility="collapsed",
             on_change=on_mode_change,
