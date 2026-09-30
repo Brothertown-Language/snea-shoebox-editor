@@ -356,6 +356,19 @@ def records():
         lang_options = ["All Languages"] + [lang["name"] for lang in languages]
         lang_name_map = {str(lang["id"]): lang["name"] for lang in languages}
         current_lang_name = lang_name_map.get(str(st.session_state.selected_language_id), "All Languages")
+        # SC-8 (Issue #1385, R-9): language filters are inert in semantic
+        # modes — the semantic seam accepts only source_id. Disabled-filter
+        # idiom mirrors FTS mode; previously-selected values are preserved
+        # but no language constraint is applied to result expectations.
+        if is_fts_mode:
+            language_disabled_help = "Language filters are not available in Full-Text Search mode."
+            language_role_disabled_help = "Language Role filters are not available in Full-Text Search mode."
+        elif is_semantic_mode:
+            language_disabled_help = "Language filters are not applied in Semantic search modes."
+            language_role_disabled_help = "Language Role filters are not applied in Semantic search modes."
+        else:
+            language_disabled_help = None
+            language_role_disabled_help = None
         st.selectbox(
             "Select Language",
             lang_options,
@@ -363,8 +376,8 @@ def records():
             key="language_select",
             label_visibility="collapsed",
             on_change=on_language_change,
-            disabled=is_fts_mode,
-            help="Language filters are not available in Full-Text Search mode." if is_fts_mode else None,
+            disabled=is_fts_mode or is_semantic_mode,
+            help=language_disabled_help,
         )
         role_options = ["Any", "Primary", "Secondary"]
         st.radio(
@@ -375,8 +388,8 @@ def records():
             horizontal=True,
             label_visibility="collapsed",
             on_change=on_language_role_change,
-            disabled=is_fts_mode,
-            help="Language Role filters are not available in Full-Text Search mode." if is_fts_mode else None,
+            disabled=is_fts_mode or is_semantic_mode,
+            help=language_role_disabled_help,
         )
 
         # Is Locked Filter
