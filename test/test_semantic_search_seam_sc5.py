@@ -128,11 +128,19 @@ class TestSemanticSearchSeamSc5(unittest.TestCase):
     def _seed_rows(self, conn):
         """Insert deterministic pinned/stale/NULL rows; caller rolls back.
 
+        Shadow committed search-entry rows first — the synced DB legitimately
+        carries thousands of real embedded rows once the backfill has run, and
+        the deterministic-ranking assertions require a closed fixture world.
+        The DELETEs live inside the rolled-back transaction, so committed
+        data is untouched.
+
         Production DDL uses plain integer id columns (ids synchronized with
         ``\\nt Record: <id>`` in raw MDF), so the synced local DB carries no
         nextval column defaults. Fixture inserts assign ids explicitly from
         the pre-existing sequences (created by migration 20260415000000).
         """
+        conn.execute(text("DELETE FROM semantic_search_entries"))
+        conn.execute(text("DELETE FROM gloss_search_entries"))
         rec = conn.execute(
             text(
                 "INSERT INTO records "
