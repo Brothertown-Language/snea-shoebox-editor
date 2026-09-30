@@ -731,7 +731,14 @@ def records():
             with st.container(border=True):
                 is_locked = bool(record.get("is_locked", False))
                 lock_status = " 🔒" if is_locked else ""
-                st.markdown(f"**Record #{record_id}** (Source: {record['source_name'] or 'Unknown'}){lock_status}")
+                # SC-4 (Issue #1385, R-4): semantic-mode rows append the
+                # similarity score inline in the header line, fixed two
+                # decimals, in the seam's descending-rank order; exact-match
+                # modes render no score. Native markdown only — no hex/rgba.
+                score_display = ""
+                if is_semantic_mode and record_id in semantic_scores:
+                    score_display = f" — Similarity: {semantic_scores[record_id]:.2f}"
+                st.markdown(f"**Record #{record_id}** (Source: {record['source_name'] or 'Unknown'}){score_display}{lock_status}")
 
                 # Check if it should be in edit mode (Global mode or local edit)
                 # MUST NOT enter edit mode if locked.
