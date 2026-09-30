@@ -1,1 +1,10 @@
-comments: []
+comments:
+- type: internal
+  body: 'Lifecycle event: plan_created — plan file .issues/1385/plan.md; phase count
+    1; execution strategy: Phase 1 direct + task-card dispatch (TDD per-SC cycles),
+    then post-implementation audit → Z3 → structural checks → pre-PR gate → regression
+    → review-prep → PR creation (stacked, human-only merge). Plan URL: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1385
+
+
+    🤖 Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash)'
+  timestamp: '2026-09-30T18:09:30+00:00'
