@@ -37,14 +37,14 @@
 
 | ID | Criterion | Evidence Type | Documentation Sources | Verification Method |
 |----|-----------|---------------|----------------------|---------------------|
-| SC-1 | The records-page mode radio renders Semantic Gloss and Semantic All entries while existing entries and captions remain unchanged; the new modes ADD SEARCH_MODE_CAPTIONS dict entries and the single selected-mode caption pattern (one caption for the SELECTED mode, rendered under the radio) is preserved unchanged | behavioral | `src/frontend/pages/records.py` (SEARCH_MODE_CAPTIONS dict, mode radio, single st.caption under the radio); seam contract in `.issues/36/artifacts/interface-compatibility.yaml` | Playwright: radio options include both new modes; the selected-mode caption renders for each selection; existing 4 options and captions untouched |
-| SC-2 | Setting the similarity threshold via the slider or numeric input persists a round-trip through PreferenceService (`records`/`semantic_threshold`, default `0.80`) and the two widgets always agree | behavioral | PreferenceService `get_preference`/`set_preference` in `src/services/preference_service.py` (preference getter/setter pair, verified fresh 2026-09-30); `concern-map.yaml` boundaries | Playwright/pytest: widget coupling sync, persistence round-trip via get/set_preference; stable-slot placement (control present in ALL modes below the mode caption, above the search/clear buttons) with widgets disabled + the "Applies only in Semantic modes." help text in non-semantic modes |
-| SC-3 | A non-numeric threshold edit is rejected and the widget snaps back to the previously accepted value | behavioral | `handoff.yaml` developer decisions (widget contract) | Playwright: invalid input entry → widget value reverts; preference unchanged |
-| SC-4 | Semantic-mode result rows display similarity scores in sorted (descending) order, rendered inline in each record card's header line (not behind a disclosure/expander) as fixed two-decimal values, and exact-match mode rows do not display scores | behavioral | `records.py` record-card render loop (card header line); seam `results: list[(record_id, score)]` | Playwright: badges/captions present on semantic rows in descending order, formatted to two decimals, inline in the header line; absent for existing modes |
-| SC-5 | Pagination slices the returned ranked list without re-invoking search: page navigation preserves order deterministically (desc score, record_id asc tie-break) | behavioral | `records.py` pagination state keys (current_page); seam rules in `concern-map.yaml` | Playwright: navigate pages; assert sequence stability across navigation, single search invocation |
-| SC-6 | Each seam status (`empty_query`, `no_embeddings`, `stale_model`, plus zero-results-after-threshold) renders its designated clean empty state, never a crash or unhandled error; stale/none message names the admin backfill remedy | behavioral | seam status enum in `concern-map.yaml` + `decompose-output.yaml` D2-ITEM-5 (unit "empty-state rendering per status payload", SC-U5) — decomposition artifact in `tmp/issue-36/contracts/decompose-output.yaml`, verified on disk 2026-09-30 (tmp/ is volatile scratch; `.issues/36/artifacts/decompose-output.yaml` holds the D1 items only) | Playwright/mocked-payload rendering: each status branch renders the correct copy |
-| SC-7 | Switching between exact-match and semantic modes changes returned results correctly, and the existing four modes' results are unchanged after the addition | behavioral | SearchMode widening in `src/services/linguistic_service.py` (search mode union type at module top, verified live 2026-09-30); regression-risk rows in `.issues/36/artifacts/testability-assessment.yaml` | Playwright behavioral harness (precedent `test_search_mode_ui_red.py`): result sets differ per mode; existing modes regression-safe |
-| SC-8 | In Semantic Gloss and Semantic All modes, the language selectbox and language-role radio are disabled with explanatory help text (mirroring the FTS-mode idiom), and the existing modes' filter behavior is unchanged | behavioral | FTS disabled-filter idiom in `src/frontend/pages/records.py` (language selectbox + language-role radio use a disabled state with help text); seam contract in `.issues/36/artifacts/interface-compatibility.yaml` (`search_semantic` accepts only `source_id`) | Playwright: both controls disabled with help text in both semantic modes; existing modes' filter state unchanged (Headword/Gloss/Lexeme enabled, FTS disabled per the existing idiom — no regression) |
+| SC-1 | The records-page mode radio renders Semantic Gloss and Semantic All entries while existing entries and captions remain unchanged; the new modes ADD SEARCH_MODE_CAPTIONS dict entries and the single selected-mode caption pattern (one caption for the SELECTED mode, rendered under the radio) is preserved unchanged | behavioral | `src/frontend/pages/records.py` (SEARCH_MODE_CAPTIONS dict, mode radio, single st.caption under the radio); seam contract in `.issues/36/artifacts/interface-compatibility.yaml` | Behavioral pytest via streamlit AppTest (repo precedent harness; see Change Control note on "Playwright"): radio options include both new modes; the selected-mode caption renders for each selection; existing 4 options and captions untouched |
+| SC-2 | Setting the similarity threshold via the slider or numeric input persists a round-trip through PreferenceService (`records`/`semantic_threshold`, default `0.80`) and the two widgets always agree | behavioral | PreferenceService `get_preference`/`set_preference` in `src/services/preference_service.py` (preference getter/setter pair, verified fresh 2026-09-30); `concern-map.yaml` boundaries | Behavioral pytest via streamlit AppTest: widget coupling sync, persistence round-trip via get/set_preference; stable-slot placement (control present in ALL modes below the mode caption, above the search/clear buttons) with widgets disabled + the "Applies only in Semantic modes." help text in non-semantic modes |
+| SC-3 | A non-numeric threshold edit is rejected and the widget snaps back to the previously accepted value | behavioral | `handoff.yaml` developer decisions (widget contract) | Behavioral pytest via streamlit AppTest: invalid input entry → widget value reverts; preference unchanged |
+| SC-4 | Semantic-mode result rows display similarity scores in sorted (descending) order, rendered inline in each record card's header line (not behind a disclosure/expander) as fixed two-decimal values, and exact-match mode rows do not display scores | behavioral | `records.py` record-card render loop (card header line); seam `results: list[(record_id, score)]` | Behavioral pytest via streamlit AppTest: badges/captions present on semantic rows in descending order, formatted to two decimals, inline in the header line; absent for existing modes |
+| SC-5 | Pagination slices the returned ranked list without re-invoking search: page navigation preserves order deterministically (desc score, record_id asc tie-break) | behavioral | `records.py` pagination state keys (current_page); seam rules in `concern-map.yaml` | Behavioral pytest via streamlit AppTest with invocation-count spy: navigate pages; assert sequence stability across navigation, single search invocation |
+| SC-6 | Each seam status (`empty_query`, `no_embeddings`, `stale_model`, plus zero-results-after-threshold) renders its designated clean empty state, never a crash or unhandled error; stale/none message names the admin backfill remedy | behavioral | seam status enum in `concern-map.yaml` + `decompose-output.yaml` D2-ITEM-5 (unit "empty-state rendering per status payload", SC-U5) — decomposition artifact in `tmp/issue-36/contracts/decompose-output.yaml`, verified on disk 2026-09-30 (tmp/ is volatile scratch; `.issues/36/artifacts/decompose-output.yaml` holds the D1 items only) | Behavioral pytest via streamlit AppTest with mocked seam payloads: each status branch renders the correct copy |
+| SC-7 | Switching between exact-match and semantic modes changes returned results correctly, and the existing four modes' results are unchanged after the addition | behavioral | SearchMode widening in `src/services/linguistic_service.py` (search mode union type at module top, verified live 2026-09-30); regression-risk rows in `.issues/36/artifacts/testability-assessment.yaml` | Behavioral pytest behavioral harness (precedent `test_search_mode_ui_red.py`): result sets differ per mode; existing modes regression-safe |
+| SC-8 | In Semantic Gloss and Semantic All modes, the language selectbox and language-role radio are disabled with explanatory help text (mirroring the FTS-mode idiom), and the existing modes' filter behavior is unchanged | behavioral | FTS disabled-filter idiom in `src/frontend/pages/records.py` (language selectbox + language-role radio use a disabled state with help text); seam contract in `.issues/36/artifacts/interface-compatibility.yaml` (`search_semantic` accepts only `source_id`) | Behavioral pytest via streamlit AppTest: both controls disabled with help text in both semantic modes; existing modes' filter state unchanged (Headword/Gloss/Lexeme enabled, FTS disabled per the existing idiom — no regression) |
 
 ## Requirements
 
@@ -69,61 +69,61 @@ R-9. In Semantic Gloss and Semantic All modes, the language selectbox and langua
 ## Items
 
 ### Item 1 (SC-1): Mode radio entries + captions for Semantic Gloss / Semantic All
-- RED: Playwright test asserting the mode radio lacks Semantic Gloss / Semantic All (fails)
+- RED: behavioral AppTest asserting the mode radio lacks Semantic Gloss / Semantic All (fails)
 - GREEN: extend mode list + SEARCH_MODE_CAPTIONS dict in `records.py`; session_state keys preserved; single selected-mode caption pattern unchanged
-- verify: Playwright radio options + selected-mode captions, existing options unchanged
+- verify: AppTest radio options + selected-mode captions, existing options unchanged
 - commit: records.py mode list only
 
 ### Item 2 (SC-2): Threshold preference — slider+numeric coupled, persists, stable slot
 - RED: widget test asserting no `semantic_threshold` preference control exists
 - GREEN: render coupled slider+numeric control in the stable sidebar slot (below the mode caption, above the search/clear buttons) present in all modes with disabled widgets + help text in non-semantic modes; persist via set_preference(`records`,`semantic_threshold`); init from get_preference default `0.80`
-- verify: Playwright/pytest two-way sync + persistence round-trip + stable-slot/disabled-in-non-semantic assertions
+- verify: AppTest two-way sync + persistence round-trip + stable-slot/disabled-in-non-semantic assertions
 - commit: records.py (or ui_utils.py shared component) threshold control
 
 ### Item 3 (SC-3): Invalid threshold edit rejected + snap-back
 - RED: test asserting invalid edit persists (no snap-back exists)
 - GREEN: validation guard rejecting non-numeric/out-of-range with snap-back
-- verify: Playwright invalid-input revert assertion
+- verify: AppTest invalid-input revert assertion
 - commit: threshold control validation
 
 ### Item 4 (SC-4): Score badge/caption on semantic rows only, sorted order, inline in header line
 - RED: test asserting no score badges render for any mode
 - GREEN: consume `results` scores in the semantic rendering branch; render badges/captions descending, inline in the record card header line, fixed two decimals; skip for exact-match modes
-- verify: Playwright badge presence/order/format and absence in exact-match modes
+- verify: AppTest badge presence/order/format and absence in exact-match modes
 - commit: records.py record-card render loop
 
 ### Item 5 (SC-5): Pagination rank-once slice
 - RED: test asserting page navigation re-invokes search or reorders results
 - GREEN: slice the already-returned ranked list on page change; no service re-invocation
-- verify: Playwright order-stability across navigation + invocation count
+- verify: AppTest order-stability across navigation + invocation-count spy
 - commit: records.py pagination slicing
 
 ### Item 6 (SC-6): Empty-state rendering per status payload
 - RED: test asserting no crash-guard rendering exists for statuses
 - GREEN: map each status + message to UI copy in the MAIN panel records area (st.info for informational states, st.warning for remedy-required states; zero-results path reuses the existing empty-batch branch); stale/none message names backfill remedy
-- verify: Playwright/mocked-payload per-status rendering assertions
+- verify: AppTest mocked-payload per-status rendering assertions
 - commit: records.py empty-state branch
 
 ### Item 7 (SC-7): Mode-switching regression + correctness
 - RED: behavioral harness asserting semantic modes yield errors / existing modes regress
 - GREEN: dispatch by SearchMode through `search_records` entry (widened Literal consumed); wire results per mode
-- verify: behavioral Playwright harness (precedent `test_search_mode_ui_red.py`), result sets differ per mode, existing modes unchanged
+- verify: behavioral AppTest harness (precedent `test_search_mode_ui_red.py`), result sets differ per mode, existing modes unchanged
 - commit: dispatch wiring + regression test
 
 ### Item 8 (SC-8): Language filters disabled in semantic modes
-- RED: Playwright test asserting the language selectbox + language-role radio remain enabled in Semantic Gloss / Semantic All modes (no disabled-parity with the FTS idiom exists)
+- RED: AppTest asserting the language selectbox + language-role radio remain enabled in Semantic Gloss / Semantic All modes (no disabled-parity with the FTS idiom exists)
 - GREEN: add the disabled state with explanatory help text for semantic modes, mirroring the FTS disabled-filter idiom; previously-selected value preserved but inert
-- verify: Playwright disabled + help-text assertions in both semantic modes; existing modes' filter state unchanged
+- verify: AppTest disabled + help-text assertions in both semantic modes; existing modes' filter state unchanged
 - commit: records.py language-filter disabled state
 
 ## Dependencies
 
 | Reference | Relationship | Status |
 |-----------|--------------|--------|
-| Issue #36 (https://github.com/Brothertown-Language/snea-shoebox-editor/issues/36) | must deliver the `search_semantic` seam + `SemanticSearchResult` v1 contract before UI items 4-6 can verify | pending (this pipeline) |
+| Issue #36 (https://github.com/Brothertown-Language/snea-shoebox-editor/issues/36) | delivered the `search_semantic` seam + `SemanticSearchResult` v1 contract; seam verified stable on disk 2026-09-30 (SearchMode Literal + `_search_strategies` mapping in `linguistic_service.py`, `search_semantic` in `semantic_search_service.py`) | satisfied |
 | Issue #400 (closed, merged) | provides existing records-page search panel state keys and rendering structure this spec extends | satisfied |
 | `preference_service.py` | consumed as-is (`get_preference`/`set_preference` on PreferenceService, verified fresh) | satisfied |
-| Playwright harness precedent (`test_search_mode_ui_red.py`) | test-harness pattern for behavioral UI SCs; coordinate to avoid compounding #1347 red state | satisfied (pattern) |
+| AppTest harness precedent (`test_search_mode_ui_red.py`) | test-harness pattern for behavioral UI SCs (streamlit.testing.v1.AppTest, mocked services); coordinate to avoid compounding #1347 red state | satisfied (pattern) |
 
 ## Traceability
 
@@ -159,7 +159,7 @@ R-9. In Semantic Gloss and Semantic All modes, the language selectbox and langua
 
 Cost is measured in defect-discovery-latency, not tool calls. Correctness is the only metric.
 
-- **SC-1:** Behavioral radio test costs minutes of Playwright execution. Skipping means a broken mode dispatch ships and every semantic search session on the highest-traffic page hits a silently wrong result set — days-to-weeks of user-reported defect latency.
+- **SC-1:** Behavioral radio test costs minutes of AppTest execution. Skipping means a broken mode dispatch ships and every semantic search session on the highest-traffic page hits a silently wrong result set — days-to-weeks of user-reported defect latency.
 - **SC-2:** Persistence round-trip test costs minutes. Skipping means thresholds silently reset per session, making retrieval precision unpredictable across reruns — discovered only after linguists lose trust in tuned results.
 - **SC-3:** Snap-back test costs minutes. Skipping means a typo silently corrupts a stored preference and degrades every future search for that user until manually diagnosed.
 - **SC-4:** Rendering assertion costs minutes. Skipping means scores vanish or appear on wrong rows — discovered in stakeholder review after merge (10× DDL multiplier).
@@ -188,8 +188,11 @@ Cost is measured in defect-discovery-latency, not tool calls. Correctness is the
 |------|--------|--------|---------------|
 | 2026-09-30 | Citation/anchor hygiene only — no SC, requirement, or scope changes: (1) SC-7 evidence citation corrected to `.issues/36/artifacts/testability-assessment.yaml` (validator-flagged filename drift `testability.yaml`; actual filename verified on disk 2026-09-30); (2) SC-6 D2-ITEM-5 citation redirected to its true location `tmp/issue-36/contracts/decompose-output.yaml` — anchor content verified on disk (unit "empty-state rendering per status payload", SC-U5), with volatile-scratch note; `.issues/36/artifacts/decompose-output.yaml` holds the D1 items only; (3) all line-number-only anchors replaced with stable symbol/section descriptions per the 080 cross-reference standard (SearchMode Literal + `search_records` entry in linguistic_service.py — post-#1390/#1391 drift :28/:391→:29/:387 confirmed live before replacing; `get_preference`/`set_preference` in preference_service.py; admin role guard in `main()` + `render_data_reprocessing_maintenance()` in table_maintenance.py; removed the Dependency-table :17,:37 ref) | Validation returned aggregate PASS with 3 non-blocking anchor warnings; developer directive "revise until 100% clean pass" | Developer 2026-09-30 |
 
+| 2026-09-30 | Evidence-accuracy revision — no SC, requirement, or scope changes; verification-method terminology corrected and dependency status synced to reality: (1) SC-1..SC-8 "Verification Method" column relabeled from "Playwright" to "Behavioral pytest via streamlit AppTest" — the plan executed verification through streamlit.testing.v1.AppTest (the repo's own precedent harness `test_search_mode_ui_red.py` is AppTest-based), NOT a Playwright browser; the original label was factually wrong about what the harness is; (2) SC-5 method upgraded to name the invocation-count spy that actually verified the single-search-invocation invariant; (3) Dependencies table row for #36 corrected from "pending (this pipeline)" to "satisfied" — the seam was delivered and verified stable on disk during this pipeline; (4) audit note recorded: the two default-skipped tests in the full-suite count (test/ui/test_playwright_backfill_clickthrough.py, gated by SNEA_E2E=1 + live app on :8501) are #36 SC-13-owned live-server E2E, not this spec's items; they skipped identically at the pre-regression baseline before any #1385 edit | Developer directive "revise this spec to correct the incorrect" after E2E scope-drift finding 2026-09-30 | Developer 2026-09-30 |
+
 ---
 
 *Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash)*
 *Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash) revised 2026-09-30*
 *Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash) revised (citation/anchor hygiene) 2026-09-30*
+*Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash) revised (evidence-accuracy) 2026-09-30*
