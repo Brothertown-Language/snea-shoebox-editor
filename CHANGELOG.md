@@ -14,6 +14,60 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 - **sync_prod_to_local DDL Builder Vector Typmod Fix** (#1394) — Fixed the `CREATE TABLE` builder in `scripts/sync_prod_to_local.py` to restore vector column typmod during local schema reconstruction: `records.embedding` rebuilds as `vector(1536)`, `gloss_search_entries.embedding` and `semantic_search_entries.embedding` as `vector(384)`, exactly matching production. Previously the builder emitted bare `vector`, degrading the synced schema and blocking the mandated pre-regression sync protocol.
 - **sync_prod_to_local nextval Default Restoration** (#1394) — Removed the `nextval`-stripping guard so the builder emits the introspected `DEFAULT nextval(...)` clause verbatim in rebuilt DDL for all 16 autoincrement `.id` columns; ORM inserts omitting `id` no longer fail with `IntegrityError` after sync. Column-type CASE branches audited per R-5: three latent typmod-fidelity gaps (numeric precision, timestamptz precision, ELSE fallback) reported, not fixed.
+- **Real Maintainer Contact in User-Facing Dialogs** (#1392) — The Access Restricted dialog now renders real maintainer contact text resolved from `contact.maintainer_label` and `contact.mastodon_url` in secrets via shared `get_maintainer_label()`/`get_maintainer_contact_url()` helpers, replacing the raw `<MAINTAINER_CONTACT>` placeholder; the login dialog, Aiven-startup error dialog, and startup failure dialog all derive contact text through the same shared path.
+- **Fail-Fast Startup Validation for contact.maintainer_label** (#1392) — Startup raises an actionable error naming `contact.maintainer_label` when the key is absent or empty, so unrendered placeholders and missing contact text never reach end users.
+- **SNEA_SIMULATE_AUTH Local Auth-State Simulation** (#1392) — New environment-variable hook (`authorized` | `unauthorized` | `anonymous`) honored only in local runtime mode lets Playwright e2e tests drive fully-logged-in, restricted, and anonymous states without fabricating browser auth cookies; inert in production.
+- **contact.maintainer_label Secrets Guidance** (#1392) — Documented the `contact.maintainer_label` key in the local development secrets configuration guidance (`docs/development/local-development.md`), with enforcement tests proving the key is present in both local secrets templates.
+
+### feature/1385-semantic-search-ui
+
+- **Semantic Search UI on Records Page** (#1393) — Delivered all 8 success criteria for semantic search on the records page: `Semantic Gloss` and `Semantic All` mode radio entries with captions in the mode selector, a coupled similarity-threshold control with per-user persistence, threshold-edit validation that rejects invalid edits with snap-back, language filters disabled in semantic modes with help text, semantic modes wired through the `search_semantic()` seam, two-decimal similarity scores rendered inline in descending order, stable pagination ordering, and clean empty states. Playwright e2e harnesses (`test/ui/test_semantic_search_ui_dom_e2e.py`, `test/ui/test_semantic_search_ui_flow_e2e.py`, SNEA_E2E=1-gated) with vision-reviewed screenshots under `tmp/issue-1385/artifacts/`.
+- **Live Defects Found by Playwright Pass, Fixed In-PR** (#1393) — Semantic dispatch now calls the `semantic_search_service.search_semantic` seam directly (the nonexistent `LinguisticService.search_semantic` classmethod had been masked by AppTest mocks); semantic-mode export derives ids from the ranked seam cache instead of re-dispatching the strategy map (`SemanticSearchResult has no order_by`); SC-4..7 AppTest harnesses re-mocked to the true seam symbol with assertions unchanged.
+- **Bundled MDF Field Reference Docs** (#1393) — The branch carries commit `b498bad` under explicit developer authorization directive: re-added the 3,353-line MDF field reference (`docs/mdf/MDFields19a_UTF8.txt`) and the MDF bundles reference PDF (`docs/mdf/mdf-bundles-reference.pdf`), unrelated to the semantic-search SCs.
+
+### fix/embed-backfill-serial-lock
+
+- **Embedding Backfill OOM Crash Remediation** (#1391) — Fixed the production crash (OOM kill on the ~1 GB Streamlit Community Cloud container) when running the embedding backfill: a global `_ENCODE_LOCK` serializes every `encode()` caller end-to-end so concurrent Streamlit reruns can no longer run ONNX inference in parallel; the singleton session is created with `intra_op_num_threads=1`/`inter_op_num_threads=1` to cap thread-workspace RAM; and the `backfill_embeddings` batch-size default dropped from 512 to 1 so rows embed one at a time, eliminating the ~400 MB 512×512×384 fp32 tensor spike. Added 5 RED/GREEN tests in `test/test_embedding_crash_remediation.py`.
+
+### feature/36-semantic-gloss-search-pgvector-impl
+
+- **Semantic Gloss Search with pgvector** (#1390) — Implemented semantic gloss search backed by pgvector (issue #36 db/embed revision): byte-pinned gte-small INT8 ONNX embedding substrate with SHA256 hash verification at load time (no silent model drift); a load-once, streamlit-free embedding-service session singleton with in-flight lock; an additive two-table pgvector schema — `gloss_search_entries` gains 3 embedding columns and a new `semantic_search_entries` table with FK CASCADE — delivered via 2 DDL-only versioned migrations with a pgvector `extversion` assert. Added the `search_semantic()` v1 seam (ranked-desc cosine ordering with `record_id`-asc tie-break, pin-join exclusion, and `empty_query`/`no_embeddings`/`stale_model`/`ok`-empty degraded statuses each carrying backfill-remedy messages), widened `SearchMode` with additive `Semantic Gloss`/`Semantic All` modes routed to the seam, embedded new `ge` rows inline during `populate_search_entries` (batch ≤512, Unicode exact — Algonquian IPA characters preserved), and added an admin-role Embedding Backfill button in Table Maintenance with `st.progress` + callback + `st.status` wrapped in `handle_ui_error`. Runtime deps `onnxruntime` + `tokenizers` added (151.9 MiB measured against the 1 GiB planning envelope).
+
+### feature/36-semantic-gloss-search-pgvector
+
+- **#36 Regression Baseline Test-Harness Repair** (#1389) — Repaired the 5 pre-existing failures from #36's regression baseline (spec #1388) with zero product-code deltas under `src/`: insert-only save/restore containment of the module-level `sys.modules` MagicMock in `test_search_mode_ui_red.py` and `test_filter_ux_red.py` (it leaked into `migrations.py`'s lazy `UploadService` import, causing 2 order-dependent failures in `test_migration_backfill_search_entries.py`); deleted 2 stale-RED tests (`test_grouping_separators_render`, `test_help_text_below_radio`) superseded by the dynamic-caption UI; rewrote `test_header_shows_mode_name_and_count` to seed `session_state.search_query` directly with an any-of markdown scan. Post-repair suite: 52 passed, 0 failed; unblocked #36's regression sweep.
+
+### feature/1383-cleanup-paper-removal
+
+- **Removed Redundant paper/ Directory** (#1384) — Deleted the `paper/` directory (22 tracked files: master.tex, build.sh, PDF/ePub outputs, all part-I/II/III section .tex files) per spec #1383 SC-7. The phonetics research paper was migrated to the snea-phonetics repository (26 files verified on main), making this repo's copy redundant.
+
+### feature/1377-mdf-docs-incorporation
+
+- **Incorporated Brothertown Language Project MDF Documentation and Guidelines** (#1378) — Added `docs/mdf/` (MDF tag reference, bundles reference, lookup table, quick reference, tag ordering, tag mappings) and `docs/guidelines/` (language tagging standards, Natick transformation steps, Natick workbench notes, comparative methodology); updated `docs/lessons-learned/index.md` with cross-references to the new MDF documentation. Raw vocabulary files were excluded per spec.
+
+### feature/1370-paper-update
+
+- **Paper Cross-Linguistic Reassessment** (#1375) — Updated the phonetics paper and all 8 phoneme research cards (#1362–#1369) with cross-linguistic reassessment from newly acquired reference dictionaries (Watkins Cree, Sauk, Arapaho, Brinton Lenape, OjibweLexicon CSV). Added Part II subsections: "Cross-Linguistic Evidence for Preaspiration" (Arapaho register variation, Watkins Cree dialect-chain model, Brinton Lenape terminal -g parallel), "Cross-Linguistic Vowel System Comparison" (Sauk 4-vowel length system as PA template, Cree 3-way length distinction, Arapaho triple vowels as boundary condition), and "Cross-Linguistic Reassessment of Dialect Classification" (Cree l/n/th/y continuum model, Lenape Unami/Minsi split parallel). Each research card gained a "Cross-Linguistic Reassessment" section challenging conversion-technique, phoneme-inventory, ambiguity-resolution, recorder-reliability, and dialect-classification assumptions.
+
+### feature/1370-paper-spec
+
+- **Paper Infrastructure + XeLaTeX Mandate** (#1372) — Set up the SNEA Orthography-to-Phoneme research paper infrastructure (#1370): XeLaTeX master document with build script producing PDF + ePub, Section 1 overview, 8 source-workflow sections, and 5 thematic-synthesis chapters, with paper outputs tracked in git for stakeholder distribution. Added Cunningham/Kopris related-work sections to all 8 orthography research cards. Added the LaTeX Build Standard to `AGENTS.md` mandating modern UTF-8 XeLaTeX (never `pdflatex`) for all `.tex` files.
+
+### feature/1359-document-local-postgresql-setup
+
+- **Documented Local PostgreSQL Setup** (#1361) — Created `docs/lessons-learned/2026-07-16-local-postgresql-setup.md` (117 lines) covering the local PostgreSQL development instance: pgserver location at `tmp/local_db/`, sync from production, start/stop, connection parameters, and query patterns; updated `docs/lessons-learned/index.md` and the `AGENTS.md` Research Catalog with cross-references.
+
+### feature/1358-remove-fts-vector-check
+
+- **Removed Dead fts_vector Column Check** (#1360) — Deleted the dead code check in `scripts/sync_prod_to_local.py` that always printed `False`, eliminating the misleading "fts_vector present: False" log line from database-sync output. Pure dead-code removal, zero functional impact.
+
+### feature/1356-retire-dev-branch
+
+- **Retired dev Branch Workflow** (#1357) — Retired the `dev` branch as a workflow target following the dev-to-main merge: deleted `docs/git-workflow-migration-guide.md` and `docs/streamlit-dev-workflow.md`, removed the dev-merging exception section from `AGENTS.md`, and updated `docs/security/credential-leakage-remediation.md` (`origin dev` → `origin main`).
+
+### feature/cleanup
+
+- **Removed .opencode.legacy/ Directory** (#1353) — Deleted the `.opencode.legacy/` directory (143 files, superseded agent configuration: guidelines, skills, scripts, templates) that had been fully replaced by the current `.opencode/` structure, eliminating dead code and confusion from stale agent configuration files lingering alongside the active set. Refs #1352.
 
 ### feature/1299-fts-entries
 

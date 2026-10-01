@@ -141,6 +141,23 @@ Comprehensive documentation is available in the `docs/` directory:
 - **[MDF Upload Plan](docs/plans/mdf-upload-plan.md)**: Implementation plan for the MDF file upload feature.
 - **[Contributing](CONTRIBUTING.md)**: Guidelines for contributing to the project.
 
+## Release Notes
+
+### v0.4.0 (2026-10-01)
+
+- **Semantic gloss search with pgvector**: New `Semantic Gloss` and `Semantic All` search modes backed by pgvector, with an embedded gte-small INT8 ONNX embedding substrate (SHA256-verified at load time) and an admin Embedding Backfill action in Table Maintenance with progress reporting.
+- **Semantic search UI**: Similarity-threshold control with per-user persistence and validation, language filters disabled in semantic modes, and two-decimal similarity scores rendered inline in descending order.
+- **Embedding backfill OOM fix**: Serialized ONNX inference with capped thread counts and one-row batches eliminates the out-of-memory crash on memory-constrained hosting.
+- **Real maintainer contact in dialogs**: The Access Restricted, login, and startup-error dialogs show real maintainer contact text resolved from secrets, with fail-fast startup validation when `contact.maintainer_label` is absent or empty.
+- **Production-to-local sync fidelity**: `sync_prod_to_local` now rebuilds vector column typmods (`vector(1536)` / `vector(384)`) and `DEFAULT nextval(...)` clauses exactly as in production.
+- **MDF documentation incorporated**: Added `docs/mdf/` (tag reference, bundles reference, lookup table, quick reference, tag ordering, tag mappings) and `docs/guidelines/` (language tagging standards, Natick transformation steps, comparative methodology).
+- **Removed the redundant `paper/` directory**: The phonetics research paper now lives in the snea-phonetics repository.
+- **Local PostgreSQL setup documented**: New guide covering the local development instance, sync from production, start/stop, connection parameters, and query patterns.
+- **Removed the dead `fts_vector` column check**: Eliminated the misleading always-false log line from database-sync output.
+- **Retired the `dev` branch workflow**: `main` is now the sole integration target, and dev-workflow documentation was removed.
+
+For the complete version history, see [CHANGELOG.md](CHANGELOG.md).
+
 ## License
 
 - **Code**: Licensed under the [MIT License](LICENSE).
