@@ -226,6 +226,23 @@ def main():
     # Page configuration MUST be the first Streamlit command
     st.set_page_config(page_title="SNEA Shoebox Editor", page_icon="📚", layout="wide")
 
+    # Fail fast: the required contact.maintainer_label secret must be present
+    # (spec R-3 — no silent default).
+    try:
+        maintainer_label = st.secrets["contact"]["maintainer_label"]
+    except (KeyError, TypeError) as exc:
+        raise RuntimeError(
+            "Missing required secret contact.maintainer_label is not set. "
+            "Add contact.maintainer_label to .streamlit/secrets.toml (or the "
+            "deployed secrets store) before starting the app."
+        ) from exc
+    if not maintainer_label:
+        raise RuntimeError(
+            "Missing required secret contact.maintainer_label is empty. "
+            "Set contact.maintainer_label to a non-empty value in "
+            ".streamlit/secrets.toml (or the deployed secrets store)."
+        )
+
     # Initialize database on first load
     _initialize_database()
 
