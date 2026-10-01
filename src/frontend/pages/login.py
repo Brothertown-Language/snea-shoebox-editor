@@ -9,6 +9,8 @@ import streamlit as st
 @st.dialog("Access Restricted")
 def show_unauthorized_dialog() -> None:
     """Display a non-closable dialog for unauthorized users."""
+    from src.frontend.ui_utils import get_maintainer_contact_url, get_maintainer_label
+
     # Hide the close button [x] using CSS
     st.html(
         """
@@ -25,11 +27,12 @@ def show_unauthorized_dialog() -> None:
         "collaborating on the proto-Southern New England Algonquian reconstruction "
         "project for the purpose of future Brothertown Language reconstruction."
     )
-    mastodon_url = st.secrets.get("contact", {}).get("mastodon_url")
-    if mastodon_url:
+    label = get_maintainer_label()
+    url = get_maintainer_contact_url()
+    if url:
         st.write(
             f"For technical assistance or access requests, please contact "
-            f"<MAINTAINER_CONTACT>: [{mastodon_url}]({mastodon_url})"
+            f"{label}: [{url}]({url})"
         )
 
     if st.button("Reload App"):

@@ -4,6 +4,7 @@
 Identity Service for managing GitHub user identity and database synchronization.
 """
 
+import os
 from datetime import datetime
 from typing import Any
 
@@ -18,6 +19,44 @@ from src.logging_config import get_logger
 from src.services.audit_service import AuditService
 
 logger = get_logger("snea.identity")
+
+SIMULATED_AUTH_ENV_VAR = "SNEA_SIMULATE_AUTH"
+
+# Simulated identity for local-run auth testing. Org/team values mirror the
+# production permission seed (scripts/seed_permissions.py): the
+# Brothertown-Language org with proto-SNEA team slugs and their roles.
+_SIMULATED_USER_INFO = {
+    "login": "michaelconrad",
+    "id": 1,
+    "name": "Michael Conrad",
+}
+_SIMULATED_USER_ORGS = [{"login": "Brothertown-Language"}]
+_SIMULATED_USER_TEAMS = [
+    {
+        "slug": "proto-SNEA",
+        "name": "proto-SNEA",
+        "organization": {"login": "Brothertown-Language"},
+    }
+]
+_SIMULATED_USER_ROLE = "editor"
+
+
+def resolve_simulated_auth() -> str | None:
+    """
+    Resolve the local-run auth simulation hook.
+
+    Honors the SNEA_SIMULATE_AUTH environment variable ONLY when the secrets
+    [runtime] mode equals "local"; returns None in any other mode (production
+    inertness) or when the variable is unset. Valid values: authorized,
+    unauthorized, anonymous.
+    """
+    try:
+        mode = st.secrets["runtime"]["mode"]
+    except Exception:
+        return None
+    if mode != "local":
+        return None
+    return os.environ.get(SIMULATED_AUTH_ENV_VAR)
 
 
 class IdentityService:
@@ -207,11 +246,34 @@ class IdentityService:
             session.close()
 
     @staticmethod
+    def _apply_simulated_auth(simulated: str) -> bool:
+        """
+        Apply the local-run auth simulation outcome without any GitHub network
+        access. Returns the identity-path outcome for the simulated value.
+        """
+        logger.warning("Using simulated auth state: %s (local mode only)", simulated)
+        if simulated == "unauthorized":
+            st.session_state["is_unauthorized"] = True
+            return False
+        if simulated == "authorized":
+            st.session_state["user_info"] = dict(_SIMULATED_USER_INFO)
+            st.session_state["user_orgs"] = [dict(o) for o in _SIMULATED_USER_ORGS]
+            st.session_state["user_teams"] = [dict(t) for t in _SIMULATED_USER_TEAMS]
+            st.session_state["user_role"] = _SIMULATED_USER_ROLE
+            return True
+        # "anonymous" (or unrecognized value): unauthenticated outcome — no
+        # identity data, no unauthorized flag.
+        return False
+
+    @staticmethod
     def sync_identity(access_token: str) -> bool:
         """
         Orchestrate the synchronization of GitHub identity.
         Used in streamlit_app.py and login.py.
         """
+        simulated = resolve_simulated_auth()
+        if simulated is not None:
+            return IdentityService._apply_simulated_auth(simulated)
         if not IdentityService.is_identity_synchronized():
             logger.debug("Identity not yet synchronized, fetching from GitHub")
             return IdentityService.fetch_github_user_info(access_token)

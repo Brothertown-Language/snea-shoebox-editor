@@ -10,6 +10,11 @@ and this project adheres to
 For AI agent infrastructure changes (`.opencode/` directory), see
 [`.opencode/CHANGELOG.md`](.opencode/CHANGELOG.md).
 
+### feature/1392-maintainer-contact-placeholder
+
+- **sync_prod_to_local DDL Builder Vector Typmod Fix** (#1394) — Fixed the `CREATE TABLE` builder in `scripts/sync_prod_to_local.py` to restore vector column typmod during local schema reconstruction: `records.embedding` rebuilds as `vector(1536)`, `gloss_search_entries.embedding` and `semantic_search_entries.embedding` as `vector(384)`, exactly matching production. Previously the builder emitted bare `vector`, degrading the synced schema and blocking the mandated pre-regression sync protocol.
+- **sync_prod_to_local nextval Default Restoration** (#1394) — Removed the `nextval`-stripping guard so the builder emits the introspected `DEFAULT nextval(...)` clause verbatim in rebuilt DDL for all 16 autoincrement `.id` columns; ORM inserts omitting `id` no longer fail with `IntegrityError` after sync. Column-type CASE branches audited per R-5: three latent typmod-fidelity gaps (numeric precision, timestamptz precision, ELSE fallback) reported, not fixed.
+
 ### feature/1299-fts-entries
 
 - **FTSEntry Model & FTS Queries Rewrite** (#1299) — Introduced dedicated `FTSEntry` model and `fts_entries` table with `simple` text search configuration, replacing the old `fts_vector` column approach. All three FTS queries (`_search_fts`, infix fallback, ILIKE fallback) now use `fts_entries` with the `simple` configuration, fixing corrupted search results caused by the `english` tsconfig stripping Algonquian linguistic characters. Added migration `v20260613120000` to create the table, populate from existing data, and drop the obsolete `fts_vector` column. Documented the research findings in `docs/lessons-learned/`.

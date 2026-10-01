@@ -39,6 +39,29 @@ def handle_ui_error(e: Exception, user_message: str = "An unexpected error occur
         st.info("💡 *Full stack trace available in server logs (tmp/streamlit.log).*")
 
 
+# ── Contact Resolution ────────────────────────────────────────────────
+
+
+def get_maintainer_label() -> str:
+    """Return the maintainer display label from st.secrets.
+
+    Single source of truth for maintainer contact text: reads
+    ``contact.maintainer_label`` so call sites never hardcode it.
+    """
+    contact = st.secrets.get("contact", {})
+    return contact.get("maintainer_label") or ""
+
+
+def get_maintainer_contact_url() -> str:
+    """Return the maintainer Mastodon URL from st.secrets.
+
+    Companion to get_maintainer_label(): reads ``contact.mastodon_url``
+    so call sites never access the contact secret directly.
+    """
+    contact = st.secrets.get("contact", {})
+    return contact.get("mastodon_url") or ""
+
+
 # ── Infrastructure Dialogs ─────────────────────────────────────────────
 
 

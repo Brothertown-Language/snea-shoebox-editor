@@ -160,6 +160,8 @@ def get_table_metadata(conn, table_name: str) -> dict:
             line = f"  {name} {dtype}"
             if dtype == 'character varying' and typmod and typmod > -1:
                 line = f"  {name} character varying({typmod - 4})"
+            elif dtype == 'vector' and typmod and typmod > -1:
+                line = f"  {name} vector({typmod})"
             if notnull:
                 line += " NOT NULL"
             if info_default := conn.execute(text(f"""
@@ -170,8 +172,7 @@ def get_table_metadata(conn, table_name: str) -> dict:
                   AND d.adnum = (SELECT a.attnum FROM pg_attribute a
                                  WHERE a.attrelid = c.oid AND a.attname = '{name}')
             """)).scalar():
-                if "nextval" not in info_default:
-                    line += f" DEFAULT {info_default}"
+                line += f" DEFAULT {info_default}"
             ddl_parts.append(line)
 
     # Add constraints (primary key, foreign keys, unique, check)
