@@ -29,8 +29,13 @@ This guide explains how to run the SNEA Shoebox Editor locally for development a
     client_id = "YOUR_LOCAL_GITHUB_CLIENT_ID"
     client_secret = "YOUR_LOCAL_GITHUB_CLIENT_SECRET"
     redirect_uri = "http://localhost:8501/component/streamlit_oauth.authorize_button"
+
+    [contact]
+    maintainer_label = "Michael Conrad (@michaelconrad on Mastodon)"
     ```
     *Note: Register a separate GitHub OAuth App for local development with `http://localhost:8501/component/streamlit_oauth.authorize_button` as the callback URL.*
+
+    The `contact.maintainer_label` key supplies the maintainer contact text shown in access-restricted and error dialogs — operators must supply it in their `.streamlit/secrets.toml` `[contact]` section.*
 
 ## Running the App
 
