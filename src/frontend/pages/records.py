@@ -8,6 +8,19 @@ import zipfile
 import streamlit as st
 
 
+class _RecordSearchResultLike:
+    """Page-local container matching the RecordSearchResult field contract
+    (records, total_count, limit, offset) for seam-consumed semantic results.
+    UI-level shim only — binds to the SemanticSearchResult contract (R-8),
+    never to pgvector or ORM internals."""
+
+    def __init__(self, records, total_count, limit, offset):
+        self.records = records
+        self.total_count = total_count
+        self.limit = limit
+        self.offset = offset
+
+
 def records():
     from src.frontend.ui_utils import (
         apply_standard_layout_css,
@@ -23,6 +36,7 @@ def records():
     from src.services.linguistic_service import LinguisticService
     from src.services.navigation_service import NavigationService
     from src.services.preference_service import PreferenceService
+    from src.services.semantic_search_service import search_semantic
     from src.services.upload_service import UploadService
 
     # Hide the main navigation menu — this view owns the sidebar entirely
@@ -55,6 +69,52 @@ def records():
     # Defaults if still missing
     if "page_size" not in st.session_state:
         st.session_state.page_size = 25
+    if "semantic_threshold" not in st.session_state:
+        saved_threshold = None
+        if user_email:
+            saved_threshold = PreferenceService.get_preference(user_email, "records", "semantic_threshold", "0.80")
+        if saved_threshold is None:
+            saved_threshold = "0.80"
+        try:
+            parsed_threshold = float(saved_threshold)
+        except (TypeError, ValueError):
+            parsed_threshold = 0.80
+        if not (0.0 <= parsed_threshold <= 1.0):
+            parsed_threshold = 0.80
+        st.session_state.semantic_threshold = parsed_threshold
+
+    # SC-3 (Issue #1385, R-3): validation guard for the semantic threshold
+    # backing value. Runs on every page execution BEFORE widget instantiation
+    # and BEFORE any set_preference persistence step. Non-numeric or
+    # out-of-range backing values are rejected and the last accepted value is
+    # restored; the pre-instantiation sync block below then re-syncs both
+    # coupled widget keys from the corrected backing value. The guard itself
+    # never calls set_preference, so an invalid edit is never persisted.
+    _THRESHOLD_MIN = 0.0
+    _THRESHOLD_MAX = 1.0
+
+    if "_accepted_threshold" not in st.session_state:
+        st.session_state._accepted_threshold = st.session_state.semantic_threshold
+
+    def _validate_threshold():
+        """Reject a non-numeric or out-of-range semantic_threshold edit.
+
+        Returns True when the backing value is valid (and is recorded as the
+        last accepted value); False when an invalid value was rejected and the
+        last accepted value restored.
+        """
+        raw = st.session_state.get("semantic_threshold")
+        is_valid = (
+            not isinstance(raw, bool) and isinstance(raw, (int, float)) and _THRESHOLD_MIN <= raw <= _THRESHOLD_MAX
+        )
+        if not is_valid:
+            st.session_state.semantic_threshold = st.session_state._accepted_threshold
+            return False
+        st.session_state._accepted_threshold = raw
+        return True
+
+    _validate_threshold()
+
     if "current_page" not in st.session_state:
         st.session_state.current_page = 1
     if "search_query" not in st.session_state:
@@ -154,17 +214,118 @@ def records():
     language_role_map = {"Any": None, "Primary": "primary", "Secondary": "secondary"}
     language_role_val = language_role_map.get(st.session_state.language_role_filter)
 
-    search_result = LinguisticService.search_records(
-        source_id=source_filter_id,
-        language_id=language_filter_id,
-        language_role=language_role_val,
-        is_locked=is_locked_bool,
-        search_term=search_term,
-        search_mode=st.session_state.search_mode,
-        record_ids=selection_record_ids,
-        limit=limit,
-        offset=offset,
-    )
+    # SC-7 (Issue #1385, R-7/R-8): per-mode dispatch. Semantic modes consume
+    # the #36 seam (search_semantic → SemanticSearchResult) directly — the
+    # page passes the session threshold and maps the ranked (record_id, score)
+    # list to full records; exact-match modes keep the existing search_records
+    # path byte-identical. The UI binds to the seam contract only — no
+    # pgvector or ORM imports.
+    is_semantic_mode = st.session_state.search_mode in ("Semantic Gloss", "Semantic All")
+
+    search_result = None
+    semantic_scores: dict[int, float] = {}
+
+    # SC-6 (Issue #1385, R-6): degraded-state payload from the semantic seam.
+    # Non-"ok" statuses render a designated clean empty state in the MAIN
+    # panel and never fall through to record rendering or a crash.
+    semantic_status = None
+
+    if is_semantic_mode:
+        if search_term:
+            mode_key = "gloss" if st.session_state.search_mode == "Semantic Gloss" else "all"
+            # Rank-once pagination (R-5, SC-5): the seam ranks the full
+            # result list once per distinct (mode, query, threshold, source)
+            # digest; page navigation slices the cached ranked list — the
+            # service is NOT re-invoked on navigation.
+            semantic_digest = (
+                mode_key,
+                search_term,
+                float(st.session_state.semantic_threshold),
+                source_filter_id,
+            )
+            cached_ranked = st.session_state.get("_semantic_ranked_cache")
+            if cached_ranked is None or cached_ranked[0] != semantic_digest:
+                semantic_result = search_semantic(
+                    mode=mode_key,
+                    query=search_term,
+                    threshold=st.session_state.semantic_threshold,
+                    source_id=source_filter_id,
+                    limit=None,
+                )
+                # SC-6: a degraded (non-ok) payload is never cached as a
+                # ranked list — re-search retries the seam.
+                if getattr(semantic_result, "status", "ok") == "ok":
+                    cached_ranked = (
+                        semantic_digest,
+                        sorted(semantic_result.results, key=lambda p: (-p[1], p[0])),
+                    )
+                    st.session_state._semantic_ranked_cache = cached_ranked
+                    semantic_status = None
+                else:
+                    semantic_status = semantic_result.status
+                    cached_ranked = (semantic_digest, [])
+                    st.session_state._semantic_ranked_cache = cached_ranked
+            elif cached_ranked[1]:
+                ranked_pairs = cached_ranked[1]
+            else:
+                # Degraded payload cached from this same digest — re-consume
+                # the seam once to re-derive the status for rendering.
+                semantic_result = search_semantic(
+                    mode=mode_key,
+                    query=search_term,
+                    threshold=st.session_state.semantic_threshold,
+                    source_id=source_filter_id,
+                    limit=None,
+                )
+                if getattr(semantic_result, "status", "ok") != "ok":
+                    semantic_status = semantic_result.status
+                ranked_pairs = []
+            if semantic_status is None and cached_ranked is not None:
+                ranked_pairs = cached_ranked[1]
+            else:
+                ranked_pairs = []
+            semantic_scores = dict(ranked_pairs)
+            # Rank-once pagination (R-5, SC-5): slice the cached ranked list
+            # first, then hydrate only the current page's records — the
+            # service is not re-invoked on page navigation.
+            page_pairs = ranked_pairs[offset : offset + limit]
+            page_records = []
+            for record_id, _score in page_pairs:
+                rec = LinguisticService.get_record(record_id)
+                if rec:
+                    page_records.append(rec)
+            search_result = _RecordSearchResultLike(
+                records=page_records,
+                total_count=len(ranked_pairs),
+                limit=limit,
+                offset=offset,
+            )
+        else:
+            # No query in a semantic mode: match exact-mode empty-query
+            # behavior (search term None → no strategy, unfiltered browse).
+            search_result = LinguisticService.search_records(
+                source_id=source_filter_id,
+                language_id=None,
+                language_role=None,
+                is_locked=is_locked_bool,
+                search_term=None,
+                search_mode=st.session_state.search_mode,
+                record_ids=selection_record_ids,
+                limit=limit,
+                offset=offset,
+            )
+    else:
+        search_result = LinguisticService.search_records(
+            source_id=source_filter_id,
+            language_id=language_filter_id,
+            language_role=language_role_val,
+            is_locked=is_locked_bool,
+            search_term=search_term,
+            search_mode=st.session_state.search_mode,
+            record_ids=selection_record_ids,
+            limit=limit,
+            offset=offset,
+        )
 
     records_batch = search_result.records
     total_count = search_result.total_count
@@ -208,17 +369,76 @@ def records():
             "Gloss": "Primary English glosses (\\ge)",
             "Lexeme": "All Algonquian terms",
             "FTS": "Every field",
+            "Semantic Gloss": "Semantic search over English glosses",
+            "Semantic All": "Semantic search over all fields",
         }
         st.radio(
             "Search Mode",
-            ["Headword", "Gloss", "Lexeme", "FTS"],
-            index=["Headword", "Gloss", "Lexeme", "FTS"].index(st.session_state.search_mode),
+            ["Headword", "Gloss", "Lexeme", "FTS", "Semantic Gloss", "Semantic All"],
+            index=["Headword", "Gloss", "Lexeme", "FTS", "Semantic Gloss", "Semantic All"].index(
+                st.session_state.search_mode
+            ),
             key="search_mode_radio",
             label_visibility="collapsed",
             on_change=on_mode_change,
         )
         st.caption(SEARCH_MODE_CAPTIONS.get(st.session_state.search_mode, ""))
         is_fts_mode = st.session_state.search_mode == "FTS"
+
+        threshold_help = None if is_semantic_mode else "Applies only in Semantic modes."
+
+        # Two-way coupled threshold widgets: both keys are bound to the shared
+        # backing value st.session_state.semantic_threshold. Sync happens
+        # pre-instantiation (never after widget instantiation) and edits are
+        # propagated through on_change callbacks — no post-instantiation
+        # session_state writes to widget keys, no st.rerun().
+        if "semantic_threshold_slider" not in st.session_state:
+            st.session_state.semantic_threshold_slider = st.session_state.semantic_threshold
+        if "semantic_threshold_number" not in st.session_state:
+            st.session_state.semantic_threshold_number = st.session_state.semantic_threshold
+        if st.session_state.semantic_threshold_slider != st.session_state.semantic_threshold:
+            st.session_state.semantic_threshold_slider = st.session_state.semantic_threshold
+        if st.session_state.semantic_threshold_number != st.session_state.semantic_threshold:
+            st.session_state.semantic_threshold_number = st.session_state.semantic_threshold
+
+        def on_threshold_slider_change():
+            effective = float(st.session_state.semantic_threshold_slider)
+            st.session_state.semantic_threshold = effective
+            if user_email:
+                PreferenceService.set_preference(user_email, "records", "semantic_threshold", str(effective))
+
+        def on_threshold_number_change():
+            effective = float(st.session_state.semantic_threshold_number)
+            st.session_state.semantic_threshold = effective
+            if user_email:
+                PreferenceService.set_preference(user_email, "records", "semantic_threshold", str(effective))
+
+        threshold_slider = st.container()
+        threshold_slider.slider(
+            "Semantic threshold",
+            min_value=0.0,
+            max_value=1.0,
+            step=0.01,
+            key="semantic_threshold_slider",
+            value=st.session_state.semantic_threshold,
+            on_change=on_threshold_slider_change,
+            label_visibility="collapsed",
+            disabled=not is_semantic_mode,
+            help=threshold_help,
+        )
+        threshold_number = st.container()
+        threshold_number.number_input(
+            "Semantic threshold",
+            min_value=0.0,
+            max_value=1.0,
+            step=0.01,
+            key="semantic_threshold_number",
+            value=st.session_state.semantic_threshold,
+            on_change=on_threshold_number_change,
+            label_visibility="collapsed",
+            disabled=not is_semantic_mode,
+            help=threshold_help,
+        )
         search_col1, search_col2 = st.columns(2)
         if search_col1.button("", icon="🔍", key="search_trigger", help="Execute Search", use_container_width=True):
             input_key = f"search_query_input_{st.session_state.get('_search_input_key', 0)}"
@@ -250,6 +470,19 @@ def records():
         lang_options = ["All Languages"] + [lang["name"] for lang in languages]
         lang_name_map = {str(lang["id"]): lang["name"] for lang in languages}
         current_lang_name = lang_name_map.get(str(st.session_state.selected_language_id), "All Languages")
+        # SC-8 (Issue #1385, R-9): language filters are inert in semantic
+        # modes — the semantic seam accepts only source_id. Disabled-filter
+        # idiom mirrors FTS mode; previously-selected values are preserved
+        # but no language constraint is applied to result expectations.
+        if is_fts_mode:
+            language_disabled_help = "Language filters are not available in Full-Text Search mode."
+            language_role_disabled_help = "Language Role filters are not available in Full-Text Search mode."
+        elif is_semantic_mode:
+            language_disabled_help = "Language filters are not applied in Semantic search modes."
+            language_role_disabled_help = "Language Role filters are not applied in Semantic search modes."
+        else:
+            language_disabled_help = None
+            language_role_disabled_help = None
         st.selectbox(
             "Select Language",
             lang_options,
@@ -257,8 +490,8 @@ def records():
             key="language_select",
             label_visibility="collapsed",
             on_change=on_language_change,
-            disabled=is_fts_mode,
-            help="Language filters are not available in Full-Text Search mode." if is_fts_mode else None,
+            disabled=is_fts_mode or is_semantic_mode,
+            help=language_disabled_help,
         )
         role_options = ["Any", "Primary", "Secondary"]
         st.radio(
@@ -269,8 +502,8 @@ def records():
             horizontal=True,
             label_visibility="collapsed",
             on_change=on_language_role_change,
-            disabled=is_fts_mode,
-            help="Language Role filters are not available in Full-Text Search mode." if is_fts_mode else None,
+            disabled=is_fts_mode or is_semantic_mode,
+            help=language_role_disabled_help,
         )
 
         # Is Locked Filter
@@ -449,10 +682,28 @@ def records():
         export_search_term = search_term
         export_record_ids = selection_record_ids
 
+        # Semantic mode export (Issue #1385): the #36 strategy map routes the
+        # semantic modes to the result-returning search_semantic seam, so any
+        # strategy-map consumer (get_all_records_for_export /
+        # stream_records_to_temp_file) re-dispatching with a semantic mode +
+        # search term would crash (SemanticSearchResult has no order_by).
+        # Respect the frozen service contract: derive export ids from the
+        # already-ranked seam cache and pass them via record_ids — the
+        # strategy dispatch is skipped entirely when record_ids is provided.
+        # A zero-result semantic search (empty cache pairs, e.g. threshold
+        # 1.0) must ALSO not re-dispatch — neutralize the term so the export
+        # path browses nothing.
+        semantic_export_ids = False
+        if is_semantic_mode and not export_record_ids:
+            cached = st.session_state.get("_semantic_ranked_cache")
+            if cached is not None and cached[0][1] == (export_search_term or None):
+                export_record_ids = [rid for rid, _score in cached[1]]
+                semantic_export_ids = bool(search_term)
+
         # Prepare export data
         all_matching_records = LinguisticService.get_all_records_for_export(
             source_id=export_source_id,
-            search_term=export_search_term,
+            search_term=None if semantic_export_ids else (export_search_term or None),
             search_mode=st.session_state.search_mode,
             record_ids=export_record_ids,
         )
@@ -509,7 +760,7 @@ def records():
                 # Use streaming to temp file for better memory management
                 temp_path = LinguisticService.stream_records_to_temp_file(
                     source_id=export_source_id,
-                    search_term=export_search_term,
+                    search_term=None if semantic_export_ids else (export_search_term or None),
                     search_mode=st.session_state.search_mode,
                     record_ids=export_record_ids,
                 )
@@ -537,8 +788,41 @@ def records():
         render_back_to_main_button()
 
     # --- 4. Main Panel: Records List ---
-    if not records_batch:
-        st.info("No records found matching your criteria.")
+    # SC-6 (Issue #1385, R-6): per-status clean empty states in the MAIN
+    # panel records area — never a crash, never sidebar rendering. st.info
+    # for informational states, st.warning for remedy-required states.
+    # Theme-aware native elements only (no hex/rgba, no st.html).
+    _BACKFILL_REMEDY = "Table Maintenance → Data Reprocessing → Embedding Backfill"
+
+    if is_semantic_mode and search_term and semantic_status is not None:
+        if semantic_status == "empty_query":
+            st.info("Enter a query to search semantically.")
+        elif semantic_status == "no_embeddings":
+            st.warning(
+                "No records have embeddings yet, so semantic search cannot match this query."
+                f" An administrator can generate them via {_BACKFILL_REMEDY}."
+            )
+        elif semantic_status == "stale_model":
+            st.warning(
+                "The embedding model has changed since records were last processed, so"
+                f" semantic results are unavailable. An administrator can resolve this"
+                f" via {_BACKFILL_REMEDY}."
+            )
+        else:
+            # Unknown status: fail clean, never crash.
+            st.info("No records found matching your criteria.")
+    elif not records_batch:
+        if is_semantic_mode and search_term:
+            # Zero-results-after-threshold (ok payload, empty ranking):
+            # reuses the existing empty-batch branch with status-specific
+            # copy naming the active threshold.
+            st.info(
+                "No records scored above the semantic threshold"
+                f" ({float(st.session_state.semantic_threshold):.2f})."
+                " Lower the Semantic threshold to widen the search."
+            )
+        else:
+            st.info("No records found matching your criteria.")
     else:
         for record in records_batch:
             record_id = record["id"]
@@ -548,7 +832,15 @@ def records():
             with st.container(border=True):
                 is_locked = bool(record.get("is_locked", False))
                 lock_status = " 🔒" if is_locked else ""
-                st.markdown(f"**Record #{record_id}** (Source: {record['source_name'] or 'Unknown'}){lock_status}")
+                # SC-4 (Issue #1385, R-4): semantic-mode rows append the
+                # similarity score inline in the header line, fixed two
+                # decimals, in the seam's descending-rank order; exact-match
+                # modes render no score. Native markdown only — no hex/rgba.
+                score_display = ""
+                if is_semantic_mode and record_id in semantic_scores:
+                    score_display = f" — Similarity: {semantic_scores[record_id]:.2f}"
+                header_line = f"**Record #{record_id}** (Source: {record['source_name'] or 'Unknown'})"
+                st.markdown(f"{header_line}{score_display}{lock_status}")
 
                 # Check if it should be in edit mode (Global mode or local edit)
                 # MUST NOT enter edit mode if locked.
