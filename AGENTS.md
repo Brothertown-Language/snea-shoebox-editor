@@ -40,6 +40,26 @@ Before making changes to search infrastructure, text normalization, FTS configur
 
 ---
 
+## UI Testing — Playwright Standard of Record (MANDATORY for UI tests)
+
+Before writing, modifying, or running ANY UI test, agents MUST read
+[the UI testing standard](docs/development/ui_testing_standard.md) and
+[the test/ui agent instructions](test/ui/AGENTS.md):
+
+- **Playwright real-browser tests against the live app are the standard of
+  record** for user-visible-behavior success criteria (rendering, layout,
+  progress, role gating). `streamlit.testing.v1.AppTest` is downgraded to
+  in-process smoke checks — it is NOT sufficient evidence for
+  user-visible-behavior claims on its own.
+- **One-time OAuth login:** when saved auth state is missing/stale, the
+  agent launches a HEADLESS=False Chromium login window and the developer
+  completes the GitHub login. Agents MUST NOT fabricate auth state from CLI
+  tokens (they typically lack the `user:email` scope identity sync requires).
+- **E2E gating:** `playwright_e2e`-marked tests skip unless `SNEA_E2E=1` +
+  live app on :8501 — skipping is by design, never silently treated as PASS.
+- Layout-sensitive criteria require vision review of Playwright screenshots
+  under `tmp/<issue>/artifacts/`.
+
 ## Regression Test Protocol
 
 Before every regression test cycle, the local database MUST be re-synced from production:

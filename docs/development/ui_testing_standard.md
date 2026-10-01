@@ -31,11 +31,20 @@ standard of record.
 
 Established by `test/ui/test_playwright_backfill_clickthrough.py`.
 
-1. **One-time login setup (manual, per developer):** launch a headed Chromium
-   via `sync_playwright()` at `http://localhost:8501/maintenance`, complete
-   real GitHub OAuth, save the session with `context.storage_state(path=...)`
-   to `tmp/issue-36/auth-state.json`. The `gh_auth_token` cookie must be
-   present in the saved state.
+1. **One-time login setup (headed window shown to the developer — the agent
+   MUST NOT authenticate on the developer's behalf):** the agent prepares
+   everything it can autonomously (start the local app, health-check
+   `/_stcore/health` → 200, verify the saved-state path), then launches a
+   headed Chromium via `sync_playwright()` (headless=False) at the login
+   page and waits for the developer to complete the real GitHub OAuth in
+   that window; the agent then saves the session with
+   `context.storage_state(path=...)` to `tmp/issue-36/auth-state.json`
+   (the gh_auth_token cookie must be present — sanity-check the cookie
+   names before consuming). Do NOT fabricate auth state from CLI tokens:
+   gh CLI tokens typically lack the `user:email` scope the app's identity
+   sync requires and dehydrate to the login page; `gh auth refresh -s user`
+   exists as a fallback only. Full agent-facing procedure:
+   [test/ui/AGENTS.md](../../test/ui/AGENTS.md).
 2. **Automated runs:** tests load `storage_state=...` into a fresh context —
    no cookie injection, no token minting, no GitHub API calls from tests.
    Regenerate storage state whenever missing or stale; tests fail loudly
@@ -45,6 +54,13 @@ Established by `test/ui/test_playwright_backfill_clickthrough.py`.
 4. **Gating:** E2E tests carry the `playwright_e2e` pytest marker and skip
    unless `SNEA_E2E=1` is set, so `pytest test/` stays green without the
    live server.
+
+## Agent instructions pointer (MANDATORY)
+
+AI agents working in `test/ui/` MUST read [test/ui/AGENTS.md](../../test/ui/AGENTS.md)
+first — it is the agent-facing operational guide for this standard: the
+headed-login-window procedure for the developer, automated E2E run steps,
+harness conventions, and the never-fabricate-auth-state rule.
 
 ## AppTest — remaining sanctioned uses
 
