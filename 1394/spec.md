@@ -92,10 +92,16 @@ Failure: `IntegrityError: null value in column "id" of relation "records" violat
 
 ### Success criteria
 
-- After a fresh sync, `SELECT format_type(atttypid, atttypmod)` for every `embedding` column returns `vector(384)`.
+- After a fresh sync, `format_type(atttypid, atttypmod)` output for every `embedding` column exactly matches production: `records.embedding` = `vector(1536)`, `gloss_search_entries.embedding` = `vector(384)`, `semantic_search_entries.embedding` = `vector(384)`.
 - After a fresh sync, `records.id` (and other ORM-autoincrement `id` columns) carry their `nextval` defaults.
 - Full test suite after sync: 0 failures (the 5 baseline failures gone, no new failures).
 - TDD phase-0 pre-regression baseline passes on a synced database for subsequent pipelines.
+
+---
+
+## Change Control
+
+- **2026-10-01** — SC1 wording synced to verified production state (guideline 130 documentation-drift sync): production `records.embedding` is `vector(1536)`, not `vector(384)`; `gloss_search_entries` and `semantic_search_entries` are `vector(384)`. SC1 now requires the fresh sync to exactly reproduce production typmod per column. Non-substantive wording sync — no change to implementation intent, scope, or evidence type (behavioral live-DB verification unchanged); the criterion is strengthened in precision, not weakened. Pipeline-initiated; no developer re-authorization required per approval-gate-008.
 
 ---
 

@@ -19,7 +19,7 @@ dispatch:
 
 ## Goal
 
-Fix the `CREATE TABLE` DDL builder in `scripts/sync_prod_to_local.py` so vector columns are rebuilt as `vector(384)` (SC1) and autoincrement columns keep their `nextval` defaults (SC2); then re-run a fresh sync and verify the full pytest suite is green (SC3) and the TDD phase-0 pre-regression baseline passes on the synced database (SC4).
+Fix the `CREATE TABLE` DDL builder in `scripts/sync_prod_to_local.py` so vector columns are rebuilt with their production typmod — `records.embedding` = `vector(1536)`, `gloss_search_entries.embedding` = `vector(384)`, `semantic_search_entries.embedding` = `vector(384)` (SC1) — and autoincrement columns keep their `nextval` defaults (SC2); then re-run a fresh sync and verify the full pytest suite is green (SC3) and the TDD phase-0 pre-regression baseline passes on the synced database (SC4).
 
 ## Architecture
 
@@ -89,7 +89,7 @@ Check your tool list for a tool named `task`.
 
 ## Exit Criteria
 
-1. C1 — SC1 verified: `format_type` returns `vector(384)` for every `embedding` column after fresh sync.
+1. C1 — SC1 verified: after fresh sync, `format_type(atttypid, atttypmod)` output for every `embedding` column exactly matches production (`records.embedding` = `vector(1536)`, `gloss_search_entries.embedding` = `vector(384)`, `semantic_search_entries.embedding` = `vector(384)`).
 2. C2 — SC2 verified: `nextval` defaults present on autoincrement `id` columns in `pg_attrdef` after fresh sync; ORM inserts omitting `id` succeed.
 3. C3 — SC3 verified: full pytest suite after fresh sync reports 0 failures.
 4. C4 — SC4 verified: TDD phase-0 pre-regression baseline passes on the synced database.
@@ -101,7 +101,7 @@ Check your tool list for a tool named `task`.
 
 - **Concern:** C1_vector_typmod
 - **Files:** `scripts/sync_prod_to_local.py` (CREATE TABLE builder column-type CASE)
-- **SCs:** SC1 — after fresh sync, `format_type(atttypid, atttypmod)` returns `vector(384)` for every `embedding` column
+- **SCs:** SC1 — after fresh sync, `format_type(atttypid, atttypmod)` output for every `embedding` column exactly matches production: `records.embedding` = `vector(1536)`, `gloss_search_entries.embedding` = `vector(384)`, `semantic_search_entries.embedding` = `vector(384)`
 - **Dependencies:** none
 - **Entry:** pre-implementation steps complete; working tree on feature branch
 - **Exit:** SC1 enforcement test passes; commit contains test + change
@@ -120,20 +120,20 @@ Check your tool list for a tool named `task`.
 
 ### State Transitions
 
-- T1 (SC1): embedding columns (`records`, `gloss_search_entries`, `semantic_search_entries`) from column type `vector` (atttypmod lost) to `vector(384)` via `format_type`.
+- T1 (SC1): embedding columns (`records`, `gloss_search_entries`, `semantic_search_entries`) from column type `vector` (atttypmod lost) to their production typmod values (`vector(1536)`, `vector(384)`, `vector(384)`) via `format_type`.
 
 ### Step-by-Step
 
 - [ ] 5. **RED — SC1 enforcement test** `(**task-card**)`
   - Dispatch `task(..., prompt: "execute red task from test-driven-development")`.
-  - SC: SC1. Write a failing enforcement test asserting the rebuilt DDL emits `vector(384)` for embedding columns. The test FAILS at baseline because the builder emits bare `vector`.
+   - SC: SC1. Write a failing enforcement test asserting the rebuilt DDL emits each embedding column with its production typmod (`records.embedding` = `vector(1536)`, `gloss_search_entries.embedding` = `vector(384)`, `semantic_search_entries.embedding` = `vector(384)`). The test FAILS at baseline because the builder emits bare `vector`.
   - RED must fail before GREEN begins. No scope creep.
 - [ ] 6. **GREEN — vector typmod fix** `(**task-card**)`
   - Dispatch `task(..., prompt: "execute green task from test-driven-development")`.
   - SC: SC1. Apply the same `atttypmod` handling used for `character varying` to `vector` columns in the CREATE TABLE builder, emitting `vector({typmod})` when `atttypmod > -1`. Minimum change only — test passes, nothing more.
 - [ ] 7. **Verify — SC1** `(**task-card**)`
   - Dispatch `task(..., prompt: "execute verify task from verification-before-completion")`.
-  - SC: SC1. Verify against live local-DB evidence: after a sync run, `format_type` returns `vector(384)` for every `embedding` column; behavioral evidence, not structural.
+   - SC: SC1. Verify against live local-DB evidence: after a sync run, `format_type` output for every `embedding` column exactly matches production (`records.embedding` = `vector(1536)`, `gloss_search_entries.embedding` = `vector(384)`, `semantic_search_entries.embedding` = `vector(384)`); behavioral evidence, not structural.
 - [ ] 8. **Commit — SC1** `(**direct**)`
   - Orchestrator runs `git add <files> && git commit -m "<message>"` — test and implementation committed as one atomic slice. No co-author trailers (added at PR-time squash). Pre-cleanup per reference card: none pending.
 
@@ -231,7 +231,7 @@ Check your tool list for a tool named `task`.
   - SC: SC3. Run `bash scripts/sync_prod_to_local.sh` fresh (per AGENTS.md Regression Test Protocol, script from the feature branch), then run the full pytest suite. What must be true: 0 failures — the 5 baseline failures gone, no new failures.
 - [ ] 15. **Verify — SC3** `(**task-card**)`
   - Dispatch `task(..., prompt: "execute verify task from verification-before-completion")`.
-  - SC: SC3. Verify before-and-after live-DB evidence: `format_type` → `vector(384)` for embedding columns, `nextval` defaults in `pg_attrdef`, plus full-suite output showing 0 failures. Behavioral evidence only.
+   - SC: SC3. Verify before-and-after live-DB evidence: `format_type` output for embedding columns exactly matches production typmod (`records.embedding` = `vector(1536)`, `gloss_search_entries.embedding` = `vector(384)`, `semantic_search_entries.embedding` = `vector(384)`), `nextval` defaults in `pg_attrdef`, plus full-suite output showing 0 failures. Behavioral evidence only.
 - [ ] 16. **Commit — SC3 evidence artifacts** `(**direct**)`
   - Orchestrator runs `git add <files> && git commit -m "<message>"` committing the evidence artifacts (no code change; evidence committed per structure artifact).
 
