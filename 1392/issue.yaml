@@ -1,8 +1,8 @@
 number: 1392
 title: '[SPEC-FIX] Unrendered <MAINTAINER_CONTACT> Placeholder Leaks Into UI'
 labels:
-- needs-approval
+- approved-for-for_pr
 state: open
 remote_issue: 1392
 remote_url: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1392
-updated_at: '2026-09-30T17:06:33+00:00'
+updated_at: '2026-10-01T13:15:53+00:00'
