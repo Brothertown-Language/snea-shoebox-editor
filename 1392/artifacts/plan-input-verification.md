@@ -75,3 +75,51 @@ solve-output.yaml, plan-output.yaml (Z3: SOLVED_SATISFICING, plan length 9).
 - `sc-summary.yaml` never existed for this issue; SC set comes from
   `analysis-summary.yaml` sc_inventory + spec §3 table + spec §7 Traceability +
   concern-map.yaml. No SC data synthesized.
+
+## Stage 3 read-back verification (final, against plan-structure-standards.md)
+
+- Index section order (§Plan Index Sections): Goal → Architecture → Files →
+  Dispatch → Blast Radius → Compliance → One-Step → Step Status → Enforcement
+  Gate → Pre-Flight Guard → Phase Table → Self-Remediation → Pre-Implementation →
+  Phase 1 → Phase 2 → Post-Implementation → Exit Criteria → lifecycle_events —
+  all 18 headings present in pinned order (grep of `^## ` confirmed).
+- Frontmatter field order matches convention 1; `plan_schema_version: "1.0"`
+  matches plan-artifact-format.md.
+- Phase-table columns match convention 2 exactly; dispatch cells summary-form
+  (convention 4); step numbering continuous 1..49 with Step Range cells
+  (convention 3).
+- Phase metadata per §Phase File Sections: Concern, Files, SCs, Dependencies,
+  Entry conditions, Exit conditions, Code Path Coverage, Cross-Cutting SCs,
+  Interface Boundaries, State Transitions, Steps, completion block, concern
+  transition — both phases (Entry/Exit split applied in Stage 3).
+- Prohibited patterns: no dispatch tables; no TBD/TODO (grep clean); phases
+  self-contained; no zero-indexed numbering; no line-number references (grep
+  `\.py:[0-9]+` clean after replacing the `streamlit_app.py:308` reference with
+  a stable-anchor phrase); one dispatch per step; all mandatory gates present
+  (pre-regression, pre-regression-verify, red, green, post-regression, verify,
+  commit-inline per phase; coherence + baseline pre; audit, z3-check,
+  structural, pre-pr-gate, regression, review-prep, create-pr, completion post).
+- No fenced code blocks in the plan body (convention 8); exit criteria C1..C9
+  (convention 9); exactly one `plan_created` lifecycle event with `plan_file` +
+  `phase_count: 2` (convention 10); no timestamps in body (convention 5).
+- Pre-flight guard block matches `.opencode/guidelines/023-pre-flight-guard.md`
+  verbatim.
+- GREEN pre-clean `rm -f ./tmp/issue-1392/artifacts/pipeline-green-*` present on
+  all 7 GREEN steps (6, 11, 18, 23, 29, 33, 38) per Artifact Retention Rule 3.
+- Stage 3 structural fixes applied: Self-Remediation moved to after Phase Table
+  (index order 8→9); top-level Cost Frames section removed (per-phase cost
+  frames retained); `:308` line reference replaced with stable anchor;
+  Entry/Exit conditions split from Dependencies in both phases.
+- `dependency-contract.yaml` confirmed present at `.issues/1392/`
+  (z3-check step 43 command target resolves).
+
+## Step 9 label write (executed)
+
+- Primary local write SUCCEEDED (tool output `updated: true`, qualifier
+  `snea-shoebox-editor#1392` — the tool's qualifier for the root repo; the
+  `.issues#1392` qualifier form is rejected with "repo '.issues' not found").
+- Read-back verification: `.issues/1392/issue.yaml` labels are now
+  `[approved-for-for_pr, spec-cleared]` (existing label preserved alongside new,
+  per convention 11).
+- Remote GitHub label write: not needed for the completion contract (primary
+  local write is canonical); no blocking status.

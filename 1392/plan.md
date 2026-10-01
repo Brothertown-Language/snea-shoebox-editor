@@ -346,6 +346,7 @@ Check your tool list for a tool named `task`.
 ## lifecycle_events
 
 - event: plan_created
+  timestamp: 2026-10-01T16:35:44Z
   plan_file: .issues/1392/plan.md
   phase_count: 2
 
