@@ -1,0 +1,7 @@
+sc7_sc8_red_baseline:
+  issue: 1394
+  recorded_at: 2026-10-01
+  reference_commit: eb467b8a2c50fcb5e50d329f916383898706de74
+  sc7_target: "git diff eb467b8 -- scripts/sync_prod_to_local.sh must be empty"
+  sc8_target: "git diff eb467b8 -- src/database/ must be empty"
+  note: "No new RED test required — structural invariant SCs; at trunk tip eb467b8 the .sh invocation contract and src/database/ state are the reference definitions"

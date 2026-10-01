@@ -1,0 +1,4 @@
+# SC8 invariant check — git diff eb467b8 -- src/database/
+# Date: 2026-10-01T15:18:56-04:00
+# Result: EMPTY DIFF (0 bytes of diff output) — migrations source and production schema untouched since trunk tip eb467b8
+# Invariant: PASS
