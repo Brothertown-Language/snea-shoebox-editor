@@ -9,7 +9,11 @@ from urllib.parse import urlparse
 import streamlit as st
 
 from src.database.connection import get_db_url, init_db, is_production
-from src.frontend.ui_utils import hide_sidebar_nav
+from src.frontend.ui_utils import (
+    get_maintainer_contact_url,
+    get_maintainer_label,
+    hide_sidebar_nav,
+)
 from src.logging_config import get_logger
 from src.services.infrastructure_service import InfrastructureService
 
@@ -117,11 +121,12 @@ def _initialize_database():
                     st.error("Database startup failed")
                     st.error(aiven_error)
 
-                    mastodon_url = st.secrets.get("contact", {}).get("mastodon_url")
-                    if mastodon_url:
+                    label = get_maintainer_label()
+                    url = get_maintainer_contact_url()
+                    if url:
                         st.info(
                             f"If the problem persists, please report the issue to "
-                            f"<MAINTAINER_CONTACT>: [{mastodon_url}]({mastodon_url})"
+                            f"{label}: [{url}]({url})"
                         )
 
                     if st.button("Retry initialization"):
@@ -194,11 +199,12 @@ def _initialize_database():
                     status.empty()
                     st.error("Database is unavailable. Please try one of the following:")
 
-                    mastodon_url = st.secrets.get("contact", {}).get("mastodon_url")
-                    if mastodon_url:
+                    label = get_maintainer_label()
+                    url = get_maintainer_contact_url()
+                    if url:
                         st.info(
                             f"If the problem persists, please report the issue to "
-                            f"<MAINTAINER_CONTACT>: [{mastodon_url}]({mastodon_url})"
+                            f"{label}: [{url}]({url})"
                         )
 
                     if st.button("Retry initialization"):
@@ -303,10 +309,10 @@ def main():
     try:
         pg.run()
     except Exception as e:
-        from src.frontend.ui_utils import handle_ui_error
+        from src.frontend.ui_utils import get_maintainer_contact_url, handle_ui_error
 
-        mastodon_url = st.secrets.get("contact", {}).get("mastodon_url")
-        contact = f" Please report this issue on Mastodon: {mastodon_url}" if mastodon_url else ""
+        url = get_maintainer_contact_url()
+        contact = f" Please report this issue on Mastodon: {url}" if url else ""
         handle_ui_error(e, f"An unexpected error occurred.{contact}", logger_name="snea.app")
 
 
