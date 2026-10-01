@@ -1,79 +1,34 @@
-# code-path-inventory.yaml — backfilled from .issues/1392/spec.md
+# Code Path Inventory — Issue 1392 — code paths implied by each SC
+# Backfilled retroactively; grounded in live code reads 2026-10-01.
 spec: .issues/1392/spec.md
-issue: 1392
+status: backfilled
 
-code_paths:
-  - id: CP-1
-    sc: SC-1
-    name: Login "Access Restricted" dialog render path
-    entry: login() in src/frontend/pages/login.py
-    path: login() → show_unauthorized_dialog() (src/frontend/pages/login.py, @st.dialog decorator, invoked at line 78) → st.write() contact line containing the raw <MAINTAINER_CONTACT> token (line 32)
-    change: route the contact st.write through the shared resolution path so the dialog renders st.secrets["contact"]["maintainer_label"]
-    evidence: read of src/frontend/pages/login.py (live)
-
-  - id: CP-2a
-    sc: SC-2
-    name: Aiven-startup-failure dialog (defect site 2)
-    entry: main() → _initialize_database() (streamlit_app.py:95)
-    path: _initialize_database() → aiven_error branch → st.info() with <MAINTAINER_CONTACT> token (streamlit_app.py:124)
-    change: replace literal with shared resolution path
-    evidence: grep hit streamlit_app.py:124 (live)
-
-  - id: CP-2b
-    sc: SC-2
-    name: Final database-failure dialog (defect site 3)
-    entry: main() → _initialize_database()
-    path: _initialize_database() → final-failure branch → st.info() with <MAINTAINER_CONTACT> token (streamlit_app.py:201)
-    change: replace literal with shared resolution path
-    evidence: grep hit streamlit_app.py:201 (live)
-
-  - id: CP-2c
-    sc: SC-2
-    name: Login dialog token removal (defect site 1)
-    entry: same as CP-1 — the 3 grep hits are login.py:32, streamlit_app.py:124, streamlit_app.py:201
-    path: grep -rn --include='*.py' "<MAINTAINER_CONTACT>" src/ streamlit_app.py → must return 0 after GREEN
-    change: all 3 literals replaced (overlaps CP-1/CP-2a/CP-2b)
-    evidence: grep returns exactly 3 source hits today (live)
-
-  - id: CP-3
-    sc: SC-3
-    name: Shared resolution path (new)
-    entry: new helper function (location chosen at implementation time)
-    path: helper reads st.secrets["contact"]["maintainer_label"] → returns label; consumed by CP-1, CP-2a, CP-2b; consumed by CP-4 validation
-    change: add one helper; no call site keeps an inline literal
-    evidence: no shared helper exists today — each site independently reads st.secrets.get("contact", {}) (live read)
-
-  - id: CP-4
-    sc: SC-4
-    name: Startup fail-fast validation (new)
-    entry: startup path — main() (streamlit_app.py:219) → st.set_page_config (line 221) → _initialize_database() (line 224)
-    path: validation reads contact.maintainer_label during startup, before any dialog renders; raises an actionable error naming contact.maintainer_label when absent
-    change: add startup validation step; error must originate in startup initialization, not in a dialog-render call
-    evidence: no validation exists today (spec SC-4 RED premise)
-
-  - id: CP-5
-    sc: SC-5
-    name: AST placeholder sweep test (new)
-    entry: uv run pytest test/
-    path: new test parses src/ and streamlit_app.py with ast; inspects string literals passed to st.write/st.info/st.error/st.warning/st.success/st.markdown/st.caption; asserts zero matches of <[A-Z][A-Z0-9_]{2,}>
-    change: add sweep test; remediate any placeholder it finds (the 3 MAINTAINER_CONTACT literals are caught here pre-SC-2-removal)
-    evidence: <SSSSS> docstring in src/services/upload_service.py excluded by AST scope (spec §3 SC-5)
-
-  - id: CP-6
-    sc: SC-6
-    name: Secrets template key insertion
-    entry: .streamlit/secrets.toml [contact] section (line 15) and .streamlit/secrets.toml.production
-    path: add contact.maintainer_label key; preserve section-order synchronization directive
-    change: two config file edits + grep enforcement test
-    evidence: grep maintainer_label → 0 hits in both files today (live)
-
-  - id: CP-7
-    sc: SC-7
-    name: Local-development documentation insertion
-    entry: docs/development/local-development.md "Configure local secrets"
-    path: document contact.maintainer_label for operators
-    change: doc edit + grep enforcement test
-    evidence: grep maintainer_label → 0 hits today (live)
-
-adjacent_paths_not_modified:
-  - streamlit_app.py:308 — mastodon_url read feeding handle_ui_error contact text; contains no <ALL_CAPS_TOKEN>, unchanged by this spec (only CP-2a/CP-2b sites are touched)
+paths:
+  - sc: [SC-1]
+    path: "login render: st run → src/frontend/pages/login.py show_unauthorized_dialog() → st.error/info dialog text ← get_maintainer_label()"
+    files: [src/frontend/pages/login.py, src/frontend/ui_utils.py]
+    entry: "Streamlit page render (login.py:30 label = get_maintainer_label())"
+  - sc: [SC-2]
+    path: "token absence: grep over src/ + streamlit_app.py Python source (call sites: login.py show_unauthorized_dialog; streamlit_app.py _initialize_database ×2)"
+    files: [src/frontend/pages/login.py, streamlit_app.py]
+    entry: "static grep / enforcement test"
+  - sc: [SC-3]
+    path: "resolution: call sites → src/frontend/ui_utils.py get_maintainer_label() → st.secrets['contact']['maintainer_label']"
+    files: [src/frontend/ui_utils.py, src/frontend/pages/login.py, streamlit_app.py]
+    entry: "3 imports of get_maintainer_label (login.py:12, streamlit_app.py:14)"
+  - sc: [SC-4]
+    path: "startup: streamlit_app.py main() → validate contact.maintainer_label after st.set_page_config → raise actionable error naming key"
+    files: [streamlit_app.py]
+    entry: "app startup initialization"
+  - sc: [SC-5]
+    path: "sweep: AST parse of src/**.py + streamlit_app.py → walk string literals in st.write/info/error/warning/success/markdown/caption calls → regex <[A-Z][A-Z0-9_]{2,}>"
+    files: [streamlit_app.py, src/]
+    entry: "test/test_user_facing_placeholder_sweep_sc5.py"
+  - sc: [SC-6, SC-7]
+    path: "config/doc presence: grep maintainer_label in .streamlit/secrets.toml, .streamlit/secrets.toml.production, docs/development/local-development.md"
+    files: [.streamlit/secrets.toml, .streamlit/secrets.toml.production, docs/development/local-development.md]
+    entry: "static grep"
+  - sc: [SC-8]
+    path: "simulation: SNEA_SIMULATE_AUTH env var → read only when st.secrets['runtime']['mode'] == 'local' → branch identity path in src/services/identity_service.py (is_unauthorized path sets st.session_state['is_unauthorized'], login.py:80/151 and streamlit_app.py:262/280 render dialog) → authorized/unauthorized/anonymous states"
+    files: [src/services/identity_service.py, src/frontend/pages/login.py, streamlit_app.py, .streamlit/secrets.toml]
+    entry: "Playwright e2e via test/ui/ (playwright_e2e marker, SNEA_E2E=1) against live app :8501"

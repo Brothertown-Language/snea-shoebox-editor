@@ -1,0 +1,74 @@
+# Planning problem — Issue 1392 — phase decomposition DAG as actions
+# Derived from structure.yaml phase/item decomposition and the dependency contract edges.
+domain: issue-1392-phase-plan
+types:
+  - name: step
+objects:
+  - name: phase1
+    type: step
+  - name: sc3
+    type: step
+  - name: sc2
+    type: step
+  - name: sc5
+    type: step
+  - name: sc8
+    type: step
+  - name: sc1verify
+    type: step
+  - name: sc4
+    type: step
+fluents:
+  - name: done
+    params:
+      - name: s
+        type: step
+actions:
+  - name: do-phase1
+    params: []
+    effects:
+      - done(phase1)
+  - name: do-phase2-after-phase1
+    params: []
+    preconditions:
+      - done(phase1)
+    effects:
+      - done(sc3)
+  - name: do-sc2-after-sc3
+    params: []
+    preconditions:
+      - done(sc3)
+    effects:
+      - done(sc2)
+  - name: do-sc5-after-sc2
+    params: []
+    preconditions:
+      - done(sc2)
+    effects:
+      - done(sc5)
+  - name: do-sc8-in-phase2
+    params: []
+    preconditions:
+      - done(sc2)
+    effects:
+      - done(sc8)
+  - name: do-sc1-verify-after-sc8
+    params: []
+    preconditions:
+      - done(sc8)
+    effects:
+      - done(sc1verify)
+  - name: do-sc4-after-phase1
+    params: []
+    preconditions:
+      - done(phase1)
+    effects:
+      - done(sc4)
+init: []
+goals:
+  - done(sc3)
+  - done(sc2)
+  - done(sc5)
+  - done(sc8)
+  - done(sc1verify)
+  - done(sc4)

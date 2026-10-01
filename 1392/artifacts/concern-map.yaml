@@ -1,58 +1,56 @@
-# concern-map.yaml — backfilled from .issues/1392/spec.md
+# Concern Map — Issue 1392 — decomposes SCs into concern groups mapped to phase boundaries
+# Backfilled retroactively; grounded in spec.md §5/§7 and plan.md phases.
 spec: .issues/1392/spec.md
-issue: 1392
+status: backfilled
 
 concern_groups:
   - id: CG-1
-    name: Configuration & documentation enablement
+    name: configuration-and-documentation-enablement
     scs: [SC-6, SC-7]
     phase: Phase 1
-    rationale: >
-      Adding contact.maintainer_label to both secrets templates and documenting it
-      must precede the code phase: SC-1's behavioral verify and SC-4's post-validation
-      startup both need the key present in test secrets to pass. (Spec §5 preamble and
-      §7 Traceability: R-5/R-6 → Phase 1.)
-    files: [.streamlit/secrets.toml, .streamlit/secrets.toml.production, docs/development/local-development.md]
+    description: >
+      Secrets templates gain contact.maintainer_label (SC-6) and the
+      local-development guidance documents it (SC-7). Enablement concern: the
+      code phase's SC-1 behavioral verify and SC-4 success path both require
+      the key this concern supplies.
+    phase_boundary: "Phase 1 complete when both greps return hits in their targets"
 
   - id: CG-2
-    name: Secrets-based resolution & fail-fast validation
-    scs: [SC-3, SC-1, SC-2, SC-4]
+    name: contact-resolution-core
+    scs: [SC-3, SC-2, SC-5]
     phase: Phase 2
-    rationale: >
-      One shared resolution helper (SC-3) is the prerequisite consumed by the 3
-      call-site migrations (SC-1 login dialog, SC-2 token removal) and paired with
-      startup validation (SC-4). Within the phase SC-3 precedes SC-1/SC-2/SC-4.
-      (Spec §5: "the shared resolution path (Item 3) precedes the call-site
-      migrations that consume it (Items 1, 2, 4)".)
-    files: [src/frontend/pages/login.py, streamlit_app.py, shared resolution helper (new), startup validation (new)]
+    description: >
+      Single-source-of-truth concern: the shared get_maintainer_label()
+      resolution path (SC-3) feeds the 3 call sites; the raw token removal
+      (SC-2) and the AST placeholder sweep (SC-5) co-locate — SC-5's RED runs
+      while the literals are still present, GREEN after SC-2's removal, per
+      spec §5 Items preamble.
+    phase_boundary: "Zero <MAINTAINER_CONTACT> matches with --include='*.py'; sweep test passes"
 
   - id: CG-3
-    name: Placeholder sweep enforcement
-    scs: [SC-5]
-    phase: Phase 2 (co-located with SC-2)
-    rationale: >
-      Sequencing constraint: SC-5's RED must run while the 3 <MAINTAINER_CONTACT>
-      literals are still present (pre-SC-2-removal window) and SC-5's GREEN/verify/
-      commit run after SC-2's GREEN — so the entire SC-5 cycle co-locates with the
-      SC-2 removal inside Phase 2. (Spec §5 preamble; resolves the TRIPLET_SPLIT
-      research finding recorded in change control 2026-10-01.)
-    files: [test/ (AST sweep test), src/ and streamlit_app.py (remediation targets)]
+    name: fail-fast-startup-validation
+    scs: [SC-4]
+    phase: Phase 2
+    description: >
+      Startup integrity concern: main() validates contact.maintainer_label
+      before any dialog renders and aborts with an actionable error naming the
+      key.
+    phase_boundary: "pytest asserts error raised from startup with key named"
 
-phase_boundaries:
-  - phase: Phase 1
-    concern_groups: [CG-1]
-    exit_criterion: maintainer_label present in both secrets templates + documented (SC-6, SC-7 verified)
-  - phase: Phase 2
-    concern_groups: [CG-2, CG-3]
-    exit_criterion: all code SCs verified (SC-1..SC-5); depends on Phase 1 key availability
+  - id: CG-4
+    name: live-browser-rendering
+    scs: [SC-1, SC-8]
+    phase: Phase 2
+    description: >
+      End-user rendering concern: the SC-8 SNEA_SIMULATE_AUTH mechanism
+      (authorized|unauthorized|anonymous, gated on [runtime] mode == "local")
+      is what makes SC-1's unauthorized-state Playwright verification
+      executable at all — the simulation executes between Item 1's GREEN and
+      Item 1's verify.
+    phase_boundary: "Playwright e2e passes all three simulated states; dialog shows resolved label, no raw token"
 
-cross_phase_dependencies:
-  - from: SC-6 (Phase 1)
-    to: SC-1 (Phase 2), SC-4 (Phase 2)
-    constraint: test secrets must carry contact.maintainer_label before behavioral/startup verification can pass
-  - from: SC-2 (Phase 2, CG-2)
-    to: SC-5 (Phase 2, CG-3)
-    constraint: SC-5 RED before SC-2 GREEN; SC-5 GREEN/verify/commit after SC-2 GREEN — atomic within Phase 2
-  - from: SC-3 (Phase 2, CG-2)
-    to: SC-1, SC-2, SC-4 (Phase 2, CG-2)
-    constraint: shared resolution helper must exist before call-site migration and before startup validation consumes it
+sequencing_notes:
+  - "CG-1 precedes all Phase 2 concerns (key dependency)."
+  - "CG-2's SC-3 precedes SC-2/SC-5 (call sites consume the helper first)."
+  - "CG-4's SC-8 precedes SC-1's verify (dialog unreachable without simulation)."
+  - "CG-3 (SC-4) can execute after SC-3 within Phase 2 without ordering constraints."

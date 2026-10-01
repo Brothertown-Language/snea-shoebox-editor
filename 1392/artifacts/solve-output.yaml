@@ -1,150 +1,28 @@
-# Solve output — issue #1392 (writing-plans research task)
-schema_version: "2.0"
-generated_at: "20261001115500"
-spec: ".issues/1392/spec.md"
-status: DONE
-finding_summary: >
-  2-phase decomposition (Phase 1 config/docs: SC-6, SC-7 → Phase 2 code:
-  SC-3, SC-1, SC-2, SC-5, SC-4) with one item per SC (7/7). Z3 model SAT,
-  solve check SAT at both stages, planner SOLVED_SATISFICING with a
-  9-action plan over 9 actions/9 fluents. Every SC triplet co-located in its
-  single phase (7/7, zero splits) and no cross-phase RED dependency points at
-  a later phase. dependency_contract extracted as-is from
-  interface-compatibility.yaml (file contains a dependency_contract section —
-  no auto-backfill needed) plus Z3 solver sections derived from the phase DAG.
-artifact_path: ".issues/1392/artifacts/structure.yaml"
+# Solve Output — Issue 1392 — SAT/planner verification results
+issue: 1392
+generated: 2026-10-01
+contract_path: .issues/1392/dependency-contract.yaml
+structure_path: .issues/1392/artifacts/structure.yaml
 
 solve_status: SAT
-solve_check_status: SAT
+solve_command: "./.opencode/tools/solve model --contract-path .issues/1392/dependency-contract.yaml --query \"z3.And(phase1_done, sc3_done, sc2_done, sc5_done, sc8_done, sc1_verified, sc4_done)\""
+solve_model:
+  phase1_done: true
+  sc1_verified: true
+  sc2_done: true
+  sc3_done: true
+  sc4_done: true
+  sc5_done: true
+  sc8_done: true
+
+check_status: "SAT (+ postconditions + invariants)"
+check_command: "./.opencode/tools/solve check --contract-path .issues/1392/dependency-contract.yaml --state-path .issues/1392/artifacts/state-analysis.yaml"
+
 plan_status: SOLVED_SATISFICING
-plan_length: 9
-
-phase_decomposition:
-  phase_count: 2
-  structure_artifact: ".issues/1392/artifacts/structure.yaml"
-  dependency_contract: ".issues/1392/dependency-contract.yaml"
-  phases:
-    - {id: 1, scs: [SC-6, SC-7], concern: "Configuration & documentation enablement — maintainer_label key in both secrets templates + local-development docs"}
-    - {id: 2, scs: [SC-3, SC-1, SC-2, SC-5, SC-4], concern: "Shared resolution helper, call-site migrations, startup fail-fast validation, AST placeholder sweep"}
-  dag_edges: ["1 → 2 (SC-1 behavioral verify + SC-4 startup verification require the SC-6 key in test secrets)"]
-  items: 7
-  sc_to_item: "1:1 (spec §5) — Phase 1: items 6, 7; Phase 2: items 3, 1, 2, 5, 4"
-
-checks:
-  solve_model:
-    task_card_command: "./.opencode/tools/solve model --contract-path .issues/1392/dependency-contract.yaml --query sat"
-    task_card_result: "error: cannot evaluate expression 'sat': name 'sat' is not defined (exit 2)"
-    command: "./.opencode/tools/solve model --contract-path .issues/1392/dependency-contract.yaml --query 'all_phases_done'"
-    result: SAT
-    exit_code: 0
-    output: |
-      SAT
-        all_phases_done = True
-        phase_1_done = True
-        phase_2_done = True
-        sc1_done = True
-        sc2_done = True
-        sc3_done = True
-        sc4_done = True
-        sc5_done = True
-        sc6_done = True
-        sc7_done = True
-    deviation_note: >
-      task card step 10 spells the query as the bare token `sat`; the live
-      tools/solve CLI evaluates --query as a Z3 expression over contract
-      variables (verified live: literal invocation exits 2 with
-      "name 'sat' is not defined"). The live-interface query
-      all_phases_done is used instead, per 075-docs-verification and the
-      #1385 precedent (same task-card vs live-CLI class of mismatch).
-
-  solve_check:
-    command: "./.opencode/tools/solve check --contract-path .issues/1392/dependency-contract.yaml --state-path .issues/1392/artifacts/state-analysis.yaml"
-    result_stage1: SAT
-    result_stage2: "SAT (+ postconditions + invariants)"
-    exit_code: 0
-    output: |
-      SAT
-        all_phases_done = False
-        phase_1_done = False
-        ... (all 10 variables False — precondition stage, no state bindings)
-      SAT (+ postconditions + invariants)
-        all_phases_done = True
-        phase_1_done = True
-        phase_2_done = True
-        sc1_done = True
-        sc2_done = True
-        sc3_done = True
-        sc4_done = True
-        sc5_done = True
-        sc6_done = True
-        sc7_done = True
-    pre_repair_failure: >
-      First invocation crashed with yaml.scanner.ScannerError
-      "mapping values are not allowed here, state-analysis.yaml line 65"
-      (unquoted ': ' inside the shared_mutable_state plain scalar).
-      Repaired by single-quoting the scalar — value-preserving syntax repair,
-      no semantic change (issues-data hygiene mandate). Two sibling backfilled
-      artifacts had the identical defect and were repaired the same way:
-      cross-cutting-matrix.yaml line 34 (nature scalar) and
-      testability-assessment.yaml line 23 (risk scalar). All 10 issue YAML
-      files re-verified parse-clean after repair.
-
-  plan_plan:
-    task_card_command: "./.opencode/tools/plan plan --contract-path .issues/1392/dependency-contract.yaml --output .issues/1392/artifacts/plan-output.yaml"
-    task_card_result: "exit 2 — usage: plan plan [-h] --problem PROBLEM [--engine ENGINE]; error: the following arguments are required: --problem/-p"
-    command: "./.opencode/tools/plan plan --problem tmp/issue-1392-planning-problem.yaml"
-    result: SOLVED_SATISFICING
-    exit_code: 0
-    output: ".issues/1392/artifacts/plan-output.yaml (raw stdout capture, #1385 precedent)"
-    problem_file: "tmp/issue-1392-planning-problem.yaml (temp workspace; derived from dependency-contract phase DAG)"
-    plan:
-      - "1. item6_add_maintainer_label_key()"
-      - "2. item7_document_key()"
-      - "3. complete_phase_1()"
-      - "4. item3_shared_resolution_helper()"
-      - "5. item4_startup_fail_fast_validation()"
-      - "6. item2_remove_token_literals()"
-      - "7. item1_login_dialog_through_helper()"
-      - "8. item5_ast_placeholder_sweep()"
-      - "9. complete_phase_2()"
-    deviation_note: >
-      task card step 12 names --contract-path/--output flags; live CLI surface
-      is (plan --problem, stdout capture) per live `plan plan --help` — live
-      tool interface used per 075-docs-verification (same precedent as #1385).
-      First run's plan interleaved Phase-2 actions before complete_phase_1;
-      the problem was tightened to precondition every Phase-2 action on
-      phase_1_done so the emitted plan honors the declared 1→2 DAG. Planner
-      topological order within Phase 2 (3, 4, 2, 1, 5) satisfies all
-      preconditions including item5-after-item2 (SC-5 cycle completes after
-      SC-2's GREEN); structure.yaml's intra-phase sequence remains the
-      plan-authoritative TDD order (RED interleaving is within-item detail
-      the planner does not model).
-
-verifications:
-  triplet_colocation: "PASS — 7/7 SCs, RED/GREEN/COMMIT fully inside one phase, zero splits (SC-5's straddle resolved by Phase-2 co-location)"
-  cross_phase_dependency: "PASS — no RED test depends on output from a later phase; Phase-2 REDs depend only on Phase-1 SC-6 (Y < X, allowed)"
-  dag_acyclicity: "PASS — single forward edge 1→2; no cycles"
-  planner_reachability: "PASS — goals phase_1_done + phase_2_done solved (SOLVED_SATISFICING)"
-  yaml_parse_integrity: "PASS — all .issues/1392/*.yaml parse clean after 3 value-preserving quoting repairs"
-
-skill_task_selection:
-  source: ".opencode/skills/writing-plans/reference/implementation-workflow.md"
-  pre_implementation: [pre-regression, pre-regression-verify]
-  red_green_daisy_chain: [red, green, post-regression, verify, commit-inline]
-  post_implementation: [audit, z3-check, structural-checks, pre-pr-gate, regression-check, review-prep, create-pr, exec-summary]
+plan_command: "./.opencode/tools/plan plan --problem .issues/1392/artifacts/plan-problem.yaml"
+plan_output_path: .issues/1392/artifacts/plan-output.yaml
 
 notes:
-  sc_summary_yaml: >
-    .issues/1392/sc-summary.yaml does not exist (live-verified via
-    `git -C .issues/ ls-tree -r HEAD` and disk listing — only issue.yaml +
-    spec.md ever committed; spec-creation create.md Step 2.1 was never run for
-    this promoted spec and revise cycles do not maintain it). SCs were
-    extracted per research step 2 from analysis-summary.yaml sc_inventory with
-    descriptions/verification from spec.md §3 and phase bindings from spec §7
-    Traceability + concern-map.yaml; recorded in structure.yaml source_notes.
-    No SC data synthesized.
-
-verdict: >
-  ALL_SAT — 2-phase DAG (config/docs enablement → code) is solvable; phase
-  decomposition validated; every SC triplet co-located; planner returns a
-  9-action SOLVED_SATISFICING plan.
+  - "dependency_contract extracted verbatim from interface-compatibility.yaml (section present; no auto-backfill needed)"
+  - "solve model query uses z3.And(...) over phase-gate variables; ordering constraints encoded in contract preconditions/invariants matching structure.yaml DAG edges"
+  - "plan CLI requires a domain/problem YAML, not --contract-path; plan-problem.yaml encodes the phase DAG actions for the tamer engine"

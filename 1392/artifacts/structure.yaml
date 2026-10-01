@@ -1,232 +1,87 @@
-# Structure artifact — issue #1392 (writing-plans research)
-# Decompose SCs into phases with dependency DAG + skill/task selection
-project_root: /home/muksihs/git/snea-shoebox-editor
-issues_prefix: .issues
-issue_number: 1392
-generated_at: "20261001114500"
+# Structure — Issue 1392 — phase decomposition, dependency DAG, skill+task selection
 spec: .issues/1392/spec.md
-analysis_summary: .issues/1392/artifacts/analysis-summary.yaml
-
-source_notes:
-  sc_summary_yaml: >
-    .issues/1392/sc-summary.yaml does not exist (live-verified: never created —
-    `git -C .issues/ ls-tree -r HEAD` for 1392/ lists only issue.yaml + spec.md,
-    and no sc-summary.yaml is on disk). spec-creation create.md Step 2.1 writes it,
-    but this spec was promoted from the issue body and only passed through revise
-    cycles, which do not maintain it. Per research.md step 2 the SC set was
-    extracted from analysis-summary.yaml sc_inventory (SC-1..SC-7 with evidence
-    types and phase bindings); descriptions and verification methods come from the
-    authoritative spec.md §3 Success Criteria table; phase bindings corroborated
-    by spec.md §7 Traceability and artifacts/concern-map.yaml. No SC data was
-    synthesized — every field below traces to those sources.
+status: written
 
 phases:
-  - id: 1
-    name: "Configuration & documentation enablement"
-    concern: >
-      CG-1: contact.maintainer_label key added to both secrets templates (SC-6)
-      and documented in the local-development secrets guidance (SC-7) — pure
-      config/docs enablement with no code changes.
-    depends_on: []
+  - id: phase-1
+    name: "Enablement — secrets key and documentation"
     scs: [SC-6, SC-7]
-    exit_criterion: >
-      maintainer_label present in both .streamlit secrets templates and documented
-      (spec §7 Traceability R-5/R-6 → Phase 1)
     items:
       - sc: SC-6
-        item: 6
-        evidence_type: string
-        order: 1
-        red: "grep -n \"maintainer_label\" .streamlit/secrets.toml .streamlit/secrets.toml.production currently returns 0 hits in both files; enforcement test asserts ≥1 hit per file"
-        green: "Add contact.maintainer_label (string value) under [contact] in .streamlit/secrets.toml and .streamlit/secrets.toml.production, preserving the section-order synchronization directive; additive only — no existing key removed or renamed"
-        verify: "Re-run the grep; one hit in each file"
-        commit: ".streamlit/secrets.toml, .streamlit/secrets.toml.production, and the grep enforcement test"
+        steps: [red, green, verify, commit]
       - sc: SC-7
-        item: 7
-        evidence_type: string
-        order: 2
-        red: "grep -n \"maintainer_label\" docs/development/local-development.md currently returns 0 hits; enforcement test asserts ≥1 hit"
-        green: "Document contact.maintainer_label in the \"Configure local secrets\" guidance of docs/development/local-development.md"
-        verify: "Re-run the grep; ≥1 hit"
-        commit: "docs/development/local-development.md and the grep enforcement test"
+        steps: [red, green, verify, commit]
+    skill_task_selection:
+      - step: red
+        skill: test-driven-development
+        dispatch: "task(..., prompt: 'execute red task from test-driven-development')"
+      - step: green
+        skill: test-driven-development
+        dispatch: "task(..., prompt: 'execute green task from test-driven-development')"
+      - step: verify
+        skill: verification-before-completion
+        dispatch: "task(..., prompt: 'execute verify task from verification-before-completion')"
+      - step: commit
+        skill: "(orchestrator) commit-inline — no sub-agent dispatch"
 
-  - id: 2
-    name: "Secrets-based resolution, fail-fast validation & placeholder sweep"
-    concern: >
-      CG-2 + CG-3: one shared resolution helper (SC-3) feeding the 3 call-site
-      migrations (SC-1 login dialog, SC-2 token removal) paired with startup
-      fail-fast validation (SC-4), plus the AST placeholder sweep (SC-5) whose
-      RED/GREEN straddles SC-2's removal inside this same phase.
-    depends_on: [1]
-    scs: [SC-3, SC-1, SC-2, SC-5, SC-4]
-    exit_criterion: "all code SCs verified (SC-1..SC-5); requires Phase 1 key availability"
-    intra_phase_execution_order:
-      - "1. Item 3 (SC-3) full cycle — shared resolution helper is the prerequisite consumed by Items 1, 2, 4 (spec §5)"
-      - "2. Item 1 (SC-1) full cycle — login dialog routed through the helper; RED fails on the raw token, GREEN removes login.py's literal"
-      - "3. Item 2 (SC-2) RED — grep asserts 0 `<MAINTAINER_CONTACT>` matches while literals remain (2 in streamlit_app.py after Item 1 GREEN)"
-      - "4. Item 5 (SC-5) RED — AST sweep fails while `<MAINTAINER_CONTACT>` literals are still present (pre-Item-2-GREEN window per spec §5)"
-      - "5. Item 2 (SC-2) GREEN → verify → commit — literals replaced at the remaining call sites"
-      - "6. Item 5 (SC-5) GREEN → verify → commit — sweep now reports zero user-facing placeholders"
-      - "7. Item 4 (SC-4) full cycle — startup fail-fast validation consumes the helper/secret path"
-      - "Interleaving note: Item 5's RED runs before Item 2's GREEN and its GREEN/verify/commit run after Item 2's GREEN — the entire Item 5 triplet stays inside Phase 2 (resolves the TRIPLET_SPLIT finding recorded in spec change-control 2026-10-01)."
+  - id: phase-2
+    name: "Code — shared resolution path, call-site migrations, token removal, AST sweep, startup validation, auth simulation hook"
+    scs: [SC-3, SC-2, SC-5, SC-1, SC-8, SC-4]
+    execution_sequence:
+      - "SC-3 shared resolution path precedes call-site migrations that consume it"
+      - "SC-2 call-site migrations; SC-5 RED runs while original literals still present, GREEN/verify/commit after SC-2 GREEN (co-located in phase)"
+      - "SC-8 auth simulation executes between SC-1 GREEN and SC-1 verify (SC-1 unauthorized-state Playwright requires SC-8 simulation)"
+      - "SC-4 startup validation last"
     items:
       - sc: SC-3
-        item: 3
-        evidence_type: semantic
-        order: 1
-        red: "Clean-room read of the 3 call sites confirms inline hardcoded contact text rather than a shared reference; test asserts a shared path exists and is referenced by all 3"
-        green: "Add one shared resolution helper reading contact.maintainer_label from st.secrets (no args, returns str) and route all 3 call sites through it"
-        verify: "Clean-room sub-agent reads the 3 former call sites and confirms each references the shared resolution path"
-        commit: "the shared helper plus its reference from all 3 call sites"
-      - sc: SC-1
-        item: 1
-        evidence_type: behavioral
-        order: 2
-        red: "Playwright real-browser test asserts the dialog shows the contact.maintainer_label value and no <MAINTAINER_CONTACT> token; fails because the raw token currently renders"
-        green: "Route show_unauthorized_dialog() in src/frontend/pages/login.py through the shared resolution path"
-        verify: "SNEA_E2E=1 uv run pytest test/ui/ -m playwright_e2e against the live app on :8501, per docs/development/ui_testing_standard.md (skip-by-design is never PASS)"
-        commit: "src/frontend/pages/login.py and the Playwright test"
+        steps: [red, green, verify, commit]
       - sc: SC-2
-        item: 2
-        evidence_type: string
-        order: "3 (RED) / 5 (GREEN, verify, commit — straddled by Item 5's RED)"
-        red: "grep -rn --include='*.py' \"<MAINTAINER_CONTACT>\" src/ streamlit_app.py currently returns 3 matches; enforcement test asserts 0"
-        green: "Replace the literal at the remaining call sites with the shared resolution path"
-        verify: "Re-run the grep with --include='*.py'; 0 matches (compiled __pycache__ artifacts out of scope)"
-        commit: "src/frontend/pages/login.py, streamlit_app.py, and the grep enforcement test"
+        steps: [red, green, verify, commit]
       - sc: SC-5
-        item: 5
-        evidence_type: string
-        order: "4 (RED — pre-Item-2-GREEN) / 6 (GREEN, verify, commit — post-Item-2-GREEN)"
-        red: "AST-based sweep test asserts zero <[A-Z][A-Z0-9_]{2,}> matches across user-facing Streamlit render-call string literals; fails while the <MAINTAINER_CONTACT> literals are still present"
-        green: "Add the AST sweep test (st.write, st.info, st.error, st.warning, st.success, st.markdown, st.caption in src/ and streamlit_app.py); remediate any placeholder it finds (docstring tokens such as <SSSSS> in src/services/upload_service.py out of scope by AST construction)"
-        verify: "uv run pytest test/ — zero pattern matches across scanned user-facing strings"
-        commit: "the sweep test plus any remediation it drives"
+        steps: [red, green, verify, commit]
+      - sc: SC-1
+        steps: [red, green, verify, commit]
+      - sc: SC-8
+        steps: [red, green, verify, commit]
       - sc: SC-4
-        item: 4
-        evidence_type: behavioral
-        order: 7
-        red: "Test invokes the app startup path with contact.maintainer_label absent and asserts an actionable error naming the key is raised from startup initialization; fails because no validation exists"
-        green: "Add startup validation in streamlit_app.py main() that reads contact.maintainer_label and raises an actionable error naming the key when absent (st.set_page_config stays the first Streamlit command)"
-        verify: "uv run pytest test/ — error raised from startup, not a dialog-render call; message names contact.maintainer_label"
-        commit: "the startup validation and its test"
+        steps: [red, green, verify, commit]
+    skill_task_selection:
+      - step: red
+        skill: test-driven-development
+        dispatch: "task(..., prompt: 'execute red task from test-driven-development')"
+      - step: green
+        skill: test-driven-development
+        dispatch: "task(..., prompt: 'execute green task from test-driven-development')"
+      - step: verify
+        skill: verification-before-completion
+        dispatch: "task(..., prompt: 'execute verify task from verification-before-completion')"
+      - step: commit
+        skill: "(orchestrator) commit-inline — no sub-agent dispatch"
 
 dependency_dag:
   edges:
-    - from: 1
-      to: 2
-      reason: >
-        SC-1's behavioral verify (Playwright dialog render) and SC-4's
-        post-validation startup both require the contact.maintainer_label key that
-        SC-6 adds to test secrets — the cross-phase dependency recorded in
-        analysis-summary.yaml key_findings. Phase 1 must commit before Phase 2
-        verification can pass.
-  intra_phase_edges:
+    - from: phase-1
+      to: phase-2
+      reason: "secrets key + docs enablement precedes code phase consuming the key"
     - from: SC-3
-      to: [SC-1, SC-2, SC-4]
-      reason: "shared resolution helper must exist before call-site migration and startup validation consume it (concern-map cross_phase_dependencies)"
+      to: SC-1
+      reason: "dialog render consumes shared helper"
+    - from: SC-3
+      to: SC-2
+      reason: "streamlit_app call sites migrate to shared helper"
     - from: SC-2
       to: SC-5
-      reason: "SC-5 RED before SC-2 GREEN; SC-5 GREEN/verify/commit after SC-2 GREEN — atomic within Phase 2"
-    - from: SC-6
-      to: [SC-1, SC-4]
-      reason: "test secrets must carry contact.maintainer_label before behavioral/startup verification passes (Phase 1 → Phase 2 edge)"
-  acyclicity: "PASS — single forward edge 1→2 plus intra-phase edges; no back-edges, no cycles"
-  triplet_colocation: >
-    PASS — 7/7 SCs have RED, GREEN, and COMMIT steps entirely inside their single
-    assigned phase; zero splits. SC-5's RED/GREEN straddle of SC-2's removal is
-    resolved by co-locating both in Phase 2 (spec §5 preamble, change-control
-    2026-10-01).
-  cross_phase_dependencies: >
-    PASS — no RED test in any phase depends on SC output committed in a later
-    phase. Phase 2 REDs (SC-1, SC-4) depend only on SC-6 output from Phase 1
-    (earlier phase, Y < X — allowed); Phase 2 intra-phase dependencies (SC-3 →
-    SC-1/SC-2/SC-4, SC-2 → SC-5) are same-phase execution ordering, not
-    cross-phase violations. Phase 1 REDs (SC-6, SC-7) depend on no SC output.
+      reason: "SC-5 GREEN/verify follow SC-2 literal removal (SC-5 RED precedes SC-2 GREEN, same phase)"
+    - from: SC-8
+      to: SC-1
+      reason: "SC-1 unauthorized-state Playwright verify requires SC-8 simulation (plan dependency edge SC-1←SC-8)"
+  internal_phase_edges:
+    - "SC-8 green between SC-1 green and SC-1 verify within phase-2"
 
-skill_task_selection:
-  per_phase_workflow: "implementation-workflow reference card (skills/writing-plans/reference/implementation-workflow.md)"
-  phases:
-    - phase: 1
-      pre_implementation:
-        - step: pre-regression
-          skill: test-driven-development
-          dispatch: 'task(..., prompt: "execute phase-0 task from test-driven-development")'
-        - step: pre-regression-verify
-          skill: verification-before-completion
-          dispatch: 'task(..., prompt: "execute verify task from verification-before-completion")'
-      items: ["Item 6 (SC-6)", "Item 7 (SC-7)"]
-      per_item_cycle:
-        - step: red
-          skill: test-driven-development
-          dispatch: 'task(..., prompt: "execute red task from test-driven-development")'
-        - step: green
-          skill: test-driven-development
-          dispatch: 'task(..., prompt: "execute green task from test-driven-development")'
-        - step: post-regression
-          skill: test-driven-development
-          dispatch: 'task(..., prompt: "execute phase-4 task from test-driven-development")'
-        - step: verify
-          skill: verification-before-completion
-          dispatch: 'task(..., prompt: "execute verify task from verification-before-completion")'
-        - step: commit-inline
-          skill: (orchestrator)
-          dispatch: "orchestrator runs git add <files> && git commit -m <message> directly — no sub-agent dispatch"
-    - phase: 2
-      pre_implementation:
-        - step: pre-regression
-          skill: test-driven-development
-          dispatch: 'task(..., prompt: "execute phase-0 task from test-driven-development")'
-        - step: pre-regression-verify
-          skill: verification-before-completion
-          dispatch: 'task(..., prompt: "execute verify task from verification-before-completion")'
-      items: ["Item 3 (SC-3)", "Item 1 (SC-1)", "Item 2 (SC-2) RED", "Item 5 (SC-5) RED", "Item 2 (SC-2) GREEN/verify/commit", "Item 5 (SC-5) GREEN/verify/commit", "Item 4 (SC-4)"]
-      per_item_cycle:
-        - step: red
-          skill: test-driven-development
-          dispatch: 'task(..., prompt: "execute red task from test-driven-development")'
-        - step: green
-          skill: test-driven-development
-          dispatch: 'task(..., prompt: "execute green task from test-driven-development")'
-        - step: post-regression
-          skill: test-driven-development
-          dispatch: 'task(..., prompt: "execute phase-4 task from test-driven-development")'
-        - step: verify
-          skill: verification-before-completion
-          dispatch: 'task(..., prompt: "execute verify task from verification-before-completion")'
-        - step: commit-inline
-          skill: (orchestrator)
-          dispatch: "orchestrator runs git add <files> && git commit -m <message> directly — no sub-agent dispatch"
-  post_implementation:
-    - step: audit
-      skill: audit
-      dispatch: 'task(..., prompt: "execute verification-audit DiMo investigator from audit. Read `audit/tasks/verification-audit-investigator.md` first") — followed by validator, evaluator, arbiter in sequence'
-    - step: z3-check
-      skill: (orchestrator)
-      dispatch: ".opencode/tools/solve check --state-path .issues/1392/artifacts/state-analysis.yaml --contract-path .issues/1392/dependency-contract.yaml"
-    - step: structural-checks
-      skill: finishing-a-development-branch
-      dispatch: 'task(..., prompt: "execute checklist task from finishing-a-development-branch")'
-    - step: pre-pr-gate
-      skill: verification-before-completion
-      dispatch: 'task(..., prompt: "execute verify task from verification-before-completion")'
-    - step: regression-check
-      skill: test-driven-development
-      dispatch: 'task(..., prompt: "execute phase-4 task from test-driven-development")'
-    - step: review-prep
-      skill: git-workflow-pr
-      dispatch: 'task(..., prompt: "execute review-prep from git-workflow-pr. Read `git-workflow-pr/tasks/review-prep.md` first")'
-    - step: create-pr
-      skill: git-workflow-pr
-      dispatch: 'task(..., prompt: "execute create task from git-workflow-pr")'
-    - step: exec-summary
-      skill: completion-core
-      dispatch: 'task(..., prompt: "execute completion task from completion-core")'
+triplet_co_location:
+  verified: true
+  note: "Every SC's RED, GREEN, and COMMIT steps are assigned to the same phase (SC-1..SC-7, SC-9? none; SC-5's RED/GREEN interleaving with SC-2 is within-phase, not split)."
 
-sc_item_map:
-  total_scs: 7
-  items: 7
-  mapping: "one item per SC (spec §5: items map 1:1 to success criteria; item numbers track SC numbers, not execution order)"
-  by_phase:
-    phase_1: {items: [6, 7], scs: [SC-6, SC-7]}
-    phase_2: {items: [3, 1, 2, 5, 4], scs: [SC-3, SC-1, SC-2, SC-5, SC-4]}
+cross_phase_dependency_check:
+  verified: true
+  note: "Phase-2 RED tests consume only SC-6/SC-7 config/doc outputs (committed in phase-1) or earlier phase-2 commits; no RED depends on output from a later phase. SC-1's RED is written before SC-8 but its verify (Playwright unauthorized-state run) is gated on SC-8 — verify, not RED, is the gated step, so no cross-phase RED dependency violation."

@@ -1,76 +1,41 @@
-# cross-cutting-matrix.yaml — backfilled from .issues/1392/spec.md
+# Cross-Cutting Matrix — Issue 1392 — SCs spanning multiple concerns
 spec: .issues/1392/spec.md
-issue: 1392
+status: backfilled
 
-concern_groups: [CG-1 config/docs enablement, CG-2 secrets resolution & fail-fast, CG-3 placeholder sweep]
-
-matrix:
-  - sc: SC-1
-    primary_concern: CG-2
-    spans: [CG-2, CG-1]
-    cross_cutting: true
-    nature: >
-      Login-dialog render change (CG-2) cannot verify until the
-      contact.maintainer_label key exists in test secrets (CG-1 / SC-6) — a
-      cross-phase dependency that forced SC-6/SC-7 into Phase 1 ahead of the code phase.
-      Verification also crosses into UI-test infrastructure (test/ui, playwright_e2e,
-      SNEA_E2E=1, live app on :8501).
-    phases: [Phase 2]
-
-  - sc: SC-2
-    primary_concern: CG-2
-    spans: [CG-2, CG-3]
-    cross_cutting: true
-    nature: >
-      Token removal (CG-2) shares an atomic window with the SC-5 sweep (CG-3): SC-5's
-      RED must observe the literals still present, SC-5's GREEN after they are gone —
-      both cycles co-located in Phase 2 with an intra-phase ordering constraint.
-    phases: [Phase 2]
-
+cross_cutting:
   - sc: SC-3
-    primary_concern: CG-2
-    spans: [CG-2]
-    cross_cutting: false
-    nature: 'Single-concern: introduce the shared resolution helper inside the code phase; prerequisite for SC-1, SC-2, SC-4.'
-    phases: [Phase 2]
-
-  - sc: SC-4
-    primary_concern: CG-2
-    spans: [CG-2, CG-1]
-    cross_cutting: true
-    nature: >
-      Startup validation (CG-2) must exercise the present-key success path and the
-      absent-key failure path; the success path depends on the CG-1 key being in test
-      secrets (SC-6). Cross-cutting into startup sequencing (must raise before any
-      dialog renders) and the pytest suite.
-    phases: [Phase 2]
-
+    spans: [contact-resolution-core, live-browser-rendering, fail-fast-startup-validation]
+    why: >
+      The shared resolution helper is consumed by the login dialog (SC-1), the
+      database-error dialogs (SC-2), and the startup validation path (SC-4);
+      its contract (str return, reads st.secrets) must satisfy all three
+      consumers.
+  - sc: SC-2
+    spans: [contact-resolution-core, live-browser-rendering]
+    why: >
+      Token removal is only correct once every call site routes through the
+      shared path; the rendered dialog (SC-1) is the user-visible proof.
   - sc: SC-5
-    primary_concern: CG-3
-    spans: [CG-3, CG-2]
-    cross_cutting: true
-    nature: >
-      AST sweep (CG-3) observes CG-2's removal state — RED pre-SC-2-removal,
-      GREEN/verify/commit post-SC-2-removal. Also spans scope-boundary judgment
-      (CG-3 vs non-user-facing docstrings such as <SSSSS> in upload_service.py).
-    phases: [Phase 2]
-
+    spans: [contact-resolution-core, live-browser-rendering]
+    why: >
+      The sweep RED window is tied to SC-2's removal timing; it guards the
+      whole user-facing render-call surface across both dialog families.
   - sc: SC-6
-    primary_concern: CG-1
-    spans: [CG-1]
-    cross_cutting: false
-    nature: Single-concern configuration insertion into two templates, gated by the section-order synchronization directive.
-    phases: [Phase 1]
+    spans: [configuration-and-documentation-enablement, fail-fast-startup-validation, live-browser-rendering]
+    why: >
+      The key SC-6 adds to templates is the input for SC-4's startup
+      validation and SC-1/SC-8's rendered dialog text — a config concern that
+      gates code-phase behavior.
+  - sc: SC-8
+    spans: [live-browser-rendering, fail-fast-startup-validation]
+    why: >
+      The simulation hook lives in the identity path but its mode guard reads
+      secrets ([runtime] mode) and it unblocks SC-1's behavioral verification;
+      it must be inert when the startup/runtime config is production.
 
+single_concern_scs:
+  - {sc: SC-1, concern: live-browser-rendering}
+  - sc: SC-4
+    concern: fail-fast-startup-validation
   - sc: SC-7
-    primary_concern: CG-1
-    spans: [CG-1]
-    cross_cutting: false
-    nature: Single-concern documentation insertion.
-    phases: [Phase 1]
-
-cross_cutting_summary: >
-  4 of 7 SCs are cross-cutting (SC-1, SC-2, SC-4, SC-5). Two crossing kinds appear:
-  (a) Phase-1-config dependency — SC-1 and SC-4 verification require SC-6's key in
-  test secrets; (b) intra-phase sequencing — SC-5's RED/GREEN straddle SC-2's removal,
-  requiring co-location inside Phase 2. SC-3, SC-6, SC-7 are single-concern.
+    concern: configuration-and-documentation-enablement
