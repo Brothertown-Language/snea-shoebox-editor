@@ -28,8 +28,15 @@ concerns:
     description: >
       Re-run scripts/sync_prod_to_local.sh, verify full pytest suite green (0 failures),
       and verify pg_attribute.atttypmod / pg_attrdef live evidence before and after.
+      Phase 5 (post-implementation gates and PR) reuses this verification concern —
+      gate checks (audit, z3-check, structural checks, pre-pr-gate, regression-check)
+      verify all SCs, so C3 legitimately spans phases 3-5.
     scs: [SC3, SC4]
-    phase_boundary: Phase 3
+    phase_boundary: Phases 3-5 (spanning)
+    phase_note: >
+      Spans phases 3 (SC3 integration gate), 4 (SC4 downstream-consumer gate), and
+      5 (post-implementation gate phase re-verifying all SCs — no new SC commits,
+      outside the dependency-contract solver DAG by design).
 
 sc_to_concern:
   SC1: C1

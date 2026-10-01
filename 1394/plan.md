@@ -66,9 +66,9 @@ Check your tool list for a tool named `task`.
 |-------|------|---------|-----|------------|------------|----------|
 | 1 | Restore vector column typmod in DDL builder | C1_vector_typmod | SC1 | — | 5-8 | direct (8) + task-card (5-7) |
 | 2 | Restore nextval column defaults in rebuilt DDL | C2_nextval_defaults | SC2 | 1 | 9-12 | direct (12) + task-card (9-11) |
-| 3 | Fresh sync + full suite green | C3_verification | SC3 | 1, 2 | 13-16 | direct (16) + task-card (13-15) |
-| 4 | TDD phase-0 pre-regression baseline gate passes on synced DB | C3_verification | SC4 | 3 | 17-20 | direct (20) + task-card (17-19) |
-| 5 | Post-implementation | C3_verification | — | 4 | 21-36 | direct (21, 23, 27, 36) + task-card (22, 24-26, 28-35) |
+| 3 | Fresh sync + full suite green | C3_verification | SC3 | 1, 2 | 13-16 | direct (13, 16) + task-card (14-15) |
+| 4 | TDD phase-0 pre-regression baseline gate passes on synced DB | C3_verification | SC4 | 3 | 17-20 | direct (17, 20) + task-card (18-19) |
+| 5 | Post-implementation | C3_verification | — | 4 | 21-30 | direct (23, 27) + task-card (21, 22, 24-26, 28-30) |
 
 ## Pre-Implementation Steps
 
@@ -327,4 +327,8 @@ Check your tool list for a tool named `task`.
 
 - VbC assertions: audit verdict recorded; z3-check output recorded; structural checks pass; pre-pr-gate verdict PASS; PR URL recorded; exec summary delivered.
 - **Cost frame:** Running the full post-implementation gate chain costs minutes per gate — every defect is caught before merge (break). Skipping any gate costs weeks — a missed defect ships to the trunk and resurfaces in downstream pipelines (death spiral). Correctness is the only metric.
+
+## lifecycle_events
+
+- 2026-10-01T18:06:13Z — `plan_created` — plan file `.issues/1394/plan.md` verified present; 4 implementation phases + Phase 5 post-implementation recorded.
 
