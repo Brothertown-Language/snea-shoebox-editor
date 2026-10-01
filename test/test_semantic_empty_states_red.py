@@ -37,6 +37,7 @@ from unittest.mock import MagicMock
 # Insert-only containment: save pre-existing entries, restore at scope-exit.
 _MOCK_MODULE_PATHS = [
     "src.services.linguistic_service",
+    "src.services.semantic_search_service",
     "src.services.preference_service",
     "src.services.identity_service",
     "src.services.navigation_service",
@@ -48,6 +49,13 @@ try:
     from src.services.semantic_search_service import SemanticSearchResult
 
     _payload = SemanticSearchResult(**__PAYLOAD__)
+
+    # R-8: the UI binds to the seam MODULE function search_semantic, not a
+    # LinguisticService classmethod. The module is mocked wholesale.
+    mock_seam = MagicMock()
+    mock_seam.search_semantic = MagicMock(return_value=_payload)
+    sys.modules["src.services.semantic_search_service"] = mock_seam
+    sys.modules["src.services.semantic_search_service"].SemanticSearchResult = SemanticSearchResult
 
     mock_linguistic = MagicMock()
     # Exact-match browse (no-query semantic path) and other modes: empty.
@@ -61,7 +69,6 @@ try:
     mock_linguistic.get_edit_history.return_value = []
     mock_linguistic.bundle_records_to_mdf = MagicMock(return_value="")
     mock_linguistic.stream_records_to_temp_file.return_value = "/tmp/test"
-    mock_linguistic.search_semantic = MagicMock(return_value=_payload)
 
     mock_preference = MagicMock()
     mock_preference.get_preference.return_value = "0.80"

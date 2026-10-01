@@ -36,6 +36,7 @@ def records():
     from src.services.linguistic_service import LinguisticService
     from src.services.navigation_service import NavigationService
     from src.services.preference_service import PreferenceService
+    from src.services.semantic_search_service import search_semantic
     from src.services.upload_service import UploadService
 
     # Hide the main navigation menu — this view owns the sidebar entirely
@@ -228,7 +229,6 @@ def records():
     # Non-"ok" statuses render a designated clean empty state in the MAIN
     # panel and never fall through to record rendering or a crash.
     semantic_status = None
-    semantic_status_message = ""
 
     if is_semantic_mode:
         if search_term:
@@ -245,7 +245,7 @@ def records():
             )
             cached_ranked = st.session_state.get("_semantic_ranked_cache")
             if cached_ranked is None or cached_ranked[0] != semantic_digest:
-                semantic_result = LinguisticService.search_semantic(
+                semantic_result = search_semantic(
                     mode=mode_key,
                     query=search_term,
                     threshold=st.session_state.semantic_threshold,
@@ -263,7 +263,6 @@ def records():
                     semantic_status = None
                 else:
                     semantic_status = semantic_result.status
-                    semantic_status_message = getattr(semantic_result, "message", "") or ""
                     cached_ranked = (semantic_digest, [])
                     st.session_state._semantic_ranked_cache = cached_ranked
             elif cached_ranked[1]:
@@ -271,7 +270,7 @@ def records():
             else:
                 # Degraded payload cached from this same digest — re-consume
                 # the seam once to re-derive the status for rendering.
-                semantic_result = LinguisticService.search_semantic(
+                semantic_result = search_semantic(
                     mode=mode_key,
                     query=search_term,
                     threshold=st.session_state.semantic_threshold,
@@ -280,7 +279,6 @@ def records():
                 )
                 if getattr(semantic_result, "status", "ok") != "ok":
                     semantic_status = semantic_result.status
-                    semantic_status_message = getattr(semantic_result, "message", "") or ""
                 ranked_pairs = []
             if semantic_status is None and cached_ranked is not None:
                 ranked_pairs = cached_ranked[1]
@@ -684,10 +682,28 @@ def records():
         export_search_term = search_term
         export_record_ids = selection_record_ids
 
+        # Semantic mode export (Issue #1385): the #36 strategy map routes the
+        # semantic modes to the result-returning search_semantic seam, so any
+        # strategy-map consumer (get_all_records_for_export /
+        # stream_records_to_temp_file) re-dispatching with a semantic mode +
+        # search term would crash (SemanticSearchResult has no order_by).
+        # Respect the frozen service contract: derive export ids from the
+        # already-ranked seam cache and pass them via record_ids — the
+        # strategy dispatch is skipped entirely when record_ids is provided.
+        # A zero-result semantic search (empty cache pairs, e.g. threshold
+        # 1.0) must ALSO not re-dispatch — neutralize the term so the export
+        # path browses nothing.
+        semantic_export_ids = False
+        if is_semantic_mode and not export_record_ids:
+            cached = st.session_state.get("_semantic_ranked_cache")
+            if cached is not None and cached[0][1] == (export_search_term or None):
+                export_record_ids = [rid for rid, _score in cached[1]]
+                semantic_export_ids = bool(search_term)
+
         # Prepare export data
         all_matching_records = LinguisticService.get_all_records_for_export(
             source_id=export_source_id,
-            search_term=export_search_term,
+            search_term=None if semantic_export_ids else (export_search_term or None),
             search_mode=st.session_state.search_mode,
             record_ids=export_record_ids,
         )
@@ -744,7 +760,7 @@ def records():
                 # Use streaming to temp file for better memory management
                 temp_path = LinguisticService.stream_records_to_temp_file(
                     source_id=export_source_id,
-                    search_term=export_search_term,
+                    search_term=None if semantic_export_ids else (export_search_term or None),
                     search_mode=st.session_state.search_mode,
                     record_ids=export_record_ids,
                 )
@@ -823,7 +839,8 @@ def records():
                 score_display = ""
                 if is_semantic_mode and record_id in semantic_scores:
                     score_display = f" — Similarity: {semantic_scores[record_id]:.2f}"
-                st.markdown(f"**Record #{record_id}** (Source: {record['source_name'] or 'Unknown'}){score_display}{lock_status}")
+                header_line = f"**Record #{record_id}** (Source: {record['source_name'] or 'Unknown'})"
+                st.markdown(f"{header_line}{score_display}{lock_status}")
 
                 # Check if it should be in edit mode (Global mode or local edit)
                 # MUST NOT enter edit mode if locked.

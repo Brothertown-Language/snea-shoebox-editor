@@ -50,6 +50,7 @@ from unittest.mock import MagicMock
 
 _MOCK_MODULE_PATHS = [
     "src.services.linguistic_service",
+    "src.services.semantic_search_service",
     "src.services.preference_service",
     "src.services.identity_service",
     "src.services.navigation_service",
@@ -59,6 +60,21 @@ _MOCK_MODULE_PATHS = [
 _saved_modules = {p: sys.modules.get(p) for p in _MOCK_MODULE_PATHS}
 try:
     from src.services.semantic_search_service import SemanticSearchResult
+
+    # R-8: the UI binds to the seam MODULE function search_semantic, not a
+    # LinguisticService classmethod. The module is mocked wholesale.
+    # Invocation-count spy: persists across at.run() reruns via session_state.
+    if "sc5_seam_calls" not in st.session_state:
+        st.session_state.sc5_seam_calls = 0
+
+    def _spy_search(*args, **kwargs):
+        st.session_state.sc5_seam_calls += 1
+        return SemanticSearchResult(results=list(_ranked), status="ok", message="")
+
+    mock_seam = MagicMock()
+    mock_seam.search_semantic = MagicMock(side_effect=_spy_search)
+    sys.modules["src.services.semantic_search_service"] = mock_seam
+    sys.modules["src.services.semantic_search_service"].SemanticSearchResult = SemanticSearchResult
 
     mock_linguistic = MagicMock()
     mock_linguistic.get_sources_with_counts.return_value = []
@@ -84,16 +100,6 @@ try:
         (9, 0.60),
         (5, 0.50),
     ]
-
-    # Invocation-count spy: persists across at.run() reruns via session_state.
-    if "sc5_seam_calls" not in st.session_state:
-        st.session_state.sc5_seam_calls = 0
-
-    def _spy_search(*args, **kwargs):
-        st.session_state.sc5_seam_calls += 1
-        return SemanticSearchResult(results=list(_ranked), status="ok", message="")
-
-    mock_linguistic.search_semantic = MagicMock(side_effect=_spy_search)
 
     mock_preference = MagicMock()
     _pref_vals = {"page_size": "5", "semantic_threshold": "0.80", "structural_highlighting": "True"}
