@@ -1,0 +1,42 @@
+# analysis-summary.yaml — backfilled artifact set for issue 1392
+spec: .issues/1392/spec.md
+issue: 1392
+generated_by: writing-plans backfill task (retroactive mode)
+
+scope_summary:
+  type: SPEC-FIX
+  problem: unrendered <MAINTAINER_CONTACT> placeholder leaks into the "Access Restricted" dialog and 2 database-failure dialogs
+  approach: resolve via st.secrets contact.maintainer_label through one shared helper; startup fail-fast validation; AST placeholder sweep
+  sc_count: 7
+  phases: [Phase 1 (config/docs: SC-6, SC-7), Phase 2 (code: SC-1..SC-5)]
+
+sc_inventory:
+  - {id: SC-1, evidence: behavioral, phase: Phase 2}
+  - {id: SC-2, evidence: string, phase: Phase 2}
+  - {id: SC-3, evidence: semantic, phase: Phase 2}
+  - {id: SC-4, evidence: behavioral, phase: Phase 2}
+  - {id: SC-5, evidence: string, phase: Phase 2 (co-located with SC-2)}
+  - {id: SC-6, evidence: string, phase: Phase 1}
+  - {id: SC-7, evidence: string, phase: Phase 1}
+
+artifact_status:
+  blast-radius.yaml: backfilled
+  concern-map.yaml: backfilled
+  code-path-inventory.yaml: backfilled
+  cross-cutting-matrix.yaml: backfilled
+  interface-compatibility.yaml: backfilled (includes dependency_contract for research step 9)
+  state-analysis.yaml: backfilled
+  testability-assessment.yaml: backfilled
+
+grounding_evidence:
+  - "grep -rn --include='*.py' '<MAINTAINER_CONTACT>' src/ streamlit_app.py → 3 hits (login.py:32, streamlit_app.py:124, streamlit_app.py:201)"
+  - "grep -n maintainer_label .streamlit/secrets.toml .streamlit/secrets.toml.production → 0 hits (RED)"
+  - "grep -n maintainer_label docs/development/local-development.md → 0 hits (RED)"
+  - "all 7 affected/verified paths from the spec confirmed to exist in the working tree"
+  - ".streamlit/secrets.toml [contact] section present at line 15 with mastodon_url at line 16"
+
+key_findings:
+  - 3 hardcoded token literals confirmed at the exact sites the spec names
+  - cross-phase dependency confirmed: SC-1/SC-4 verification need the SC-6 key in test secrets → Phase 1 must precede Phase 2
+  - SC-5 RED/GREEN straddle SC-2's removal — atomic co-location inside Phase 2 (matches spec change-control TRIPLET_SPLIT resolution)
+  - adjacent mastodon_url read at streamlit_app.py:308 (handle_ui_error path) contains no token and is not a defect site

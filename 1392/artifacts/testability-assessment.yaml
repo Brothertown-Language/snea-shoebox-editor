@@ -1,0 +1,91 @@
+# testability-assessment.yaml — backfilled from .issues/1392/spec.md
+spec: .issues/1392/spec.md
+issue: 1392
+
+assessments:
+  - sc: SC-1
+    evidence_type: behavioral
+    verification: >
+      Playwright real-browser test against the live app on :8501 (test/ui/,
+      playwright_e2e marker, SNEA_E2E=1) asserting the dialog shows the
+      contact.maintainer_label value and contains no <MAINTAINER_CONTACT> token.
+    testability: automatable end-to-end; requires live app + saved auth state per docs/development/ui_testing_standard.md
+    fixtures: live app on :8501; test secrets containing contact.maintainer_label (supplied by SC-6)
+    automation: full (gated pytest marker)
+    risk: e2e gating — SNEA_E2E=1 skip-by-design must never be treated as PASS
+
+  - sc: SC-2
+    evidence_type: string
+    verification: "grep -rn --include='*.py' \"<MAINTAINER_CONTACT>\" src/ streamlit_app.py returns 0 matches"
+    testability: trivially automatable as a repo enforcement test; --include='*.py' scope excludes stale __pycache__ .pyc artifacts
+    fixtures: none
+    automation: full (grep enforcement test)
+    risk: 'low — deterministic; scope qualifier is load-bearing (live-verified: bare grep also matches 1 .pyc)'
+
+  - sc: SC-3
+    evidence_type: semantic
+    verification: clean-room sub-agent reads the 3 former call sites and confirms each references the shared resolution path rather than an inline literal
+    testability: semi-automatable (source-read review); semantic judgment that the 3 sites share one path
+    fixtures: none — the 3 call sites themselves (login.py show_unauthorized_dialog; streamlit_app.py _initialize_database ×2)
+    automation: partial (clean-room read; supporting structural assertion possible via grep for helper references)
+    risk: reviewer-judgment component; helper naming must be discoverable for the clean-room check
+
+  - sc: SC-4
+    evidence_type: behavioral
+    verification: >
+      Test invokes the app startup path with contact.maintainer_label absent and asserts
+      the error is raised from startup initialization — not deferred to a dialog-render
+      call — with a message naming contact.maintainer_label (uv run pytest test/).
+    testability: automatable; needs an isolated secrets fixture with the key removed (test must not mutate real secrets)
+    fixtures: pytest fixture overriding/emptying st.secrets [contact] maintainer_label; assertion on call-stack origin (startup vs dialog render)
+    automation: full (uv run pytest test/)
+    risk: timing/origin assertion (startup vs dialog-render) is the discriminating check — must assert origin, not just raise
+
+  - sc: SC-5
+    evidence_type: string
+    verification: >
+      Repo test added with this SC uses Python ast to scan string literals passed to
+      user-facing Streamlit render calls (st.write, st.info, st.error, st.warning,
+      st.success, st.markdown, st.caption) in src/ and streamlit_app.py; asserts zero
+      matches of <[A-Z][A-Z0-9_]{2,}>; uv run pytest test/.
+    testability: fully automatable; AST parsing excludes docstrings/comments by construction (scope determinism)
+    fixtures: none — scans repository source
+    automation: full
+    risk: >
+      deterministic by AST construction; <SSSSS> docstring in src/services/upload_service.py
+      is the scope-boundary counter-example and must stay out of scope. Note: this SC's
+      RED/GREEN straddles SC-2's removal (co-located triplet) — test ordering matters.
+
+  - sc: SC-6
+    evidence_type: string
+    verification: "grep -n \"maintainer_label\" .streamlit/secrets.toml .streamlit/secrets.toml.production returns ≥1 hit in each file"
+    testability: trivially automatable; current RED state live-verified (0 hits in both files)
+    fixtures: none
+    automation: full (grep enforcement test)
+    risk: low — additive TOML key; section-order synchronization directive must be preserved when editing
+
+  - sc: SC-7
+    evidence_type: string
+    verification: "grep -n \"maintainer_label\" docs/development/local-development.md returns ≥1 hit"
+    testability: trivially automatable; current RED state live-verified (0 hits)
+    fixtures: none
+    automation: full (grep enforcement test)
+    risk: low
+
+evidence_type_distribution:
+  behavioral: [SC-1, SC-4]
+  string: [SC-2, SC-5, SC-6, SC-7]
+  semantic: [SC-3]
+
+substrate_check: >
+  Runtime-behavioral substrate review: SC-1 (dialog rendering) and SC-4 (startup
+  validation) are declared behavioral and verified behaviorally — matches substrate.
+  SC-2/SC-5/SC-6/SC-7 are static content-presence checks over source/config/docs
+  (grep/AST over files, no runtime observation) — string evidence matches their
+  substrate; no uplift required. SC-3 is a semantic source-structure review, not a
+  runtime claim.
+
+cross_references:
+  - docs/development/ui_testing_standard.md (SC-1 mandatory procedure)
+  - test/ pytest suite (SC-4, SC-5, SC-6, SC-7)
+  - test/ui/ playwright_e2e infrastructure (SC-1)

@@ -1,0 +1,127 @@
+# Dependency contract for issue #1392 — MAINTAINER_CONTACT placeholder resolution
+# Source: .issues/1392/artifacts/interface-compatibility.yaml dependency_contract section
+# (extracted as-is — file contains a dependency_contract section, no auto-backfill needed)
+# Structure augmentation: phase DAG + Z3 solver sections (variables/preconditions/
+# postconditions/invariants/queries) so tools/solve and tools/plan can consume it —
+# same augmentation pattern as .issues/1385/dependency-contract.yaml.
+#
+# Use:
+#   ./.opencode/tools/solve model --contract-path .issues/1392/dependency-contract.yaml --query <expr>
+#   ./.opencode/tools/solve check --contract-path .issues/1392/dependency-contract.yaml --state-path .issues/1392/artifacts/state-analysis.yaml
+
+schema_version: "1.0"
+generated_at: "20261001114600"
+
+phases:
+  - id: 1
+    name: "Configuration & documentation enablement"
+    depends_on: []
+    scs: [SC-6, SC-7]
+  - id: 2
+    name: "Secrets-based resolution, fail-fast validation & placeholder sweep"
+    depends_on: [1]
+    scs: [SC-3, SC-1, SC-2, SC-5, SC-4]
+
+# --- Dependency contract extracted verbatim from interface-compatibility.yaml ---
+description: >
+  Concrete dependency data derived from the spec's affected files and success
+  criteria — consumed by research.md step 9 into .issues/1392/dependency-contract.yaml.
+
+dependencies:
+  - source: src/frontend/pages/login.py::show_unauthorized_dialog (SC-1, SC-3)
+    target: shared resolution helper → st.secrets["contact"]["maintainer_label"]
+    type_constraint: returns str (non-empty after startup validation)
+    scs: [SC-1, SC-3]
+    status: new
+  - source: streamlit_app.py::_initialize_database (aiven-error branch, streamlit_app.py:124) (SC-2, SC-3)
+    target: shared resolution helper → st.secrets["contact"]["maintainer_label"]
+    type_constraint: returns str
+    scs: [SC-2, SC-3]
+    status: new
+  - source: streamlit_app.py::_initialize_database (final-failure branch, streamlit_app.py:201) (SC-2, SC-3)
+    target: shared resolution helper → st.secrets["contact"]["maintainer_label"]
+    type_constraint: returns str
+    scs: [SC-2, SC-3]
+    status: new
+  - source: streamlit_app.py::main startup validation (SC-4)
+    target: st.secrets["contact"]["maintainer_label"]
+    type_constraint: key present → proceed; absent → raise Exception whose message contains the literal string 'contact.maintainer_label'
+    scs: [SC-4]
+    status: new
+  - source: .streamlit/secrets.toml [contact] (SC-6)
+    target: shared resolution path / startup validation reader
+    type_constraint: TOML key maintainer_label under [contact], value string
+    scs: [SC-6]
+    status: new key in existing section
+  - source: .streamlit/secrets.toml.production [contact] (SC-6)
+    target: shared resolution path / startup validation reader
+    type_constraint: TOML key maintainer_label under [contact], value string; key set synchronized with .streamlit/secrets.toml
+    scs: [SC-6]
+    status: new key in existing section
+  - source: docs/development/local-development.md "Configure local secrets" (SC-7)
+    target: operator deployment of contact.maintainer_label
+    type_constraint: documentation reference (grep-matchable string 'maintainer_label')
+    scs: [SC-7]
+    status: doc addition
+  - source: test/ui Playwright e2e (SC-1)
+    target: live app on :8501 rendering show_unauthorized_dialog
+    type_constraint: SNEA_E2E=1 + playwright_e2e marker required; asserts no '<MAINTAINER_CONTACT>' token in dialog
+    scs: [SC-1]
+    status: existing infrastructure, new test
+  - source: new AST sweep test (SC-5)
+    target: src/**/*.py + streamlit_app.py user-facing Streamlit render-call string literals
+    type_constraint: regex <[A-Z][A-Z0-9_]{2,}> must match 0 user-facing literals; docstrings excluded by AST scoping
+    scs: [SC-5]
+    status: new test
+
+existing_dependencies:
+  - reference: .streamlit/secrets.toml [contact] mastodon_url
+    relationship: existing source of contact.mastodon_url feeding all contact dialogs; unchanged
+    status: satisfied
+  - reference: docs/development/ui_testing_standard.md
+    relationship: mandatory SC-1 verification procedure
+    status: satisfied
+  - reference: test/ui/ playwright_e2e + SNEA_E2E=1 gating
+    relationship: execution environment for SC-1
+    status: satisfied
+
+# --- Solver sections (Z3) — derived from structure.yaml phase DAG ---
+variables:
+  sc1_done: {type: bool}
+  sc2_done: {type: bool}
+  sc3_done: {type: bool}
+  sc4_done: {type: bool}
+  sc5_done: {type: bool}
+  sc6_done: {type: bool}
+  sc7_done: {type: bool}
+  phase_1_done: {type: bool}
+  phase_2_done: {type: bool}
+  all_phases_done: {type: bool}
+
+# Preconditions: no initial-state assertion — ordering is enforced by invariants,
+# so preconditions stay empty (a forced-false initial state would contradict the
+# postcondition that all phases complete).
+preconditions: []
+
+invariants:
+  # Intra-phase dependency ordering (Phase 2): call-site migrations consume SC-3's helper
+  - "z3.Implies(sc1_done, sc3_done)"
+  - "z3.Implies(sc2_done, sc3_done)"
+  - "z3.Implies(sc4_done, sc3_done)"
+  # SC-5's cycle completes after SC-2's GREEN (straddled triplet, same phase)
+  - "z3.Implies(sc5_done, sc2_done)"
+  # Cross-phase edge: SC-1 behavioral verify and SC-4 startup verification need SC-6's key
+  - "z3.Implies(sc1_done, sc6_done)"
+  - "z3.Implies(sc4_done, sc6_done)"
+  # Phase completion == all member SCs complete
+  - "phase_1_done == z3.And(sc6_done, sc7_done)"
+  - "phase_2_done == z3.And(sc1_done, sc2_done, sc3_done, sc4_done, sc5_done)"
+  # DAG edge Phase 1 → Phase 2
+  - "z3.Implies(phase_2_done, phase_1_done)"
+  - "all_phases_done == z3.And(phase_1_done, phase_2_done)"
+
+postconditions:
+  - "all_phases_done"
+
+queries:
+  - "all_phases_done"

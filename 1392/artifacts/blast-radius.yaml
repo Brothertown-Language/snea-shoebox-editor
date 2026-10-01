@@ -1,0 +1,71 @@
+# blast-radius.yaml — backfilled from .issues/1392/spec.md
+spec: .issues/1392/spec.md
+issue: 1392
+
+affected_files:
+  # Primary defect sites — hardcoded <MAINTAINER_CONTACT> literals (verified live: 3 grep hits)
+  - path: src/frontend/pages/login.py
+    role: primary defect site — show_unauthorized_dialog() renders raw token
+    exists: true
+    evidence: "grep -rn --include='*.py' '<MAINTAINER_CONTACT>' src/ streamlit_app.py → login.py:32"
+    scs: [SC-1, SC-2, SC-3]
+  - path: streamlit_app.py
+    role: defect site — _initialize_database() contains 2 dialogs with raw token
+    exists: true
+    evidence: "grep hits at streamlit_app.py:124 and streamlit_app.py:201"
+    scs: [SC-2, SC-3, SC-4]
+  # Configuration targets
+  - path: .streamlit/secrets.toml
+    role: secrets template — [contact] section gains contact.maintainer_label (SC-6); existing source of contact.mastodon_url
+    exists: true
+    evidence: "file present; [contact] section at line 15 with mastodon_url at line 16; grep maintainer_label → 0 hits (RED state)"
+    scs: [SC-6]
+  - path: .streamlit/secrets.toml.production
+    role: production secrets template — contact.maintainer_label added in sync (SC-6)
+    exists: true
+    evidence: "file present; grep maintainer_label → 0 hits (RED state)"
+    scs: [SC-6]
+  # Documentation targets
+  - path: docs/development/local-development.md
+    role: operator documentation — "Configure local secrets" guidance gains contact.maintainer_label (SC-7)
+    exists: true
+    evidence: "file present; grep maintainer_label → 0 hits (RED state)"
+    scs: [SC-7]
+  - path: docs/development/ui_testing_standard.md
+    role: mandatory verification procedure for the SC-1 Playwright test
+    exists: true
+    evidence: "file present (read-only reference)"
+    scs: [SC-1]
+  # Scope boundary (counter-example — must NOT be remediated)
+  - path: src/services/upload_service.py
+    role: scope boundary — filename-format docstring contains <SSSSS>, out of scope for SC-5 by AST construction
+    exists: true
+    evidence: "file present"
+    scs: [SC-5]
+  # Test surfaces (existing infrastructure, tests added by this spec)
+  - path: test/ui/
+    role: Playwright e2e infrastructure — playwright_e2e marker, SNEA_E2E=1 gating for SC-1
+    exists: true
+    evidence: "test/ui directory present"
+    scs: [SC-1]
+  - path: test/
+    role: pytest suite — hosts SC-4 startup-validation test, SC-5 AST sweep test, SC-6/SC-7 grep enforcement tests
+    exists: true
+    evidence: "uv run pytest test/ is the spec's stated verification command"
+    scs: [SC-4, SC-5, SC-6, SC-7]
+
+new_files:
+  # Shared resolution helper (SC-3) — location chosen at implementation time; no existing helper found
+  - path: (TBD at implementation — shared helper reading st.secrets["contact"]["maintainer_label"])
+    role: single source of truth consumed by all 3 call sites
+    scs: [SC-3]
+
+not_affected:
+  - .streamlit/secrets.toml [contact] mastodon_url value (explicitly unchanged — §2 Not Included)
+  - dialog layout and surrounding copy (§2 Not Included)
+
+blast_summary: >
+  3 call-site literals across 2 source files (login.py, streamlit_app.py) are the defect;
+  blast extends to 2 secrets templates, 1 doc target, 1 UI-test surface, and 1 new shared
+  helper. One reference doc and one scope-boundary counter-example are read-only. All
+  affected paths verified to exist in the codebase.

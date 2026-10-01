@@ -1,0 +1,130 @@
+# interface-compatibility.yaml — backfilled from .issues/1392/spec.md
+spec: .issues/1392/spec.md
+issue: 1392
+
+interfaces:
+  - id: IF-1
+    name: st.secrets [contact] mapping
+    kind: config-read interface (existing, extended)
+    contract: >
+      st.secrets["contact"] behaves as a mapping; current consumers use
+      st.secrets.get("contact", {}).get("mastodon_url") → Optional[str]. The spec
+      adds one key, contact.maintainer_label → str, read through the shared helper.
+    compatibility: additive — existing mastodon_url access pattern at streamlit_app.py:308 and the
+      if mastodon_url guard at all contact call sites remain unchanged (spec §11 edge case).
+    verification: live read of src/frontend/pages/login.py, streamlit_app.py (3 token sites + line 308)
+
+  - id: IF-2
+    name: Shared resolution helper (new)
+    kind: intra-module function interface
+    contract: >
+      Single function, no arguments, returns the maintainer contact label as str.
+      Raised/validated absence path is governed by IF-3 (startup), so render-time
+      callers may treat the return as a non-empty str once startup has validated it.
+    consumers: [show_unauthorized_dialog (login.py), _initialize_database aiven-error dialog (streamlit_app.py:124),
+                _initialize_database final-failure dialog (streamlit_app.py:201)]
+    compatibility: replaces 3 inline literal/f-string expressions; call shape at each site changes from
+      f-string constant to helper return value — no signature change at the call sites themselves.
+    new_interface: true
+
+  - id: IF-3
+    name: Startup validation interface (new)
+    kind: app-initialization contract
+    contract: >
+      During app startup (main() in streamlit_app.py, before any dialog renders),
+      read contact.maintainer_label; when absent raise an error whose message names
+      contact.maintainer_label. Error origin must be startup initialization, not a
+      dialog-render call (SC-4 verification asserts timing).
+    compatibility: >
+      Placement constraint: st.set_page_config MUST remain the first Streamlit command
+      in main() (comment at streamlit_app.py:221); validation must not reorder it.
+      Only st.secrets reads are required, which are side-effect free.
+    new_interface: true
+
+  - id: IF-4
+    name: show_unauthorized_dialog() dialog interface
+    kind: Streamlit dialog (existing)
+    contract: '() -> None, decorated @st.dialog("Access Restricted"); non-closable; invoked from login() at login.py:78'
+    compatibility: unchanged signature and behavior; only the contact line's value source changes (SC-1).
+
+  - id: IF-5
+    name: _initialize_database() database-init interface
+    kind: startup function (existing)
+    contract: '() -> None; returns on success, st.stop() on fatal dialog paths; invoked from main() at streamlit_app.py:224'
+    compatibility: unchanged signature; 2 internal st.info contact lines change value source (SC-2/SC-3).
+
+  - id: IF-6
+    name: Secrets-template synchronization contract
+    kind: config file convention
+    contract: >
+      .streamlit/secrets.toml and .streamlit/secrets.toml.production must stay key-set
+      synchronized per the section-order synchronization directive; [contact] section
+      gains maintainer_label in both files.
+    compatibility: additive TOML key — no existing key removed or renamed.
+
+  - id: IF-7
+    name: Playwright e2e verification contract
+    kind: test-infrastructure interface (existing)
+    contract: 'test/ui/ with playwright_e2e marker, SNEA_E2E=1 gating, live app on :8501, per docs/development/ui_testing_standard.md'
+    compatibility: consumed as-is by SC-1; no infrastructure change required.
+
+dependency_contract:
+  description: >
+    Concrete dependency data derived from the spec's affected files and success
+    criteria — consumed by research.md step 9 into .issues/1392/dependency-contract.yaml.
+  dependencies:
+    - source: src/frontend/pages/login.py::show_unauthorized_dialog (SC-1, SC-3)
+      target: shared resolution helper → st.secrets["contact"]["maintainer_label"]
+      type_constraint: returns str (non-empty after startup validation)
+      scs: [SC-1, SC-3]
+      status: new
+    - source: streamlit_app.py::_initialize_database (aiven-error branch, streamlit_app.py:124) (SC-2, SC-3)
+      target: shared resolution helper → st.secrets["contact"]["maintainer_label"]
+      type_constraint: returns str
+      scs: [SC-2, SC-3]
+      status: new
+    - source: streamlit_app.py::_initialize_database (final-failure branch, streamlit_app.py:201) (SC-2, SC-3)
+      target: shared resolution helper → st.secrets["contact"]["maintainer_label"]
+      type_constraint: returns str
+      scs: [SC-2, SC-3]
+      status: new
+    - source: streamlit_app.py::main startup validation (SC-4)
+      target: st.secrets["contact"]["maintainer_label"]
+      type_constraint: key present → proceed; absent → raise Exception whose message contains the literal string 'contact.maintainer_label'
+      scs: [SC-4]
+      status: new
+    - source: .streamlit/secrets.toml [contact] (SC-6)
+      target: shared resolution path / startup validation reader
+      type_constraint: TOML key maintainer_label under [contact], value string
+      scs: [SC-6]
+      status: new key in existing section
+    - source: .streamlit/secrets.toml.production [contact] (SC-6)
+      target: shared resolution path / startup validation reader
+      type_constraint: TOML key maintainer_label under [contact], value string; key set synchronized with .streamlit/secrets.toml
+      scs: [SC-6]
+      status: new key in existing section
+    - source: docs/development/local-development.md "Configure local secrets" (SC-7)
+      target: operator deployment of contact.maintainer_label
+      type_constraint: documentation reference (grep-matchable string 'maintainer_label')
+      scs: [SC-7]
+      status: doc addition
+    - source: test/ui Playwright e2e (SC-1)
+      target: live app on :8501 rendering show_unauthorized_dialog
+      type_constraint: SNEA_E2E=1 + playwright_e2e marker required; asserts no '<MAINTAINER_CONTACT>' token in dialog
+      scs: [SC-1]
+      status: existing infrastructure, new test
+    - source: new AST sweep test (SC-5)
+      target: src/**/*.py + streamlit_app.py user-facing Streamlit render-call string literals
+      type_constraint: regex <[A-Z][A-Z0-9_]{2,}> must match 0 user-facing literals; docstrings excluded by AST scoping
+      scs: [SC-5]
+      status: new test
+  existing_dependencies:
+    - reference: .streamlit/secrets.toml [contact] mastodon_url
+      relationship: existing source of contact.mastodon_url feeding all contact dialogs; unchanged
+      status: satisfied
+    - reference: docs/development/ui_testing_standard.md
+      relationship: mandatory SC-1 verification procedure
+      status: satisfied
+    - reference: test/ui/ playwright_e2e + SNEA_E2E=1 gating
+      relationship: execution environment for SC-1
+      status: satisfied

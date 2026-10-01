@@ -1,0 +1,77 @@
+# state-analysis.yaml — backfilled from .issues/1392/spec.md
+spec: .issues/1392/spec.md
+issue: 1392
+
+state_transitions:
+  - id: ST-1
+    sc: SC-1
+    name: Dialog render-state transition
+    from: "Access Restricted dialog renders raw '<MAINTAINER_CONTACT>' token"
+    to: "dialog renders resolved contact.maintainer_label text"
+    trigger: show_unauthorized_dialog() executes with the shared resolution path in place
+    guard: contact.maintainer_label present (validated at startup) and contact.mastodon_url present for the link branch
+    invariant: raw token never displayed to an end user (R-1)
+
+  - id: ST-2
+    sc: SC-2
+    name: Source-token state transition
+    from: "3 <MAINTAINER_CONTACT> literals in *.py source (login.py:32, streamlit_app.py:124, streamlit_app.py:201)"
+    to: "0 <MAINTAINER_CONTACT> literals in *.py source"
+    trigger: GREEN of Item 2 — literals replaced by the shared resolution path
+    invariant: grep -rn --include='*.py' returns 0 matches (compiled __pycache__ artifacts out of scope)
+
+  - id: ST-3
+    sc: SC-3
+    name: Contact-text source-of-truth transition
+    from: "3 independent inline contact-text expressions (duplicated)"
+    to: "1 shared resolution path consumed by all 3 call sites"
+    trigger: GREEN of Item 3 — helper introduced and call sites routed
+    invariant: no duplicated hardcoded contact text remains (R-2)
+
+  - id: ST-4
+    sc: SC-4
+    name: Startup validation state transition (spec §11 State transitions)
+    branch_pass: "App startup → key validation passes → dialogs render resolved text"
+    branch_fail: "App startup → key validation fails → startup aborts with an actionable error naming contact.maintainer_label, before any dialog renders"
+    from: "no startup validation of contact.maintainer_label"
+    to: "validation runs during startup initialization"
+    invariant: error origin is startup initialization, not a dialog-render call; no silent default (R-3)
+
+  - id: ST-5
+    sc: SC-5
+    name: Placeholder-sweep enforcement state
+    from: "no automated sweep — sibling placeholders can reach users"
+    to: "AST sweep test exists; zero <[A-Z][A-Z0-9_]{2,}> matches across user-facing render-call string literals"
+    trigger: GREEN of Item 5 (after Item 2's removal for the passing state)
+    invariant: docstring tokens (e.g. <SSSSS> in src/services/upload_service.py) remain out of scope by AST construction
+
+  - id: ST-6
+    sc: SC-6
+    name: Secrets-template key state transition
+    from: "contact.maintainer_label absent from .streamlit/secrets.toml and .streamlit/secrets.toml.production"
+    to: "key present in both files, [contact] section-order synchronization preserved"
+    trigger: Item 6 GREEN
+    invariant: no existing key removed or renamed (additive change)
+
+  - id: ST-7
+    sc: SC-7
+    name: Documentation state transition
+    from: "contact.maintainer_label undocumented in docs/development/local-development.md"
+    to: "key documented under the 'Configure local secrets' guidance"
+    trigger: Item 7 GREEN
+    invariant: grep -n maintainer_label returns ≥1 hit
+
+runtime_state:
+  shared_mutable_state: 'none — resolution reads st.secrets at startup and render time (spec §11 Concurrency: not applicable, no race surface)'
+  session_state_interaction: login.py's existing st.session_state clearing on "Reload App" is untouched by this spec
+  recovery_transition: >
+    operator adds contact.maintainer_label to the environment's secrets following
+    SC-6/SC-7 guidance → restart app → startup validation passes → dialogs render
+    resolved text (spec §11 Recovery)
+  failure_modes:
+    - deployed secrets lack the key → fail-fast at startup naming the key; never a raw placeholder, never a silent default
+    - shared resolution path raising → surfaces as startup failure, never a partial render
+
+ambient_state_unchanged:
+  - contact.mastodon_url absence → if mastodon_url guard skips the contact link (existing behavior, unchanged)
+  - dialog layout and surrounding copy (§2 Not Included)
