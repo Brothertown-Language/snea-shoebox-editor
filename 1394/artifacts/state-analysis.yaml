@@ -1,0 +1,52 @@
+# state-analysis.yaml — Issue 1394 (backfilled retroactively)
+spec: .issues/1394/spec.md
+issue: 1394
+
+state_transitions:
+  - sc: SC1
+    transitions:
+      - from: "local replica: records.embedding type = bare vector (degraded)"
+        to: "local replica: records.embedding = vector(1536), format_type output exactly matching production"
+        mechanism: "rebuilt DDL emitted by builder CASE branch with vector typmod (no -4 offset); applied during fresh sync run"
+  - sc: SC2
+    transitions:
+      - from: "local replica: gloss_search_entries.embedding = bare vector"
+        to: "local replica: gloss_search_entries.embedding = vector(384) matching production"
+        mechanism: "same generalized atttypmod emission; fresh sync run"
+  - sc: SC3
+    transitions:
+      - from: "local replica: semantic_search_entries.embedding = bare vector"
+        to: "local replica: semantic_search_entries.embedding = vector(384) matching production"
+        mechanism: "same generalized atttypmod emission; fresh sync run"
+  - sc: SC4
+    transitions:
+      - from: "local replica: 16 enumerated id columns have no pg_attrdef nextval default (stripped); ORM inserts omitting id raise IntegrityError"
+        to: "local replica: all 16 columns carry verbatim production nextval(...) defaults in pg_attrdef; ORM insert omitting id succeeds"
+        mechanism: "stripping guard `if \"nextval\" not in info_default:` removed; introspected expression emitted as DEFAULT in column line; sequence-reset step (setval to max(id)) re-applied post-load without conflict"
+  - sc: SC5
+    transitions:
+      - from: "suite state at pre-fix synced DB: 2 vector-typmod failures + 3 NotNullViolation failures (5 failed total)"
+        to: "suite state after fix + fresh sync: all 5 named baseline tests PASS (tests unchanged, R-6)"
+        mechanism: "no source change in this item — green comes from the Phase 1+2 builder fixes"
+  - sc: SC6
+    transitions:
+      - from: "documented pre-fix baseline: 5 failed, 169 passed, 8 skipped (trunk tip eb467b8)"
+        to: "post-fix suite: 0 failures = pre-fix passing set + 5 baseline tests green; zero new failures (deterministic comparison)"
+        mechanism: "full pytest run after fresh sync; output diffed against documented baseline"
+  - sc: SC7
+    transitions:
+      - "invariant — scripts/sync_prod_to_local.sh content state at eb467b8 must remain identical through all fix commits; no transition permitted"
+  - sc: SC8
+    transitions:
+      - "invariant — src/database/migrations.py and production schema artifacts must remain untouched; no transition permitted"
+  - sc: SC9
+    transitions:
+      - from: "no recorded CASE-branch typmod audit artifact exists"
+        to: "audit artifact records each CASE branch (vector, tsvector, bool, int4, int8, float8, numeric, varchar, text, timestamptz, ELSE) with its typmod handling"
+        mechanism: "structural code inspection; additional gaps reported as separate findings (R-5), never fixed in this scope"
+
+stateful_risks:
+  - "edge: atttypmod = -1 (no typmod) — emission must stay bare type, guarded by typmod > -1; no vector(-1)"
+  - "edge: generated columns — attgenerated == 's' path must not be conflated with nextval default path"
+  - "edge: sequence reset vs emitted DEFAULT — setval must still leave max(id)-consistent values and not error on existing DEFAULT"
+  - "edge: non-nextval defaults (now(), false) — preserved unchanged; fix only stops stripping nextval"

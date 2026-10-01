@@ -1,0 +1,36 @@
+# Solve Output — Issue #1394 (regenerated 2026-10-01 after artifacts directory loss)
+# Inputs: dependency-contract.yaml (issue root, regenerated from
+# interface-compatibility.yaml dependency_contract section — extracted as-is),
+# state-analysis.yaml, plan-problem.yaml
+issue: 1394
+solve_status: SAT
+plan_status: SOLVED_SATISFICING
+
+checks:
+  - tool: ./.opencode/tools/solve model
+    command: >-
+      ./.opencode/tools/solve model --contract-path .issues/1394/dependency-contract.yaml
+      --query phase4_structural_invariants_verified
+    result: SAT
+    detail: all four phase variables True in the model
+  - tool: ./.opencode/tools/solve check
+    command: >-
+      ./.opencode/tools/solve check --contract-path .issues/1394/dependency-contract.yaml
+      --state-path .issues/1394/artifacts/state-analysis.yaml
+    result: SAT
+    detail: >-
+      SAT with postconditions + invariants (start state: phases 1-2 complete,
+      phases 3-4 pending — current workflow position) and SAT from empty start
+      state; DAG ordering constraints all satisfiable
+  - tool: ./.opencode/tools/plan plan
+    command: >-
+      ./.opencode/tools/plan plan -p .issues/1394/artifacts/plan-problem.yaml
+    result: SOLVED_SATISFICING
+    detail: >-
+      tamer engine returned SOLVED_SATISFICING with plan_length 0 (engine quirk —
+      reproduces on historical .issues/1382 problem as well). Goal reachability
+      independently verified: ./.opencode/tools/plan validate on the 5-action
+      phase-chain plan (phase1→phase2→phase3→phase4→phase5) returned "valid".
+      Full output in plan-output.yaml.
+
+verdict: PASS

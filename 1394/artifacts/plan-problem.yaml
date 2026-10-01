@@ -1,0 +1,83 @@
+# Planning Problem — Issue #1394
+# 5 phases: phase1 (SC1-SC3 vector typmod) → phase2 (SC4 nextval defaults) →
+# phase3 (SC5/SC6 fresh sync + suite gate) → phase4 (SC7/SC8 structural invariants)
+# → phase5 (post-implementation gates + PR, terminal)
+domain: ddl-builder-fix-1394
+types:
+  - name: item
+objects:
+  - name: phase1
+    type: item
+  - name: phase2
+    type: item
+  - name: phase3
+    type: item
+  - name: phase4
+    type: item
+  - name: phase5
+    type: item
+fluents:
+  - name: item_done
+    params:
+      - name: i
+        type: item
+  - name: vector_typmod_fixed
+  - name: nextval_defaults_restored
+  - name: suite_green_vs_baseline
+  - name: structural_invariants_verified
+  - name: pr_created
+actions:
+  - name: restore_vector_typmod
+    params:
+      - name: i
+        type: item
+    preconditions:
+      - not item_done(i)
+    effects:
+      - item_done(i)
+      - vector_typmod_fixed
+  - name: restore_nextval_defaults
+    params:
+      - name: i
+        type: item
+    preconditions:
+      - vector_typmod_fixed
+      - not item_done(i)
+    effects:
+      - item_done(i)
+      - nextval_defaults_restored
+  - name: fresh_sync_suite_gate
+    params:
+      - name: i
+        type: item
+    preconditions:
+      - vector_typmod_fixed
+      - nextval_defaults_restored
+      - not item_done(i)
+    effects:
+      - item_done(i)
+      - suite_green_vs_baseline
+  - name: verify_structural_invariants
+    params:
+      - name: i
+        type: item
+    preconditions:
+      - suite_green_vs_baseline
+      - not item_done(i)
+    effects:
+      - item_done(i)
+      - structural_invariants_verified
+  - name: post_implementation_gates
+    params:
+      - name: i
+        type: item
+    preconditions:
+      - structural_invariants_verified
+      - not item_done(i)
+    effects:
+      - item_done(i)
+      - pr_created
+init:
+  - not pr_created
+goals:
+  - pr_created

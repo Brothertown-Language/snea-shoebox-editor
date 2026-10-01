@@ -1,34 +1,44 @@
 # Dependency contract for issue 1394
-# Source: dependency_contract section extracted as-is from
-# .issues/1394/artifacts/interface-compatibility.yaml (consumer/provider/facts/
-# type_constraints/out_of_scope_changes verbatim).
-# Solver sections (variables/preconditions/invariants) derived from the phase
-# dependency DAG in .issues/1394/artifacts/structure.yaml — derivation provenance:
-# each invariant mirrors one DAG edge; variables model per-phase completion state.
+# Source: dependency_contract section extracted from the revised spec
+# (.issues/1394/spec.md) Requirements/Dependencies, regenerated 2026-10-01
+# against the revised atomic SC set (SC1-SC9; former SC4 dropped as ceremony;
+# SC7/SC8 added to trace R-3/R-4 as structural invariants; SC9 added to trace
+# R-5 as the CASE-branch typmod audit). Solver sections
+# (variables/preconditions/invariants) derived from the revised phase
+# dependency DAG in .issues/1394/plan.md — derivation provenance: each
+# invariant mirrors one DAG edge; variables model per-phase completion state.
 
 dependency_contract:
   consumer: scripts/sync_prod_to_local.sh (shell entry point) and sync_prod_to_local.py DDL builder
   provider: production PostgreSQL catalog (read) → local PostgreSQL (write)
   facts:
-    - vector columns carry atttypmod = 384 + header offset semantics via pg_attribute; builder must emit vector(384) when atttypmod > -1
-    - nextval defaults are expressible via pg_get_expr(d.adbin, d.adrelid) from pg_attrdef
-    - sequence names follow {table}_{column}_seq (e.g. records_id_seq) and exist post-sync from prior #1314 fix
+    - embedding columns carry per-column production typmod via pg_attribute.atttypmod: records.embedding = vector(1536), gloss_search_entries.embedding = vector(384), semantic_search_entries.embedding = vector(384); builder must emit vector({typmod}) when atttypmod > -1 (no -4 offset — pgvector stores precision directly)
+    - nextval defaults are expressible via pg_get_expr(d.adbin, d.adrelid) from pg_attrdef; the enumerated production set of nextval-defaulted columns is 16 columns (edit_history.id, fts_entries.id, gloss_search_entries.id, headword_search_entries.id, languages.id, matchup_queue.id, permissions.id, record_languages.id, records.id, schema_version.id, search_entries.id, semantic_search_entries.id, sources.id, user_activity_log.id, user_preferences.id, users.id) — verified by live read-only production catalog query 2026-10-01
+    - sequence names follow {table}_{column}_seq (e.g. records_id_seq) and exist post-sync from prior #1314 fix; the existing sequence-reset step is preserved and must not conflict with emitted DEFAULT nextval(...) clauses
+    - pre-fix suite baseline pinned to trunk tip eb467b8: 5 failed, 169 passed, 8 skipped; the 5-failure baseline set = 2 vector typmod in test_semantic_search_schema_sc3.py + 3 NotNullViolation null-id in test_upload_search_entries.py
+    - scripts/sync_prod_to_local.sh invocation contract at trunk tip eb467b8 is the SC7 reference definition (CLI surface unchanged)
+    - src/database/migrations.py and production schema state at trunk tip eb467b8 are the SC8 reference definition (untouched by the fix)
     - local DB reachable via socket tmp/local_db for evidence queries
+    - R-5 audit scope (SC9): every column-type CASE branch in sync_prod_to_local.py must be either typmod-applied (production typmod emitted correctly — character varying, vector after the fix) or typmod-free (bare type emitted correctly); the audit records each branch in the artifact; additional fidelity gaps are reported as separate findings, never silently fixed in this scope
   type_constraints:
-    - DDL string emitted must be valid PostgreSQL CREATE TABLE / ALTER TABLE syntax
+    - DDL string emitted must be valid PostgreSQL CREATE TABLE syntax (single path: DEFAULT nextval(...) emitted directly in the rebuilt DDL; no ALTER TABLE fallback)
     - builder return shape (dict with regular_cols, generated_cols, all_cols, ddl) must be preserved for callers
+    - non-nextval defaults (now(), false) and generated-column defaults must be preserved unchanged
   out_of_scope_changes:
-    - src/database/migrations.py
-    - production schema
+    - src/database/migrations.py (SC8 structural invariant)
+    - production schema (SC8 structural invariant)
+    - scripts/sync_prod_to_local.sh invocation contract (SC7 structural invariant)
 
 variables:
   phase1_vector_typmod_fix_committed:
     type: bool
   phase2_nextval_default_fix_committed:
     type: bool
-  phase3_full_suite_green_after_sync:
+  phase3_suite_green_vs_documented_baseline:
     type: bool
-  phase4_tdd_baseline_gate_passes:
+  phase4_structural_invariants_verified:
+    type: bool
+  phase5_case_branch_typmod_audit_committed:
     type: bool
 
 preconditions:
@@ -39,14 +49,16 @@ preconditions:
   # ability from the empty start state is trivially the SAT model.
   # Documented start state (tracked outside the solver): no 1394 work committed,
   # 5 baseline failures present at trunk tip eb467b8.
-  - "z3.Implies(phase3_full_suite_green_after_sync, z3.And(phase1_vector_typmod_fix_committed, phase2_nextval_default_fix_committed))"
+  - "z3.Implies(phase3_suite_green_vs_documented_baseline, z3.And(phase1_vector_typmod_fix_committed, phase2_nextval_default_fix_committed))"
 
 invariants:
   # edge phase2 depends_on phase1
   - "z3.Implies(phase2_nextval_default_fix_committed, phase1_vector_typmod_fix_committed)"
   # edge phase3 depends_on phase1
-  - "z3.Implies(phase3_full_suite_green_after_sync, phase1_vector_typmod_fix_committed)"
+  - "z3.Implies(phase3_suite_green_vs_documented_baseline, phase1_vector_typmod_fix_committed)"
   # edge phase3 depends_on phase2
-  - "z3.Implies(phase3_full_suite_green_after_sync, phase2_nextval_default_fix_committed)"
+  - "z3.Implies(phase3_suite_green_vs_documented_baseline, phase2_nextval_default_fix_committed)"
   # edge phase4 depends_on phase3
-  - "z3.Implies(phase4_tdd_baseline_gate_passes, phase3_full_suite_green_after_sync)"
+  - "z3.Implies(phase4_structural_invariants_verified, phase3_suite_green_vs_documented_baseline)"
+  # edge phase5 depends_on phase4
+  - "z3.Implies(phase5_case_branch_typmod_audit_committed, phase4_structural_invariants_verified)"

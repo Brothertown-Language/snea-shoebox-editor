@@ -1,0 +1,29 @@
+# cross-cutting-matrix.yaml — Issue 1394 (backfilled retroactively)
+spec: .issues/1394/spec.md
+issue: 1394
+
+matrix:
+  - sc: SC1-SC3
+    spans_concerns: [C1_vector_typmod]
+    cross_cutting: "no — each SC targets one table's embedding column through one shared mechanism; the shared mechanism (generalized atttypmod handling) is implemented once in Phase 1 and verified per-table to keep SCs atomic"
+    shared_mechanism: "column-type CASE atttypmod branch in scripts/sync_prod_to_local.py"
+  - sc: SC4
+    spans_concerns: [C2_nextval_defaults, C3_verification]
+    cross_cutting: "partial — the defaults-emission change (C2) interacts with the sequence-reset step (lines ~319-328) and is verified by the live-DB query (C3-style verification); edge case: emitted DEFAULT nextval(...) + setval reset must not conflict (spec Edge Cases: sequence reset interplay)"
+    shared_mechanism: "info_default introspection path + sequence-reset step"
+  - sc: SC5-SC6
+    spans_concerns: [C3_verification, C1_vector_typmod, C2_nextval_defaults]
+    cross_cutting: "yes — SC5/SC6 integrate outcomes of BOTH Phase 1 (typmod) and Phase 2 (defaults); they consume commits from two concerns but make no source changes themselves"
+    shared_mechanism: "fresh sync run + full pytest suite"
+  - sc: SC7-SC8
+    spans_concerns: [C4_structural_invariants, C1_vector_typmod, C2_nextval_defaults]
+    cross_cutting: "yes — the git-diff invariants assert the ABSENCE of side effects from the C1/C2 changes (no .sh change, no src/database/ change); they span every implementation concern as boundary guards"
+    shared_mechanism: "git diff vs trunk tip eb467b8"
+  - sc: SC9
+    spans_concerns: [C5_audit, C1_vector_typmod, C2_nextval_defaults]
+    cross_cutting: "yes — the CASE-branch audit inspects the final state of the code path modified by C1 (typmod branches) and touches defaults handling (C2); findings are reported, never fixed in-scope (R-5)"
+    shared_mechanism: "structural code inspection of the column-type CASE"
+
+isolation_findings:
+  - "SC1, SC2, SC3 are intentionally isolated atomic SCs over one shared code change — this is per-SC decomposition, not concern leakage; the RED/GREEN/verify/commit cycles for I-1..I-3 layer on the same CASE branch and are daisy-chained per plan phase 1."
+  - "No SC requires modifying production data or src/ code; cross-cutting is verification-side only."

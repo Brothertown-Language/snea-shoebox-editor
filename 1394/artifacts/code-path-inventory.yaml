@@ -1,0 +1,52 @@
+# code-path-inventory.yaml — Issue 1394 (backfilled retroactively, grounded in live code)
+spec: .issues/1394/spec.md
+issue: 1394
+
+inventory:
+  - sc: SC1
+    code_paths:
+      - "scripts/sync_prod_to_local.py — column-type CASE (lines ~123-135): branch `WHEN t.typname = 'vector' THEN 'vector'` (line ~124) emits bare vector; fix generalizes atttypmod handling (existing pattern at lines ~161-162 for character varying: `typmod - 4`) to vector with NO -4 offset (line ~163-164: `vector({typmod})` when typmod > -1)"
+      - "scripts/sync_prod_to_local.py — builder loop `for name in all_cols:` (lines ~120-177) assembles per-column DDL line"
+    verification_path: "live psql format_type(atttypid, atttypmod) on local replica via socket tmp/local_db after sync run"
+
+  - sc: SC2
+    code_paths:
+      - "same CASE/typmod path as SC1 — covers table gloss_search_entries.embedding (production vector(384))"
+    verification_path: "live psql format_type check on local replica after sync run"
+
+  - sc: SC3
+    code_paths:
+      - "same CASE/typmod path as SC1 — covers table semantic_search_entries.embedding (production vector(384))"
+    verification_path: "live psql format_type check on local replica after sync run"
+
+  - sc: SC4
+    code_paths:
+      - "scripts/sync_prod_to_local.py — info_default introspection (lines ~167-174): pg_get_expr(d.adbin, d.adrelid) FROM pg_attrdef; stripping guard `if \"nextval\" not in info_default:` (line ~175) currently suppresses nextval defaults; fix removes the guard so the expression is emitted verbatim (`DEFAULT {info_default}` line ~176)"
+      - "scripts/sync_prod_to_local.py — sequence reset (lines ~319-328): pg_get_serial_sequence(:t,'id') + setval('{seq}', max_id); preserved intact, must not conflict with emitted DEFAULT"
+    verification_path: "live psql pg_attrdef check for all 16 enumerated columns after sync run; ORM insert omitting id succeeds"
+
+  - sc: SC5
+    code_paths:
+      - "test/test_semantic_search_schema_sc3.py — test_gloss_search_entries_embedding_is_vector384, test_semantic_search_entries_embedding_is_vector384 (read-only baseline)"
+      - "test/test_upload_search_entries.py — 3 test_sc8_* NotNullViolation null-id failures (read-only baseline)"
+    verification_path: "full pytest run after fresh sync; the 5 named tests report PASS"
+
+  - sc: SC6
+    code_paths:
+      - "full pytest suite (test/) — deterministic comparison vs documented pre-fix baseline 5 failed / 169 passed / 8 skipped at trunk tip eb467b8"
+    verification_path: "full pytest run output compared against documented pre-fix baseline"
+
+  - sc: SC7
+    code_paths:
+      - "scripts/sync_prod_to_local.sh — entry point; no change permitted"
+    verification_path: "git diff against trunk tip eb467b8 showing no .sh change"
+
+  - sc: SC8
+    code_paths:
+      - "src/database/migrations.py — read-only reference; no change permitted"
+    verification_path: "git diff against trunk tip eb467b8 showing no change under src/database/ or production schema artifacts"
+
+  - sc: SC9
+    code_paths:
+      - "scripts/sync_prod_to_local.py — column-type CASE (lines ~123-135): 10 branches (vector, tsvector, bool, int4, int8, float8, numeric, varchar, text, timestamptz) + ELSE fallback"
+    verification_path: "structural code inspection; recorded audit artifact listing each branch and its typmod handling"

@@ -1,0 +1,35 @@
+# interface-compatibility.yaml — Issue 1394 (backfilled retroactively)
+spec: .issues/1394/spec.md
+issue: 1394
+
+interface_boundaries:
+  - boundary: "scripts/sync_prod_to_local.sh -> scripts/sync_prod_to_local.py"
+    contract: "CLI invocation contract — script name, arguments, environment variables, exit codes unchanged (R-3)"
+    compatibility: "PRESERVED — fix is internal to the python DDL builder; SC7 verifies via git diff vs trunk tip eb467b8 showing no .sh change"
+  - boundary: "DDL builder -> local PostgreSQL (reconstructed schema)"
+    contract: "Emitted CREATE TABLE DDL must reconstruct production schema semantics: vector typmod (format_type output) and pg_attrdef defaults verbatim"
+    compatibility: "RESTORED — before fix: bare `vector` and stripped nextval defaults; after fix: vector({typmod}) and DEFAULT nextval(...) emitted in column line; verified by SC1-SC4 live-DB queries"
+  - boundary: "reconstructed schema -> SQLAlchemy ORM (src/ application code)"
+    contract: "ORM inserts omitting autoincrement id must succeed against local replica (IntegrityError: null value in column \"id\" must not occur)"
+    compatibility: "RESTORED — SC4 verifies via ORM insert omitting id (test_sc8_* pattern)"
+  - boundary: "builder introspection -> pg catalog (production, read-only)"
+    contract: "Read-only queries against pg_attribute / pg_attrdef / pg_constraint / information_schema; production data untouched"
+    compatibility: "PRESERVED — no change to introspection queries; only emission logic changes"
+  - boundary: "builder output -> sequence-reset step (same script)"
+    contract: "Emitted DEFAULT nextval(...) must not conflict with setval('{seq}', max_id) reset (lines ~319-328)"
+    compatibility: "PRESERVED — sequence-reset step kept intact per spec Approach; edge case verified post-sync (spec Edge Cases: sequence reset interplay)"
+
+dependency_contract:
+  real_sources:
+    - "scripts/sync_prod_to_local.py (feature branch under test) — DDL builder module; supplies rebuilt CREATE TABLE DDL for all synced tables"
+    - "scripts/sync_prod_to_local.sh — mandated sync entry point (AGENTS.md Regression Test Protocol); calls the python tool"
+  real_targets:
+    - "local PostgreSQL replica via socket tmp/local_db — receives reconstructed schema; queried post-sync for format_type / pg_attrdef evidence"
+    - "full pytest suite (test/) — consumes the synced local DB as its test fixture; the 5 baseline failures in test/test_semantic_search_schema_sc3.py and test/test_upload_search_entries.py are the acceptance targets"
+  real_type_constraints:
+    - "vector columns: atttypmod stores precision directly (no -4 offset) — records.embedding vector(1536), gloss_search_entries.embedding vector(384), semantic_search_entries.embedding vector(384); contrast character varying where typmod - 4 = max length (lines ~161-162)"
+    - "column defaults: info_default is pg_get_expr(d.adbin, d.adrelid)::text from pg_attrdef — nextval expressions emitted verbatim; non-nextval defaults (now(), false) preserved unchanged"
+    - "notnull: emitted as NOT NULL suffix; generated columns (attgenerated == 's') take the GENERATED ALWAYS AS (...) STORED path, never the nextval path"
+  consumers_of_contract:
+    - "plan.md Phase 1 (typmod emission), Phase 2 (defaults emission), Phase 3 (sync + suite gate), Phase 4 (structural invariants)"
+    - "dependency-contract.yaml extraction (research.md step 9)"

@@ -1,0 +1,39 @@
+# blast-radius.yaml — Issue 1394 (backfilled retroactively; artifacts deleted during spec revision loops)
+spec: .issues/1394/spec.md
+issue: 1394
+
+affected_files:
+  - path: scripts/sync_prod_to_local.py
+    role: primary-change
+    change: column-type CASE generalizes atttypmod handling to vector columns (defect site: bare `vector` emission, CASE branch `WHEN t.typname = 'vector' THEN 'vector'` at line ~124); defaults guard removed (`if "nextval" not in info_default:` at line ~175) so introspected pg_attrdef nextval(...) expressions are emitted verbatim in the rebuilt CREATE TABLE column line
+    verified: yes — live code read, defect locations confirmed at CASE line 124 and guard line 175
+  - path: scripts/sync_prod_to_local.sh
+    role: caller-entry-point
+    change: none — invocation contract invariant (R-3/SC7); script re-run only
+    verified: yes — file exists; spec SC7 requires git diff showing no change
+  - path: test/test_semantic_search_schema_sc3.py
+    role: read-only-baseline-evidence
+    change: none — R-6 forbids test modification; 2 vector-typmod baseline failures (SC5)
+    verified: yes — exists; baseline set documented in spec SC5
+  - path: test/test_upload_search_entries.py
+    role: read-only-baseline-evidence
+    change: none — R-6; 3 NotNullViolation null-id test_sc8_* baseline failures (SC5)
+    verified: yes — exists; baseline set documented in spec SC5
+  - path: src/database/migrations.py
+    role: read-only-reference
+    change: none — R-4/SC8 invariant (out of scope)
+    verified: yes — file exists; referenced as vector(384) schema expectation source
+
+blast_radius: LOW
+rationale: single-script local-replica reconstruction path; no production schema, no API surface, no test modifications; downstream dependents limited to the .sh entry point and the pre-regression baseline workflow.
+
+downstream_dependents:
+  - scripts/sync_prod_to_local.sh — invokes the python DDL builder via sync run
+  - AGENTS.md Regression Test Protocol — every pre-regression sync run consumes the rebuilt DDL
+  - TDD phase-0 baseline on freshly synced local DB — unblocks the 5 documented failures
+
+out_of_scope_files:
+  - src/database/migrations.py
+  - production schema DDL artifacts
+  - test/test_semantic_search_schema_sc3.py
+  - test/test_upload_search_entries.py

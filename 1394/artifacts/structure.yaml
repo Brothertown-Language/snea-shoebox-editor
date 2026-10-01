@@ -1,0 +1,143 @@
+# structure.yaml — Issue 1394 (regenerated 2026-10-01 after artifacts directory loss)
+issue: 1394
+source:
+  spec: .issues/1394/spec.md
+  plan: .issues/1394/plan.md
+  analysis_summary: .issues/1394/artifacts/analysis-summary.yaml
+sc_count: 9
+
+# Phase decomposition — SC assignments mirror plan.md Phase Table
+phases:
+  - id: 1
+    name: Restore vector column typmod in DDL builder
+    concern: C1_vector_typmod
+    scs: [SC1, SC2, SC3]
+    items: [I-1, I-2, I-3]
+    files: scripts/sync_prod_to_local.py
+    evidence_type: behavioral (live-DB)
+  - id: 2
+    name: Restore nextval column defaults in rebuilt DDL
+    concern: C2_nextval_defaults
+    scs: [SC4]
+    items: [I-4]
+    files: scripts/sync_prod_to_local.py
+    evidence_type: behavioral (live-DB)
+  - id: 3
+    name: Fresh sync + suite green vs documented baseline
+    concern: C3_verification
+    scs: [SC5, SC6]
+    items: [I-5, I-6]
+    files: scripts/sync_prod_to_local.sh (re-run only)
+    evidence_type: behavioral (test-suite)
+  - id: 4
+    name: Structural invariants — invocation contract + scope boundaries
+    concern: C4_structural_invariants
+    scs: [SC7, SC8]
+    items: [I-7, I-8]
+    files: none changed (structural verification only)
+    evidence_type: structural (git diff)
+  - id: 5
+    name: Post-implementation + CASE-branch typmod audit
+    concern: C5_audit
+    scs: [SC9]
+    items: [I-9]
+    files: none changed (audit artifact + gates and PR only)
+    evidence_type: structural (code inspection + recorded audit artifact)
+
+# Dependency DAG — edges mirror plan.md Phase Table "Depends On" column
+# and dependency-contract.yaml invariants 1:1
+dependency_dag:
+  - phase: 1
+    depends_on: []
+  - phase: 2
+    depends_on: [1]
+  - phase: 3
+    depends_on: [1, 2]
+  - phase: 4
+    depends_on: [1, 2, 3]
+  - phase: 5
+    depends_on: [4]
+
+# Triplet co-location verification (research step 6) — PASS:
+#   SC1: RED(5)/GREEN(6)/COMMIT(8) all phase 1
+#   SC2: RED(9)/GREEN(10)/COMMIT(12) all phase 1
+#   SC3: RED(13)/GREEN(14)/COMMIT(16) all phase 1
+#   SC4: RED(17)/GREEN(18)/COMMIT(20) all phase 2
+#   SC5: baseline-RED(21)/GREEN(22)/COMMIT(25) all phase 3
+#   SC6: baseline-RED(21)/GREEN(23)/COMMIT(25) all phase 3
+#   SC7: baseline-RED(26)/GREEN(27)/COMMIT(30) all phase 4
+#   SC8: baseline-RED(26)/GREEN(28)/COMMIT(30) all phase 4
+#   SC9: structural verify-only cycle — audit(35)/verify(36)/commit(37) all phase 5
+#        (no RED/GREEN: SC9 is a structural audit item, no code change — matches
+#        the verify-only structural cycle used for I-7/I-8 baseline-RED style)
+triplet_colocation: PASS
+# Cross-phase dependency verification (research step 7) — PASS:
+# every RED depends only on outputs committed in the same or an earlier phase
+# (phase 2 RED on phase 1 output = earlier phase, DAG-consistent)
+cross_phase_dependency: PASS
+
+# Skill+task selection per phase — from plan.md dispatch table and
+# implementation-workflow reference card mapping
+skill_task_selection:
+  - phase: 1
+    tasks:
+      - skill: test-driven-development
+        task: red
+      - skill: test-driven-development
+        task: green
+      - skill: verification-before-completion
+        task: verify
+      - skill: orchestrator
+        task: commit-inline
+  - phase: 2
+    tasks:
+      - skill: test-driven-development
+        task: red
+      - skill: test-driven-development
+        task: green
+      - skill: verification-before-completion
+        task: verify
+      - skill: orchestrator
+        task: commit-inline
+  - phase: 3
+    tasks:
+      - skill: test-driven-development
+        task: green
+      - skill: verification-before-completion
+        task: verify
+      - skill: orchestrator
+        task: commit-inline
+  - phase: 4
+    tasks:
+      - skill: test-driven-development
+        task: green
+      - skill: verification-before-completion
+        task: verify
+      - skill: orchestrator
+        task: commit-inline
+  - phase: 5
+    tasks:
+      - skill: test-driven-development
+        task: pre-regression
+      - skill: test-driven-development
+        task: post-regression
+      - skill: test-driven-development
+        task: green
+      - skill: audit
+        task: verification-audit
+      - skill: finishing-a-development-branch
+        task: structural-checks
+      - skill: verification-before-completion
+        task: verify
+      - skill: verification-before-completion
+        task: pre-pr-gate
+      - skill: git-workflow-pr
+        task: review-prep
+      - skill: git-workflow-pr
+        task: create-pr
+      - skill: completion-core
+        task: exec-summary
+      - skill: orchestrator
+        task: commit-inline
+      - skill: orchestrator
+        task: z3-check

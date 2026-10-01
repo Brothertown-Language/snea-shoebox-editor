@@ -1,0 +1,45 @@
+# testability-assessment.yaml — Issue 1394 (backfilled retroactively)
+spec: .issues/1394/spec.md
+issue: 1394
+
+assessments:
+  - sc: SC1
+    evidence_type: behavioral (live-DB)
+    method: "Live psql query — format_type(atttypid, atttypmod) for records.embedding on local replica via socket tmp/local_db after a real sync run; expected exactly 'vector(1536)'"
+    mismatch_risk: "low — per-item RED test asserts builder-emitted DDL contains vector(1536); GREEN confirmed only by live catalog, never by string-grep substitution"
+  - sc: SC2
+    evidence_type: behavioral (live-DB)
+    method: "Live psql format_type check — gloss_search_entries.embedding = 'vector(384)' after fresh sync"
+    mismatch_risk: low
+  - sc: SC3
+    evidence_type: behavioral (live-DB)
+    method: "Live psql format_type check — semantic_search_entries.embedding = 'vector(384)' after fresh sync"
+    mismatch_risk: low
+  - sc: SC4
+    evidence_type: behavioral (live-DB)
+    method: "Live psql pg_attrdef check (pg_get_expr) for all 16 enumerated columns after fresh sync, verbatim from production; plus ORM insert omitting id succeeds (test_sc8_* pattern)"
+    mismatch_risk: "medium — 16-column enumeration invites spot-checking; full enumeration check is mandatory (data-integrity robust-verification duty)"
+  - sc: SC5
+    evidence_type: behavioral (test-suite)
+    method: "Full pytest run after fresh sync; the 5 named baseline tests (2 in test/test_semantic_search_schema_sc3.py, 3 test_sc8_* in test/test_upload_search_entries.py) report PASS; baseline tests remain read-only (R-6)"
+    mismatch_risk: "low — named tests are deterministic targets; forbidden to modify tests to force PASS"
+  - sc: SC6
+    evidence_type: behavioral (test-suite)
+    method: "Full pytest run output compared against documented pre-fix baseline (5 failed / 169 passed / 8 skipped at trunk tip eb467b8) — expected 0 failed, 169 passed + 5 newly green = deterministic count comparison"
+    mismatch_risk: "low — deterministic comparison against recorded baseline, not open-ended assertion"
+  - sc: SC7
+    evidence_type: structural
+    method: "git diff against trunk tip eb467b8 showing no change to scripts/sync_prod_to_local.sh"
+    mismatch_risk: "low — git-diff invariant; structural declared and honored"
+  - sc: SC8
+    evidence_type: structural
+    method: "git diff against trunk tip eb467b8 showing no change under src/database/ or production schema artifacts"
+    mismatch_risk: "low — git-diff invariant; structural declared and honored"
+  - sc: SC9
+    evidence_type: structural
+    method: "Structural code inspection of the column-type CASE in scripts/sync_prod_to_local.py; recorded audit artifact listing each branch (vector, tsvector, bool, int4, int8, float8, numeric, varchar, text, timestamptz, ELSE) and its typmod handling"
+    mismatch_risk: "low — audit artifact is a declared structural deliverable; runtime-behavioral uplift N/A since SC9 asserts recorded inspection, not runtime behavior"
+
+global_gates:
+  - "EVIDENCE_TYPE_MISMATCH is a hard FAIL — SC1-SC4 require live-DB behavioral evidence (real sync + psql catalog queries); SC5-SC6 require real pytest execution; SC7-SC9 are legitimately structural."
+  - "No substitution: grep/string checks on emitted DDL do not substitute for the live sync + catalog verification (spec Cost Frame death-spiral rationale)."

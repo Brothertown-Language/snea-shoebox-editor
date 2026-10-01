@@ -1,0 +1,37 @@
+# concern-map.yaml — Issue 1394 (backfilled retroactively)
+spec: .issues/1394/spec.md
+issue: 1394
+sc_count: 9
+
+concerns:
+  - id: C1_vector_typmod
+    name: Restore vector column typmod in DDL builder
+    scs: [SC1, SC2, SC3]
+    phase_boundary: Phase 1 (plan) — vector typmod emission in the column-type CASE
+    rationale: All three vector-typmod SCs share one mechanism (generalized atttypmod handling for vector, no -4 offset); split into atomic SCs per table (records/gloss_search_entries/semantic_search_entries).
+  - id: C2_nextval_defaults
+    name: Restore nextval column defaults in rebuilt DDL
+    scs: [SC4]
+    phase_boundary: Phase 2 (plan) — defaults emission (remove stripping guard at line ~175); sequence-reset step kept intact
+    rationale: Single atomic SC covering the enumerated 16-column production set.
+  - id: C3_verification
+    name: Fresh sync + suite green vs documented baseline
+    scs: [SC5, SC6]
+    phase_boundary: Phase 3 (plan) — integration gate; no new source change
+    rationale: SC5 (5 named baseline tests PASS) and SC6 (deterministic full-suite comparison vs 5 failed/169 passed/8 skipped at eb467b8) both consume the Phase 1+2 commits.
+  - id: C4_structural_invariants
+    name: Structural invariants — invocation contract + scope boundaries
+    scs: [SC7, SC8]
+    phase_boundary: Phase 4 (plan) — git diff invariants vs trunk tip eb467b8
+    rationale: R-3 (.sh contract unchanged) and R-4 (migrations/production schema untouched) are structural diff checks.
+  - id: C5_audit
+    name: Typmod fidelity audit of remaining CASE branches
+    scs: [SC9]
+    phase_boundary: Post-implementation audit (R-5) — recorded CASE-branch typmod audit artifact
+    rationale: Atomic structural audit of the column-type CASE in scripts/sync_prod_to_local.py (branch at lines ~123-135).
+
+dependency_edges:
+  - C1 -> C3 (SC5/SC6 consume typmod fix)
+  - C2 -> C3 (SC5/SC6 consume defaults fix)
+  - C1, C2, C3 -> C4 (diff invariants compared against the completed-fix working tree)
+  - C1, C2 -> C5 (audit inspects the final CASE state after both fixes)

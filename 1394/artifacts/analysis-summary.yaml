@@ -1,0 +1,39 @@
+# analysis-summary.yaml — Issue 1394 (backfilled retroactively)
+spec_path: .issues/1394/spec.md
+plan_path: .issues/1394/plan.md
+issue: 1394
+mode: retroactive
+sc_count: 9
+
+artifact_status:
+  blast-radius.yaml: backfilled
+  concern-map.yaml: backfilled
+  code-path-inventory.yaml: backfilled
+  cross-cutting-matrix.yaml: backfilled
+  interface-compatibility.yaml: backfilled
+  state-analysis.yaml: backfilled
+  testability-assessment.yaml: backfilled
+
+scope_summary: >-
+  Fix the CREATE TABLE DDL builder in scripts/sync_prod_to_local.py so vector columns
+  are rebuilt with their production typmod (records.embedding vector(1536);
+  gloss_search_entries.embedding and semantic_search_entries.embedding vector(384)) —
+  the builder currently emits bare `vector` (CASE branch at line ~124, applying atttypmod
+  only for character varying) — and so the enumerated 16-column production set of
+  nextval-defaulted id columns keeps its defaults, emitted directly in the rebuilt DDL by
+  removing the stripping guard `if "nextval" not in info_default:` (line ~175). The
+  sequence-reset step (setval, lines ~319-328) stays intact. Single-path approach; no
+  ALTER TABLE post-pass. Then a fresh sync + full pytest verify the 5 documented baseline
+  failures are green with zero new failures vs the pre-fix suite (5 failed / 169 passed /
+  8 skipped at trunk tip eb467b8). Structural invariants: .sh invocation contract and
+  src/database/migrations.py / production schema untouched; R-5 CASE-branch typmod audit
+  recorded as a separate artifact. Out of scope: sequence creation (#1314/#1316), the
+  unrelated #1388 failures, Search Mode UI RED tests (#1347), migrations source and
+  production schema.
+
+grounding:
+  live_code_verified:
+    - "scripts/sync_prod_to_local.py lines ~118-193 (DDL builder loop) — defect CASE branch at line ~124, defaults guard at line ~175, varchar typmod pattern at lines ~161-162, generated-column path lines ~149-158"
+    - "scripts/sync_prod_to_local.py lines ~319-328 (sequence reset via pg_get_serial_sequence + setval)"
+  spec_verified: ".issues/1394/spec.md read in full (SC1-SC9, R-1..R-6, Items I-1..I-9, traceability, edge cases, change control)"
+  plan_verified: ".issues/1394/plan.md phase table (5 phases) and architecture read"
