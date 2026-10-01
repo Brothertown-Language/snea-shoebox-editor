@@ -1,0 +1,111 @@
+# Phase structure for issue 1394 (writing-plans research task)
+issue: 1394
+project_root: /home/muksihs/git/snea-shoebox-editor
+issues_prefix: .issues
+
+phases:
+  - phase: 1
+    title: Restore vector column typmod in DDL builder
+    sc_ids: [SC1]
+    items:
+      - item: 1.1
+        sc_id: SC1
+        cycle: [RED, GREEN, REFACTOR, COMMIT]
+        description: >
+          RED: enforcement test asserting the rebuilt DDL emits vector(384) for
+          embedding columns (fails at baseline). GREEN: apply the same atttypmod
+          handling used for character varying to vector columns in
+          scripts/sync_prod_to_local.py CREATE TABLE builder. COMMIT: test + change
+          in one atomic slice.
+    skill_task_selection:
+      red: test-driven-development :: task(..., prompt: "execute red task from test-driven-development")
+      green: test-driven-development :: task(..., prompt: "execute green task from test-driven-development")
+      verify: verification-before-completion :: task(..., prompt: "execute verify task from verification-before-completion")
+      commit: (orchestrator) commit-inline
+
+  - phase: 2
+    title: Restore nextval column defaults in rebuilt DDL
+    sc_ids: [SC2]
+    depends_on: [1]
+    items:
+      - item: 2.1
+        sc_id: SC2
+        cycle: [RED, GREEN, REFACTOR, COMMIT]
+        description: >
+          RED: enforcement test asserting nextval('{table}_{column}_seq') default
+          present in pg_attrdef after sync (fails at baseline; IntegrityError on
+          ORM insert omitting id). GREEN: emit nextval default in rebuilt DDL or
+          re-add via ALTER TABLE ... SET DEFAULT after CREATE TABLE, keeping the
+          existing sequence-reset step intact. COMMIT: test + change in one slice.
+    skill_task_selection:
+      red: test-driven-development :: task(..., prompt: "execute red task from test-driven-development")
+      green: test-driven-development :: task(..., prompt: "execute green task from test-driven-development")
+      verify: verification-before-completion :: task(..., prompt: "execute verify task from verification-before-completion")
+      commit: (orchestrator) commit-inline
+
+  - phase: 3
+    title: Fresh sync + full suite green
+    sc_ids: [SC3]
+    depends_on: [1, 2]
+    items:
+      - item: 3.1
+        sc_id: SC3
+        cycle: [RED, GREEN, REFACTOR, COMMIT]
+        description: >
+          RED: baseline evidence already exists — 5 failed / 169 passed / 8 skipped
+          at trunk tip eb467b8 (spec Detailed Findings); no new RED test required
+          for this verification SC. GREEN: run scripts/sync_prod_to_local.sh fresh,
+          then full pytest suite; verify 0 failures and pg_attrdef/format_type
+          live-DB evidence before-and-after per spec. COMMIT: evidence artifacts.
+    skill_task_selection:
+      verify: verification-before-completion :: task(..., prompt: "execute verify task from verification-before-completion")
+      commit: (orchestrator) commit-inline
+
+  - phase: 4
+    title: TDD phase-0 pre-regression baseline gate passes on synced DB
+    sc_ids: [SC4]
+    depends_on: [3]
+    items:
+      - item: 4.1
+        sc_id: SC4
+        cycle: [RED, GREEN, REFACTOR, COMMIT]
+        description: >
+          RED: baseline gate previously blocked on synced databases (state-analysis
+          T4 from-state). GREEN: confirm the TDD phase-0 pre-regression baseline
+          passes on the freshly synced database — consequence of SC1-SC3, no code
+          change beyond the sync script. COMMIT: evidence artifacts.
+    skill_task_selection:
+      verify: verification-before-completion :: task(..., prompt: "execute verify task from verification-before-completion")
+      commit: (orchestrator) commit-inline
+
+dependency_dag:
+  edges:
+    - from: 1
+      to: 2
+      reason: both phases modify the same DDL builder; nextval handling layered on vector-typmod fix
+    - from: 1
+      to: 3
+      reason: SC3 fresh-sync verification requires the vector typmod fix committed
+    - from: 2
+      to: 3
+      reason: SC3 fresh-sync verification requires the nextval-default fix committed
+    - from: 3
+      to: 4
+      reason: SC4 baseline gate is a direct consequence of the SC3 green suite
+
+triplet_co_location:
+  verified: true
+  note: >
+    Every SC has its RED, GREEN, and COMMIT steps assigned to exactly one phase.
+    SC1 -> phase 1; SC2 -> phase 2; SC3 -> phase 3; SC4 -> phase 4. No splits.
+
+cross_phase_dependency:
+  verified: true
+  note: >
+    No RED test in any phase depends on SC output committed in a later phase.
+    Phase 3 and phase 4 have no new RED tests (verification SCs whose RED
+    baseline evidence already exists at trunk tip eb467b8, committed before
+    this issue's work began).
+
+status: DONE
+blocker_reason: null

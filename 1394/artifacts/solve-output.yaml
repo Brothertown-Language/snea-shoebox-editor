@@ -1,0 +1,35 @@
+# Solve output for issue 1394 (writing-plans research task)
+issue: 1394
+solve_model:
+  command: >
+    ./.opencode/tools/solve model --contract-path .issues/1394/dependency-contract.yaml
+    --query "phase4_tdd_baseline_gate_passes"
+  status: SAT
+  model:
+    phase1_vector_typmod_fix_committed: true
+    phase2_nextval_default_fix_committed: true
+    phase3_full_suite_green_after_sync: true
+    phase4_tdd_baseline_gate_passes: true
+solve_check:
+  command: >
+    ./.opencode/tools/solve check --contract-path .issues/1394/dependency-contract.yaml
+    --state-path .issues/1394/artifacts/state-analysis.yaml
+  status: SAT
+  note: "SAT (+ postconditions + invariants)"
+plan:
+  command: >
+    ./.opencode/tools/plan plan --problem tmp/1394/plan-problem.yaml
+  problem_file: tmp/1394/plan-problem.yaml
+  status: SOLVED_SATISFICING
+  engine: tamer
+  plan_length: 4
+  steps:
+    - fix_vector_typmod()
+    - fix_nextval_defaults()
+    - fresh_sync_and_full_suite()
+    - confirm_tdd_baseline_gate()
+plan_output_path: .issues/1394/artifacts/plan-output.yaml
+dependency_contract_path: .issues/1394/dependency-contract.yaml
+structure_path: .issues/1394/artifacts/structure.yaml
+status: DONE
+blocker_reason: null

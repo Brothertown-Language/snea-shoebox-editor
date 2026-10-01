@@ -1,0 +1,26 @@
+# SC summary for issue 1394 (backfilled by writing-plans research task from spec.md § Success Criteria)
+issue: 1394
+source: .issues/1394/spec.md
+success_criteria:
+  - sc_id: SC1
+    statement: >
+      After a fresh sync, SELECT format_type(atttypid, atttypmod) for every
+      embedding column returns vector(384).
+    mechanism: DDL builder emits vector({typmod}) when atttypmod > -1
+  - sc_id: SC2
+    statement: >
+      After a fresh sync, records.id (and other ORM-autoincrement id columns)
+      carry their nextval defaults.
+    mechanism: rebuilt DDL emits nextval default or ALTER TABLE ... SET DEFAULT post-CREATE
+  - sc_id: SC3
+    statement: >
+      Full test suite after sync: 0 failures (the 5 baseline failures gone,
+      no new failures).
+    mechanism: fresh sync via scripts/sync_prod_to_local.sh, then full pytest run
+  - sc_id: SC4
+    statement: >
+      TDD phase-0 pre-regression baseline passes on a synced database for
+      subsequent pipelines.
+    mechanism: consequence of SC1-SC3; no code change beyond sync script
+status: DONE
+blocker_reason: null

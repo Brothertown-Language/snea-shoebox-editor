@@ -1,0 +1,40 @@
+# State analysis for issue 1394
+spec_path: .issues/1394/spec.md
+issue: 1394
+
+state_domain: local PostgreSQL catalog state produced by the sync reconstruction
+
+transitions:
+  - id: T1
+    sc: SC1
+    entity: embedding columns (records, gloss_search_entries, semantic_search_entries)
+    from: column type 'vector' (atttypmod lost)
+    to: column type 'vector(384)' — format_type(atttypid, atttypmod) returns vector(384)
+    mechanism: rebuilt CREATE TABLE DDL emits vector({typmod}) when atttypmod > -1
+
+  - id: T2
+    sc: SC2
+    entity: autoincrement id column defaults (pg_attrdef)
+    from: no nextval default (only now(), false exprs present per live evidence)
+    to: nextval('{table}_{column}_seq') DEFAULT present on each autoincrement id column
+    mechanism: emit nextval default in rebuilt DDL or ALTER TABLE ... SET DEFAULT
+      post-CREATE; sequence-reset step must remain intact and ordering-compatible
+
+  - id: T3
+    sc: SC3
+    entity: test suite state
+    from: 5 failed, 169 passed, 8 skipped (baseline at trunk tip eb467b8)
+    to: 0 failures — 5 baseline failures gone, no new failures
+    mechanism: fresh sync via scripts/sync_prod_to_local.sh, then full pytest run
+
+  - id: T4
+    sc: SC4
+    entity: TDD phase-0 pre-regression baseline gate
+    from: blocked on synced databases (5 pre-existing failures)
+    to: passes on freshly synced database for subsequent pipelines
+    mechanism: consequence of T1-T3; no code change beyond sync script
+
+invariants:
+  - scripts/sync_prod_to_local.sh invocation contract unchanged
+  - production schema and src/database/migrations.py untouched
+  - existing sequence creation/reset behavior (from #1314/#1316) preserved

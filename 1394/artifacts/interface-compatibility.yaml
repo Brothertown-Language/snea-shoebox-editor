@@ -1,0 +1,48 @@
+# Interface compatibility analysis for issue 1394
+spec_path: .issues/1394/spec.md
+issue: 1394
+
+boundaries:
+  - boundary: shell script → python sync tool
+    source: scripts/sync_prod_to_local.sh
+    target: scripts/sync_prod_to_local.py
+    contract: invocation contract MUST NOT change (spec key dependency)
+    risk: LOW — fix is internal to the DDL builder; CLI surface untouched
+
+  - boundary: sync tool → local PostgreSQL catalog
+    source: scripts/sync_prod_to_local.py
+    target: local DB rebuilt via rebuilt CREATE TABLE DDL
+    contract: >
+      Rebuilt DDL must reproduce prod-equivalent schema: vector columns with typmod
+      (vector(384)), nextval column defaults present in pg_attrdef, sequences intact
+      (from #1314/#1316 fix), existing sequence-reset step preserved.
+    risk: MEDIUM — emitting nextval defaults could interact with the sequence-reset
+      step; mitigated by verifying pg_attrdef contents post-sync.
+
+  - boundary: ORM models → local DB
+    source: src/ ORM models (SQLAlchemy)
+    target: local DB schema
+    contract: >
+      ORM inserts omitting id must succeed — requires nextval DEFAULT on autoincrement
+      id columns. migrations.py (~line 972) already re-adds defaults in one migration;
+      sync output must not regress that guarantee.
+
+  - boundary: tests → schema
+    source: test/test_semantic_search_schema_sc3.py, test/test_upload_search_entries.py
+    target: schema assertions (format_type → vector(384); IntegrityError on missing default)
+    contract: tests are read-only baseline evidence; no test changes.
+
+dependency_contract:
+  consumer: scripts/sync_prod_to_local.sh (shell entry point) and sync_prod_to_local.py DDL builder
+  provider: production PostgreSQL catalog (read) → local PostgreSQL (write)
+  facts:
+    - vector columns carry atttypmod = 384 + header offset semantics via pg_attribute; builder must emit vector(384) when atttypmod > -1
+    - nextval defaults are expressible via pg_get_expr(d.adbin, d.adrelid) from pg_attrdef
+    - sequence names follow {table}_{column}_seq (e.g. records_id_seq) and exist post-sync from prior #1314 fix
+    - local DB reachable via socket tmp/local_db for evidence queries
+  type_constraints:
+    - DDL string emitted must be valid PostgreSQL CREATE TABLE / ALTER TABLE syntax
+    - builder return shape (dict with regular_cols, generated_cols, all_cols, ddl) must be preserved for callers
+  out_of_scope_changes:
+    - src/database/migrations.py
+    - production schema

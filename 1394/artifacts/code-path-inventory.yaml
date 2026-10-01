@@ -1,0 +1,48 @@
+# Code path inventory for issue 1394
+spec_path: .issues/1394/spec.md
+issue: 1394
+
+paths:
+  - id: P1
+    sc: SC1
+    entry: scripts/sync_prod_to_local.py — CREATE TABLE builder column loop
+    anchors: column-type CASE (typname = 'vector' branch) and the
+      "character varying and typmod > -1" special-case that must be generalized
+    detail: >
+      Per-column info query selects dtype, a.atttypmod, a.attnotnull, a.attgenerated.
+      typmod is applied only when dtype == 'character varying'. SC1 requires a vector
+      branch emitting vector({typmod}) when typmod > -1. Audit the remaining CASE
+      branches for other typmod-bearing types per spec Impact mitigation.
+
+  - id: P2
+    sc: SC2
+    entry: scripts/sync_prod_to_local.py — defaults handling in same loop
+    anchors: pg_attrdef lookup; the guard `if "nextval" not in info_default:` that
+      strips autoincrement defaults
+    detail: >
+      Two candidate implementations (spec permits either): emit nextval(...) in the
+      rebuilt DDL line, or post-CREATE ALTER TABLE ... SET DEFAULT. Must coexist with
+      the existing sequence-reset step and the migration in
+      src/database/migrations.py (~line 972) that re-adds nextval defaults.
+
+  - id: P3
+    sc: SC3, SC4
+    entry: scripts/sync_prod_to_local.sh (re-run) → sync_prod_to_local.py
+    anchors: load_secrets, _ensure_pgserver, sync_data
+    detail: >
+      Verification path only: fresh sync rebuilds local schema, then full pytest run
+      and psql evidence checks (pg_attribute.atttypmod, pg_attrdef) against the
+      local socket tmp/local_db.
+
+  - id: P4
+    sc: SC1, SC2
+    entry: test/test_semantic_search_schema_sc3.py, test/test_upload_search_entries.py
+    anchors: test_gloss_search_entries_embedding_is_vector384,
+      test_semantic_search_entries_embedding_is_vector384, test_sc8_* tests
+    detail: >
+      Baseline failing tests (5) that define the regression evidence; no changes to
+      test files.
+
+non_touched_paths:
+  - src/database/migrations.py (read-only reference; out of scope)
+  - production schema / prod DB (never touched)

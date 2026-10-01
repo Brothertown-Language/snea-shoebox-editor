@@ -1,0 +1,31 @@
+# Blast radius analysis for issue 1394
+spec_path: .issues/1394/spec.md
+issue: 1394
+
+affected_files:
+  - path: scripts/sync_prod_to_local.py
+    exists: true
+    role: primary — CREATE TABLE DDL builder (column-type CASE + defaults handling)
+    change: emit vector({typmod}) for vector columns; restore nextval column defaults
+  - path: scripts/sync_prod_to_local.sh
+    exists: true
+    role: invocation entry point — contract MUST NOT change
+    change: none (out of scope; only re-run for verification)
+  - path: src/database/migrations.py
+    exists: true
+    role: reference only — defines vector(384) schema and existing nextval default-restoring migration (~line 972)
+    change: none (out of scope per spec)
+  - path: test/test_semantic_search_schema_sc3.py
+    exists: true
+    role: verification — 2 failing tests assert embedding columns are vector(384)
+    change: none (tests are the baseline evidence)
+  - path: test/test_upload_search_entries.py
+    exists: true
+    role: verification — 3 failing test_sc8_* tests exercise ORM inserts relying on nextval defaults
+    change: none (tests are the baseline evidence)
+
+downstream_dependents:
+  - scripts/sync_prod_to_local.sh (calls sync_prod_to_local.py)
+  - TDD phase-0 pre-regression baseline on freshly synced local DB (per AGENTS.md Regression Test Protocol)
+
+blast_radius: LOW — single-script reconstruction path; no production schema or API changes.

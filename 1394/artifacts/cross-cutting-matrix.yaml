@@ -1,0 +1,40 @@
+# Cross-cutting matrix for issue 1394
+spec_path: .issues/1394/spec.md
+issue: 1394
+
+concerns: [C1_vector_typmod, C2_nextval_defaults, C3_verification]
+scs: [SC1, SC2, SC3, SC4]
+
+matrix:
+  - sc: SC1
+    concerns: [C1]
+    cross_cutting: false
+    notes: isolated to the column-type CASE branch in sync_prod_to_local.py
+
+  - sc: SC2
+    concerns: [C2]
+    cross_cutting: true
+    spans: [C2, C3]
+    notes: >
+      nextval default restoration crosses into verification (C3): re-added defaults
+      must not conflict with the existing sequence-reset step, and ORM insert behavior
+      (test_sc8_*) must be verified after sync per spec Impact risk 2.
+
+  - sc: SC3
+    concerns: [C3]
+    cross_cutting: true
+    spans: [C1, C2, C3]
+    notes: >
+      Full-suite green depends on both defect fixes landing (C1+C2); SC3 is the
+      integration gate spanning the whole change.
+
+  - sc: SC4
+    concerns: [C3]
+    cross_cutting: true
+    spans: [C3]
+    notes: >
+      TDD phase-0 baseline is a downstream consumer of the sync entry-point contract;
+      scripts/sync_prod_to_local.sh invocation contract must remain unchanged.
+
+shared_files:
+  scripts/sync_prod_to_local.py: [C1, C2]  # both defect fixes edit the same builder loop

@@ -1,0 +1,52 @@
+# Dependency contract for issue 1394
+# Source: dependency_contract section extracted as-is from
+# .issues/1394/artifacts/interface-compatibility.yaml (consumer/provider/facts/
+# type_constraints/out_of_scope_changes verbatim).
+# Solver sections (variables/preconditions/invariants) derived from the phase
+# dependency DAG in .issues/1394/artifacts/structure.yaml — derivation provenance:
+# each invariant mirrors one DAG edge; variables model per-phase completion state.
+
+dependency_contract:
+  consumer: scripts/sync_prod_to_local.sh (shell entry point) and sync_prod_to_local.py DDL builder
+  provider: production PostgreSQL catalog (read) → local PostgreSQL (write)
+  facts:
+    - vector columns carry atttypmod = 384 + header offset semantics via pg_attribute; builder must emit vector(384) when atttypmod > -1
+    - nextval defaults are expressible via pg_get_expr(d.adbin, d.adrelid) from pg_attrdef
+    - sequence names follow {table}_{column}_seq (e.g. records_id_seq) and exist post-sync from prior #1314 fix
+    - local DB reachable via socket tmp/local_db for evidence queries
+  type_constraints:
+    - DDL string emitted must be valid PostgreSQL CREATE TABLE / ALTER TABLE syntax
+    - builder return shape (dict with regular_cols, generated_cols, all_cols, ddl) must be preserved for callers
+  out_of_scope_changes:
+    - src/database/migrations.py
+    - production schema
+
+variables:
+  phase1_vector_typmod_fix_committed:
+    type: bool
+  phase2_nextval_default_fix_committed:
+    type: bool
+  phase3_full_suite_green_after_sync:
+    type: bool
+  phase4_tdd_baseline_gate_passes:
+    type: bool
+
+preconditions:
+  # Initial-state markers ("phase not yet committed") are NOT solver constraints:
+  # this solver solves preconditions + invariants + query in one check, so a
+  # "Not(phaseN)" precondition would contradict any goal query that requires the
+  # phase complete. DAG ordering is fully encoded in invariants below; goal reach-
+  # ability from the empty start state is trivially the SAT model.
+  # Documented start state (tracked outside the solver): no 1394 work committed,
+  # 5 baseline failures present at trunk tip eb467b8.
+  - "z3.Implies(phase3_full_suite_green_after_sync, z3.And(phase1_vector_typmod_fix_committed, phase2_nextval_default_fix_committed))"
+
+invariants:
+  # edge phase2 depends_on phase1
+  - "z3.Implies(phase2_nextval_default_fix_committed, phase1_vector_typmod_fix_committed)"
+  # edge phase3 depends_on phase1
+  - "z3.Implies(phase3_full_suite_green_after_sync, phase1_vector_typmod_fix_committed)"
+  # edge phase3 depends_on phase2
+  - "z3.Implies(phase3_full_suite_green_after_sync, phase2_nextval_default_fix_committed)"
+  # edge phase4 depends_on phase3
+  - "z3.Implies(phase4_tdd_baseline_gate_passes, phase3_full_suite_green_after_sync)"

@@ -1,0 +1,41 @@
+# Concern map for issue 1394
+spec_path: .issues/1394/spec.md
+issue: 1394
+sc_count: 4
+
+concerns:
+  - id: C1
+    name: vector typmod fidelity in DDL builder
+    description: >
+      The column-type CASE in scripts/sync_prod_to_local.py maps 'vector' to bare
+      'vector' and atttypmod is only applied for character varying. Fix: emit
+      vector({typmod}) when atttypmod > -1, mirroring the varchar handling.
+    scs: [SC1]
+    phase_boundary: Phase 1
+
+  - id: C2
+    name: nextval column-default restoration
+    description: >
+      The builder excludes nextval defaults ("nextval" not in info_default) and never
+      re-adds them. Fix: emit nextval(...) defaults in rebuilt DDL or re-add via
+      ALTER TABLE ... SET DEFAULT after CREATE TABLE, keeping the existing
+      sequence-reset step intact.
+    scs: [SC2]
+    phase_boundary: Phase 2
+
+  - id: C3
+    name: sync re-run and suite verification
+    description: >
+      Re-run scripts/sync_prod_to_local.sh, verify full pytest suite green (0 failures),
+      and verify pg_attribute.atttypmod / pg_attrdef live evidence before and after.
+    scs: [SC3, SC4]
+    phase_boundary: Phase 3
+
+sc_to_concern:
+  SC1: C1
+  SC2: C2
+  SC3: C3
+  SC4: C3
+
+audit_concern: C1-adjacent — spec Impact asks to audit the full CASE builder for other
+  typmod/default gaps during the C1 fix (mitigation, folded into Phase 1).

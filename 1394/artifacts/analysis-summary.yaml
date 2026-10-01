@@ -1,0 +1,48 @@
+# Analysis summary for issue 1394 (writing-plans preconditions verification)
+
+spec_path: .issues/1394/spec.md
+issue_yaml_path: .issues/1394/issue.yaml
+approval_status:
+  approved: true
+  label: approved-for-for_pr
+  source: .issues/1394/issue.yaml labels field
+  note: spec.md frontmatter still shows needs-approval; issue.yaml labels field is the canonical authorization source per 010-approval-gate.md
+success_criteria:
+  count: 4
+  present: true
+artifact_presence:
+  blast-radius.yaml: BACKFILLED
+  concern-map.yaml: BACKFILLED
+  code-path-inventory.yaml: BACKFILLED
+  cross-cutting-matrix.yaml: BACKFILLED
+  interface-compatibility.yaml: BACKFILLED
+  state-analysis.yaml: BACKFILLED
+  testability-assessment.yaml: BACKFILLED
+  missing_count: 0
+  note: all 7 artifacts were absent; backfilled retroactively per writing-plans/tasks/backfill.md (mode retroactive), skeleton-first with grounding reads of scripts/sync_prod_to_local.py and affected tests
+backfill_mode: retroactive
+backfill_source: spec body (SCs, scope, detailed findings incl. live DB evidence) plus grounding reads of scripts/sync_prod_to_local.py (DDL builder, lines ~118-200), src/database/migrations.py (vector(384) schema, nextval default-restoring migration ~line 972), and the 5 baseline failing tests
+
+scope_summary: >-
+  Single-script fix: scripts/sync_prod_to_local.py CREATE TABLE builder must emit
+  vector({typmod}) for vector columns and restore nextval column defaults. Out of
+  scope: migrations.py, production schema, script invocation contract, the unrelated
+  #1388/#1347 failures. Verification requires a fresh sync run and full pytest suite
+  green (0 failures) on the synced local DB.
+scope_boundary_findings:
+  scripts/sync_prod_to_local.py: EXISTS
+  scripts/sync_prod_to_local.sh: EXISTS
+  src/database/migrations.py: EXISTS
+  test/test_semantic_search_schema_sc3.py: EXISTS
+  test/test_upload_search_entries.py: EXISTS
+  missing_files: 0
+
+status: DONE
+blocker_reason: null
+
+finding_summary: >-
+  Spec exists and is approved (approved-for-for_pr in issue.yaml labels; canonical local record).
+  4 success criteria defined. All 5 spec-referenced files exist in the codebase. All 7
+  analytical artifacts were missing and have been BACKFILLED retroactively (mode:
+  retroactive) from the spec body with grounding in the actual DDL builder code and
+  baseline failing tests. Artifact gate for plan creation is now satisfied.
