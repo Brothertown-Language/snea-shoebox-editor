@@ -1,0 +1,26 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0 -- /home/muksihs/git/snea-shoebox-editor/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/muksihs/git/snea-shoebox-editor
+configfile: pyproject.toml
+plugins: anyio-4.12.1
+collecting ... collected 16 items
+
+test/test_semantic_search_schema_sc3.py::TestSemanticSearchSchemaSc3::test_gloss_search_entries_embedding_is_vector384 PASSED [  6%]
+test/test_semantic_search_schema_sc3.py::TestSemanticSearchSchemaSc3::test_gloss_search_entries_has_three_new_columns PASSED [ 12%]
+test/test_semantic_search_schema_sc3.py::TestSemanticSearchSchemaSc3::test_orm_gloss_search_entry_has_new_columns PASSED [ 18%]
+test/test_semantic_search_schema_sc3.py::TestSemanticSearchSchemaSc3::test_orm_semantic_search_entry_declared PASSED [ 25%]
+test/test_semantic_search_schema_sc3.py::TestSemanticSearchSchemaSc3::test_semantic_search_entries_columns PASSED [ 31%]
+test/test_semantic_search_schema_sc3.py::TestSemanticSearchSchemaSc3::test_semantic_search_entries_embedding_is_vector384 PASSED [ 37%]
+test/test_semantic_search_schema_sc3.py::TestSemanticSearchSchemaSc3::test_semantic_search_entries_record_id_cascades_on_delete PASSED [ 43%]
+test/test_semantic_search_schema_sc3.py::TestSemanticSearchSchemaSc3::test_semantic_search_entries_table_exists PASSED [ 50%]
+test/test_upload_search_entries.py::TestUploadSearchEntriesRED::test_gloss_ge_excludes_nested_ge PASSED [ 56%]
+test/test_upload_search_entries.py::TestUploadSearchEntriesRED::test_headword_va_excludes_nested_va PASSED [ 62%]
+test/test_upload_search_entries.py::TestUploadSearchEntriesRED::test_no_lx_no_headword_entry PASSED [ 68%]
+test/test_upload_search_entries.py::TestUploadSearchEntriesRED::test_search_entry_unchanged PASSED [ 75%]
+test/test_upload_search_entries.py::TestUploadSearchEntriesEmbeddingSC8::test_sc8_batch_writes_le_512 PASSED [ 81%]
+test/test_upload_search_entries.py::TestUploadSearchEntriesEmbeddingSC8::test_sc8_ge_rows_embedded_with_pin PASSED [ 87%]
+test/test_upload_search_entries.py::TestUploadSearchEntriesEmbeddingSC8::test_sc8_signature_unchanged_returns_int PASSED [ 93%]
+test/test_upload_search_entries.py::TestUploadSearchEntriesEmbeddingSC8::test_sc8_unicode_preserved_exactly_on_real_records PASSED [100%]
+
+============================== 16 passed in 2.47s ==============================

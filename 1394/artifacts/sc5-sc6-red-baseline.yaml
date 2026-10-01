@@ -1,0 +1,12 @@
+sc5_sc6_red_baseline:
+  issue: 1394
+  recorded_at: 2026-10-01
+  baseline_commit: eb467b8a2c50fcb5e50d329f916383898706de74
+  baseline_suite: "5 failed, 169 passed, 8 skipped, 22 subtests passed"
+  documented_5_failure_set:
+    - "test/test_semantic_search_schema_sc3.py::test_gloss_search_entries_embedding_is_vector384 (vector typmod)"
+    - "test/test_semantic_search_schema_sc3.py::test_semantic_search_entries_embedding_is_vector384 (vector typmod)"
+    - "test/test_upload_search_entries.py::test_sc8_batch_writes_le_512 (NotNullViolation null id)"
+    - "test/test_upload_search_entries.py::test_sc8_ge_rows_embedded_with_pin (NotNullViolation null id)"
+    - "test/test_upload_search_entries.py::test_sc8_unicode_preserved_exactly_on_real_records (NotNullViolation null id)"
+  note: "No new RED test required for verification SCs I-5/I-6 — baseline evidence pre-exists (phase-0 run this session); RED state = the documented from-state above"

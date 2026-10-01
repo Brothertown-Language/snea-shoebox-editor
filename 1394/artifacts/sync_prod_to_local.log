@@ -1,0 +1,48 @@
+Starting Production to Local Sync...
+2026-10-01 15:07:46 [DEBUG] snea.database.pgserver: Using local DB path: /home/muksihs/git/snea-shoebox-editor/tmp/local_db
+2026-10-01 15:07:46 [DEBUG] snea.database.pgserver: pgserver already running (pid=1239826) — will not stop on exit.
+2026-10-01 15:07:46 [DEBUG] snea.database.pgserver: Starting pgserver (db_path=/home/muksihs/git/snea-shoebox-editor/tmp/local_db)…
+2026-10-01 15:07:46 [DEBUG] snea.database.pgserver: pgserver started (uri=postgresql://postgres:@/postgres?host=/home/muksihs/git/snea-shoebox-editor/tmp/local_db).
+2026-10-01 15:07:46 [DEBUG] snea.database.pgserver: Enabling TCP listening for local dev…
+2026-10-01 15:07:46 [DEBUG] snea.database.pgserver: TCP enable: socket_dir=/home/muksihs/git/snea-shoebox-editor/tmp/local_db, pgdata=/home/muksihs/git/snea-shoebox-editor/tmp/local_db
+2026-10-01 15:07:46 [DEBUG] snea.database.pgserver: Stopping socket-only PostgreSQL instance…
+2026-10-01 15:07:46 [DEBUG] snea.database.pgserver: Socket-only instance stopped.
+2026-10-01 15:07:46 [DEBUG] snea.database.pgserver: Restarting PostgreSQL with TCP (args=['-w', '-o', '-h "localhost"', '-o', '-k /home/muksihs/git/snea-shoebox-editor/tmp/local_db', '-l', '/home/muksihs/git/snea-shoebox-editor/tmp/local_db/log', 'start'])…
+2026-10-01 15:07:47 [DEBUG] snea.database.pgserver: PostgreSQL restarted with TCP on localhost:5432.
+2026-10-01 15:07:47 [DEBUG] snea.database.pgserver: Connection URI: postgresql://postgres:@localhost:5432/postgres
+Starting Production to Local Sync...
+Starting pgserver (db_path=/home/muksihs/git/snea-shoebox-editor/tmp/local_db)...
+pgserver started: localhost:5432/postgres
+Connecting to Production: snea-editor-db-snea-edit-db.a.aivencloud.com:16092/defaultdb?sslmode=require
+Connecting to Local: localhost:5432/postgres
+Introspecting production schema...
+  Found 17 tables
+  Created 17 tables in dependency order
+  Indexes created
+Copying production data...
+  Copied: iso_639_3 (7927 rows)
+  Copied: languages (6 rows)
+  Copied: schema_version (27 rows)
+  Copied: sources (10 rows)
+  Copied: users (2 rows)
+  Copied: permissions (3 rows)
+  Copied: records (7753 rows)
+  Copied: user_activity_log (14811 rows)
+  Copied: user_preferences (3 rows)
+  Copied: edit_history (10481 rows)
+  Copied: fts_entries (7750 rows)
+  Copied: gloss_search_entries (6681 rows)
+  Copied: headword_search_entries (8519 rows)
+  Copied: matchup_queue (0 rows)
+  Copied: record_languages (3260 rows)
+  Copied: search_entries (14032 rows)
+  Copied: semantic_search_entries (0 rows)
+Resetting sequences...
+
+=== VERIFICATION ===
+  records: 7753 rows
+  schema_version: 27 rows
+  fts_entries: 7750 rows
+  Schema version: 20260929200607
+
+Sync completed successfully.

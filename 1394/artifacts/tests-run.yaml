@@ -1,0 +1,15 @@
+tests_run: 186
+all_passed: true
+details:
+  full_suite: "178 passed, 8 skipped, 0 failed (186 collected) — PYTHONPATH=. uv run pytest test/"
+  subtests_passed: 22
+  accounting_check: "pre-fix 169 passed + 5 baseline now green + 4 new tests added by fix = 178 passed (verified deterministic)"
+  baseline_files_run: "16 passed, 0 failed — test/test_semantic_search_schema_sc3.py + test/test_upload_search_entries.py"
+  sc5_named_tests: "2 vector-typmod tests + 3 test_sc8_* (batch_writes_le_512, ge_rows_embedded_with_pin, unicode_preserved_exactly_on_real_records) all PASSED"
+  fresh_sync: "bash scripts/sync_prod_to_local.sh — schema_version 20260929200607 — verify-resync.log"
+  live_db_evidence:
+    sc1: "records.embedding => vector(1536)"
+    sc2: "gloss_search_entries.embedding => vector(384)"
+    sc3: "semantic_search_entries.embedding => vector(384)"
+    sc4: "all 16 enumerated .id columns carry nextval('<table>_id_seq') pg_attrdef defaults"
+execution_time: "2026-10-01 session, post-fix HEAD f9ba1922260b425ddf9fef60f3b884e9b5a76d53"
