@@ -1,0 +1,8 @@
+title: '[SPEC-FIX] sync_prod_to_local DDL builder drops vector typmod and nextval
+  column defaults — 5 pre-existing test failures after mandated pre-regression sync'
+status: open
+labels:
+- needs-approval
+body: ''
+created_at: '2026-10-01T17:03:51+00:00'
+updated_at: '2026-10-01T17:03:51+00:00'
