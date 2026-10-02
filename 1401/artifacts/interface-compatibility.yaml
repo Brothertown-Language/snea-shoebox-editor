@@ -1,0 +1,54 @@
+# Interface Compatibility — Issue #1401: Search-match highlighting in Records view
+grounding: handoff interface-compat artifact + verified code reads (2026-10-02)
+
+## interfaces
+- interface: render_mdf_block (public, ui_utils.py:186)
+  current: "def render_mdf_block(mdf_text: str, key: str = \"\", diagnostics: list[dict] | None = None) -> None"
+  status: modified
+  change: additive optional keyword params (e.g. highlight_spans: dict[int, list[tuple[int, int]]] | None = None) — default-off
+  backward_compatible: true — all four existing call sites (records.py:912, records.py:1022, upload_mdf.py:1022, upload_mdf.py:1028) remain source-compatible without edits; only records.py:912 opts in
+- interface: RecordSearchResult (public dataclass, linguistic_service.py:90-99)
+  current: fields records, total_count, limit, offset
+  status: modified
+  change: additive optional field matched_terms: dict[int, list[str]] | None = None
+  backward_compatible: true — default None preserves all existing constructions; verified consumer is records.py only (direct use + _RecordSearchResultLike mirror :11-21)
+- interface: _RecordSearchResultLike (page-local, records.py:11-21)
+  current: 4-arg __init__ (records, total_count, limit, offset), constructed at :297-302
+  status: modified
+  change: gains same optional field with default None (or tolerates absence) — keeps the #36 semantic seam contract intact
+  backward_compatible: true
+- interface: compute_stored_term_spans / compute_fts_spans (NEW, src/frontend/search_highlight.py)
+  status: new
+  change: pure functions (line, terms|query) → list[(start, end)]; no Streamlit/DB imports; import generate_sort_lx for normalization (SC-2)
+  backward_compatible: n/a (new surface)
+- interface: _search_strategies strategy functions (internal, linguistic_service.py:80-87)
+  status: unchanged
+  change: none — matched-term collection implemented in search_records() post-dispatch so all ILIKE modes share one implementation
+  backward_compatible: true
+
+## removed_interfaces: []
+
+## breaking_changes: []
+
+## dependency_contract
+- source: RecordSearchResult.matched_terms (linguistic_service.py)
+  target: _RecordSearchResultLike (records.py:11-21, constructed :297-302)
+  type: artifact schema
+  constraint: additive field must be optional-with-default in BOTH containers; the mirror must accept the new field or tolerate its absence so the #36 semantic seam construction never raises
+- source: search_highlight.py span computation (SC-1/SC-2)
+  target: render_mdf_block highlight param (ui_utils.py, SC-4)
+  type: artifact schema
+  constraint: span format is per-line list[(start, end)] offsets into the raw rendered line (pre-escape); ui_utils owns escaping/wrapping; malformed/out-of-range spans are clamped or ignored, never crash
+- source: LinguisticService.generate_sort_lx (linguistic_service.py:107-134)
+  target: compute_fts_spans (src/frontend/search_highlight.py)
+  type: artifact schema
+  constraint: FTS scan MUST reuse generate_sort_lx as the sole normalizer (no second normalizer); ∞→oozzz mapping preserved per docs/lessons-learned/2026-06-13-infinity-symbol-normalization.md
+- source: search_entries/headword_search_entries/gloss_search_entries.term (search.py:39-41, 58-59, 76-77)
+  target: SC-1 verbatim find
+  type: artifact schema
+  constraint: raw term strings are located verbatim in rendered text (format_mdf_record preserves field content, parser.py:224-243); data drift degrades to no-op, never fuzzy-matched
+
+## compatibility_verdict
+- backward_compatible: true — additive-only change set (new optional params/fields + new module)
+- breaking: none — no public symbol removed or re-typed; no schema change; no migration; no new endpoints
+- internal_only: strategy function signatures unchanged; CSS block additive alongside existing styles

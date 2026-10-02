@@ -1,0 +1,16 @@
+# Research Card Consultation — Issue #1401: Search-match highlighting in Records view
+cards_scanned: 24 (.issues/research-cards/*.md)
+match_result: none applicable
+
+## Method
+- Globbed `.issues/research-cards/*.md` (canonical path-parameter form; worktree target).
+- Grepped card contents for topic terms: `highlight|search-match|render_mdf|ui_highlight|search_highlight`.
+- Single match was `data/papers/reference/proto-algonquian/hewson-1993-proto-algonquian-dictionary.html` — a source-material artifact inside a card's data subtree, not a research card on UI/highlighting.
+- All 24 cards are historical-linguistic source catalogs (Narragansett/Wampanoag/Pequot/Mohegan dictionaries and vocabularies).
+
+## Applicable findings incorporated
+- None — no card addresses search highlighting, Unicode regex tokenization, FTS scanning, or UI rendering with confidence >= 0.7.
+- Cross-reference consulted instead (repository guidance, not a research card): `docs/lessons-learned/2026-06-13-regex-linguistic-characters.md` (ASCII regex destroys linguistic data — Unicode-aware tokenization mandate) and `docs/lessons-learned/2026-06-13-infinity-symbol-normalization.md` (∞ → oozzz mapping) — both already embedded in the brainstorm handoff's cross-cutting analysis.
+
+## Conclusion
+No research-card findings to incorporate; proceed with handoff-grounded analysis.

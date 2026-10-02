@@ -45,12 +45,20 @@ dispatch:
 
 | Phase | Name | Concern | SCs | Depends On | Step Range | Dispatch |
 |-------|------|---------|-----|------------|-----------|----------|
-| 1 | Real-data calibration of the semantic-seam default floor | calibration | SC-1, SC-8, SC-8a | — | 3-17 | direct (2) + task-card (3-17) |
-| 2 | Seam default-floor semantics (threshold=None) + all-below-floor outcome | seam | SC-2..SC-7 | 1 | 18-47 | direct (0) + task-card (18-47) |
-| 3 | UI threshold plumbing — default parity and override preservation | ui plumbing | SC-9, SC-10 | 2 | 48-57 | direct (0) + task-card (48-57) |
+| 1 | Real-data calibration of the semantic-seam default floor | calibration (SC-1); recall-regression (SC-8, SC-8a) | SC-1, SC-8, SC-8a | — | 3-17 | direct (2) + task-card (3-17) |
+| 2 | Seam default-floor semantics (threshold=None) + all-below-floor outcome | seam-default (SC-2..SC-4); floor-empty (SC-5..SC-7) | SC-2..SC-7 | 1 | 18-47 | direct (0) + task-card (18-47) |
+| 3 | UI threshold plumbing — default parity and override preservation | ui-default (SC-9, SC-10) | SC-9, SC-10 | 2 | 48-57 | direct (0) + task-card (48-57) |
 | — | Post-implementation (audit → PR) | pipeline closeout | all | 1,2,3 | 58-65 | mixed (per step) |
 
 Pre-implementation steps 1-2 run once before Phase 1. Post-implementation steps 58-65 run once after Phase 3.
+
+**Concern alignment (per validate-findings F-1/F-2/F-3, option (a) — non-structural):** `artifacts/concern-map.yaml` defines 5 concerns; the plan decomposes into 3 implementation phases by file/seam boundary. Each phase's Concern column enumerates ALL concern-map concerns it addresses, with the SC mapping shown inline. No concern is shared between phases; the mapping is a strict partition of the 5 concerns:
+
+- Phase 1 = `calibration` (SC-1) + `recall-regression` (SC-8, SC-8a)
+- Phase 2 = `seam-default` (SC-2..SC-4) + `floor-empty` (SC-5..SC-7)
+- Phase 3 = `ui-default` (SC-9, SC-10)
+
+Both concerns in a phase co-locate because they target the same seam boundary and commit atomically per the per-item TDD cycle (e.g., `recall-regression` SC-8/SC-8a assertions are measured-evidence regression items executed alongside the calibration battery against the same corpus pin; `floor-empty` SC-5..SC-7 is the outcome-rendering half of the same `search_semantic()` seam change as `seam-default`).
 
 ---
 
@@ -178,3 +186,4 @@ Check your tool list for a tool named `task`.
 - 2026-10-02T16:13:51Z — plan_created — plan verified at `.issues/1400/plan.md`; 3 phases + pre-implementation (2 steps) + post-implementation (8 steps); dispatch: phase-1/2/3 task-card via test-driven-development + verification-before-completion with orchestrator commit-inline; dependency contract present at `.issues/1400/dependency-contract.yaml`.
 - 2026-10-02T17:10:00Z — plan_revised — regenerated against revised spec (structure/decomposition revision: compound SC-8 split into atomic SC-8 (floor-clearing anchors rank 1 + cosine ≥ published floor) and SC-8a ("how many" below-floor empty outcome with pinned SC-5 message); SC-5 deficiency message pinned to "No gloss results meet the sensitivity floor."; SC count 10 → 11). Plan updated: Phase 1 SCs SC-1/SC-8/SC-8a with new Item 3 (SC-8a, steps 13-17); Phase 2 items/steps renumbered (18-47); Phase 3 renumbered (48-57); post-implementation renumbered (58-65); exit criteria C5 split into C5/C5a; phase plan files updated.
 - 2026-10-02T16:40:31Z — plan_revised — regenerated against revised spec (measured-reality recalibration: floor interval (0.9018, 0.9753), in-corpus anchors incl. "how many" 0.8917 below-floor, OOC max "light bulb" 0.9018; probe `tmp/1400/artifacts/verification-probe.yaml`); Architecture, Phase 1 context, step 2 baseline, C2, C5 updated to match revised SC-8; phase plan files and dependency contract updated.
+- 2026-10-02T17:30:00Z — plan_revised — validate-findings F-1/F-2 (Cat 4 concern-separation FAIL) remediated via non-structural option (a): Phase Table Concern column and concern-alignment note updated to enumerate all concern-map concerns per phase (Phase 1 = calibration + recall-regression; Phase 2 = seam-default + floor-empty; Phase 3 = ui-default), strict partition of the 5 concern-map concerns, no concern shared between phases. SC coverage (11 SCs), linear DAG (1→2→3), and per-item TDD cycles unchanged; concern-map.yaml annotated with a phase-mapping note; dependency-contract.yaml unchanged.

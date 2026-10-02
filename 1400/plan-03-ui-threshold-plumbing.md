@@ -1,6 +1,6 @@
 # Phase 3 — UI threshold plumbing — default parity and override preservation
 
-**Concern:** ui plumbing
+**Concern:** ui-default (SC-9, SC-10) — per concern-map.yaml
 
 **Files:**
 - `src/frontend/pages/records.py` — `st.session_state.semantic_threshold` default literals and override passthrough

@@ -1,0 +1,25 @@
+# Pipeline Readiness — Issue #1401: Search-match highlighting in Records view
+validated: 2026-10-02, against contracts/decompose-output.yaml + artifacts/
+
+## checks
+- check: Atomicity
+  result: PASS
+  detail: 7 SCs → 7 items → 7 RED→GREEN→verify→COMMIT cycles; no item spans multiple SCs (SC-1 stored-term spans, SC-2 FTS spans, SC-3 service collection, SC-4 markup, SC-5 CSS, SC-6 wiring, SC-7 E2E)
+- check: Dependency ordering (SC DAG acyclic)
+  result: PASS
+  detail: "SC-1, SC-2 (independent) → SC-4 → SC-5 → SC-6; SC-3 → SC-6; all → SC-7. No cycles."
+- check: Single concern
+  result: PASS
+  detail: SC-1/SC-2 = pure helper module (unit domain); SC-3 = service layer (pytest integration domain); SC-4 = ui_utils markup (unit/smoke + Playwright DOM); SC-5 = ui_utils CSS (Playwright visual domain); SC-6 = records.py wiring (Playwright behavioral domain); SC-7 = integration E2E. SC-4/SC-5 share ui_utils.py but distinct concern domains (markup structure vs styling) and distinct verification domains.
+- check: Phase dependency (acyclic)
+  result: PASS
+  detail: Phase 1 (pure helpers) → Phase 2 (service data) → Phase 3 (markup → CSS → wiring) → Phase 4 (E2E). No backward edges.
+- check: Three-tier structure (multi-phase spec: pre/per-file/post)
+  result: PASS
+  detail: pre-tier = Phase 1 pure functions (no Streamlit/DB); per-file tier = Phases 2-3 (service, markup, CSS, wiring — one file category each); post-tier = Phase 4 gated E2E integration.
+
+## verdict
+PASS — spec is ready for the create task to draft SC table + spec content from this decomposition.
+
+## gate_evidence
+validate-yaml gate invocation: `./.opencode/tools/local-issues validate-yaml --number snea-shoebox-editor#1401` → exit code 0 (no malformed-file report lines; no violations in the target issue's records). Workspace-wide scan not gating.

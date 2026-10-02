@@ -1,6 +1,6 @@
 # Phase 2 — Seam default-floor semantics (threshold=None) + all-below-floor outcome
 
-**Concern:** seam
+**Concern:** seam-default (SC-2..SC-4); floor-empty (SC-5..SC-7) — per concern-map.yaml
 
 **Files:**
 - `src/services/semantic_search_service.py` — `search_semantic()`, `_candidate_sql()` threshold filter, post-query result assembly

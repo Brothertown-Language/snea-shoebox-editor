@@ -34,3 +34,11 @@ cross_concern_rules:
   - "all-or-nothing enforcement: every SC must pass; partial implementation not permitted"
 
 # 🤖 Co-authored with AI: OpenCode (zai-org/GLM-5.3-Flash)
+
+# Plan-phase mapping (plan.md remediation, validate-findings F-1/F-2 option (a)):
+#   plan Phase 1 → calibration + recall-regression (SC-1, SC-8, SC-8a)
+#   plan Phase 2 → seam-default + floor-empty (SC-2..SC-7)
+#   plan Phase 3 → ui-default (SC-9, SC-10)
+#   Strict partition of the 5 concerns; no concern shared between phases.
+#   Co-location rationale: paired concerns target the same seam boundary and
+#   commit atomically per the per-item TDD cycle (see plan.md Phase Table note).

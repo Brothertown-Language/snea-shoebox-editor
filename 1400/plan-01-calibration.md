@@ -1,6 +1,6 @@
 # Phase 1 — Real-data calibration of the semantic-seam default floor
 
-**Concern:** calibration
+**Concern:** calibration (SC-1); recall-regression (SC-8, SC-8a) — per concern-map.yaml
 
 **Files:**
 - calibration evidence artifact (new — per-anchor floors + provenance)

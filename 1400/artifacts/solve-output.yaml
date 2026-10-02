@@ -1,0 +1,44 @@
+# Solve Output — Issue #1400 (research task steps 10-13)
+issue: 1400
+solve_status: SAT
+plan_status: SOLVED_SATISFICING
+
+solve_model:
+  command: "./.opencode/tools/solve model --contract-path .issues/1400/dependency-contract.yaml --query all_phases_done"
+  result: SAT
+  assignment:
+    all_phases_done: true
+    phase1_complete: true
+    phase2_complete: true
+    phase3_complete: true
+  note: "query literal 'sat' is not a defined expression in this solver; the contract's goal/postcondition variable all_phases_done is the SAT query."
+
+solve_check:
+  command: "./.opencode/tools/solve check --contract-path .issues/1400/dependency-contract.yaml --state-path .issues/1400/artifacts/state-analysis.yaml"
+  current_state: SAT
+  current_assignment:
+    all_phases_done: false
+    phase1_complete: false
+    phase2_complete: false
+    phase3_complete: false
+  goal_state: SAT (+ postconditions + invariants)
+  goal_assignment:
+    all_phases_done: true
+    phase1_complete: true
+    phase2_complete: true
+    phase3_complete: true
+
+plan_plan:
+  command: "./.opencode/tools/plan plan --problem tmp/1400/artifacts/plan-problem.yaml"
+  problem_path: tmp/1400/artifacts/plan-problem.yaml
+  note: "tools/plan plan does not accept --contract-path/--output; problem YAML derived from dependency-contract.yaml preconditions/variables; output captured to tmp/1400/artifacts/plan-raw-output.txt and mirrored here."
+  engine: tamer
+  status: SOLVED_SATISFICING
+  plan_length: 3
+  plan:
+    - complete-phase1-calibration()
+    - complete-phase2-seam-default-floor()
+    - complete-phase3-ui-threshold-plumbing()
+  plan_order_matches_dag: true   # phase1 -> phase2 -> phase3, matching dependency_dag edges
+
+# 🤖 Co-authored with AI: OpenCode (zai-org/GLM-5.3-Flash)

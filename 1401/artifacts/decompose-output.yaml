@@ -1,0 +1,64 @@
+# Decomposition Contract — Issue #1401: Search-match highlighting in Records view
+granularity: each unit is a single independently verifiable claim; 1 item per SC; 1 SC-ID per item
+structural_decision: span-computation helper lives in new pure module `src/frontend/search_highlight.py` (no Streamlit import) — keeps ui_utils additive-only and gives the pure helper a clean home (resolves handoff "location TBD")
+interface_decision: helpers return per-line (start, end) offset spans; `render_mdf_block` performs escaping/wrapping (markup stays in ui_utils)
+
+## Phase 1 — Pure span computation (pre-tier, no Streamlit/DB)
+- item: 1
+  sc_id: SC-1
+  title: Stored-term span computation (plain verbatim substring find)
+  unit: `compute_stored_term_spans(line, terms) -> list[(start, end)]` — exact verbatim whole-term find of each stored raw term in a rendered line; overlapping/adjacent term occurrences handled by deterministic left-to-right scan; absent terms yield no spans (graceful no-op).
+  invariant: no case folding, no fuzzy matching, no normalization — raw terms appear verbatim in rendered text (verified: parser.py:224-243 preserves field content)
+  failure_modes: term absent → empty list; empty terms → empty list; unicode-safe slicing (no regex char classes)
+  cycle: RED unit test → GREEN implement → verify → commit
+- item: 2
+  sc_id: SC-2
+  title: FTS query-token span computation (Unicode-aware normalized scan)
+  unit: `compute_fts_spans(line, query) -> list[(start, end)]` — normalize query via `LinguisticService.generate_sort_lx`, extract tokens exactly as `_search_fts` does (strip tsquery-unsafe chars, `:*` prefix semantics, multi-token AND); tokenize rendered line with Unicode-safe `\w` (no `re.ASCII`); normalize each candidate word on the fly; emit whole-word spans for candidates matching any query token (AND-set membership determined by line content is NOT required — highlight any token matching, whole-term granularity).
+  invariant: single normalizer reuse (generate_sort_lx); ∞→oozzz consistent (C2); NFD length shifts handled by scanning normalized candidate text and mapping back to raw offsets
+  failure_modes: empty query → empty; no tokens after cleaning → empty; candidate not matching → skipped
+  cycle: RED unit test → GREEN implement → verify → commit
+
+## Phase 2 — Service data layer
+- item: 3
+  sc_id: SC-3
+  title: Matched-term collection in `search_records()` + additive result fields
+  unit: `RecordSearchResult.matched_terms: dict[int, list[str]] | None = None` (additive, default None); `_RecordSearchResultLike` gains the same optional field (default None) preserving the #36 seam contract; `search_records()` collects matched raw `term` values grouped by record_id for Lexeme/Headword/Gloss modes (same query pass, join-side aggregation within page window); FTS and Semantic modes return None.
+  invariant: existing 4-field construction sites stay source-compatible; no schema/migration change; dedup per record
+  failure_modes: unknown mode → existing ValueError unchanged; empty result → empty/None map, never fabricated
+  cycle: RED pytest service-level → GREEN implement → verify → commit
+
+## Phase 3 — Presentation + page wiring (per-file tier)
+- item: 4
+  sc_id: SC-4
+  title: `render_mdf_block` highlight params + search-token markup wrapping
+  unit: optional keyword params (e.g. `highlight_spans: dict[int, list[tuple[int,int]]] | None = None`) default-off; wrap matched text in `<mark class="search-token">…</mark>` using escaped text; defined coexistence/precedence rule with `diag["spans"]` diff-token markup and `status-*` line tints (search-token applied within/alongside existing spans; diff behavior unaltered); the three non-target call sites remain untouched (default-off).
+  invariant: no-diagnostics lines render identically to today when no highlight spans; escaping preserved (no XSS surface change)
+  failure_modes: spans out of range / malformed → clamped or ignored, never crashes render
+  cycle: RED unit/smoke test → GREEN implement → verify → commit
+- item: 5
+  sc_id: SC-5
+  title: `mark.search-token` CSS — teal/cyan bold, light + dark theme variants
+  unit: CSS block alongside existing `mark.diff-token` styles; teal/cyan tint + bold; distinct from yellow diff-token and status tints; both `prefers-color-scheme` variants; WCAG-reasonable contrast on light `#f0f2f6` and dark `#262730`.
+  invariant: existing diff-token/status styles byte-identical
+  cycle: RED Playwright visual assertion → GREEN implement → verify → commit
+- item: 6
+  sc_id: SC-6
+  title: View-mode wiring in records.py (single opt-in call site)
+  unit: thread query/mode/matched spans into the View-mode `render_mdf_block` call at records.py:912 only; highlight activates automatically when a lexical-mode query is present (no new session-state key, no preference toggle); empty query → no highlight params; semantic modes → no highlight (matched_terms is None there).
+  invariant: revision-history (records.py:1022) and upload_mdf.py diff call sites receive no highlight args
+  cycle: RED Playwright behavioral test → GREEN implement → verify → commit
+
+## Phase 4 — Post-tier integration verification
+- item: 7
+  sc_id: SC-7
+  title: Gated Playwright E2E — full search-to-highlight flow
+  unit: `SNEA_E2E=1` + live app on :8501 real-browser test: search in each lexical mode highlights matches in the rendered block; Semantic mode shows no highlight; empty query shows no highlight; screenshots archived under tmp/issue-1401/artifacts/.
+  invariant: skipping is by design (never silently treated as PASS)
+  cycle: RED (E2E fails pre-wiring) → GREEN → verify → commit
+
+## Dependency DAG (acyclic)
+SC-1, SC-2 (independent) → SC-4 → SC-5 → SC-6; SC-3 → SC-6; all → SC-7
+
+## Atomicity check
+Each item = exactly one SC = exactly one RED→GREEN→verify→COMMIT cycle. No item spans multiple SCs.

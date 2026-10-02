@@ -1,0 +1,55 @@
+# Pre-Spec Inspection — Issue #1401: Search-match highlighting in Records view
+scope: ENHANCEMENT
+design_input: brainstorming handoff (tmp/issue-1401/artifacts/preliminary/handoff.yaml, design_approved: true)
+verification: bounded line-range reads of every cited surface (2026-10-02)
+
+## Verified codebase facts
+
+### Service layer — src/services/linguistic_service.py
+- `RecordSearchResult` dataclass: fields `records, total_count, limit, offset` (lines 90-99) — verified
+- `_search_strategies` dict: Lexeme/FTS/Headword/Gloss/Semantic Gloss/Semantic All (lines 80-87) — verified
+- `_search_lexeme` (32-37): `SearchEntry.normalized_term.ilike(f"%{norm_search}%")` — verified
+- `_search_fts` (40-55): `#N` record-id shortcut; normalize via `generate_sort_lx`; strip tsquery-unsafe chars; join words with `&` + `:*` prefix; `to_tsquery('simple', ...)` — verified
+- `_search_headword` (58-67), `_search_gloss` (70-77): same ILIKE-on-normalized pattern — verified
+- `generate_sort_lx` (107-134): NFD → strip combining marks → straighten quotes → ∞→`oozzz` → ✔→"" → lowercase → strip leading punctuation — verified
+- `search_records()` body (420-487): base query joins primary language; dispatches strategy at 453-457 when `search_term`; sorts by `sort_lx, hm, ps, lang, ge`; paginates; builds record dicts (466-485) including `mdf_data`; returns `RecordSearchResult` at 487 — verified. Matched-term collection is a query/passage-level addition in the same method.
+
+### Page layer — src/frontend/pages/records.py
+- `_RecordSearchResultLike` (11-21): 4-field mirror for the #36 semantic seam — verified
+- Session state: `search_query` (120-121), `search_mode` (122-123, default "Headword"), `structural_highlighting` (140-141) — verified
+- `on_search_change` (164-166) / `on_mode_change` (168-170) reset current_page — verified
+- `search_term = st.session_state.search_query or None` (194) — verified
+- Semantic seam (217-310): `is_semantic_mode` at 223; rank-once cache at 246-287; `_RecordSearchResultLike(...)` constructed at 297-302 — verified
+- View-mode render call at 912: `render_mdf_block(mdf_data, diagnostics=diagnostics, key=f"render_{record_id}")` with diagnostics gated by `structural_highlighting` (908-910) — verified
+- Revision-history render at 1022-1024: `render_mdf_block(entry["current_data"], diagnostics=hist_diags, ...)` — verified
+- `structural_highlighting` preference precedent (records.py:65-67 area per handoff; session-state key at 140-141) — verified as session-state key
+
+### Presentation — src/frontend/ui_utils.py
+- `render_mdf_block(mdf_text, key="", diagnostics=None)` signature (186) — verified
+- Span-level markup path: `diag["spans"]` → `<mark class="diff-token">{escaped text}</mark>` else escaped line (206-219) — verified
+- Line wrapping: `<div class="mdf-line {status_cls}" {title_attr}>{inner_html}</div>` (223) — verified
+- CSS: status-* line tints (252-279), `mark.diff-token` (280-285), light/dark `prefers-color-scheme` blocks (286-295), JS parent-frame theme read (298-314) — verified
+- `format_mdf_record` imported inside `render_mdf_block` (195-197); `mdf_text` split to lines (198)
+
+### Data model — src/database/models/search.py
+- `SearchEntry.term` + `normalized_term` + `entry_type` (39-41) — verified
+- `HeadwordSearchEntry.term` + `normalized_term` (58-59) — verified
+- `GlossSearchEntry.term` + `normalized_term` (76-77) — verified
+- `FTSEntry.fts_vector` only (11-25): tsvector of fully-normalized text; no raw document, no positions — verified (ts_headline not viable on stored data)
+
+### Population — src/services/upload_service.py (1794-1843)
+- `SearchEntry(term=entry["lx"], ...)` / va, se, cf, ve — raw `term` stored verbatim from parsed fields (1795-1808) — verified
+- `HeadwordSearchEntry` lx + primary_va (1811-1820); `GlossSearchEntry` ge (1823-1837) — verified
+- `FTSEntry`: `to_tsvector("simple", generate_sort_lx(record.mdf_data))` only (1839-1843) — verified
+
+### Renderer input preservation — src/mdf/parser.py
+- `format_mdf_record` (224-243): lstrip lines, drop blank lines, re-insert blank lines before bundle tags — field content preserved verbatim; stored raw terms therefore appear verbatim in rendered text — verified
+
+## Conventions observed
+- Copyright header + "NO EDITS WITHOUT APPROVED PLAN" comment atop each source file
+- Dataclass result containers; strategy-dict dispatch for search modes
+- CSS lives inline in `render_mdf_block` template string; theme via media queries + JS
+- Tests in `test/` (pytest) and `test/ui/` (Playwright, standard of record per docs/development/ui_testing_standard.md)
+
+## Conclusion
+Handoff findings fully confirmed against live code; no discrepancies found. Affected surface is confined to: linguistic_service.py (search_records + RecordSearchResult), records.py (View-mode call + mirror dataclass), ui_utils.py (render_mdf_block + CSS), plus a new pure span-computation helper and tests.

@@ -1,0 +1,27 @@
+# State Analysis — Issue #1401: Search-match highlighting in Records view
+grounding: handoff state-analysis artifact + verified code reads (2026-10-02)
+
+## session_state
+- key: st.session_state.search_query
+  status: exists — no change (records.py:120-121, set at :164-166, read at :194)
+  role: read-only dependency; drives highlight activation
+- key: st.session_state.search_mode
+  status: exists — no change (records.py:122-123, radio at :168-170)
+  role: read-only dependency; lexical modes highlight, semantic modes do not
+- new_keys_required: none — current design adds no session-state keys
+
+## preferences
+- change: none in current design — highlight activates automatically when a lexical-mode query is present
+- precedent_if_toggle_later_wanted: structural_highlighting preference pattern (records.py:140-141 session-state key)
+
+## database
+- read/write: read-only extension of the existing search_records() query — matched raw term values are selected, never written
+- tables: search_entries, headword_search_entries, gloss_search_entries (already store term + normalized_term, search.py:39-41, 58-59, 76-77); fts_entries untouched
+- migrations: none
+
+## ephemeral
+- matched_terms map: per-request, derived in search_records() within the paginated query — not cached in session state
+- highlight spans: per-render, computed by the page before the render call — not cached (contrast: _semantic_ranked_cache at records.py:246-287 exists because embedding calls are expensive; highlighting has no expensive backend call and needs no cache)
+
+## persistence_boundaries
+- crossed: none new — existing DB read path and existing st.html() iframe render path only
