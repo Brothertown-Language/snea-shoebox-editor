@@ -1,0 +1,53 @@
+# Planning problem for issue 1401 — phases as actions, DAG edges as preconditions
+domain: issue-1401-phase-completion
+types:
+  - name: phase
+objects:
+  - name: p1
+    type: phase
+  - name: p2
+    type: phase
+  - name: p3
+    type: phase
+  - name: p4
+    type: phase
+fluents:
+  - name: done
+    params:
+      - name: x
+        type: phase
+actions:
+  - name: complete-phase1-pure-span-module
+    params:
+      - name: x
+        type: phase
+    effects:
+      - done(p1)
+  - name: complete-phase2-service-data-layer
+    params:
+      - name: x
+        type: phase
+    effects:
+      - done(p2)
+  - name: complete-phase3-renderer-styling-wiring
+    params:
+      - name: x
+        type: phase
+    preconditions:
+      - done(p1)
+      - done(p2)
+    effects:
+      - done(p3)
+  - name: complete-phase4-playwright-e2e
+    params:
+      - name: x
+        type: phase
+    preconditions:
+      - done(p1)
+      - done(p2)
+      - done(p3)
+    effects:
+      - done(p4)
+init: []
+goals:
+  - done(p4)

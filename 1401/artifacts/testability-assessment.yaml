@@ -1,0 +1,32 @@
+# Testability-assessment artifact for issue 1401 (backfilled from spec)
+artifact: testability-assessment
+issue: 1401
+status: complete
+scs:
+  SC-1: {evidence_type: behavioral, instrument: "pytest unit execution", method: "verbatim/NFD-diacritic/IPA/infinity/overlapping samples with output inspection"}
+  SC-2: {evidence_type: behavioral, instrument: "pytest unit execution", method: "absent-term, empty-term-list, empty-line samples with output inspection"}
+  SC-3: {evidence_type: behavioral, instrument: "pytest unit execution", method: "normalization-parity, prefix-semantics, multi-token, Unicode-edge samples with output inspection"}
+  SC-4: {evidence_type: behavioral, instrument: "pytest unit execution", method: "token-free query, empty query, no-match samples with output inspection"}
+  SC-5: {evidence_type: behavioral, instrument: "pytest integration against test database", method: "field default None; existing construction-site compatibility"}
+  SC-6: {evidence_type: behavioral, instrument: "pytest integration", method: "mirror container construction with new field completes without raising"}
+  SC-7: {evidence_type: behavioral, instrument: "pytest integration against test database", method: "per-mode collection, per-record dedup, bounded to paginated window"}
+  SC-8: {evidence_type: behavioral, instrument: "pytest integration", method: "None for FTS and Semantic strategies"}
+  SC-9: {evidence_type: behavioral, instrument: "pytest/AppTest smoke + output comparison", method: "revision-history and import-diff call sites byte-identical"}
+  SC-10: {evidence_type: behavioral, instrument: "pytest/AppTest smoke + Playwright DOM assertions", method: "markup structure; escaping preserved on markup-sensitive matched text"}
+  SC-11: {evidence_type: behavioral, instrument: "pytest/AppTest smoke", method: "malformed/out-of-range span samples; no exception, no mark for dropped spans"}
+  SC-12: {evidence_type: behavioral, instrument: "pytest/AppTest smoke + Playwright DOM assertions", method: "overlapping span samples; diff-token wins"}
+  SC-13: {evidence_type: behavioral, instrument: "Playwright DOM + computed-style", method: "status tint output with vs without active highlighting"}
+  SC-14: {evidence_type: behavioral, instrument: "Playwright computed-style", method: "teal/cyan background tint + bold weight on marks"}
+  SC-15: {evidence_type: behavioral, instrument: "Playwright computed-style comparison", method: "both theme variants; screenshots archived"}
+  SC-16: {evidence_type: behavioral, instrument: "Playwright computed-style contrast computation", method: ">= 4.5:1 WCAG 2.1 AA in both themes; screenshots archived"}
+  SC-17: {evidence_type: behavioral, instrument: "Playwright real-browser behavioral", method: "View-mode-only threading confirmed; other renders receive no highlight parameters"}
+  SC-18: {evidence_type: behavioral, instrument: "Playwright real-browser behavioral", method: "auto-activation across 4 lexical modes from fresh session state"}
+  SC-19: {evidence_type: behavioral, instrument: "Playwright real-browser behavioral", method: "empty-query DOM assertions"}
+  SC-20: {evidence_type: behavioral, instrument: "Playwright real-browser behavioral", method: "semantic-mode DOM assertions"}
+  SC-21: {evidence_type: behavioral, instrument: "gated Playwright E2E (SNEA_E2E=1 + live app :8501)", method: "lexical-mode highlight flow; screenshots archived; gate-skip never silently a pass"}
+  SC-22: {evidence_type: behavioral, instrument: "gated Playwright E2E", method: "semantic-mode absence; gate-skip never silently a pass"}
+  SC-23: {evidence_type: behavioral, instrument: "gated Playwright E2E", method: "empty-query absence; gate-skip never silently a pass"}
+notes: |
+  All 23 SCs are behavioral per the spec's evidence-type column. AppTest is
+  smoke-only (R-19); user-visible claims require Playwright real-browser
+  evidence per docs/development/ui_testing_standard.md.

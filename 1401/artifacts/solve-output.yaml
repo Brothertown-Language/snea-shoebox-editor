@@ -1,0 +1,30 @@
+# Solve output for issue 1401
+artifact: solve-output
+issue: 1401
+solve_status: SAT
+plan_status: SOLVED_SATISFICING
+model_check:
+  command: "./.opencode/tools/solve model --contract-path .issues/1401/dependency-contract.yaml --query \"phase4_complete == True\""
+  result: SAT
+  model: {phase1_complete: true, phase2_complete: true, phase3_complete: true, phase4_complete: true}
+  exit_code: 0
+state_check:
+  command: "./.opencode/tools/solve check --contract-path .issues/1401/dependency-contract.yaml --state-path .issues/1401/artifacts/state-analysis.yaml"
+  result_pre_postconditions: SAT
+  result_with_postconditions_invariants: "SAT (+ postconditions + invariants)"
+  exit_code: 0
+planner:
+  command: "./.opencode/tools/plan plan -p .issues/1401/artifacts/plan-problem.yaml"
+  engine: tamer
+  status: SOLVED_SATISFICING
+  plan_length: 4
+  plan:
+    - complete-phase1-pure-span-module(p1)
+    - complete-phase2-service-data-layer(p1)
+    - complete-phase3-renderer-styling-wiring(p1)
+    - complete-phase4-playwright-e2e(p1)
+  exit_code: 0
+notes:
+  - "Task-card literal invocation '--query sat' is not a valid expression for tools/solve model; query replaced with 'phase4_complete == True' (Z3 expression over contract variables)"
+  - "Task-card plan invocation (--contract-path/--output) does not match tools/plan interface; planner run with a --problem YAML encoding the phase DAG, output recorded here"
+  - "dependency-contract.yaml carries both the Z3 form (variables/invariants) and the extracted interface-compatibility dependency_contract section under provenance"

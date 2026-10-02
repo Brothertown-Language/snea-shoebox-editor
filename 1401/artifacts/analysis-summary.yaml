@@ -1,0 +1,27 @@
+# Analysis summary for issue 1401 (backfilled)
+artifact: analysis-summary
+issue: 1401
+spec_path: .issues/1401/spec.md
+sc_count: 23
+artifact_status:
+  blast-radius: backfilled
+  concern-map: backfilled
+  code-path-inventory: backfilled
+  cross-cutting-matrix: backfilled
+  interface-compatibility: backfilled
+  state-analysis: backfilled
+  testability-assessment: backfilled
+scope_summary: |
+  Three-layer additive design for search-match highlighting in Records View mode:
+  (1) new pure span-computation module src/frontend/search_highlight.py (Phase 1,
+  SC-1..SC-4); (2) service data layer — additive matched_terms field on
+  RecordSearchResult and page-local mirror, ILIKE-mode collection in the existing
+  paginated query (Phase 2, SC-5..SC-8); (3) renderer/styling/page wiring —
+  default-off highlight parameters on render_mdf_block, mark.search-token markup,
+  malformed-span drop, diff-token precedence, teal/cyan styling with WCAG 4.5:1
+  contrast (Phase 3, SC-9..SC-20); (4) gated Playwright E2E (Phase 4, SC-21..SC-23).
+  Read-path only: no schema, migration, endpoint, parser, or write-path changes.
+  Phases 1 and 2 are mutually independent; Phase 3 depends on SC-1/SC-3 (span
+  contract), SC-10 (styling chain), and SC-9+SC-7 (wiring chain); Phase 4 depends
+  on all.
+backfill_note: All 7 artifacts were absent; each was backfilled from the spec body with live code grounding (2026-10-02).
