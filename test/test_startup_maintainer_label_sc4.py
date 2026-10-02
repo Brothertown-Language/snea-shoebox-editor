@@ -1,15 +1,17 @@
-"""Enforcement test for SC-SC4 (issue 1392): fail fast on missing contact.maintainer_label.
+"""Enforcement test for SC-SC4 (issue 1392) under issue 1397 spec Revision 1 (SC-6):
+default-fallback contact resolution — never crash on a missing contact key.
 
-When ``contact.maintainer_label`` is absent from st.secrets, the app SHALL fail
-fast during startup with an actionable error naming ``contact.maintainer_label``
-— no silent default — and ``st.set_page_config`` must remain the first
-Streamlit command executed in ``main()``.
+When ``contact.maintainer_label`` is absent from st.secrets, the app SHALL NOT
+raise RuntimeError. Instead, startup continues: a ONE-TIME non-blocking
+operator warning naming the missing key PATH only is emitted from the startup
+preflight (not a dialog render), and ``st.set_page_config`` must remain the
+first Streamlit command executed in ``main()``.
 
 The startup path is invoked directly: ``main()`` is called with
-``contact.maintainer_label`` absent and an assertion verifies the actionable
-error is raised from startup initialization (not from a dialog-render call).
-
-RED: fails at baseline because no startup validation exists in main().
+``contact.maintainer_label`` absent and the sentinel CookieController proves
+startup continued past the contact-key preflight into the next initialization
+stage — a sentinel RuntimeError there means startup was NOT blocked by the
+missing contact key.
 
 Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
 """
@@ -17,6 +19,8 @@ Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
 from __future__ import annotations
 
 import importlib
+import logging
+import re
 import sys
 import types
 from pathlib import Path
@@ -29,6 +33,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 APP_MODULE = "streamlit_app"
 SENTINEL_COOKIE_MSG = "SENTINEL: CookieController reached (no startup validation fired)"
+MISSING_KEY_PATH = "contact.maintainer_label"
 
 ST_COMMANDS_TO_RECORD = (
     "set_page_config",
@@ -80,14 +85,17 @@ def secrets_without_contact(monkeypatch, recorded_st_calls):
 
 @pytest.fixture()
 def app_module(monkeypatch, recorded_st_calls):
-    """Import streamlit_app with _initialize_database stubbed to a no-op."""
+    """Import streamlit_app with _initialize_database stubbed to a no-op.
+
+    Sentinel: main() must proceed PAST the contact-key preflight and database
+    init into CookieController construction. A sentinel there proves startup
+    continued (no contact-key crash) while keeping main() from running
+    further, making the continuation point deterministic.
+    """
     st, _ = recorded_st_calls
     mod = importlib.import_module(APP_MODULE)
     monkeypatch.setattr(mod, "_initialize_database", lambda: None, raising=False)
 
-    # Sentinel: if startup validation does not fire, main() proceeds past
-    # database init into CookieController construction. A sentinel there makes
-    # baseline failure deterministic and clearly distinguishable.
     sentinel_module = types.ModuleType("streamlit_cookies_controller")
 
     class SentinelCookieController:
@@ -99,18 +107,45 @@ def app_module(monkeypatch, recorded_st_calls):
     return mod
 
 
-def test_main_fails_fast_naming_contact_maintainer_label(
-    app_module, recorded_st_calls, secrets_without_contact
-):
-    """SC-4: startup must raise an actionable error naming contact.maintainer_label."""
-    _, calls = recorded_st_calls
-    with pytest.raises(Exception, match=r"contact\.maintainer_label"):
-        app_module.main()
+def _capture_startup_warnings(caplog):
+    """Capture warnings from the app logger (propagate=False in logging_config)."""
+    logger = logging.getLogger("snea.app")
+    logger.addHandler(caplog.handler)
+    caplog.set_level(logging.WARNING, logger="snea.app")
+    return logger
 
 
-def test_set_page_config_is_first_streamlit_command_before_fail_fast(
-    app_module, recorded_st_calls, secrets_without_contact
+def _warning_messages_naming_missing_key(caplog) -> list[str]:
+    return [
+        rec.getMessage()
+        for rec in caplog.records
+        if rec.levelno >= logging.WARNING and MISSING_KEY_PATH in rec.getMessage()
+    ]
+
+
+def test_main_continues_with_single_operator_warning_naming_contact_maintainer_label(
+    app_module, recorded_st_calls, secrets_without_contact, caplog
 ):
+    """SC-4/SC-6 (Revision 1): startup must NOT crash on a missing
+    contact.maintainer_label; instead exactly ONE operator warning naming the
+    missing key PATH is emitted and startup continues into the next stage
+    (proven by the sentinel CookieController RuntimeError)."""
+    logger = _capture_startup_warnings(caplog)
+    try:
+        with pytest.raises(RuntimeError, match=re.escape(SENTINEL_COOKIE_MSG)):
+            app_module.main()
+    finally:
+        logger.removeHandler(caplog.handler)
+
+    warnings = _warning_messages_naming_missing_key(caplog)
+    assert len(warnings) == 1, (
+        "SC-6: exactly ONE operator warning naming contact.maintainer_label "
+        f"must be emitted on missing contact.maintainer_label; got "
+        f"{len(warnings)}: {warnings}"
+    )
+
+
+def test_set_page_config_is_first_streamlit_command(app_module, recorded_st_calls, secrets_without_contact):
     """SC-4: st.set_page_config must remain the first Streamlit command executed."""
     st, calls = recorded_st_calls
     try:
@@ -119,37 +154,37 @@ def test_set_page_config_is_first_streamlit_command_before_fail_fast(
         pass
     assert calls, "no Streamlit commands were recorded during startup"
     assert calls[0] == "set_page_config", (
-        f"st.set_page_config must be the first Streamlit command in main(); "
-        f"recorded order: {calls}"
+        f"st.set_page_config must be the first Streamlit command in main(); recorded order: {calls}"
     )
 
 
-def test_fail_fast_raises_from_startup_not_dialog_render(
-    app_module, recorded_st_calls, secrets_without_contact
+def test_operator_warning_from_startup_preflight_not_dialog_render(
+    app_module, recorded_st_calls, secrets_without_contact, caplog
 ):
-    """SC-4: the error is raised from startup initialization, not a dialog render.
+    """SC-4/SC-6 (Revision 1): the operator warning is emitted from the
+    startup preflight, not a dialog render.
 
     A dialog-render path would invoke other Streamlit commands (error/info/
-    button) before the failure. Startup fail-fast must raise directly after
+    button) before the warning. Startup preflight must run directly after
     set_page_config with no intervening Streamlit rendering commands.
     """
-    _, calls = recorded_st_calls
+    logger = _capture_startup_warnings(caplog)
     try:
-        app_module.main()
-    except Exception as exc:
-        message = str(exc)
-        assert "contact.maintainer_label" in message, (
-            f"raised error is not actionable: {message!r}"
-        )
-        render_commands = [c for c in calls if c != "set_page_config"]
-        assert not render_commands, (
-            f"error was raised after dialog/render commands {render_commands}; "
-            "fail-fast must come from startup initialization, not a dialog render"
-        )
-        assert SENTINEL_COOKIE_MSG not in message, (
-            "no startup validation fired; main() ran past startup initialization"
-        )
-    else:
-        pytest.fail(
-            "main() completed without failing fast on missing contact.maintainer_label"
-        )
+        _, calls = recorded_st_calls
+        try:
+            app_module.main()
+        except RuntimeError as exc:
+            assert SENTINEL_COOKIE_MSG in str(exc), (
+                f"startup was blocked before reaching the CookieController stage: {exc!r}"
+            )
+    finally:
+        logger.removeHandler(caplog.handler)
+
+    warnings = _warning_messages_naming_missing_key(caplog)
+    assert warnings, "no operator warning naming contact.maintainer_label was emitted from startup preflight"
+    render_commands = [c for c in calls if c != "set_page_config"]
+    assert not render_commands, (
+        f"warning was emitted after dialog/render commands {render_commands}; "
+        "the operator warning must come from the startup preflight, not a "
+        "dialog render"
+    )

@@ -89,6 +89,13 @@ service-account.json
 !docs/**/*token*
 !**/plan_*token*
 !.junie/security-secrets.md
+!.streamlit/required_secrets.yaml
+!test/test_required_secrets_manifest_sc1.py
+!src/services/secrets_preflight.py
+!test/test_secrets_preflight_sc2.py
+!test/test_secrets_value_safety_sc5.py
+!test/test_remediation_runbook_sc4_1397.py
+!docs/runbook-streamlit-cloud-secrets-outage-remediation.md
 
 # Data files
 src/backend/seed_data/natick.txt
