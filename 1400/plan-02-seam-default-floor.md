@@ -89,12 +89,12 @@
 - [ ] 41. **Verify (**task-card**).** Dispatch the verify task from verification-before-completion: verify zero above-floor rows produce a normal return in the edge-input matrix. **→ SC-6**
 - [ ] 42. **Commit (**direct**).** Stage and commit test + implementation together. **→ SC-6**
 
-### Item 9 — SC-7: below-floor rows never served as ranked results
+### Item 9 — SC-7: per-row filtering — below-floor rows excluded whenever a threshold is active
 
-- [ ] 43. **RED (**task-card**).** Dispatch the red task from test-driven-development: write a failing edge-input test asserting the all-below-floor outcome never serves below-floor rows as ranked results. The test FAILS because the default floor does not yet apply in the SQL filter path. **→ SC-7**
-- [ ] 44. **GREEN (**task-card**).** Dispatch the green task from test-driven-development: guarantee below-floor rows are excluded from results under the default path — the floor filter must actually apply for the default, not only for explicit thresholds. **→ SC-7**
+- [ ] 43. **RED (**task-card**).** Dispatch the red task from test-driven-development: write a failing per-row filtering test using a mixed above/below-floor stub under an EXPLICIT threshold, asserting below-floor rows are excluded while floor-clearing rows are served in the same result set. The test FAILS because below-floor rows are currently served alongside floor-clearing rows. **→ SC-7**
+- [ ] 44. **GREEN (**task-card**).** Dispatch the green task from test-driven-development: guarantee below-floor rows are excluded from results whenever a threshold is active (default OR explicit) — the floor filter applies per-row, never mixing served and below-floor rows in one response. **→ SC-7**
 - [ ] 45. **Post-regression (**task-card**).** Dispatch the phase-4 task from test-driven-development: full seam regression batch passes. **→ non-regression for SC-7**
-- [ ] 46. **Verify (**task-card**).** Dispatch the verify task from verification-before-completion: verify results are empty whenever all scores are below the floor in the edge-input matrix. **→ SC-7**
+- [ ] 46. **Verify (**task-card**).** Dispatch the verify task from verification-before-completion: verify the mixed-distribution result contains ONLY floor-clearing rows (below-floor rows excluded from the same result set). **→ SC-7**
 - [ ] 47. **Commit (**direct**).** Stage and commit test + implementation together. **→ SC-7**
 
 ---

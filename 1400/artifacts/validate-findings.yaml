@@ -1,0 +1,80 @@
+# validate-findings.yaml — .issues/1400
+issue: 1400
+generated: "2026-10-02"
+validated_plan: ".issues/1400/plan.md"
+solve_status_input: SAT
+
+overall_status: PASS_WITH_FINDINGS
+
+category_results:
+  - category: "1 — Structural validation"
+    status: PASS
+    checks:
+      - check: "phase table with required columns (Phase, Name, Concern, SCs, Depends On, Step Range, Dispatch)"
+        result: PASS
+      - check: "each phase has a procedure section with numbered steps"
+        result: PASS
+        detail: "plan-01..plan-04 each carry Step-by-step sections with checkbox-numbered steps (3-17, 18-47, 48-57, 66-74)"
+      - check: "exit criteria section with SC-to-phase mapping"
+        result: PASS
+        detail: "C1..C9/C5a/C8a map to SC-1..SC-11, SC-8a, SC-11a and pipeline completion"
+    findings:
+      - id: VF-1
+        severity: minor
+        detail: "Step numbering has a gap: steps 58-65 do not exist in any phase or post-implementation section (renumbering residue from the 2026-10-02 19:55 revision: post-implementation 73-80 → 75-82 while Phase 4 ends at 74). Non-blocking; cosmetic renumbering only. No step references a missing 58-65 identifier."
+
+  - category: "2 — Skill+task validity"
+    status: PASS
+    checks:
+      - check: "every skill+task reference matches implementation-workflow reference card"
+        result: PASS
+        detail: "test-driven-development red/green/phase-4 post-regression, verification-before-completion verify, audit (verification-audit DiMo investigator → validator → evaluator → arbiter), finishing-a-development-branch checklist, verification-before-completion pre-pr-gate, test-driven-development regression-check, git-workflow-pr review-prep/create, completion-core completion — all valid reference-card entries. Direct commit steps align with orchestrator commit-inline convention declared in the dispatch frontmatter."
+
+  - category: "3 — SC coverage"
+    status: PASS
+    checks:
+      - check: "every spec SC appears in at least one phase's exit criteria"
+        result: PASS
+        detail: "13 SCs (SC-1..SC-11, SC-8a, SC-11a): Phase 1 = SC-1/SC-8/SC-8a; Phase 2 = SC-2..SC-7; Phase 3 = SC-9/SC-10; Phase 4 = SC-11/SC-11a. No SC uncovered."
+      - check: "triplet split detection — RED/GREEN/COMMIT co-located per SC"
+        result: PASS
+        detail: "Each SC maps to exactly one Item with RED/GREEN/COMMIT inside the same phase (Items 1-3 in Phase 1, 4-9 in Phase 2, 10-11 in Phase 3, 12-13 in Phase 4). No triplet split."
+
+  - category: "4 — Concern separation"
+    status: PASS
+    checks:
+      - check: "each phase addresses concerns from concern-map.yaml"
+        result: PASS
+        detail: "Concern-map defines 5 concerns; strict partition: Phase 1 = calibration + recall-regression; Phase 2 = seam-default + floor-empty; Phase 3 = ui-default; Phase 4 = e2e-auth-bypass. No concern shared between phases."
+      - check: "no two phases address the same concern"
+        result: PASS
+        detail: "Co-located concern pairs within a phase (calibration+recall-regression, seam-default+floor-empty) were previously adjudicated as non-structural under validate-findings option (a) — same seam boundary, atomic per-item TDD commits. Phase 4 concern isolated to a distinct boundary (security_manager.py auth path)."
+
+  - category: "5 — DAG validation"
+    status: PASS
+    checks:
+      - check: "no cycles"
+        result: PASS
+        detail: "Preconditions are a linear chain: phase2⇒phase1, phase3⇒phase2, phase4⇒phase3; invariants encode the same acyclic edges. Consistent with solve-output SAT."
+      - check: "all phases reachable from start"
+        result: PASS
+        detail: "Phase 1 root → 2 → 3 → 4; post-implementation depends on 1,2,3,4."
+      - check: "no orphan phases"
+        result: PASS
+
+  - category: "6 — Holistic quality"
+    status: PASS
+    checks:
+      - check: "no TBD/TODO placeholders in plan body"
+        result: PASS
+        detail: "grep over plan.md and plan-01..04 returned zero matches."
+      - check: "all steps use checkbox format"
+        result: PASS
+      - check: "dispatch mode consistency"
+        result: PASS
+        detail: "Mixed dispatch is explicit and consistent: red/green/post-regression/verify are task-card steps, commit steps are declared direct (orchestrator commit-inline) in the frontmatter dispatch block for all four phases; post-implementation declares mixed per step."
+
+summary: |
+  6/6 categories PASS. One minor finding VF-1: step-numbering gap 58-65
+  (renumbering residue), cosmetic and non-blocking — no dangling references.
+  Plan is structurally valid against the SAT solve output and dependency contract.

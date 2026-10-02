@@ -25,26 +25,34 @@ dependency_contract_from_interface_compatibility:
     real_source: "st.session_state['semantic_threshold'] float in [0.0, 1.0]"
     real_target: "search_semantic(threshold=...)"
     type_constraints: "float only; persisted as string preference via PreferenceService; out-of-range rejected by _validate_threshold guard"
+  e2e_auth_bypass:
+    real_source: "SNEA_E2E=1 env gate (existing E2E gating mechanism per ui_testing_standard)"
+    real_target: "pinned test-only auth bypass hook in the app auth path — src/services/security_manager.py auth resolution (SC-11); pytest auth-path inertness test asserting production-path behavior when SNEA_E2E is unset (SC-11a); E2E harness authentication"
+    type_constraints: "bypass branch reachable ONLY when SNEA_E2E=1; inert without the gate (production auth behavior identical, verified by pytest per SC-11a); cookie/context injection is NOT an authorized mechanism (token set server-side, validated against live GitHub API); no real GitHub credentials fabricated or embedded"
 
 variables:
   phase1_complete: {type: bool, description: "calibration anchors + evidence artifact + published floor constant derived from real corpus queries (SC-1, SC-8, SC-8a)"}
   phase2_complete: {type: bool, description: "seam threshold=None default-floor semantics + explicit override/restore + all-below-floor ok/empty/message outcome (SC-2..SC-7)"}
   phase3_complete: {type: bool, description: "UI threshold default parity within +/-0.01 and override preservation (SC-9, SC-10)"}
+  phase4_complete: {type: bool, description: "pinned test-only SNEA_E2E-gated auth bypass hook in src/services/security_manager.py auth resolution making E2E tests authenticate without headed OAuth login or fabricated credentials (SC-11); bypass inert outside the gate verified by pytest (SC-11a)"}
   all_phases_done: {type: bool, description: "conjunction of all phase completions"}
 
 preconditions:
   - "z3.Implies(phase2_complete, phase1_complete)"
   - "z3.Implies(phase3_complete, phase2_complete)"
+  - "z3.Implies(phase4_complete, phase3_complete)"
 
 invariants:
   # DAG edges (structure.yaml dependency_dag)
-  - "all_phases_done == z3.And(phase1_complete, phase2_complete, phase3_complete)"
+  - "all_phases_done == z3.And(phase1_complete, phase2_complete, phase3_complete, phase4_complete)"
+  - "z3.Not(z3.And(phase4_complete, z3.Not(phase3_complete)))"
   - "z3.Not(z3.And(phase3_complete, z3.Not(phase2_complete)))"
   - "z3.Not(z3.And(phase2_complete, z3.Not(phase1_complete)))"
   # Triplet co-location: each SC committed within its phase — phases are atomic
   - "z3.Or(z3.Not(phase1_complete), phase1_complete)"
   - "z3.Or(z3.Not(phase2_complete), phase2_complete)"
   - "z3.Or(z3.Not(phase3_complete), phase3_complete)"
+  - "z3.Or(z3.Not(phase4_complete), phase4_complete)"
 
 postconditions:
   - "all_phases_done"
