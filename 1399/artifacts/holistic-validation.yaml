@@ -1,0 +1,79 @@
+status: DONE
+issue: 1399
+spec_path: ".issues/1399/spec.md"
+dimensions:
+  - id: 1
+    name: Implementability
+    result: PASS
+    justification: "Single approach (add params['lim'] under the existing guard), atomic SCs, one affected production file — consistent output across implementors."
+  - id: 2
+    name: Internal Consistency
+    result: PASS
+    justification: "Preamble root cause matches fix approach; SCs match requirements (traceability table complete); affected files match artifact blast radius."
+  - id: 3
+    name: Completeness
+    result: PASS
+    justification: "No TBD/TODO; edge cases (limit=0, negative, non-integer) specified; local-replica dependency named; no guessing required."
+  - id: 4
+    name: Scope Discipline
+    result: PASS
+    justification: "Not Included section excludes #1400 calibration, UI wiring, status taxonomy, schema changes; requirements R-5 confines the fix."
+  - id: 5
+    name: Testability
+    result: PASS
+    justification: "All 4 SCs behavioral with pytest verification against the local replica; each independently verifiable."
+  - id: 6
+    name: Escape Hatches
+    result: PASS
+    justification: "No 'should/may/ideally/as appropriate/TBD/moment-of-discretion' language in SCs or requirements; guard-test RED-'need not fail' wording is a stated invariant-gate convention, not a discretion grant."
+  - id: 7
+    name: Provenance
+    result: PASS
+    justification: "Root-cause claim verified by live reads and grep of semantic_search_service.py at HEAD (no params['lim'] write); caller behavior verified in records.py; Documentation Sources table lists each source with verification method."
+  - id: 8
+    name: Feasibility
+    result: PASS
+    justification: "One-line params addition in a live file; test pattern mirrors existing suites; local replica available per repo sync protocol."
+  - id: 9
+    name: Safety
+    result: PASS
+    justification: "No destructive operations, no production writes (only local replica), parameterized LIMIT avoids injection; rollback = trivial git revert."
+  - id: 10
+    name: Traceability
+    result: PASS
+    justification: "Traceability table maps every R to >=1 SC and every SC to >=1 R; Items 1:1 with SC-1..SC-4; no orphan SCs or root causes (single root cause → SC-1 addresses it directly)."
+  - id: 11
+    name: Correctness
+    result: PASS
+    justification: "Root cause (SQL has :lim, params lacks it) matches the actual defect found in live source; fix approach directly restores placeholder/params parity."
+structural_checks:
+  - check_name: "SHALL language conformance"
+    result: PASS
+    justification: "All six requirements use SHALL; no unqualified must/will/should in normative statements."
+  - check_name: "dark-prose-007 cost frames"
+    result: PASS
+    justification: "Cost Frame section covers SC-1..SC-4 with defect-discovery-latency framing, action cost, skipping cost, identity anchor."
+  - check_name: "Documentation Sources column"
+    result: PASS
+    justification: "SC table includes the required Documentation Sources column with non-empty entries per SC."
+  - check_name: "Determinism"
+    result: PASS
+    justification: "No adverbs-without-thresholds, comparatives-without-baselines, open-ended quality terms, hedging, or escape hatches in SCs; expected values specified explicitly."
+  - check_name: "Compound-SC detection"
+    result: PASS
+    justification: "Revised in response to self-check: each SC states one verification target (SC-1 no exception; SC-2 cap-vs-top-ranked comparison; SC-3 baseline-count equalivalence; SC-4 suite pass)."
+  - check_name: "Causal-chain verification"
+    result: PASS
+    justification: "Single root cause → SC-1 directly addresses it; SC-2 verifies the observable cap consequence; no orphan SCs/root causes."
+  - check_name: "Evidence-type-to-method cross-check"
+    result: PASS
+    justification: "All SCs declare behavioral, verified via pytest execution — matches the canonical taxonomy (test execution with output inspection; non-deck-repo fallback instrument = pytest against local replica)."
+  - check_name: "Artifact cross-reference"
+    result: PASS
+    justification: "Spec affected files (semantic_search_service.py + new test file) match blast-radius.yaml; single phase matches concern-map.yaml; interface-compatibility.yaml constraint (placeholder/params parity) matches R-3; testability-assessment.yaml strategy matches SC verification methods. All artifact files exist and are non-empty."
+  - check_name: "Decomposition criteria (atomicity/single-deliverable/binary-verifiability/PR-gate-viability/ceremony/coverage)"
+    result: PASS
+    justification: "Each SC is atomic (no coordinating conjunctions joining distinct targets), single-deliverable, binary-verifiable, one RED/GREEN cycle (PR-gate viable); SC-3/SC-4 are warning-level guard SCs that add new verification signal (baseline equivalence, suite regression) not entailed by SC-1/SC-2."
+aggregate_verdict: PASS
+finding_summary: "11/11 holistic dimensions PASS; 9/9 structural checks PASS. One self-check-driven revision applied before verdict: original SC-3 bundled invariance + suite-run targets (compound) — decomposed into SC-3 (invariance) and SC-4 (suite regression), and the Documentation Sources column was added to the SC table. validate-yaml scoped gate exit 0."
+blocker_reason: null

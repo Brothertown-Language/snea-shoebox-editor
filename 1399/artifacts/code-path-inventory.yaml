@@ -1,0 +1,9 @@
+status: DONE
+issue: 1399
+phases:
+  - phase: 1
+    title: "Bind-param fix"
+    code_paths:
+      - "search_semantic() → params dict construction (lines 143-151) → _candidate_sql(has_limit=...) → text(sql) → conn.execute(sql, params) — 'lim' key added to params before execute when limit is not None."
+      - "Test path: test/test_semantic_limit_bind_sc1_red.py → search_semantic(limit=5) → engine (local DB replica)."
+    untouched_paths: "empty_query guard, _encode_query, diagnostics block, backfill_embeddings."

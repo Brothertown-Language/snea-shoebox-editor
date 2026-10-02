@@ -1,0 +1,10 @@
+status: DONE
+topic: "search_semantic(limit=<n>) InvalidRequestError — ':lim' bind param never populated"
+cards_consulted: 0
+findings: |
+  Research cards in .issues/research-cards/ cover Algonquian dictionary sources
+  (central/eastern Algonquian, DOBES, Mayhew, Stiles, Brinley, Gatschet, etc.)
+  — linguistic data provenance topics. No card addresses SQLAlchemy bind-param
+  or SQL generation defects; no card has confidence >= 0.7 relevant to this
+  bug topic. No findings incorporated.
+gap_report: "No research-card coverage of SQLAlchemy text() bind-parameter defects; proceeding from live-source inspection only."

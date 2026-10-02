@@ -1,0 +1,14 @@
+status: DONE
+issue: 1399
+interfaces:
+  - name: "search_semantic(mode, query, threshold, source_id, limit=None)"
+    status: unchanged
+    compat: backward_compatible
+    notes: "Signature already declares limit=None; fix restores the promised contract instead of changing it."
+removed_interfaces: []
+breaking_changes: []
+dependency_contract:
+  - source: "search_semantic limit parameter (declared contract)"
+    target: "_candidate_sql has_limit LIMIT :lim clause"
+    type: "artifact schema"
+    constraint: "params dict MUST contain a 'lim' key whenever the rendered SQL contains the :lim bind param — parity between SQL placeholders and params keys is the invariant."

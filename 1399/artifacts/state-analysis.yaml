@@ -1,0 +1,13 @@
+status: DONE
+issue: 1399
+phases:
+  - phase: 1
+    title: "Bind-param fix"
+    state_transitions:
+      - from: "search_semantic(limit=<n>) raises InvalidRequestError (broken seam)"
+        to: "search_semantic(limit=<n>) returns SemanticSearchResult(status='ok', results capped at n)"
+        trigger: "params['lim'] populated when limit is not None"
+      - from: "search_semantic(limit=None) full ranked list"
+        to: "unchanged"
+        trigger: "no state change — invariant preserved"
+    invariants: "Result ordering (score DESC, record_id ASC) and status taxonomy unchanged."

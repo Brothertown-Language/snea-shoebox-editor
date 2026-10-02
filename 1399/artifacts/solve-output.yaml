@@ -1,0 +1,10 @@
+solve_status: SAT
+plan_status: SOLVED_SATISFICING
+model_check: "SAT (lim_parity = True)"
+state_check: "SAT (+ postconditions + invariants), lim_parity = True"
+planner_result:
+  engine: tamer
+  problem: issue-1399-limit-bind-param-fix
+  plan_length: 4
+  actions: [red, green, verify, commit]
+  goals_satisfied: 1 of 1

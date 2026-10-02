@@ -1,0 +1,13 @@
+status: DONE
+issue: 1399
+grounding: "Grounded from spec scope sections (limit bind-param seam in src/services/semantic_search_service.py) plus pre-spec inspection reads (service file, records.py caller, test suite listing)."
+phases:
+  - phase: 1
+    title: "Bind-param fix + RED/GREEN tests"
+    affected:
+      - src/services/semantic_search_service.py (search_semantic params construction — add lim key)
+      - test/test_semantic_limit_bind_sc1_red.py (new RED/GREEN test, this issue)
+    ripple_effects:
+      - "No ripple: 'lim' key is additive to params dict; _candidate_sql signature unchanged; SQL string unchanged."
+      - "Callers unaffected (records.py passes limit=None; contract restored for limit=<n>)."
+    ungrounded_assumptions: "None."

@@ -1,0 +1,32 @@
+domain: "issue-1399-limit-bind-param-fix"
+fluents:
+  - name: "red_done"
+    type: "bool"
+  - name: "green_done"
+    type: "bool"
+  - name: "verify_done"
+    type: "bool"
+  - name: "commit_done"
+    type: "bool"
+actions:
+  - name: "red"
+    preconditions: []
+    effects:
+      - "red_done"
+  - name: "green"
+    preconditions:
+      - "red_done"
+    effects:
+      - "green_done"
+  - name: "verify"
+    preconditions:
+      - "green_done"
+    effects:
+      - "verify_done"
+  - name: "commit"
+    preconditions:
+      - "verify_done"
+    effects:
+      - "commit_done"
+goals:
+  - "commit_done"

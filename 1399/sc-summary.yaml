@@ -1,0 +1,18 @@
+sc_count: 4
+scs:
+  - id: "SC-1"
+    description: "search_semantic(limit=5) executes against the local DB replica without raising any exception."
+    evidence_type: "behavioral"
+    plan_item: 1
+  - id: "SC-2"
+    description: "With limit=1, the results list contains exactly the top-ranked pair of the unlimited ordering (cap of 1)."
+    evidence_type: "behavioral"
+    plan_item: 2
+  - id: "SC-3"
+    description: "With limit=None, the result count equals the unlimited pre-fix baseline count for the same query."
+    evidence_type: "behavioral"
+    plan_item: 3
+  - id: "SC-4"
+    description: "All existing semantic-search suites pass on the fixed branch."
+    evidence_type: "behavioral"
+    plan_item: 4

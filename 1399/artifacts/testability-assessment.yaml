@@ -1,0 +1,9 @@
+status: DONE
+issue: 1399
+phases:
+  - phase: 1
+    title: "Bind-param fix"
+    strategy: mixed
+    unit: "Integration test against local DB replica (matches existing test/test_semantic_search_edge_matrix_sc7.py pattern) asserting (a) no exception with limit=5, (b) cap at limit=1, (c) limit=None invariant."
+    behavioral: "Not required — no agent-enforcement surface; standard pytest execution suffices."
+    red_green: "RED: no-exception test fails on current HEAD (InvalidRequestError). GREEN: passes after params['lim'] fix."

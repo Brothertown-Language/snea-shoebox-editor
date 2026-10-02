@@ -1,0 +1,28 @@
+status: DONE
+issue: 1399
+phases:
+  - name: "Phase 1 — limit bind-param fix (single concern: restore :lim parity)"
+    scs: [SC-1, SC-2, SC-3, SC-4]
+    concern: "limit-bind-param-parity"
+    skill_task_selection:
+      - step: red
+        skill: test-driven-development
+        dispatch: "task(..., prompt: \"execute red task from test-driven-development\")"
+      - step: green
+        skill: test-driven-development
+        dispatch: "task(..., prompt: \"execute green task from test-driven-development\")"
+      - step: verify
+        skill: verification-before-completion
+        dispatch: "task(..., prompt: \"execute verify task from verification-before-completion\")"
+      - step: commit
+        skill: orchestrator (commit-inline)
+        dispatch: "direct git add/commit"
+dependency_dag:
+  edges: []
+  note: "Single phase — no inter-phase edges. All 4 SCs share one concern boundary (limit bind-param seam); SC-2/SC-3/SC-4 verification depends on SC-1's fix within the same phase."
+triplet_co_location:
+  SC-1: "RED/GREEN/COMMIT all in Phase 1 — OK"
+  SC-2: "RED/GREEN/COMMIT all in Phase 1 — OK"
+  SC-3: "RED/GREEN/COMMIT all in Phase 1 — OK"
+  SC-4: "RED/GREEN/COMMIT all in Phase 1 — OK"
+cross_phase_dependencies: none

@@ -1,0 +1,13 @@
+variables:
+  lim_parity:
+    type: bool
+    description: "params contains 'lim' key exactly when SQL renders the :lim bind param"
+dependency_contract:
+  - source: "search_semantic limit parameter (declared contract)"
+    target: "_candidate_sql has_limit LIMIT :lim clause"
+    type: "artifact schema"
+    constraint: "params dict MUST contain a 'lim' key whenever the rendered SQL contains the :lim bind param — parity between SQL placeholders and params keys is the invariant."
+preconditions:
+  - "z3.BoolVal(True)"
+postconditions:
+  - "lim_parity"

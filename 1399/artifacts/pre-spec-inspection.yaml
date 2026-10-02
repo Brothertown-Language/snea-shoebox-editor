@@ -1,0 +1,32 @@
+status: DONE
+issue: 1399
+inspected_files:
+  - path: src/services/semantic_search_service.py
+    role: defect site — _candidate_sql() lines 99-120 and search_semantic() lines 123-163
+  - path: src/frontend/pages/records.py
+    role: production caller — passes limit=None today (lines 252-260, 277-285); latent exposure only
+root_cause:
+  location: "src/services/semantic_search_service.py — search_semantic() params construction (lines 143-151) vs _candidate_sql() has_limit branch (line 119)"
+  defect: |
+    _candidate_sql(mode, has_threshold, has_source, has_limit) appends " LIMIT :lim"
+    to the outer query when has_limit is True. search_semantic() builds params
+    = {"qv": ..., "pin": ...} and conditionally adds "thr" (effective_threshold
+    is not None) and "source_id" (source_id is not None) — but never adds
+    "lim" when limit is not None, even though it passes has_limit=limit is not None.
+  consequence: |
+    conn.execute(sql, params) on a text() statement containing :lim with no
+    matching key raises sqlalchemy.exc.InvalidRequestError
+    ("A value is required for bind parameter 'lim' ... in parameter
+    group ...") for every search_semantic(limit=<n>) call.
+  evidence: |
+    Verified by reading live source at HEAD of feature/1400-semantic-threshold-calibration:
+    line 119 `lim = " LIMIT :lim" if has_limit else ""`; lines 143-151 params
+    dict contains only qv/pin/thr/source_id keys; no "lim" assignment anywhere
+    in the function (grep ":lim|limit" shows no params["lim"] write).
+existing_patterns:
+  - "Conditional param population mirrors :thr (line 149) and :source_id (line 151) — the fix follows the same pattern: params['lim'] = int(limit) guarded by limit is not None."
+  - "SQLAlchemy text() bind-param style throughout the module (params dict passed to conn.execute)."
+callers:
+  - "src/frontend/pages/records.py — search_semantic(..., limit=None) x2; unaffected by defect but contract-breaking for any limit=<n> caller."
+  - "Tests (test/test_semantic_*.py) — none currently pass limit=<n> (defect untested)."
+scope_boundary: "Fix confined to limit bind-param defect in search_semantic seam; no threshold/calibration changes (#1400), no UI changes."

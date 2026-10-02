@@ -1,0 +1,15 @@
+status: DONE
+issue: 1399
+matrix:
+  - concern: "Security"
+    impact: "Positive — parameterized LIMIT preserved; no interpolation introduced."
+    notes: "int(limit) coercion keeps the bind param typed; invalid types raise naturally."
+  - concern: "Data integrity (no synthetic data)"
+    impact: "Tests use real embedded rows from local DB replica per existing suite patterns."
+    notes: "No fabricated linguistic data."
+  - concern: "Backward compatibility"
+    impact: "limit=None path byte-identical; no API signature change."
+    notes: "Pure defect fix."
+  - concern: "Unicode/linguistic data"
+    impact: "None — fix touches numeric bind param only."
+    notes: "IPA characters untouched."

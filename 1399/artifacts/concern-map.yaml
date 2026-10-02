@@ -1,0 +1,10 @@
+status: DONE
+issue: 1399
+phases:
+  - phase: 1
+    title: "Bind-param fix"
+    concerns:
+      - concern: "SQL bind-parameter correctness"
+        boundary: "search_semantic() params construction only"
+        separated_from: "SQL string construction (_candidate_sql unchanged), threshold semantics (#1400), UI wiring (records.py untouched)"
+    separation_ok: true

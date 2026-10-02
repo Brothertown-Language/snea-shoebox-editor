@@ -1,0 +1,32 @@
+spec_path: .issues/1399/spec.md
+approval_status: approved
+approval_label: approved-for-pr
+approval_source: local issue.yaml (canonical)
+sc_count: 4
+scs:
+  - id: SC-1
+    evidence_type: behavioral
+  - id: SC-2
+    evidence_type: behavioral
+  - id: SC-3
+    evidence_type: behavioral
+  - id: SC-4
+    evidence_type: behavioral
+artifact_presence:
+  blast-radius.yaml: present
+  concern-map.yaml: present
+  code-path-inventory.yaml: present
+  cross-cutting-matrix.yaml: present
+  interface-compatibility.yaml: present
+  state-analysis.yaml: present
+  testability-assessment.yaml: present
+scope_boundary_findings:
+  - file: src/services/semantic_search_service.py
+    exists: true
+    verified: grep confirms `_candidate_sql` with has_limit param, `LIMIT :lim` clause, `def search_semantic(..., limit=None)`, and NO `params["lim"]` write at HEAD
+  - file: test/test_semantic_*.py
+    exists: true
+    verified: 19 existing semantic test files listed in test/
+  - file: test/test_migration_semantic_schema_sc4.py
+    exists: true
+    verified: present in test/ listing
