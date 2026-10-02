@@ -1,0 +1,55 @@
+problem built: issue-1397-phase-plan
+  objects: 4
+  fluents: 4
+  actions: 4
+  goals:   4
+[96m[1mNOTE: To disable printing of planning engine credits, add this line to your code: `up.shortcuts.get_environment().credits_stream = None`
+[0m[96m  *** Credits ***
+[0m[96m  * In operation mode `OneshotPlanner` at line 523 of `/home/muksihs/git/snea-shoebox-editor/./.opencode/tools/plan`, [0m[96myou are using the following planning engine:
+[0m[96m  * Engine name: Tamer
+  * Developers:  FBK Tamer Development Team
+[0m[96m  * Description: [0m[96mTamer offers the capability to generate a plan for classical, numerical and temporal problems.
+  *              For those kind of problems tamer also offers the possibility of validating a submitted plan.[0m[96m
+[0m[96m
+[0m
+plan length: 8
+
+- [ ] 1. define-manifest(p3)
+- [ ] 2. define-manifest(p4)
+- [ ] 3. define-manifest(p2)
+- [ ] 4. implement-preflight(p4)
+- [ ] 5. implement-preflight(p3)
+- [ ] 6. implement-preflight(p2)
+- [ ] 7. write-runbook(p4)
+- [ ] 8. couple-guard(p3)
+
+---
+actions:
+- name: define-manifest
+  parameters:
+  - p3
+- name: define-manifest
+  parameters:
+  - p4
+- name: define-manifest
+  parameters:
+  - p2
+- name: implement-preflight
+  parameters:
+  - p4
+- name: implement-preflight
+  parameters:
+  - p3
+- name: implement-preflight
+  parameters:
+  - p2
+- name: write-runbook
+  parameters:
+  - p4
+- name: couple-guard
+  parameters:
+  - p3
+domain: issue-1397-phase-plan
+engine: tamer
+plan_length: 8
+status: SOLVED_SATISFICING

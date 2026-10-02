@@ -1,0 +1,22 @@
+# code-path-inventory.yaml — backfilled from .issues/1397/spec.md
+schema_version: 1
+issue: 1397
+code_paths_by_sc:
+  "machine-checkable required-secrets manifest":
+    - "streamlit_app.py fail-fast guard st.secrets['contact']['maintainer_label'] (line 232)"
+    - "src/services/infrastructure_service.py st.secrets accesses: aiven.{project_name,service_name,api_token}, github_oauth, connections.postgresql.url (lines 40-42, 104-113)"
+    - "src/aiven_utils.py duplicate st.secrets accesses (lines 17-19, 157-167)"
+    - "src/services/identity_service.py st.secrets: runtime.mode, github_oauth.user_info_url (lines 54, 83)"
+    - "src/database/connection.py st.secrets: runtime.mode, connections.postgresql.url (lines 70-71, 588-589)"
+    - "src/logging_config.py st.secrets: runtime.mode (lines 23-24)"
+    - "src/frontend/pages/login.py st.secrets: github_oauth.{client_id,client_secret,authorize_url,token_url,redirect_uri} (lines 70-74, 102)"
+    - "src/frontend/ui_utils.py st.secrets access (grep-confirmed)"
+  "preflight verification against manifest":
+    - "new preflight module (startup-time check integrated near streamlit_app.py fail-fast guard, lines 229-243)"
+    - "optional CI/deploy step in .github/workflows/ (if CI-time mechanism chosen)"
+    - "src/services/infrastructure_service.py existing presence-check helpers (lines 104-113) as reuse candidates"
+  "guard/preflight coupling via manifest":
+    - "streamlit_app.py guard refactored to read the manifest instead of hardcoded keys"
+  "production outage remediation (developer action)":
+    - "Streamlit Cloud secrets store (external; not in codebase) — documented instructions"
+    - ".streamlit/secrets.toml.production template updated to include contact.maintainer_label"

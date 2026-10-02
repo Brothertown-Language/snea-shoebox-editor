@@ -1,0 +1,20 @@
+# cross-cutting-matrix.yaml — backfilled from .issues/1397/spec.md
+schema_version: 1
+issue: 1397
+cross_cutting_scs:
+  - sc: "Never log or expose secret VALUES — key presence comparison only"
+    concerns_spanned:
+      - preflight-verification
+      - guard-manifest-coupling
+      - required-secrets-manifest
+    rationale: >
+      Value-safety is a constraint on every mechanism that reads st.secrets: the manifest
+      holds paths only, the preflight report names paths only, and the guard already
+      compares presence/non-emptiness without echoing values.
+  - sc: "Preflight tied to fail-fast guard's key list (no silent divergence)"
+    concerns_spanned:
+      - required-secrets-manifest
+      - preflight-verification
+    rationale: >
+      A single manifest is consumed by both the startup guard (streamlit_app.py:229-243)
+      and the preflight report generator; a test must assert guard keys == manifest keys.

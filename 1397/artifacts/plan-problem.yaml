@@ -1,0 +1,72 @@
+# plan-output problem file — .issues/1397 phase DAG
+# Encodes the dependency DAG from structure.yaml as a planning problem:
+# one action per phase, ordered preconditions matching the DAG edges.
+domain: issue-1397-phase-plan
+types:
+  - name: phase
+objects:
+  - name: p1
+    type: phase
+  - name: p2
+    type: phase
+  - name: p3
+    type: phase
+  - name: p4
+    type: phase
+fluents:
+  - name: manifest_defined
+    params:
+      - name: x
+        type: phase
+  - name: preflight_implemented
+    params:
+      - name: x
+        type: phase
+  - name: guard_coupled
+    params:
+      - name: x
+        type: phase
+  - name: runbook_written
+    params:
+      - name: x
+        type: phase
+actions:
+  - name: define-manifest
+    params:
+      - name: x
+        type: phase
+    preconditions: []
+    effects:
+      - manifest_defined(x)
+  - name: implement-preflight
+    params:
+      - name: x
+        type: phase
+    preconditions:
+      - manifest_defined(x)
+    effects:
+      - preflight_implemented(x)
+  - name: couple-guard
+    params:
+      - name: x
+        type: phase
+    preconditions:
+      - manifest_defined(x)
+      - preflight_implemented(x)
+    effects:
+      - guard_coupled(x)
+  - name: write-runbook
+    params:
+      - name: x
+        type: phase
+    preconditions:
+      - preflight_implemented(x)
+    effects:
+      - runbook_written(x)
+init:
+  - manifest_defined(p1)
+goals:
+  - manifest_defined(p1)
+  - preflight_implemented(p2)
+  - guard_coupled(p3)
+  - runbook_written(p4)

@@ -1,0 +1,107 @@
+# structure.yaml — phase decomposition for .issues/1397
+schema_version: 1
+issue: 1397
+sc_source: >
+  SC list derived from concern-map.yaml concern_groups (sc_count: 5 per
+  analysis-summary.yaml). sc-summary.yaml was not present in artifacts/; the
+  concern-map SC inventory matches sc_count exactly and is used as the SC source.
+success_criteria:
+  - id: SC-1
+    text: "Define a machine-checkable inventory of required st.secrets keys (contact.maintainer_label, contact.mastodon_url, etc.) as a single-source-of-truth manifest"
+  - id: SC-2
+    text: "Verification mechanism compares deploy target secrets store against manifest BEFORE app can crash (startup preflight and/or CI/deploy step) with a structured report naming missing key PATHS only"
+  - id: SC-3
+    text: "Tie preflight to the fail-fast guard's key list so the two cannot diverge silently (guard consumes the same manifest)"
+  - id: SC-4
+    text: "Supply contact.maintainer_label in Streamlit Cloud secrets store (developer action, documented in runbook/report)"
+  - id: SC-5
+    text: "Never log or expose secret VALUES; checks compare key presence only (cross-cutting constraint tested within preflight phase)"
+
+phases:
+  - id: phase-1
+    name: "required-secrets manifest definition"
+    scs: [SC-1]
+    items:
+      - sc_id: SC-1
+        red: "RED: failing test asserting manifest file exists at .streamlit/required-secrets.yaml and covers every st.secrets key accessed in code"
+        green: "GREEN: create the required-secrets manifest listing dotted key paths"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+    skill_task_selection:
+      red: "test-driven-development — execute red task from test-driven-development"
+      green: "test-driven-development — execute green task from test-driven-development"
+      post_regression: "test-driven-development — execute phase-4 task from test-driven-development"
+      verify: "verification-before-completion — execute verify task from verification-before-completion"
+      commit: "(orchestrator) commit-inline"
+
+  - id: phase-2
+    name: "preflight verification implementation (incl. secret-value-safety)"
+    scs: [SC-2, SC-5]
+    items:
+      - sc_id: SC-2
+        red: "RED: failing test for preflight check taking store-mapping + manifest paths, returning missing-path list"
+        green: "GREEN: implement preflight module producing structured report (missing key paths, no values)"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+      - sc_id: SC-5
+        red: "RED: failing test asserting preflight output/logs contain no secret values (key presence only)"
+        green: "GREEN: enforce value-redaction guarantees in preflight report and logging"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+    skill_task_selection:
+      red: "test-driven-development — execute red task from test-driven-development"
+      green: "test-driven-development — execute green task from test-driven-development"
+      post_regression: "test-driven-development — execute phase-4 task from test-driven-development"
+      verify: "verification-before-completion — execute verify task from verification-before-completion"
+      commit: "(orchestrator) commit-inline"
+
+  - id: phase-3
+    name: "fail-fast guard <-> manifest coupling"
+    scs: [SC-3]
+    items:
+      - sc_id: SC-3
+        red: "RED: failing test asserting streamlit_app.py guard key list is sourced from the manifest (single source, no duplication)"
+        green: "GREEN: refactor guard to consume the manifest; add divergence-prevention test"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+    skill_task_selection:
+      red: "test-driven-development — execute red task from test-driven-development"
+      green: "test-driven-development — execute green task from test-driven-development"
+      post_regression: "test-driven-development — execute phase-4 task from test-driven-development"
+      verify: "verification-before-completion — execute verify task from verification-before-completion"
+      commit: "(orchestrator) commit-inline"
+
+  - id: phase-4
+    name: "outage remediation runbook (developer action)"
+    scs: [SC-4]
+    items:
+      - sc_id: SC-4
+        red: "RED: failing test/assertion that the runbook document exists and names the exact Cloud-store key to add (contact.maintainer_label) and the preflight verification step"
+        green: "GREEN: write remediation runbook documenting the developer-only Cloud-store action"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+    skill_task_selection:
+      red: "test-driven-development — execute red task from test-driven-development"
+      green: "test-driven-development — execute green task from test-driven-development"
+      post_regression: "test-driven-development — execute phase-4 task from test-driven-development"
+      verify: "verification-before-completion — execute verify task from verification-before-completion"
+      commit: "(orchestrator) commit-inline"
+
+dependency_dag:
+  edges:
+    - from: phase-1
+      to: phase-2
+      reason: "preflight consumes the manifest paths produced by phase-1"
+    - from: phase-1
+      to: phase-3
+      reason: "guard coupling consumes the same manifest (single source of truth)"
+    - from: phase-2
+      to: phase-3
+      reason: "guard-coupling divergence test asserts guard and preflight agree via the manifest"
+    - from: phase-2
+      to: phase-4
+      reason: "runbook documents preflight verification as the post-remediation confirmation step"
+
+verification:
+  triplet_colocation: "PASS — each SC's RED/GREEN/COMMIT steps are within a single phase (SC-5 co-located with SC-2 in phase-2 as cross-cutting constraint)"
+  cross_phase_dependency: "PASS — no RED test in an earlier phase depends on output from a later phase (DAG edges only point forward)"

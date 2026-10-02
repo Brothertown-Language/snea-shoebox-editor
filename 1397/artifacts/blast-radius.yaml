@@ -1,0 +1,20 @@
+# blast-radius.yaml — backfilled from .issues/1397/spec.md
+schema_version: 1
+issue: 1397
+affected_files:
+  - path: streamlit_app.py
+    role: startup fail-fast guard (lines 229-243); preflight integration point; exists
+  - path: .streamlit/secrets.toml
+    role: local dev secrets store; reference for required-key inventory; exists
+  - path: .streamlit/secrets.toml.production
+    role: production secrets template; must mirror manifest additions; exists
+  - path: src/services/infrastructure_service.py
+    role: existing secrets-audit logic (st.secrets presence checks at lines 104-113); reuse/extension target; exists
+  - path: src/aiven_utils.py
+    role: duplicate secrets-audit logic (lines 157-167); consistency consideration; exists
+  - path: test/
+    role: new tests for manifest completeness and preflight behavior (pattern: test_startup_maintainer_label_sc4.py); exists
+blast_radius_notes: >
+  New files expected: required-secrets manifest (e.g. .streamlit/required_secrets.yaml or equivalent)
+  and preflight module. The fail-fast guard at streamlit_app.py:229-243 must read the manifest
+  rather than a hardcoded key list so guard and manifest cannot diverge. No production data files touched.

@@ -1,0 +1,16 @@
+# state-analysis.yaml — backfilled from .issues/1397/spec.md
+schema_version: 1
+issue: 1397
+state_transitions_by_sc:
+  "preflight verification before crash":
+    - from: "app startup with partial/missing secrets store"
+      to: "structured preflight report emitted (missing key paths listed) before guard raises or in place of opaque crash"
+  "fail-fast guard behavior":
+    - from: "missing contact.maintainer_label"
+      to: "RuntimeError naming the missing key (existing behavior, streamlit_app.py:234-243) — unchanged"
+  "outage remediation (developer action)":
+    - from: "Streamlit Cloud store lacking contact.maintainer_label (production DOWN)"
+      to: "Cloud store contains the key; production renders"
+  "future required-secret addition":
+    - from: "code adds new st.secrets key"
+      to: "manifest updated in same change; preflight catches drift at startup/CI instead of production crash"

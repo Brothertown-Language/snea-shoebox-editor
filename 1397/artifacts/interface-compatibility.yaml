@@ -1,0 +1,30 @@
+# interface-compatibility.yaml — backfilled from .issues/1397/spec.md
+schema_version: 1
+issue: 1397
+interface_boundaries:
+  - boundary: "preflight module <-> streamlit_app.py fail-fast guard"
+    contract: >
+      Guard (streamlit_app.py:229-243) calls preflight/manifest loader; both must expose
+      the same required-key list source. Adding a new required secret means one manifest
+      edit; guard and preflight behavior update automatically.
+  - boundary: "preflight module <-> existing secrets-audit helpers (src/services/infrastructure_service.py:104-113)"
+    contract: >
+      Preflight may reuse or supersede the ad-hoc presence checks; signature compatibility
+      with dict-based st.secrets access must hold. Duplicated logic in src/aiven_utils.py
+      must not diverge.
+  - boundary: "manifest file <-> Streamlit Cloud deployed secrets store"
+    contract: >
+      Manifest lists required key PATHS (dotted, e.g. contact.maintainer_label); comparison
+      is presence-only against the target store's key structure. Format must be parseable
+      without executing secrets (no value reads).
+dependency_contract:
+  real_sources:
+    - ".streamlit/secrets.toml (local dev store, existing)"
+    - ".streamlit/secrets.toml.production (production template, existing)"
+  real_targets:
+    - "required-secrets manifest file (new; consumed by guard and preflight)"
+    - "preflight report structure (new; dict with missing-key path list, no values)"
+  type_constraints:
+    - "manifest: YAML/TOML list of dotted key paths (str), never value pairs"
+    - "preflight check: takes store-mapping (nested dict) + manifest paths -> returns missing-path list (list[str])"
+    - "guard integration: missing paths -> RuntimeError with actionable message (existing pattern, streamlit_app.py:235)"

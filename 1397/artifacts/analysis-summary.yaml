@@ -1,0 +1,27 @@
+# analysis-summary.yaml — backfill for .issues/1397
+schema_version: 1
+issue: 1397
+spec_path: .issues/1397/spec.md
+sc_count: 5
+artifact_status:
+  blast-radius.yaml: backfilled
+  concern-map.yaml: backfilled
+  code-path-inventory.yaml: backfilled
+  cross-cutting-matrix.yaml: backfilled
+  interface-compatibility.yaml: backfilled
+  state-analysis.yaml: backfilled
+  testability-assessment.yaml: backfilled
+scope_summary: >
+  Outage root-cause fix: introduce a required-secrets manifest as the machine-readable
+  source of truth for all st.secrets keys, add a preflight verification (startup and/or
+  CI) comparing deploy target store against the manifest (key presence only, never
+  values), couple the streamlit_app.py fail-fast guard to the same manifest, and
+  remediate the current Streamlit Cloud outage via developer action (adding
+  contact.maintainer_label). Out of scope: weakening the guard, contact dialog
+  redesign, secrets file format restructuring.
+grounding_notes: >
+  Affected-file existence verified via bash (ls/grep): streamlit_app.py guard at
+  lines 229-243; st.secrets access points enumerated across src/services,
+  src/database/connection.py, src/logging_config.py, src/frontend/pages/login.py,
+  src/frontend/ui_utils.py, src/aiven_utils.py; .streamlit/secrets.toml and
+  .streamlit/secrets.toml.production exist; existing test patterns in test/.

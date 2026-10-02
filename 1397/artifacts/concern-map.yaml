@@ -1,0 +1,24 @@
+# concern-map.yaml — backfilled from .issues/1397/spec.md
+schema_version: 1
+issue: 1397
+concern_groups:
+  - concern: required-secrets-manifest
+    scs:
+      - "Define a machine-checkable inventory of required st.secrets keys (contact.maintainer_label, contact.mastodon_url, etc.)"
+    phase_boundary: "Phase: manifest definition — single source of truth file + tests asserting it covers all st.secrets accesses in code"
+  - concern: preflight-verification
+    scs:
+      - "Verification mechanism compares deploy target secrets store against manifest BEFORE app can crash (startup preflight and/or CI/deploy step)"
+    phase_boundary: "Phase: preflight implementation — structured report naming missing key PATHS only"
+  - concern: guard-manifest-coupling
+    scs:
+      - "Tie preflight to the fail-fast guard's key list so the two cannot diverge silently"
+    phase_boundary: "Phase: coupling — guard and preflight consume the same manifest"
+  - concern: production-remediation
+    scs:
+      - "Supply contact.maintainer_label in Streamlit Cloud secrets store (developer action)"
+    phase_boundary: "Phase: outage remediation — human/developer step, documented in runbook/report"
+  - concern: secret-value-safety
+    scs:
+      - "Never log or expose secret VALUES; checks compare key presence only"
+    phase_boundary: "Cross-cutting constraint applied within preflight-verification phase tests"

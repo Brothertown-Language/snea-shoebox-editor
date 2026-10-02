@@ -1,0 +1,25 @@
+# solve-output.yaml — .issues/1397
+schema_version: 1
+issue: 1397
+solve_status: SAT
+solve_model:
+  query: "z3.And(phase1_complete, phase2_complete, phase3_complete, phase4_complete)"
+  result: SAT
+  assignment:
+    phase1_complete: true
+    phase2_complete: true
+    phase3_complete: true
+    phase4_complete: true
+check_status: "SAT (+ postconditions + invariants)"
+check_state_path: .issues/1397/artifacts/state-analysis.yaml
+check_initial: SAT
+check_with_postconditions_invariants: SAT
+plan_status: SOLVED_SATISFICING
+plan_engine: tamer
+plan_problem_path: .issues/1397/artifacts/plan-problem.yaml
+plan_output_path: .issues/1397/artifacts/plan-output.yaml
+plan_length: 8
+summary: >
+  model SAT (all four phases completable with DAG invariants), check SAT against
+  state-analysis.yaml, planner returned SOLVED_SATISFICING with an 8-step plan
+  covering all four phases in dependency order.

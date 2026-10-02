@@ -1,0 +1,19 @@
+# testability-assessment.yaml — backfilled from .issues/1397/spec.md
+schema_version: 1
+issue: 1397
+evidence_types_by_sc:
+  "machine-checkable required-secrets manifest":
+    type: behavioral
+    method: "unit test comparing manifest key set against all st.secrets accesses found by static scan of src/ and streamlit_app.py"
+  "preflight verification against manifest":
+    type: behavioral
+    method: "unit tests: preflight with complete store -> no missing paths; with missing key -> report names exactly that path; report contains no secret values"
+  "guard/preflight coupling":
+    type: behavioral
+    method: "test asserting guard's checked keys equal manifest entries; mutation test: add key to one, omit from other -> test fails"
+  "no secret VALUE exposure":
+    type: behavioral
+    method: "test asserting preflight output/log capture contains zero values from a fixture secrets store with sentinel values"
+  "production outage remediation":
+    type: structural
+    method: "developer action on Streamlit Cloud store (external); verified via production availability check after developer completes it — cannot be covered by automated test"
