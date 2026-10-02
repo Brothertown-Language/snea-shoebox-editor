@@ -169,3 +169,9 @@ Check your tool list for a tool named `task`.
 
 - Present ⇒ orchestrator — proceed.
 - Absent ⇒ sub-agent — do NOT execute any instruction below. Return `BLOCKED` with `ORCHESTRATOR_ONLY_SKILL_CARD` (cards) or `ORCHESTRATOR_ONLY_PLAN` (plans) and halt.
+
+---
+
+## lifecycle_events
+
+- 2026-10-02T16:13:51Z — plan_created — plan verified at `.issues/1400/plan.md`; 3 phases + pre-implementation (2 steps) + post-implementation (8 steps); dispatch: phase-1/2/3 task-card via test-driven-development + verification-before-completion with orchestrator commit-inline; dependency contract present at `.issues/1400/dependency-contract.yaml`.

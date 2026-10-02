@@ -1,0 +1,80 @@
+# validate-findings.yaml — .issues/1400
+schema_version: 1
+issue: 1400
+generated_by: writing-plans/tasks/validate
+generated_at: 2026-10-02
+
+overall_status: PASS
+
+category_1_structural:
+  status: PASS
+  checks:
+    phase_table_required_columns: PASS   # Phase | Name | Concern | SCs | Depends On | Step Range | Dispatch — all present (plan.md Phase Table)
+    per_phase_procedure_numbered_steps: PASS  # plan-01/02/03 each have Step-by-step with numbered checkbox steps (3-12, 13-42, 43-52)
+    exit_criteria_sc_mapping: PASS       # Exit Criteria C1-C8 map to SC-1..SC-10 and pipeline completion
+
+category_2_skill_task_validity:
+  status: PASS
+  checks:
+    tdd_red: PASS        # "execute red task from test-driven-development" — matches reference card
+    tdd_green: PASS      # "execute green task from test-driven-development" — matches
+    tdd_phase4_post_regression: PASS  # "execute phase-4 task from test-driven-development" — matches
+    vbc_verify: PASS     # "execute verify task from verification-before-completion" — matches
+    commit_inline: PASS  # orchestrator-direct per reference card
+    audit: PASS          # verification-audit DiMo investigator dispatch string — matches
+    z3_check: PASS       # orchestrator-direct solve check — matches
+    structural_checks: PASS  # "execute checklist task from finishing-a-development-branch" — matches
+    pre_pr_gate: PASS    # "execute verify task from verification-before-completion" — matches
+    regression_check: PASS   # "execute phase-4 task from test-driven-development" — matches
+    review_prep: PASS    # "execute review-prep from git-workflow-pr..." — matches
+    create_pr: PASS      # "execute create task from git-workflow-pr" — matches
+    exec_summary: PASS   # "execute completion task from completion-core" — matches
+
+category_3_sc_coverage:
+  status: PASS
+  scs_covered:
+    SC-1: phase 1 (item 1, steps 3-7)
+    SC-2: phase 2 (item 3, steps 13-17)
+    SC-3: phase 2 (item 4, steps 18-22)
+    SC-4: phase 2 (item 5, steps 23-27)
+    SC-5: phase 2 (item 6, steps 28-32)
+    SC-6: phase 2 (item 7, steps 33-37)
+    SC-7: phase 2 (item 8, steps 38-42)
+    SC-8: phase 1 (item 2, steps 8-12)
+    SC-9: phase 3 (item 9, steps 43-47)
+    SC-10: phase 3 (item 10, steps 48-52)
+  uncovered_scs: []
+  triplet_split_detection:
+    status: PASS
+    detail: >
+      Every SC's RED/GREEN/COMMIT steps are co-located in a single phase and a
+      single numbered item (per-item TDD cycle). No SC has RED in one phase and
+      GREEN/COMMIT in another. Cross-cutting notes (SC-2/SC-8 spanning
+      calibration+seam concerns) are data-dependency notes, not step splits.
+
+category_4_concern_separation:
+  status: PASS
+  checks:
+    one_concern_per_phase: PASS  # phase 1=calibration, phase 2=seam, phase 3=ui plumbing — matches concern-map.yaml groups exactly
+    no_duplicate_concerns: PASS  # each concern-group maps to exactly one phase; no overlap
+
+category_5_dag_validation:
+  status: PASS
+  checks:
+    no_cycles: PASS   # linear chain phase1 -> phase2 -> phase3 (dependency-contract preconditions: Implies(2,1), Implies(3,2)); solve-output cycle_check: no cycles
+    all_phases_reachable: PASS  # solve SAT + plan_output planner_reachability: PASS
+    no_orphan_phases: PASS      # phase 1 is the root; phases 2,3 each have in+out edges; post-implementation closeout row depends on 1,2,3
+
+category_6_holistic_quality:
+  status: PASS
+  checks:
+    no_tbd_todo_placeholders: PASS   # no TBD/TODO/placeholder tokens in plan.md or plan-01..03
+    checkbox_format: PASS            # all steps and VbC blocks use "- [ ]" checkbox format
+    dispatch_mode_consistency: PASS  # task-card phases contain zero inline RED/GREEN/verify steps; direct steps are commit-inline (steps 7/12/17/22/27/32/37/42/47/52), pre-implementation (1-2), and z3-check (54) — all sanctioned orchestrator-direct per reference card
+
+notes:
+  - Solve output is SAT (solve_status: SAT, plan_status: SOLVED_SATISFICING).
+  - SC-9/SC-10 Playwright evidence requirement correctly encoded in phase 3 entry/exit conditions and verify steps (skips reported as skipped, never PASS).
+  - Coercion rules (DONE_WITH_CONCERNS → FAIL) correctly encoded in step 56 pre-PR gate.
+
+co-authored_with_ai: OpenCode (zai-org/GLM-5.3-Flash)
