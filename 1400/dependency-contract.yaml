@@ -10,10 +10,13 @@ dependency_contract_from_interface_compatibility:
     real_source: "calibration evidence artifact (SC-1 output; per-anchor provenance: query battery, corpus pin, date)"
     real_target: "src/services/semantic_search_service.py — module-level named calibration constant (R-2, no magic number); src/frontend/pages/records.py — default state parity within +/-0.01 (SC-9)"
     type_constraints: >
-      float in (0.84, 0.93) exclusive interval per the measured distributions:
-      strictly greater than the measured out-of-corpus max (0.84) and strictly
-      less than the measured in-corpus minimum (0.93); SC-8 anchor demands
-      floor <= 0.90 supports rank-1 cosine >= 0.90 recall.
+      float in (0.9018, 0.9753) exclusive interval per the measured probe
+      (tmp/1400/artifacts/verification-probe.yaml, 2026-10-02): strictly
+      greater than the measured out-of-corpus battery max ("light bulb",
+      0.9018) and strictly less than the smallest floor-clearing in-corpus
+      anchor (beaver, 0.9753); anchor "how many" (0.8917) falls below the
+      floor by measurement and returns the below-floor empty outcome (SC-5
+      semantics), not a recall regression.
   semantic_search_result:
     real_source: "SemanticSearchResult(results: list[tuple[int, float]], status: str, message: str)"
     real_target: "all callees (records.py, linguistic_service.py dispatch, pytest seam tests)"

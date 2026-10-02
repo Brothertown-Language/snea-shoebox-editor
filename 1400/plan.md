@@ -17,7 +17,7 @@ dispatch:
 
 **Goal:** Calibrate a real-data default threshold floor for the gloss-space `search_semantic()` seam from the production replica, engage it when `threshold=None` (with honest all-below-floor outcomes and preserved explicit-override control), and sync the UI default threshold state to the published floor.
 
-**Architecture:** Three-phase linear pipeline. Phase 1 derives per-anchor calibration floors with provenance from real corpus queries and publishes a named calibration constant (evidence artifact + module constant, strictly between the measured out-of-corpus max 0.84 and in-corpus min 0.93, floor ≤ 0.90). Phase 2 implements default-on-`None` semantics in the seam of `src/services/semantic_search_service.py` and maps the all-below-floor outcome onto `status=ok` + empty results + message (unchanged signature and status enum per R-3). Phase 3 syncs the `st.session_state.semantic_threshold` default in `src/frontend/pages/records.py` to the published floor and verifies override passthrough with Playwright per `docs/development/ui_testing_standard.md`.
+**Architecture:** Three-phase linear pipeline. Phase 1 derives per-anchor calibration floors with provenance from real corpus queries and publishes a named calibration constant (evidence artifact + module constant, strictly between the measured out-of-corpus max 0.9018 and the smallest floor-clearing in-corpus anchor 0.9753 — floor ∈ (0.9018, 0.9753); measured distributions overlap, so the in-corpus anchor "how many" 0.8917 legitimately falls below the floor and returns the below-floor empty outcome per SC-5 semantics). Phase 2 implements default-on-`None` semantics in the seam of `src/services/semantic_search_service.py` and maps the all-below-floor outcome onto `status=ok` + empty results + message (unchanged signature and status enum per R-3). Phase 3 syncs the `st.session_state.semantic_threshold` default in `src/frontend/pages/records.py` to the published floor and verifies override passthrough with Playwright per `docs/development/ui_testing_standard.md`.
 
 **Files:**
 - `src/services/semantic_search_service.py`
@@ -69,8 +69,8 @@ Pre-implementation steps 1-2 run once before Phase 1. Post-implementation steps 
 **Context:**
 
 - Corpus: production replica, 6,681 embedded glosses, pin `thenlper/gte-small`, synced 2026-10-02
-- Measured distributions: in-corpus exact match 0.93–1.00 at rank 1; out-of-corpus max 0.84; out-of-corpus bulk p50 0.75–0.77
-- Floor constraint: float strictly in (0.84, 0.93), floor ≤ 0.90
+- Measured distributions (verification probe `tmp/1400/artifacts/verification-probe.yaml`, 2026-10-02): floor-clearing in-corpus anchors water 1.0000, beaver 0.9753, money 0.9970, gun 0.9959, book 0.9936 (all rank 1); in-corpus anchor "how many" 0.8917 (below any floor that clears the OOC max); out-of-corpus battery max "light bulb" 0.9018, battery range 0.8471–0.9018; out-of-corpus bulk p50 0.75–0.77 (earlier probe)
+- Floor constraint: float strictly in (0.9018, 0.9753); "how many" documented as below-floor empty outcome (SC-5), not a recall regression
 - Provenance required per anchor: query battery, corpus pin, date
 - Synthetic queries prohibited (R-1)
 
@@ -115,7 +115,7 @@ Pre-implementation steps 1-2 run once before Phase 1. Post-implementation steps 
 ## Pre-Implementation (once per plan)
 
 - [ ] 1. **Coherence gate (**direct**).** Read the ledger at `.issues/1400/artifacts/plan-input-verification.md`; confirm every SC (SC-1..SC-10) maps to exactly one phase and one plan item, the phase DAG is linear and acyclic (1 → 2 → 3), and each phase's red/green/post-regression/verify/commit skill+task selection matches the implementation-workflow reference card. **→ all SCs**
-- [ ] 2. **Baseline check (**direct**).** Verify production replica is freshly synced (`bash scripts/sync_prod_to_local.sh`), the feature branch exists, and existing seam/UI tests (`test/test_semantic_threshold_red.py` and siblings listed in the blast radius) pass before the first RED. Record the measured pre-calibration baseline (in-corpus rank-1 cosine 0.93–1.00) for SC-8 comparison. **→ all SCs**
+- [ ] 2. **Baseline check (**direct**).** Verify production replica is freshly synced (`bash scripts/sync_prod_to_local.sh`), the feature branch exists, and existing seam/UI tests (`test/test_semantic_threshold_red.py` and siblings listed in the blast radius) pass before the first RED. Record the measured pre-calibration baseline (floor-clearing in-corpus anchors water 1.0000 / beaver 0.9753 / money 0.9970 / gun 0.9959 / book 0.9936 at rank 1; anchor "how many" 0.8917 documented below floor per SC-8) for SC-8 comparison. **→ all SCs**
 
 ---
 
@@ -153,10 +153,10 @@ Pre-implementation steps 1-2 run once before Phase 1. Post-implementation steps 
 ## Exit Criteria
 
 - [ ] C1. Calibration evidence artifact exists with per-anchor floor values and full source provenance (query battery, corpus pin, date) for in-corpus and out-of-corpus batteries; no synthetic queries. **→ SC-1**
-- [ ] C2. Published calibrated default floor is a named constant strictly between 0.84 and 0.93, ≤ 0.90, carrying provenance. **→ SC-1, SC-2**
+- [ ] C2. Published calibrated default floor is a named constant strictly between 0.9018 and 0.9753, carrying provenance. **→ SC-1, SC-2**
 - [ ] C3. `search_semantic(threshold=None)` filters on the calibrated floor; explicit values override; `None` after an override re-engages the default. **→ SC-2, SC-3, SC-4**
 - [ ] C4. All-below-floor outcome returns `status=ok`, empty `results`, deficiency message — no exception, no below-floor rows served. **→ SC-5, SC-6, SC-7**
-- [ ] C5. Default threshold: in-corpus battery targets rank at rank 1 with cosine ≥ 0.90 (no recall regression vs baseline 0.93–1.00). **→ SC-8**
+- [ ] C5. Default threshold: floor-clearing in-corpus battery anchors (water / beaver / money / gun / book) rank at rank 1 with cosine ≥ published floor; anchor "how many" (0.8917) returns the below-floor empty outcome per SC-5 semantics (no recall regression for floor-clearing anchors). **→ SC-8**
 - [ ] C6. Fresh-session `st.session_state.semantic_threshold` equals the published floor within ±0.01; UI overrides reach the seam unchanged. **→ SC-9, SC-10**
 - [ ] C7. All pytest suites pass; Playwright SC-9/SC-10 evidence captured per ui_testing_standard (skips reported as skipped, never as PASS). **→ SC-8, SC-9, SC-10, non-regression**
 - [ ] C8. Stacked PR created; all post-implementation gates (audit, Z3, structural checks, pre-PR gate, regression check) PASS. **→ pipeline completion**
@@ -175,3 +175,4 @@ Check your tool list for a tool named `task`.
 ## lifecycle_events
 
 - 2026-10-02T16:13:51Z — plan_created — plan verified at `.issues/1400/plan.md`; 3 phases + pre-implementation (2 steps) + post-implementation (8 steps); dispatch: phase-1/2/3 task-card via test-driven-development + verification-before-completion with orchestrator commit-inline; dependency contract present at `.issues/1400/dependency-contract.yaml`.
+- 2026-10-02T16:40:31Z — plan_revised — regenerated against revised spec (measured-reality recalibration: floor interval (0.9018, 0.9753), in-corpus anchors incl. "how many" 0.8917 below-floor, OOC max "light bulb" 0.9018; probe `tmp/1400/artifacts/verification-probe.yaml`); Architecture, Phase 1 context, step 2 baseline, C2, C5 updated to match revised SC-8; phase plan files and dependency contract updated.

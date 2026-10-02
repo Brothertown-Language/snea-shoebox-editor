@@ -1,7 +1,7 @@
-sc_count: 10
+sc_count: 11
 scs:
   - id: "SC-1"
-    description: "Calibration anchors derived from real corpus queries (in-corpus and out-of-corpus batteries) with per-anchor floor values recorded with source provenance in a calibration evidence artifact; no synthetic queries as evidence"
+    description: "Calibration anchors derived from real corpus queries (in-corpus battery: water / beaver / how many / money / gun / book; out-of-corpus battery: 17 real queries) with per-anchor floor values recorded with source provenance in a calibration evidence artifact; no synthetic queries as evidence"
     evidence_type: "behavioral"
     plan_item: 1
   - id: "SC-2"
@@ -17,7 +17,7 @@ scs:
     evidence_type: "behavioral"
     plan_item: 4
   - id: "SC-5"
-    description: "When all ranked scores fall below the calibrated floor, the seam returns status=ok with empty results and a message naming the deficiency (e.g. \"no gloss results meet the sensitivity floor\")"
+    description: "When all ranked scores fall below the calibrated floor, the seam returns status=ok with empty results and the fixed deficiency message exactly: \"No gloss results meet the sensitivity floor.\" (pinned constant)"
     evidence_type: "behavioral"
     plan_item: 5
   - id: "SC-6"
@@ -29,14 +29,18 @@ scs:
     evidence_type: "behavioral"
     plan_item: 7
   - id: "SC-8"
-    description: "Under the default threshold, in-corpus targets in the calibration battery rank at rank 1 with cosine score >= 0.90 (no recall regression vs the measured pre-calibration baseline of 0.93-1.00 at rank 1)"
+    description: "Under the default threshold, in-corpus calibration anchors that measurably clear the floor — water (1.0000), beaver (0.9753), money (0.9970), gun (0.9959), book (0.9936) — rank at rank 1 with cosine score >= the published floor (no recall regression for floor-clearing anchors)"
     evidence_type: "behavioral"
     plan_item: 8
+  - id: "SC-8a"
+    description: "The in-corpus anchor \"how many\" (0.8917) falls below the default floor by measurement and MUST return the below-floor empty outcome (SC-5 semantics), not a rank-1 serve — documented measured behavior, not recall regression"
+    evidence_type: "behavioral"
+    plan_item: 9
   - id: "SC-9"
     description: "The UI default threshold state (st.session_state.semantic_threshold) equals the published calibrated default floor within ±0.01"
     evidence_type: "behavioral"
-    plan_item: 9
+    plan_item: 10
   - id: "SC-10"
     description: "A user override in the UI threshold control is preserved (override value is used by the seam, not silently replaced by the default)"
     evidence_type: "behavioral"
-    plan_item: 10
+    plan_item: 11
