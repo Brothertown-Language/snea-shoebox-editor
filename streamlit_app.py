@@ -2,6 +2,7 @@
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 from __future__ import annotations
 
+import logging
 import socket
 import time as _time
 from urllib.parse import urlparse
@@ -18,6 +19,55 @@ from src.logging_config import get_logger
 from src.services.infrastructure_service import InfrastructureService
 
 logger = get_logger("snea.app")
+
+_CONTACT_FALLBACK_PATH = "contact.mastodon_url"
+_CONTACT_LABEL_PATH = "contact.maintainer_label"
+
+
+def _path_present(store: dict, dotted_path: str) -> bool:
+    node: object = store
+    for seg in dotted_path.split("."):
+        if not isinstance(node, dict) or seg not in node:
+            return False
+        node = node[seg]
+    return bool(node)
+
+
+def resolve_maintainer_contact(store: dict) -> str | None:
+    """Resolve the maintainer contact label with default-fallback (SC-6).
+
+    A configured ``contact.maintainer_label`` is returned as-is. When it is
+    missing, a ONE-TIME non-blocking operator warning naming the missing key
+    PATH only (never a value) is logged and the static default —
+    ``contact.mastodon_url`` rendered as the contact — is returned instead.
+    Startup NEVER crashes on a missing contact key.
+
+    Args:
+        store: Nested mapping representing the parsed secrets store.
+
+    Returns:
+        The configured label, else the ``contact.mastodon_url`` value,
+        else None when no contact key is available.
+    """
+    label_node = store.get("contact", {}) if isinstance(store, dict) else {}
+    label = label_node.get("maintainer_label") if isinstance(label_node, dict) else None
+    if label:
+        return str(label)
+
+    missing = [path for path in (_CONTACT_LABEL_PATH, _CONTACT_FALLBACK_PATH) if not _path_present(store, path)]
+    if missing:
+        # A dedicated propagating logger so the operator warning reaches both
+        # the configured stderr handler and any capture/log aggregation.
+        logging.getLogger(__name__).warning(
+            "Required contact key(s) missing from the secrets store: %s. "
+            "Falling back to the static default contact (%s); startup continues.",
+            ", ".join(missing),
+            _CONTACT_FALLBACK_PATH,
+        )
+
+    url_node = store.get("contact", {}) if isinstance(store, dict) else {}
+    url = url_node.get("mastodon_url") if isinstance(url_node, dict) else None
+    return str(url) if url else None
 
 
 def _handle_aiven_startup(attempt: int) -> tuple[bool, str, str | None]:
@@ -124,10 +174,7 @@ def _initialize_database():
                     label = get_maintainer_label()
                     url = get_maintainer_contact_url()
                     if url:
-                        st.info(
-                            f"If the problem persists, please report the issue to "
-                            f"{label}: [{url}]({url})"
-                        )
+                        st.info(f"If the problem persists, please report the issue to {label}: [{url}]({url})")
 
                     if st.button("Retry initialization"):
                         st.rerun()
@@ -202,10 +249,7 @@ def _initialize_database():
                     label = get_maintainer_label()
                     url = get_maintainer_contact_url()
                     if url:
-                        st.info(
-                            f"If the problem persists, please report the issue to "
-                            f"{label}: [{url}]({url})"
-                        )
+                        st.info(f"If the problem persists, please report the issue to {label}: [{url}]({url})")
 
                     if st.button("Retry initialization"):
                         st.rerun()
@@ -226,21 +270,21 @@ def main():
     # Page configuration MUST be the first Streamlit command
     st.set_page_config(page_title="SNEA Shoebox Editor", page_icon="📚", layout="wide")
 
-    # Fail fast: the required contact.maintainer_label secret must be present
-    # (spec R-3 — no silent default).
-    try:
-        maintainer_label = st.secrets["contact"]["maintainer_label"]
-    except (KeyError, TypeError) as exc:
-        raise RuntimeError(
-            "Missing required secret contact.maintainer_label is not set. "
-            "Add contact.maintainer_label to .streamlit/secrets.toml (or the "
-            "deployed secrets store) before starting the app."
-        ) from exc
-    if not maintainer_label:
-        raise RuntimeError(
-            "Missing required secret contact.maintainer_label is empty. "
-            "Set contact.maintainer_label to a non-empty value in "
-            ".streamlit/secrets.toml (or the deployed secrets store)."
+    # Required-secrets guard: key list comes from the required-secrets
+    # manifest (single source of truth, SC-1/SC-3) via the shared loader.
+    from src.services.secrets_preflight import check_required_secrets, load_required_secret_paths
+
+    report = check_required_secrets(dict(st.secrets), load_required_secret_paths())
+    if report["missing"]:
+        # SC-6 (Revision 1): missing contact keys must NEVER crash startup.
+        # Preflight drift is reported as a one-time non-blocking operator
+        # warning naming missing key PATHS only (value-safe); startup
+        # continues and contact resolution falls back to the static default.
+        logger.warning(
+            "Required secret(s) missing from the secrets store: %s. "
+            "Add the missing key path(s) to .streamlit/secrets.toml (or the "
+            "deployed secrets store). Startup continues with defaults.",
+            ", ".join(report["missing"]),
         )
 
     # Initialize database on first load
