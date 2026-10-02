@@ -1,0 +1,27 @@
+# plan-revision.yaml — .issues/1397
+schema_version: 1
+issue: 1397
+revision_source: "Direct developer revision request (2026-10-01): plan fidelity failure against spec Revision 1"
+spec_revision: >
+  Spec Revision 1 — Developer directive 2026-10-01: default-value fallback, never crash.
+  The app MUST NOT crash when contact.maintainer_label is absent: fall back to a static
+  default (contact.mastodon_url rendered as the contact when no label configured), emit a
+  one-time non-blocking operator warning naming the missing key PATH only (value-safety
+  applies), continue startup. Supersedes issue #1392's no-silent-default decision for
+  this display label.
+
+actions_taken:
+  - "spec.md: added Revision 1 section with SC-6 text; out-of-scope bullet 'removing/weakening the fail-fast guard' marked superseded for contact display-label keys by Revision 1"
+  - "structure.yaml: SC-6 added to success_criteria; phase-3 scs now [SC-3, SC-6] with full RED/GREEN/verify/commit items for SC-6; phase-3 name updated; DAG edges unchanged (1->2, 1->3, 2->3, 2->4 still valid)"
+  - "concern-map.yaml: guard-manifest-coupling concern extended with the Revision 1 fallback SC; phase_boundary updated"
+  - "dependency-contract.yaml: guard integration type constraint rewritten from RuntimeError pattern to default-fallback resolution (no RuntimeError on missing contact keys)"
+  - "plan.md: Goal, Architecture, Blast Radius (behavior CHANGES — RuntimeError replaced by fallback), Phase Table (phase 3 step range 20-29, phase 4 30-34, post-impl 35-42), phase 2 concern transition, Phase 3 rewritten (guard/fallback consuming manifest; crash path removed; SC-6 TDD cycle steps 25-29), Exit Criteria C2-C6 rewritten and C8 added, plan_revised lifecycle event appended"
+  - "Preserved unchanged in substance: SC-1 manifest phase, SC-2/SC-5 preflight + value-safety phase, SC-4 runbook phase, dispatch modes, plan_schema_version 1, per-SC TDD colocation"
+
+unchanged_decision_record:
+  sc_numbering: "SC-6 added (no renumbering) — preserves artifact cross-references; one SC = one phase mapping maintained (SC-6 -> phase 3)"
+  default_value: "static default = contact.mastodon_url rendered as the contact when no label configured (per revision request proposal)"
+  warning_semantics: "one-time, non-blocking, operator-facing; names missing key PATH only; SC-5 value-safety applies"
+  manifest_coupling: "manifest still declares required keys; preflight still reports drift to operators; startup never crashes on a missing contact key"
+
+pre_flight_guard: "ORCHESTRATOR_ONLY_PLAN guard block preserved verbatim in plan.md"

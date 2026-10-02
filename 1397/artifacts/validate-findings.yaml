@@ -1,56 +1,69 @@
 # validate-findings.yaml — .issues/1397
 schema_version: 1
 issue: 1397
+validated_artifact: .issues/1397/plan.md
 overall_status: PASS
-
-category_1_structural:
-  status: PASS
-  checks:
-    phase_table_required_columns: PASS  # Phase|Name|Concern|SCs|Depends On|Step Range|Dispatch all present
-    per_phase_procedure_numbered_steps: PASS  # each phase has "### Steps" with numbered checkbox steps (5-9, 10-19, 20-24, 25-29, plus pre/post sections)
-    exit_criteria_sc_mapping: PASS  # "Exit Criteria" section C1-C7 maps SC-1..SC-5 plus pipeline gates
-
-category_2_skill_task_validity:
-  status: PASS
-  checks:
-    dispatch_strings_match_reference_card: PASS  # all task-card steps match implementation-workflow.md canonical strings:
-    # pre-regression (phase-0, tdd), pre-regression-verify (verify, vbc), red/green/post-regression (tdd),
-    # verify (vbc), commit-inline (orchestrator direct), audit (DiMo investigator chain),
-    # z3-check (orchestrator solve check), structural-checks (finishing-a-development-branch checklist),
-    # pre-pr-gate (vbc verify), regression-check (tdd phase-4), review-prep (git-workflow-pr), create-pr (git-workflow-pr), exec-summary (completion-core)
-    no_invalid_references: PASS
-
-category_3_sc_coverage:
-  status: PASS
-  checks:
-    every_sc_in_exit_criteria: PASS  # SC-1→C1, SC-2→C2, SC-3→C3, SC-4→C4, SC-5→C5
-    every_sc_in_phase: PASS  # SC-1→phase1, SC-2+SC-5→phase2, SC-3→phase3, SC-4→phase4
-    triplet_split_detection: PASS  # no triplet split across phases:
-    # SC-1: RED 5 / GREEN 6 / COMMIT 9 (all phase 1)
-    # SC-2: RED 10 / GREEN 11 / COMMIT 14 (all phase 2)
-    # SC-5: RED 15 / GREEN 16 / COMMIT 19 (all phase 2)
-    # SC-3: RED 20 / GREEN 21 / COMMIT 24 (all phase 3)
-    # SC-4: RED 25 / GREEN 26 / COMMIT 29 (all phase 4)
-
-category_4_concern_separation:
-  status: PASS
-  checks:
-    one_concern_per_phase: PASS  # phase1=required-secrets-manifest, phase2=preflight-verification (+SC-5 as cross-cutting constraint co-located per concern-map phase_boundary), phase3=guard-manifest-coupling, phase4=production-remediation
-    no_duplicate_concern: PASS  # no concern addressed by two phases; SC-5 co-location matches concern-map cross-cutting declaration
-
-category_5_dag_validation:
-  status: PASS
-  checks:
-    no_cycles: PASS  # edges 1→2, 1→3, 2→3, 2→4 (plan step 1 matches dependency-contract invariants and structure.yaml DAG)
-    all_phases_reachable: PASS  # phase-1 is the root; 2,3,4 all reachable
-    no_orphan_phases: PASS  # phase-1 is the start node (no incoming by design, not orphan); every other phase has incoming and outgoing edges
-
-category_6_holistic_quality:
-  status: PASS
-  checks:
-    no_tbd_todo_placeholders: PASS  # none in plan body; "<files>" placeholders in commit steps are declared as resolved-at-execution-time
-    checkbox_format_all_steps: PASS  # all steps use "- [ ]" format
-    dispatch_mode_consistency: PASS  # task-card steps dispatch via task() (pre-clean is per-step protocol, not inline work); direct steps (coherence gate, baseline, commits, z3-check) are orchestrator-inline per reference card
-
-observations:
-  - "Minor naming drift: structure.yaml RED text uses .streamlit/required-secrets.yaml; plan.md uses .streamlit/required_secrets.yaml. Plan is authoritative for execution; no functional impact."
+categories:
+  - category: structural-validation
+    status: PASS
+    checks:
+      - check: phase-table-with-required-columns
+        result: PASS
+        detail: "Phase table has Phase, Name, Concern, SCs, Depends On, Step Range, Dispatch columns; 4 phases + post-implementation row."
+      - check: per-phase-procedure-numbered-steps
+        result: PASS
+        detail: "Each phase has a Steps section with numbered checkbox steps (5-9, 10-19, 20-29, 30-34, 35-42)."
+      - check: exit-criteria-sc-mapping
+        result: PASS
+        detail: "Exit Criteria C1-C8 map SC-1..SC-6 plus pipeline gates and PR creation."
+  - category: skill-task-validity
+    status: PASS
+    checks:
+      - check: dispatch-strings-match-reference-card
+        result: PASS
+        detail: "All task-card dispatch strings match canonical entries in skills/writing-plans/reference/implementation-workflow.md (pre-regression, pre-regression-verify, red, green, post-regression, verify, audit, structural-checks, pre-pr-gate, regression-check, review-prep, create-pr, exec-summary)."
+      - check: orchestrator-direct-steps-sanctioned
+        result: PASS
+        detail: "Direct steps limited to commit-inline, coherence gate, baseline check, and z3-check — all sanctioned orchestrator-direct per reference card."
+  - category: sc-coverage
+    status: PASS
+    checks:
+      - check: all-scs-covered
+        result: PASS
+        detail: "SC-1→P1, SC-2→P2, SC-5→P2, SC-3→P3, SC-6→P3, SC-4→P4; all present in exit criteria."
+      - check: triplet-colocation
+        result: PASS
+        detail: "RED/GREEN/COMMIT for each SC co-located in one phase: SC-1(5,6,9), SC-2(10,11,14), SC-5(15,16,19), SC-3(20,21,24), SC-6(25,26,29), SC-4(30,31,34)."
+  - category: concern-separation
+    status: PASS
+    checks:
+      - check: one-concern-per-phase
+        result: PASS
+        detail: "P1=required-secrets-manifest, P2=preflight-verification, P3=guard-manifest-coupling (incl. SC-6 fallback per concern-map combined boundary), P4=production-remediation."
+      - check: no-shared-concern
+        result: PASS
+        detail: "secret-value-safety is concern-map-designated cross-cutting with home in the preflight phase; phase references to it (P1 RED assertion, P3 warning value-safety) are constraint applications, not concern-home duplication."
+  - category: dag-validation
+    status: PASS
+    checks:
+      - check: acyclic
+        result: PASS
+        detail: "Edges 1→2, 1→3, 2→3, 2→4; post-implementation depends 1-4. No cycles."
+      - check: all-phases-reachable
+        result: PASS
+        detail: "Phase 1 is the DAG root; all phases and post-implementation reachable."
+      - check: no-orphan-phases
+        result: PASS
+        detail: "Every phase has incoming or outgoing edges; matches SAT solve model in solve-output.yaml."
+  - category: holistic-quality
+    status: PASS
+    checks:
+      - check: no-tbd-todo-placeholders
+        result: PASS
+        detail: "No TBD/TODO/placeholder tokens in plan body; execution-time path resolution noted explicitly, not placeholder."
+      - check: checkbox-format
+        result: PASS
+        detail: "All 42 steps use checkbox format."
+      - check: dispatch-mode-consistency
+        result: PASS
+        detail: "Inline (direct) steps contain no dispatched instructions; task-card steps contain no inline execution."

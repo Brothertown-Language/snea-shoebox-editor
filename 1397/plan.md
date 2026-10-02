@@ -20,13 +20,13 @@ dispatch:
 
 ## Goal
 
-Restore and prevent recurrence of the production outage caused by the fail-fast `contact.maintainer_label` guard crashing the deployed Streamlit app. Introduce a required-secrets manifest as the single machine-readable source of truth, a preflight verification that compares a deploy target's secrets store against the manifest (naming missing key PATHS only, never values), tie the fail-fast guard to the same manifest so guard and preflight cannot diverge, and document the developer-only remediation for the current Streamlit Cloud outage.
+Restore and prevent recurrence of the production outage caused by the fail-fast `contact.maintainer_label` guard crashing the deployed Streamlit app. Introduce a required-secrets manifest as the single machine-readable source of truth, a preflight verification that compares a deploy target's secrets store against the manifest (naming missing key PATHS only, never values), replace the fail-fast crash for contact keys with a manifest-coupled default-fallback resolution path (per spec Revision 1: missing contact key → static default `contact.mastodon_url` rendered as the contact, one-time non-blocking operator warning naming the missing key PATH, startup continues — NO RuntimeError), and document the developer-only remediation for the current Streamlit Cloud outage.
 
 ## Architecture
 
 - New required-secrets manifest (YAML list of dotted key paths) under `.streamlit/`.
 - New preflight module: takes a store mapping + manifest paths, returns a structured missing-path report.
-- `streamlit_app.py` fail-fast guard refactored to consume the manifest (single source; no duplicated key list).
+- `streamlit_app.py` guard refactored to consume the manifest (single source; no duplicated key list) and REPLACED by a default-fallback resolution path for contact keys (spec Revision 1): missing contact key → static default (`contact.mastodon_url` rendered as the contact), one-time non-blocking operator warning naming the missing key PATH only, startup continues. The manifest still declares required keys; preflight still reports drift to operators; startup never crashes on a missing contact key.
 - Remediation runbook documenting the developer-only Streamlit Cloud secrets-store action.
 
 ## Files
@@ -45,7 +45,7 @@ Restore and prevent recurrence of the production outage caused by the fail-fast 
 
 ## Blast Radius
 
-- `streamlit_app.py` guard (startup path) — behavior preserved (RuntimeError naming missing key); key list source changes.
+- `streamlit_app.py` guard (startup path) — behavior CHANGES per spec Revision 1: the RuntimeError crash on a missing contact key is replaced by default-fallback resolution (static default + one-time warning naming the missing key PATH); key list source changes to the manifest.
 - `src/services/infrastructure_service.py` and `src/aiven_utils.py` — reuse/supersede existing presence-check helpers; duplicated logic must not diverge.
 - `src/services/identity_service.py`, `src/database/connection.py`, `src/logging_config.py`, `src/frontend/pages/login.py`, `src/frontend/ui_utils.py` — st.secrets access sites inventoried in phase-1 manifest completeness.
 - `.streamlit/secrets.toml.production` — must mirror manifest additions.
@@ -76,15 +76,15 @@ Check your tool list for a tool named `task`.
 |-------|------|---------|-----|------------|------------|----------|
 | 1 | Required-secrets manifest definition | required-secrets manifest | SC-1 | — | 5-9 | direct (5) + task-card (6-9) |
 | 2 | Preflight verification implementation (incl. secret-value-safety) | preflight verification | SC-2, SC-5 | 1 | 10-19 | task-card (10-18) + direct (19) |
-| 3 | Fail-fast guard / manifest coupling | guard-manifest coupling | SC-3 | 1, 2 | 20-24 | task-card (20-23) + direct (24) |
-| 4 | Outage remediation runbook (developer action) | production remediation | SC-4 | 2 | 25-29 | task-card (25-28) + direct (29) |
-| — | Post-implementation | pipeline gates | all | 1-4 | 30-37 | direct (31) + task-card (30, 32-37) |
+| 3 | Guard/manifest coupling + default-fallback resolution (Revision 1) | guard-manifest coupling + default-fallback | SC-3, SC-6 | 1, 2 | 20-29 | task-card (20-28) + direct (29) |
+| 4 | Outage remediation runbook (developer action) | production remediation | SC-4 | 2 | 30-34 | task-card (30-33) + direct (34) |
+| — | Post-implementation | pipeline gates | all | 1-4 | 35-42 | direct (36) + task-card (35, 37-42) |
 
 ## Pre-Implementation
 
 - [ ] 1. Coherence gate (**direct**)
   - Re-read `.issues/1397/spec.md` and `.issues/1397/artifacts/structure.yaml`; confirm SC list, phase DAG edges (1→2, 1→3, 2→3, 2→4), and triplet colocation are consistent.
-  - Confirm all 5 SCs map to exactly one phase and no phase covers an SC not assigned to it.
+  - Confirm all 6 SCs map to exactly one phase and no phase covers an SC not assigned to it.
   - SC reference: all (gate covers whole plan).
 - [ ] 2. Baseline check (**direct**)
   - Run the existing test suite (`uv run pytest test/`) and record the passing baseline; confirm clean working tree on the feature branch.
@@ -179,7 +179,7 @@ Check your tool list for a tool named `task`.
 
 ### State Transitions
 
-- From: app startup with partial/missing secrets store crashes opaquely. To: structured preflight report naming missing key paths before the guard raises.
+- From: app startup with partial/missing secrets store crashes opaquely. To: structured preflight report naming missing key paths before startup fallback resolution.
 
 ### Steps
 
@@ -224,42 +224,45 @@ Check your tool list for a tool named `task`.
 
 ### Concern Transition
 
-- Preflight and manifest in place → phase-3 couples the fail-fast guard to the same manifest so they cannot diverge silently.
+- Preflight and manifest in place → phase-3 couples the guard to the same manifest and replaces the missing-contact-key crash with default-fallback resolution (spec Revision 1).
 
-## Phase 3 — Fail-fast guard / manifest coupling
+## Phase 3 — Guard/manifest coupling + default-fallback resolution (Revision 1)
 
-- **Concern:** guard-manifest single-source coupling
-- **Files:** `streamlit_app.py` (fail-fast guard, startup path); new divergence-prevention test under `test/`
-- **SCs:** SC-3
+- **Concern:** guard-manifest single-source coupling + default-fallback for missing contact keys
+- **Files:** `streamlit_app.py` (fail-fast guard, startup path); new divergence-prevention and fallback tests under `test/`
+- **SCs:** SC-3, SC-6
 - **Depends On:** phases 1, 2
 - **Entry condition:** manifest (phase 1) and preflight (phase 2) committed
-- **Exit condition:** guard consumes the manifest; divergence test passes
+- **Exit condition:** guard consumes the manifest; missing contact keys fall back to a static default with a one-time warning; no RuntimeError raised; divergence test passes
 
 ### Code Path Coverage
 
-- `streamlit_app.py` fail-fast guard refactored to read `.streamlit/required_secrets.yaml` instead of a hardcoded key list; existing RuntimeError-with-actionable-message behavior (missing key named) preserved unchanged.
+- `streamlit_app.py` guard refactored to read `.streamlit/required_secrets.yaml` instead of a hardcoded key list.
+- Per spec Revision 1, the RuntimeError guard for contact keys is REPLACED by the default-fallback resolution path: a missing `contact.maintainer_label` (or any manifest-required contact key) falls back to the static default (render `contact.mastodon_url` as the contact when no label configured), logs a ONE-TIME non-blocking operator warning naming the missing key PATH only (value-safety applies — no values in the warning), and startup continues. The crash path is removed; the manifest still declares required keys and preflight still reports drift to operators.
 
 ### Cross-Cutting SCs
 
-- SC-3 itself is the cross-cutting coupling constraint recorded in the cross-cutting matrix (manifest ↔ preflight ↔ guard).
+- SC-3 is the cross-cutting coupling constraint recorded in the cross-cutting matrix (manifest ↔ preflight ↔ guard/fallback).
+- SC-5 (value-safety) applies to the SC-6 warning output: the warning names the missing key PATH only, never a value.
 
 ### Interface Boundaries
 
-- Guard ↔ preflight/manifest loader: same required-key list source; adding a required secret is one manifest edit and both behaviors update automatically.
+- Guard/fallback ↔ preflight/manifest loader: same required-key list source; adding a required secret is one manifest edit and both behaviors update automatically.
+- Fallback ↔ contact rendering: `contact.maintainer_label` missing → render `contact.mastodon_url` as the contact (static default), never crash.
 
 ### State Transitions
 
-- From: guard key list hardcoded (can silently diverge from manifest). To: guard keys == manifest keys, asserted by test.
+- From: guard key list hardcoded (can silently diverge from manifest) and a missing contact key crashes startup with RuntimeError. To: guard keys == manifest keys (asserted by test) and a missing contact key resolves via the manifest-declared default with a one-time warning; startup never crashes on a missing contact key.
 
 ### Steps
 
 - [ ] 20. RED for SC-3 (**task-card**)
   - `task(..., prompt: "execute red task from test-driven-development")`
   - Pre-clean `tmp/1397/artifacts/pipeline-red-*`.
-  - RED: failing test asserting the guard's required-key list is sourced from the manifest — a test adding a key to the manifest must change guard behavior, with no duplicated hardcoded list.
+  - RED: failing test asserting the guard's required-key list is sourced from the manifest — a test adding a key to the manifest must change guard/preflight behavior, with no duplicated hardcoded list.
 - [ ] 21. GREEN for SC-3 (**task-card**)
   - `task(..., prompt: "execute green task from test-driven-development")`
-  - GREEN: guard refactored to consume the manifest; divergence-prevention test passes; existing guard RuntimeError behavior unchanged.
+  - GREEN: guard refactored to consume the manifest; divergence-prevention test passes.
 - [ ] 22. Post-regression for SC-3 (**task-card**)
   - `task(..., prompt: "execute phase-4 task from test-driven-development")`
   - SC reference: SC-3.
@@ -267,17 +270,35 @@ Check your tool list for a tool named `task`.
   - `task(..., prompt: "execute verify task from verification-before-completion")`
   - SC reference: SC-3.
 - [ ] 24. Commit SC-3 (**direct**)
-  - `git add <guard refactor and test files> && git commit -m "refactor(app): fail-fast guard consumes required-secrets manifest (SC-3)"`
+  - `git add <guard refactor and test files> && git commit -m "refactor(app): guard consumes required-secrets manifest (SC-3)"`
 
-**Cost frame:** Verifying guard/manifest coupling costs one behavioral test run — minutes. Skipping means a stale manifest masks future missing keys (the spec's second risk) and the divergence is found only by the next production crash.
+**Cost frame:** Verifying guard/manifest coupling plus the fallback behavior costs two behavioral test runs — minutes. Skipping means a stale manifest masks future missing keys (the spec's second risk) and a missing contact key still crashes production (the exact outage this plan exists to close, per Revision 1).
 
 ### Phase 3 Completion
 
-- Verify: SC-3 verdict PASS; guard behavior regression-free.
+- Verify: SC-3 and SC-6 verdicts PASS with behavioral evidence; commits atomic per item; no RuntimeError path remains for missing contact keys.
 
 ### Concern Transition
 
-- Guard and preflight now share one source of truth → phase-4 documents the developer-only remediation of the live outage.
+- Guard and preflight now share one source of truth and missing contact keys resolve via fallback → phase-4 documents the developer-only remediation of the live outage.
+
+- [ ] 25. RED for SC-6 (**task-card**)
+  - `task(..., prompt: "execute red task from test-driven-development")`
+  - Pre-clean `tmp/1397/artifacts/pipeline-red-*`.
+  - RED: failing test asserting that a store mapping missing `contact.maintainer_label` does NOT raise RuntimeError — startup continues with the static default (`contact.mastodon_url` rendered as the contact), exactly one non-blocking operator warning naming the missing key PATH (no values) is logged, and the app proceeds to render.
+- [ ] 26. GREEN for SC-6 (**task-card**)
+  - `task(..., prompt: "execute green task from test-driven-development")`
+  - GREEN: the RuntimeError guard for contact keys is replaced by the default-fallback resolution path consuming the manifest; one-time warning logged (path only, value-safe); startup continues on a missing contact key. RED test passes. Minimum change only.
+- [ ] 27. Post-regression for SC-6 (**task-card**)
+  - `task(..., prompt: "execute phase-4 task from test-driven-development")`
+  - Pre-clean `tmp/1397/artifacts/pipeline-post-regression-*`.
+  - SC reference: SC-6.
+- [ ] 28. Verify SC-6 (**task-card**)
+  - `task(..., prompt: "execute verify task from verification-before-completion")`
+  - Pre-clean `tmp/1397/artifacts/pipeline-verify-*`.
+  - SC reference: SC-6.
+- [ ] 29. Commit SC-6 (**direct**)
+  - `git add <fallback resolution and test files> && git commit -m "feat(app): default-fallback contact resolution, never crash on missing contact key (SC-6)"`
 
 ## Phase 4 — Outage remediation runbook (developer action)
 
@@ -307,20 +328,20 @@ Check your tool list for a tool named `task`.
 
 ### Steps
 
-- [ ] 25. RED for SC-4 (**task-card**)
+- [ ] 30. RED for SC-4 (**task-card**)
   - `task(..., prompt: "execute red task from test-driven-development")`
   - Pre-clean `tmp/1397/artifacts/pipeline-red-*`.
   - RED: failing assertion that the runbook document exists and names the exact Cloud-store key to add (`contact.maintainer_label`) and the preflight verification step.
-- [ ] 26. GREEN for SC-4 (**task-card**)
+- [ ] 31. GREEN for SC-4 (**task-card**)
   - `task(..., prompt: "execute green task from test-driven-development")`
   - GREEN: runbook written documenting the developer-only Cloud-store action (add `contact.maintainer_label`), plus preflight as the post-remediation confirmation step; RED assertion passes.
-- [ ] 27. Post-regression for SC-4 (**task-card**)
+- [ ] 32. Post-regression for SC-4 (**task-card**)
   - `task(..., prompt: "execute phase-4 task from test-driven-development")`
   - SC reference: SC-4.
-- [ ] 28. Verify SC-4 (**task-card**)
+- [ ] 33. Verify SC-4 (**task-card**)
   - `task(..., prompt: "execute verify task from verification-before-completion")`
   - SC reference: SC-4.
-- [ ] 29. Commit SC-4 (**direct**)
+- [ ] 34. Commit SC-4 (**direct**)
   - `git add <runbook, template, test files> && git commit -m "docs(secrets): outage remediation runbook for Cloud-store maintainer_label (SC-4)"`
 
 **Cost frame:** Verifying the runbook names the exact key and confirmation step costs one assertion run. Skipping means the developer remediates from memory and the next outage has no documented procedure — the runbook is the only durable record of the human-only action.
@@ -335,34 +356,34 @@ Check your tool list for a tool named `task`.
 
 ## Post-Implementation
 
-- [ ] 30. Adversarial audit (**task-card**)
+- [ ] 35. Adversarial audit (**task-card**)
   - `task(..., prompt: "execute verification-audit DiMo investigator from audit. Read \`audit/tasks/verification-audit-investigator.md\` first")` — followed by validator, evaluator, arbiter in sequence
   - Pre-clean `tmp/1397/artifacts/pipeline-audit-*`.
   - SC reference: all.
-- [ ] 31. Z3 constraint check (**direct**)
+- [ ] 36. Z3 constraint check (**direct**)
   - `.opencode/tools/solve check --state-path <state file> --contract-path <contract file>` — paths resolved at execution time from `tmp/1397/` constraints artifacts.
   - Pre-clean `tmp/1397/artifacts/pipeline-z3-check-*`.
   - SC reference: all.
-- [ ] 32. Structural checks (**task-card**)
+- [ ] 37. Structural checks (**task-card**)
   - `task(..., prompt: "execute checklist task from finishing-a-development-branch")`
   - Pre-clean `tmp/1397/artifacts/pipeline-structural-checks-*`.
   - Finishing checklist: lint, typecheck, format checks on modified files; SC reference: all.
-- [ ] 33. Pre-PR gate (**task-card**)
+- [ ] 38. Pre-PR gate (**task-card**)
   - `task(..., prompt: "execute verify task from verification-before-completion")`
   - Pre-clean `tmp/1397/artifacts/pipeline-pre-pr-gate-*`.
   - Reads all SC verdicts; BLOCKs if any FAIL. DONE_WITH_CONCERNS coerces to FAIL. SC reference: all.
-- [ ] 34. Final regression check (**task-card**)
+- [ ] 39. Final regression check (**task-card**)
   - `task(..., prompt: "execute phase-4 task from test-driven-development")`
   - Pre-clean `tmp/1397/artifacts/pipeline-regression-check-*`.
   - SC reference: all.
-- [ ] 35. Review prep (**task-card**)
+- [ ] 40. Review prep (**task-card**)
   - `task(..., prompt: "execute review-prep from git-workflow-pr. Read \`git-workflow-pr/tasks/review-prep.md\` first")`
   - SC reference: all.
-- [ ] 36. Create PR (**task-card**)
+- [ ] 41. Create PR (**task-card**)
   - `task(..., prompt: "execute create task from git-workflow-pr")`
   - Stacked strategy — one branch, squashed commits, one PR targeting the trunk. Do not merge (human-only merge).
   - SC reference: all.
-- [ ] 37. Completion summary (**task-card**)
+- [ ] 42. Completion summary (**task-card**)
   - `task(..., prompt: "execute completion task from completion-core")`
   - Generate completion executive summary.
   - SC reference: all.
@@ -372,16 +393,28 @@ Check your tool list for a tool named `task`.
 ## Exit Criteria
 
 - C1: Manifest exists as single source of truth covering every required `st.secrets` key path (SC-1 PASS).
-- C2: Preflight verification produces a structured report naming missing key PATHS only, run before the app can crash (SC-2 PASS).
-- C3: Fail-fast guard consumes the manifest; divergence-prevention test passes (SC-3 PASS).
-- C4: Remediation runbook exists naming the exact Cloud-store key and the preflight confirmation step (SC-4 PASS).
-- C5: No secret VALUES are logged or exposed anywhere in preflight output (SC-5 PASS).
-- C6: Audit, z3-check, structural checks, pre-PR gate, and final regression check all PASS.
-- C7: PR created (stacked strategy); completion summary emitted.
+- C2: Preflight verification produces a structured report naming missing key PATHS only, run before startup fallback resolution (SC-2 PASS).
+- C3: Guard consumes the manifest; divergence-prevention test passes (SC-3 PASS).
+- C4: Missing contact keys resolve via default-fallback (static default `contact.mastodon_url` rendered as the contact, one-time non-blocking warning naming the missing key PATH only); no RuntimeError raised; startup continues (SC-6 PASS).
+- C5: Remediation runbook exists naming the exact Cloud-store key and the preflight confirmation step (SC-4 PASS).
+- C6: No secret VALUES are logged or exposed anywhere in preflight output or fallback warnings (SC-5 PASS).
+- C7: Audit, z3-check, structural checks, pre-PR gate, and final regression check all PASS.
+- C8: PR created (stacked strategy); completion summary emitted.
 
 ## lifecycle_events
 
 - event: plan_created
   timestamp: "2026-10-01T23:15:00-04:00"
   plan_path: ".issues/1397/plan.md"
+  phase_count: 4
+- event: plan_revised
+  timestamp: "2026-10-01T23:45:00-04:00"
+  plan_path: ".issues/1397/plan.md"
+  reason: >
+    Spec Revision 1 (developer directive 2026-10-01: default-value fallback, never crash).
+    Plan fidelity failure fixed — RuntimeError-guard preservation removed; SC-6 added;
+    phase 3 revised to replace the crash path with manifest-coupled default-fallback
+    resolution. Spec, structure.yaml, concern-map.yaml, dependency-contract.yaml,
+    blast radius, phase table, DAG, and exit criteria updated.
+    Revision artifact: artifacts/plan-revision.yaml.
   phase_count: 4

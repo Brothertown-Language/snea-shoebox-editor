@@ -13,7 +13,8 @@ concern_groups:
   - concern: guard-manifest-coupling
     scs:
       - "Tie preflight to the fail-fast guard's key list so the two cannot diverge silently"
-    phase_boundary: "Phase: coupling — guard and preflight consume the same manifest"
+      - "Revision 1: missing contact key -> default-value fallback, one-time warning, never crash (SC-6)"
+    phase_boundary: "Phase: coupling + fallback resolution — guard and preflight consume the same manifest; RuntimeError replaced by default-fallback for missing contact keys"
   - concern: production-remediation
     scs:
       - "Supply contact.maintainer_label in Streamlit Cloud secrets store (developer action)"

@@ -16,6 +16,8 @@ success_criteria:
     text: "Supply contact.maintainer_label in Streamlit Cloud secrets store (developer action, documented in runbook/report)"
   - id: SC-5
     text: "Never log or expose secret VALUES; checks compare key presence only (cross-cutting constraint tested within preflight phase)"
+  - id: SC-6
+    text: "Revision 1: Missing contact.maintainer_label (or any manifest-required contact key) -> startup continues with a static default (contact.mastodon_url rendered as the contact when no label configured), one-time non-blocking operator warning naming the missing key PATH only, NO RuntimeError raised"
 
 phases:
   - id: phase-1
@@ -56,12 +58,17 @@ phases:
       commit: "(orchestrator) commit-inline"
 
   - id: phase-3
-    name: "fail-fast guard <-> manifest coupling"
-    scs: [SC-3]
+    name: "guard <-> manifest coupling + default-fallback resolution (Revision 1)"
+    scs: [SC-3, SC-6]
     items:
       - sc_id: SC-3
         red: "RED: failing test asserting streamlit_app.py guard key list is sourced from the manifest (single source, no duplication)"
         green: "GREEN: refactor guard to consume the manifest; add divergence-prevention test"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+      - sc_id: SC-6
+        red: "RED: failing test asserting that a store missing contact.maintainer_label does NOT raise RuntimeError, startup continues with the static default (contact.mastodon_url rendered as contact), and a one-time non-blocking warning naming the missing key PATH only is logged (no values)"
+        green: "GREEN: replace the RuntimeError guard for contact keys with the default-fallback resolution path consuming the manifest; one-time warning logged; startup never crashes on a missing contact key"
         verify: "verify task from verification-before-completion"
         commit: "commit-inline (orchestrator)"
     skill_task_selection:

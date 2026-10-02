@@ -15,7 +15,7 @@ dependency_contract_from_interface_compatibility:
   type_constraints:
     - "manifest: YAML/TOML list of dotted key paths (str), never value pairs"
     - "preflight check: takes store-mapping (nested dict) + manifest paths -> returns missing-path list (list[str])"
-    - "guard integration: missing paths -> RuntimeError with actionable message (existing pattern, streamlit_app.py:235)"
+    - "guard integration: missing contact keys -> default-fallback resolution consuming the manifest (Revision 1: one-time non-blocking warning naming key PATH only, static default contact.mastodon_url, NO RuntimeError); divergence with preflight prevented by shared manifest source"
 
 variables:
   phase1_complete: {type: bool, description: "required-secrets manifest defined and committed"}

@@ -32,7 +32,7 @@ The fix is NOT merely "add the secret" — that is the symptom remediation. The 
 
 **Out of scope:**
 
-- Removing or weakening the fail-fast guard (it performed correctly)
+- Removing or weakening the fail-fast guard (it performed correctly) — **superseded for contact display-label keys by Revision 1 below**
 - Redesigning the contact dialog or resolution path
 - Restructuring the secrets file format
 
@@ -46,5 +46,17 @@ Introduce a required-secrets manifest as the single machine-readable source of t
 - **Risk: manifest drift** — a stale manifest could mask future missing keys; mitigate by tying the preflight to the fail-fast guard's key list so the two cannot diverge silently.
 - **Key dependency:** immediate outage remediation requires the developer to add `contact.maintainer_label` in the Streamlit Cloud secrets store (agent cannot reach the Cloud store).
 - **Call to action:** developer action required now to restore production; spec work proceeds in parallel to close the process gap.
+
+## Revision 1 — Developer directive 2026-10-01: default-value fallback, never crash
+
+The developer explicitly directed that the app MUST NOT crash when `contact.maintainer_label` is absent. On a missing `contact.maintainer_label` (or any manifest-required contact key), startup MUST:
+
+- continue with a static default value (proposal: render `contact.mastodon_url` as the contact when no label is configured),
+- emit a one-time, non-blocking operator warning naming the missing key PATH only (value-safety applies), and
+- NOT raise a `RuntimeError`.
+
+Revision 1 formally supersedes issue #1392's no-silent-default decision for this display label only. This new success criterion is **SC-6**:
+
+> SC-6: Missing `contact.maintainer_label` (or any manifest-required contact key) → startup continues with a static default (`contact.mastodon_url` rendered as the contact when no label configured), a one-time non-blocking operator warning naming the missing key PATH only is logged, and NO `RuntimeError` is raised.
 
 🤖 OpenCode (huggingface/zai-org/GLM-5.3-Flash) created
