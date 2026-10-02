@@ -1,59 +1,56 @@
-# State Analysis — Issue #1400 (grounded in post-revision spec, 11-SC version)
+# State Analysis — Issue #1400
 issue: 1400
 
 state_machines:
-  - machine: "search_semantic seam status"
+  - machine: search_semantic seam status
     file: src/services/semantic_search_service.py
     states: [ok, empty_query, no_embeddings, stale_model]
     transitions:
-      - from: start
+      - from: (start)
         to: empty_query
-        condition: "query empty/whitespace"
+        condition: query empty/whitespace (line 114)
         change: none
-      - from: start
+      - from: (start)
         to: no_embeddings
-        condition: "model assets missing"
+        condition: model assets missing (lines 119-126)
         change: none
-      - from: start
+      - from: (start)
         to: ok-with-results
-        condition: "candidates >= threshold (explicit value per SC-3, OR calibrated default when threshold=None per SC-2, OR default re-engaged after override per SC-4)"
-        change: "MODIFIED — threshold binding now defaults to calibrated floor (interval (0.9018, 0.9753)) at threshold=None (was: no filter)"
-      - from: start
+        condition: "candidates >= threshold (explicit OR calibrated default when threshold=None)"
+        change: "MODIFIED — threshold binding now defaults to calibrated floor at threshold=None (was: no filter)"
+      - from: (start)
         to: ok-with-empty
-        condition: "all scores below floor -> diagnostic block; status stays ok, results empty, message pinned to 'No gloss results meet the sensitivity floor.' (SC-5); no exception (SC-6); no below-floor rows served (SC-7)"
-        change: "MODIFIED — message names the sensitivity-floor deficiency; floor-clearing anchors (water, beaver, money, gun, book) rank 1 with cosine >= published floor (SC-8); 'how many' (0.8917) legitimately lands here by measurement (SC-8a)"
+        condition: "all scores below floor (diagnostic block lines 153-174)"
+        change: "message updated to name the sensitivity-floor deficiency; status stays ok (R-3)"
       - from: ok-with-empty
         to: stale_model
-        condition: "diagnostics: no pinned rows, stale-model rows exist"
+        condition: "diagnostics: no pinned rows, stale-model rows exist (lines 175-184)"
         change: none
       - from: ok-with-empty
         to: no_embeddings
-        condition: "diagnostics: zero embedded rows"
+        condition: "diagnostics: zero embedded rows (lines 185-193)"
         change: none
 
-  - machine: "UI semantic_threshold session state"
+  - machine: UI semantic_threshold session state
     file: src/frontend/pages/records.py
     states: [default_fallback, persisted_user_value, user_edit]
     transitions:
-      - from: start
+      - from: (start)
         to: default_fallback
-        condition: "no PreferenceService stored value — now calibrated floor constant instead of '0.80'; st.session_state.semantic_threshold equals published floor within ±0.01 (SC-9)"
-        change: MODIFIED (SC-9)
-      - from: start
+        condition: "no PreferenceService stored value — now calibrated floor constant instead of '0.80'"
+        change: MODIFIED (SC-5)
+      - from: (start)
         to: persisted_user_value
-        condition: "stored preference exists — preserved (SC-10)"
-        change: none
-      - from: "persisted_user_value|default_fallback"
+        condition: stored preference exists
+        change: none    # preserved user overrides
+      - from: persisted_user_value|default_fallback
         to: user_edit
-        condition: "slider/number widget sync"
+        condition: slider/number widget sync (lines 391-406)
         change: none
 
-ui_threshold_watcher: "Playwright live-app checks for SC-9 (fresh-session default) and SC-10 (override preserved to seam) per docs/development/ui_testing_standard.md; E2E gating SNEA_E2E=1 + live app on :8501"
+ui_threshold_watcher: "ui-state watcher tests for st.session state flip (test/ui/) only where SC-5 Playwright live-app check applies (per ui_testing_standard)"
 
 invariants:
   - "status value set unchanged across all transitions (R-3)"
-  - "user-provided threshold always overrides default (SC-3, SC-10)"
-  - "never raises below-floor noise as ranked results (SC-5, SC-7)"
-  - "None after explicit override re-engages default (SC-4)"
-
-# 🤖 Co-authored with AI: OpenCode (zai-org/GLM-5.3-Flash)
+  - "user-provided threshold always overrides default (SC-2)"
+  - "never raises below-floor noise as ranked results (SC-3)"

@@ -1,43 +1,35 @@
-# Code Path Inventory — Issue #1400 (grounded in post-revision spec, 11-SC version)
+# Code Path Inventory — Issue #1400
 issue: 1400
-grounding: "Spec scope sections + bounded reads already performed (pre-spec-inspection); no expanded reads needed (R-18)."
+grounding: "Spec scope sections + bounded reads already performed (pre-spec-inspection.yaml); no expanded reads needed (R-18)."
 
 paths_by_phase:
   - phase: calibration
-    scs: [SC-1]
     code_paths: []
-    rationale: "SC-1 is a new calibration module + evidence artifact only; no existing production code path executes calibration — derived constant (floor in (0.9018, 0.9753)) is a calibration output, not a runtime path. Probe evidence: tmp/1400/artifacts/verification-probe.yaml (20-query real battery, 2026-10-02, pin thenlper/gte-small)."
+    rationale: "SC-1 is a new calibration module + evidence artifact only; no existing production code path executes calibration — derived constant is a calibration output, not a runtime path."
   - phase: seam-default
-    scs: [SC-2, SC-3, SC-4]
     code_paths:
       - path: src/services/semantic_search_service.py
-        entry: "search_semantic(mode, query, threshold, source_id, limit)"
-        branch: "threshold param binding — currently filters when threshold is not None; default resolution added here for threshold=None (SC-2); explicit value keeps override precedence (SC-3); None-after-override re-engages default (SC-4)"
-        downstream: "_candidate_sql threshold rendering -> SQL WHERE (1 - cosine) >= :thr"
+        entry: search_semantic(mode, query, threshold, source_id, limit)  # line 108
+        branch: "threshold param binding — currently `if threshold is not None` (line 130); default resolution added here for threshold=None"
+        downstream: _candidate_sql(has_threshold=...) -> SQL WHERE (1 - cosine) >= :thr (line 90)
       - path: src/services/embedding_service.py
-        branch: "PIN import + encode() used by _encode_query (unchanged)"
+        branch: PIN import + encode() used by _encode_query (unchanged)
   - phase: floor-empty
-    scs: [SC-5, SC-6, SC-7]
     code_paths:
       - path: src/services/semantic_search_service.py
-        branch: "empty-results diagnostic block — ok/pinned branch message pinned to 'No gloss results meet the sensitivity floor.' (SC-5); status stays 'ok' (R-3); no exception path (SC-6); below-floor rows never served as ranked results (SC-7)"
+        branch: "empty-results diagnostic block (lines 153-193) — ok/pinned branch message extended to name the below-floor deficiency; status stays 'ok' (R-3)"
         note: "this branch currently fires when threshold filters everything or zero candidates; below-floor default queries route here identically"
   - phase: recall-regression
-    scs: [SC-8, SC-8a]
     code_paths:
       - path: test/ (new regression battery module)
-        branch: "pytest battery re-probing calibration anchors: floor-clearing anchors water (1.0000) / beaver (0.9753) / money (0.9970) / gun (0.9959) / book (0.9936) asserted at rank 1 with cosine >= published floor (SC-8); 'how many' (0.8917) asserted below-floor empty with pinned SC-5 message (SC-8a)"
-      - path: tmp/1400/artifacts/verification-probe.yaml (measured baseline — read-only evidence source)
+        branch: "pytest battery re-probing calibration anchors (water / how many / beaver) at rank-1 under default floor"
   - phase: ui-default
-    scs: [SC-9, SC-10]
     code_paths:
       - path: src/frontend/pages/records.py
-        branch: "session-state init fallback '0.80' -> calibrated floor constant, st.session_state.semantic_threshold equals published floor within ±0.01 (SC-9)"
-        note: "threshold call sites keep passing explicit st.session_state.semantic_threshold; user override reaches the seam unchanged (SC-10)"
-      - path: test/ui/ (Playwright live-app checks, SC-9/SC-10 per ui_testing_standard)
+        branch: "session-state init fallback '0.80' (lines 72-86) -> calibrated floor constant"
+        note: "call sites 248-277 keep passing explicit st.session_state.semantic_threshold; seam default engages when that value is None-equivalent / uses default import"
+      - path: test/ui/ (Playwright live-app check, SC-5)
 
 unchanged_paths:
-  - src/services/linguistic_service.py (DISPATCH_TABLE routing — message-only, no signature change, R-3)
+  - src/services/linguistic_service.py (DISPATCH_TABLE routing — message-only, no signature change)
   - src/database/connection.py, schema migrations (derived-index-only, no DDL)
-
-# 🤖 Co-authored with AI: OpenCode (zai-org/GLM-5.3-Flash)

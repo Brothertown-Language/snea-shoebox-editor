@@ -1,0 +1,42 @@
+# Planning problem derived from .issues/1400/dependency-contract.yaml (research task step 12)
+# Refreshed 2026-10-02 for the regenerated 4-phase plan (new Phase 4: e2e-auth-bypass, SC-11/SC-11a)
+domain: issue-1400-phase-completion
+types:
+  - name: phase
+objects:
+  - name: phase1_complete
+    type: phase
+  - name: phase2_complete
+    type: phase
+  - name: phase3_complete
+    type: phase
+  - name: phase4_complete
+    type: phase
+fluents:
+  - name: done
+    params:
+      - name: p
+        type: phase
+actions:
+  - name: complete-phase1-calibration
+    preconditions: []
+    effects:
+      - done(phase1_complete)
+  - name: complete-phase2-seam-default-floor
+    preconditions:
+      - done(phase1_complete)
+    effects:
+      - done(phase2_complete)
+  - name: complete-phase3-ui-threshold-plumbing
+    preconditions:
+      - done(phase2_complete)
+    effects:
+      - done(phase3_complete)
+  - name: complete-phase4-e2e-auth-bypass
+    preconditions:
+      - done(phase3_complete)
+    effects:
+      - done(phase4_complete)
+init: []   # closed-world: no phase done initially
+goals:
+  - done(phase4_complete)

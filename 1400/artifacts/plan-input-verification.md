@@ -1,55 +1,21 @@
-# Plan Input Verification Ledger — Issue #1400
+# Plan Input Verification — Issue #1400
 
-Written once from verified sources (spec.md, structure.yaml, issue.yaml read 2026-10-02). Subsequent plan work re-reads THIS ledger, not the sources.
+Verified 2026-10-02 by writing-plans research task after the plan regeneration with Phase 4 (e2e-auth-bypass).
 
-## Issue State
+## Coherence Gate Findings
 
-- Issue: 1400, status open
-- Local labels (canonical, `issue.yaml`): `approved-for-pr`, `spec-cleared` — both present
-- Remote: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1400
-- Authorization scope: `for_pr`; PR strategy: stacked
+- **SC↔phase↔item mapping:** every SC maps to exactly one phase and one plan item. SC-1/SC-8/SC-8a → Phase 1 (items 1, 8, 9); SC-2..SC-7 → Phase 2 (items 2-7); SC-9/SC-10 → Phase 3 (items 10, 11); SC-11/SC-11a → Phase 4 (items 12, 13). 13 SCs, 13 items — 1:1.
+- **Phase DAG:** linear and acyclic: 1 → 2 → 3 → 4. Verified in structure.yaml `dependency_dag` and dependency-contract.yaml preconditions.
+- **Triplet co-location:** PASS — every SC's RED/GREEN/COMMIT steps are assigned to the same phase (structure.yaml `verifications.triplet_colocation`).
+- **Cross-phase dependency:** PASS — no RED test depends on SC output from a later phase (structure.yaml `verifications.cross_phase_dependency`).
+- **Skill+task selection:** matches the implementation-workflow reference card (red/green/post-regression → test-driven-development; verify → verification-before-completion; commit-inline → orchestrator).
 
-## Spec Facts (post-revision, 11 SCs)
+## Solver Results
 
-- SC count: 11 (SC-1..SC-10 + SC-8a)
-- Floor interval: strictly (0.9018, 0.9753) — OOC max "light bulb" 0.9018 < floor < smallest floor-clearing anchor beaver 0.9753
-- SC-5 pinned message (exact): `No gloss results meet the sensitivity floor.`
-- In-corpus anchors: water 1.0000, beaver 0.9753, how many 0.8917 (below floor → SC-5 empty outcome), money 0.9970, gun 0.9959, book 0.9936 — all rank 1
-- Probe evidence: `tmp/1400/artifacts/verification-probe.yaml` (2026-10-02, production replica 6,681 embedded glosses, pin `thenlper/gte-small`, 20-query battery)
-- All SCs are `behavioral` evidence type
-- R-3: seam signature + status enum (`ok`/`empty_query`/`no_embeddings`/`stale_model`) unchanged; below-floor maps to `ok` + empty + message
-- SC-9/SC-10 require Playwright real-browser evidence per `docs/development/ui_testing_standard.md` (AppTest smoke-only auxiliary; E2E skips reported as skipped)
-
-## SC → Phase Mapping (structure.yaml)
-
-| Phase | Name | SCs |
+| Check | Tool | Result |
 |---|---|---|
-| 1 | calibration | SC-1, SC-8, SC-8a |
-| 2 | seam-default-floor | SC-2, SC-3, SC-4, SC-5, SC-6, SC-7 |
-| 3 | ui-threshold-plumbing | SC-9, SC-10 |
+| SAT model (`all_phases_done`) | `.opencode/tools/solve model` | SAT |
+| State check | `.opencode/tools/solve check` | SAT (+ postconditions + invariants) |
+| Planner | `.opencode/tools/plan plan` | SOLVED_SATISFICING (plan length 4) |
 
-- DAG: 1 → 2 → 3 (linear, acyclic; triplet colocation PASS)
-- Per-SC items: 11 items, one TDD cycle each (spec Missing Items table matches structure.yaml items)
-
-## Files
-
-- `src/services/semantic_search_service.py` (seam + calibration constant, phases 1–2)
-- `src/frontend/pages/records.py` (UI default + override passthrough, phase 3)
-- `test/ui/test_semantic_search_ui_flow_e2e.py` (Playwright, SC-9/SC-10)
-- New calibration/seam pytest modules; calibration evidence artifact under `tmp/1400/artifacts/`
-
-## CLI Surface
-
-- Label writes: `./.opencode/tools/local-issues update snea-shoebox-editor#1400 --labels <all labels comma-joined>` (replaces entire labels array — always include existing labels)
-- Z3 check: `./.opencode/tools/solve check --state-path ... --contract-path ...`
-- Labels already contain `spec-cleared` — no label write needed for this plan run
-
-## Plan State on Rewrite Entry
-
-- plan.md exists with frontmatter, phase table (step ranges 3-17 / 18-47 / 48-57 / 58-65), pre-implementation steps 1-2, post-implementation steps 58-65, exit criteria C1-C8 (incl. C5a), Pre-Flight Guard, lifecycle events — already matches the 11-SC spec and this structure artifact
-- Phase files plan-01/02/03.md exist and match phase SCs/items/step ranges
-- dependency-contract.yaml matches structure DAG edges
-
-## Co-authored
-
-🤖 Co-authored with AI: OpenCode (zai-org/GLM-5.3-Flash)
+Evidence: `.issues/1400/artifacts/solve-output.yaml`, `.issues/1400/artifacts/plan-output.yaml`.

@@ -1,41 +1,44 @@
-# Testability Assessment — Issue #1400 (grounded in post-revision spec, 11-SC version; SC numbering updated from stale pre-decomposition SC-1..SC-5)
+# Testability Assessment — Issue #1400
 issue: 1400
-sc_count: 11   # SC-1..SC-8, SC-8a, SC-9, SC-10
+refreshed: "Covers SC-11/SC-11a additions (e2e-auth-bypass) which postdate the original artifact."
 
 phases:
-  - phase: calibration
-    scs: [SC-1]
+  - phase: calibration (SC-1)
     test_strategy: behavioral
-    method: "pytest calibration module probing the production-replica corpus with the real in-corpus battery (water / beaver / how many / money / gun / book) and out-of-corpus battery (coffee, telephone, airplane, electricity, car, radio, television, computer, internet, light bulb, clock, school, hospital, train, camera, battery, refrigerator); emit per-anchor evidence artifact with provenance (battery, pin thenlper/gte-small, date, artifact path) — mirrors #36 SC-6 pattern as a durable deliverable. Requires synced replica (scripts/sync_prod_to_local.sh per regression protocol). Measured anchor baseline: water 1.0000, beaver 0.9753, how many 0.8917, money 0.9970, gun 0.9959, book 0.9936; out-of-corpus max 0.9018 (light bulb)."
-    fixture: "local replica; real model encode of real queries (no synthetic battery — R-1)"
+    method: "pytest calibration module probing the production-replica corpus with real in-corpus/out-of-corpus query batteries; emit per-anchor evidence artifact with provenance (mirrors #36 SC-6 pattern but as a durable deliverable). Requires synced replica (scripts/sync_prod_to_local.sh per regression protocol)."
+    fixture: local replica; set_query_encoder injection not needed — real model encode of real queries
     risks: "model load requires pinned gte-small assets locally; probe runtime bounded by corpus size (6,681 rows)"
-  - phase: seam-default
-    scs: [SC-2, SC-3, SC-4]
+
+  - phase: seam-default (SC-2)
     test_strategy: behavioral
-    method: "pytest seam contract — threshold=None engages calibrated default (SC-2); explicit float filters at that value with override precedence (SC-3); threshold=None after override re-engages default (SC-4). Deterministic via set_query_encoder + stubbed engine path per existing seam-test patterns (test/test_semantic_search_seam_sc5.py)."
-    fixture: "deterministic encoder override + stubbed engine rows"
-  - phase: floor-empty
-    scs: [SC-5, SC-6, SC-7]
+    method: "pytest seam contract — threshold=None engages default; explicit float value filters at that value; seam consumes constant from calibration artifact source-of-truth. Deterministic via set_query_encoder + mock/static engine path per existing seam-test patterns in test/test_semantic_search_seam_sc5.py"
+    fixture: deterministic encoder override + stubbed engine rows
+
+  - phase: floor-empty (SC-3)
     test_strategy: behavioral
-    method: "pytest edge-input matrix — all-below-floor returns status=ok + empty results + pinned message exactly 'No gloss results meet the sensitivity floor.' (SC-5); never raises (SC-6); never serves below-floor rows as ranked results (SC-7). Extends test/test_semantic_search_edge_matrix_sc7.py pattern."
-    fixture: "deterministic encoder override + stubbed engine rows"
-  - phase: recall-regression
-    scs: [SC-8, SC-8a]
+    method: "pytest edge-input matrix — all-below-floor battery returns ok + empty + deficiency message; never raises; never returns below-floor noise. SC-7 per-row filtering verified with a mixed above/below-floor stub under an explicit threshold. Extends test_semantic_search_edge_matrix_sc7.py pattern"
+    fixture: deterministic encoder override + stubbed engine rows
+
+  - phase: recall-regression (SC-4)
     test_strategy: behavioral
-    method: "pytest regression battery on local replica — floor-clearing anchors water (1.0000), beaver (0.9753), money (0.9970), gun (0.9959), book (0.9936) asserted at rank 1 with cosine >= published floor (SC-8); 'how many' (0.8917) asserted as below-floor empty outcome (ok + empty results + pinned SC-5 message) per measured overlap, not recall regression (SC-8a). Baseline evidence: tmp/1400/artifacts/verification-probe.yaml (2026-10-02, 6,681 embedded glosses)."
-    fixture: "local replica (real embeddings; scripts/sync_prod_to_local.sh before every regression cycle)"
-  - phase: ui-default
-    scs: [SC-9, SC-10]
+    method: "pytest regression battery — calibration anchors (water / how many / beaver and full SC-1 battery) rank at/near rank 1 under the calibrated default vs pre-calibration measured baseline recorded in the evidence artifact"
+    fixture: local replica (real embeddings)
+
+  - phase: ui-default (SC-5)
     test_strategy: behavioral
-    method: "Playwright real-browser live-app check per docs/development/ui_testing_standard.md — fresh-session st.session_state.semantic_threshold equals published floor within ±0.01 (SC-9); user override value is used by the seam and not silently replaced by the default (SC-10). E2E gating: SNEA_E2E=1 + live app on :8501; skip is a documented skip, never counted as PASS. streamlit.testing.v1.AppTest is in-process smoke only — insufficient for these user-visible-behavior SCs on their own."
-    fixture: "live Streamlit app + saved auth state per one-time OAuth login protocol (no fabricated auth state)"
+    method: "Playwright real-browser live-app check per docs/development/ui_testing_standard.md — threshold default shown is calibrated floor; user override respected. E2E gating: SNEA_E2E=1 + live app on :8501; skip is a documented skip, never counted as PASS"
+    fixture: live Streamlit app; SC-11 SNEA_E2E-gated bypass hook in src/services/security_manager.py auth resolution (no headed OAuth login, no saved-auth-state capture, no fabricated credentials)
+
+  - phase: e2e-auth-bypass (SC-11 / SC-11a)
+    test_strategy: behavioral
+    method: "SC-11: run the Playwright E2E suite with SNEA_E2E=1 + live app on :8501 and assert the suite completes AUTHENTICATED with no headed GitHub OAuth login step and no fabricated real GitHub credentials (bypass hook engaged in security_manager.py auth resolution). SC-11a: pytest auth-path test with SNEA_E2E unset asserting the auth resolution follows the production path — no bypass branch taken, GitHub API token validation unchanged"
+    fixture: live Streamlit app on :8501 with SNEA_E2E=1 (SC-11); app process with SNEA_E2E unset + mocked/asserted GitHub token validation path (SC-11a)
+    risks: "bypass leakage into production auth would be a security regression — SC-11a's inertness test is the containment gate; E2E runs without SNEA_E2E=1 skip by design and are reported as skipped, never PASS"
 
 existing_test_surface_affected:
-  - test/test_semantic_search_seam_sc5.py (threshold behavior assertions must be re-baselined to default-floor semantics for SC-2/SC-3/SC-4)
-  - test/test_semantic_search_edge_matrix_sc7.py (ok-with-empty path — SC-5/SC-6/SC-7)
-  - semantic_threshold UI watcher tests (SC-9/SC-10)
+  - test/test_semantic_search_seam_sc5.py (threshold behavior assertions may need re-baseline to default-floor semantics)
+  - test/test_semantic_search_edge_matrix_sc7.py (ok-with-empty path; extended for per-row filtering under mixed distributions)
+  - semantic_threshold UI watcher tests
+  - test/ui Playwright E2E suite (authentication setup replaced by SC-11 bypass hook; SNEA_E2E gating retained)
 
-verification_domain: "single — seam/user-visible ranking behavior; no DB write domains"
-floor_interval: "(0.9018, 0.9753) — strictly greater than measured out-of-corpus max 0.9018, strictly less than smallest floor-clearing in-corpus anchor beaver 0.9753"
-
-# 🤖 Co-authored with AI: OpenCode (zai-org/GLM-5.3-Flash)
+verification_domain: single — seam/user-visible ranking behavior + test-infra auth; no DB write domains

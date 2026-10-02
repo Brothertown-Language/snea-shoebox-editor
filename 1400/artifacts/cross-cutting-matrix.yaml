@@ -1,36 +1,27 @@
-# Cross-Cutting Matrix — Issue #1400 (grounded in post-revision spec, 11-SC version)
+# Cross-Cutting Matrix — Issue #1400
 issue: 1400
 
 concerns:
   - concern: data-integrity (no synthetic data)
     phases: [calibration, recall-regression]
-    scs: [SC-1, SC-8, SC-8a]
-    rule: "R-1 / Global Absolute Prohibition — calibration battery queries and probe evidence are real corpus queries with provenance; measured distributions (out-of-corpus max 0.9018 'light bulb', in-corpus anchor 'how many' 0.8917 — OVERLAPPING) are recorded in tmp/1400/artifacts/verification-probe.yaml; per-anchor floors re-derived durably by the calibration evidence artifact."
+    rule: "R-1 / Global Absolute Prohibition — calibration battery queries and probe evidence are real corpus queries with provenance; spec-body measured values (0.83 out-of-corpus vs 0.99 in-corpus) are recorded as context, per-anchor floors re-derived durably by the evidence artifact."
   - concern: semantic-change-lock (no unauthorized semantic changes)
     phases: [seam-default, floor-empty]
-    scs: [SC-2, SC-3, SC-4, SC-5, SC-6, SC-7]
-    rule: "090-data-integrity: seam status vocabulary is signature-unchanged (R-3); below-floor maps onto existing ok+empty branch per #36 R-7 with pinned message 'No gloss results meet the sensitivity floor.' — no new semantic state introduced."
+    rule: "090-data-integrity: seam status vocabulary is signature-unchanged (R-3); below-floor maps onto existing ok+empty branch per #36 R-7 — no new semantic state introduced."
   - concern: provenance / audit trail
-    phases: [calibration, recall-regression]
-    scs: [SC-1, SC-8, SC-8a]
-    rule: "090-data-integrity audit + R-2 — threshold default recorded as calibration constant with source provenance (battery, corpus pin thenlper/gte-small, date 2026-10-02, artifact path) in the evidence artifact, constrained to interval (0.9018, 0.9753); not an inline magic number."
+    phases: [calibration]
+    rule: "090-data-integrity audit + R-2 — threshold default recorded as calibration constant with source provenance in the evidence artifact, not an inline magic number."
   - concern: license/attribution
     phases: [all]
-    scs: [SC-1..SC-10 + SC-8a]
-    rule: "080-code-standards — new .py modules carry MIT SPDX header + AI co-authored byline (existing seam file style)."
+    rule: "080-code-standards — new .py modules carry MIT SPDX header + AI co-authored byline (existing seam file style, lines 1-3 of semantic_search_service.py)."
   - concern: verification-honesty
     phases: [recall-regression, ui-default]
-    scs: [SC-8, SC-8a, SC-9, SC-10]
-    rule: "065 — pre/post-change baseline measured live on the replica (probe artifact); claims of recall parity and UI parity backed by probe/Playwright output, not memory. SC-8a is documented measured behavior, not a regression to fix."
+    rule: "065 — pre/post-change baseline measured live on the replica; claims of recall parity backed by probe output, not memory."
   - concern: security
     phases: [all]
-    scs: [SC-1..SC-10 + SC-8a]
     rule: "no remote mutations, no config mutations, no production-data writes (derived-index-only); UI auth unchanged."
   - concern: tests-against-production
-    phases: [recall-regression, ui-default]
-    scs: [SC-8, SC-8a, SC-9, SC-10]
-    rule: "090-data-integrity — pytest runs hit the locally synced replica (scripts/sync_prod_to_local.sh), never production. SC-9/SC-10 Playwright runs require live app on :8501 + SNEA_E2E=1; skipping is reported as skipped, never silently as PASS."
+    phases: [recall-regression]
+    rule: "090-data-integrity — pytest runs hit the locally synced replica (scripts/sync_prod_to_local.sh), never production."
 
 phase_coverage: complete
-
-# 🤖 Co-authored with AI: OpenCode (zai-org/GLM-5.3-Flash)
