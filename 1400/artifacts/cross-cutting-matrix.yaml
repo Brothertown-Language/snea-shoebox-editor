@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: MIT
+issue: 1400
+artifact: cross-cutting-matrix
+generated_by: writing-plans/tasks/backfill
+generated_at: 2026-10-02
+verified_by: grounding reads against spec SCs + working tree (2026-10-02)
+
+cross_cutting_scs:
+  - sc: SC-2
+    spans: [calibration, seam_default_floor_semantics]
+    note: >
+      The seam change consumes the calibration constant; the constant must exist
+      (Phase 1) before the seam can engage it (Phase 2).
+  - sc: SC-8
+    spans: [calibration, seam_default_floor_semantics]
+    note: >
+      Recall-regression battery exercises the seam under the default floor while
+      evidence lives in the calibration artifact — spans both concerns.
+  - sc: SC-9
+    spans: [calibration, ui_threshold_plumbing]
+    note: >
+      UI default (records.py) must equal the published calibration constant
+      within +/-0.01 — parity between the calibration concern and the UI concern.
+  - sc: SC-5, SC-6, SC-7
+    spans: [seam_default_floor_semantics, "seam status machine (R-3/#36 R-7)"]
+    note: >
+      The all-below-floor outcome is simultaneously a threshold-filtering change
+      (concern 2) and a status-machine mapping (ok + empty + message) constrained
+      by the signature-unchanged requirement R-3.

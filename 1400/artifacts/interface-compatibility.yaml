@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: MIT
+issue: 1400
+artifact: interface-compatibility
+generated_by: writing-plans/tasks/backfill
+generated_at: 2026-10-02
+generated_with_implementation_validation: 2026-10-02
+verified_by: grounding reads of seam + UI sources, #36 artifacts (2026-10-02)
+
+interfaces:
+  - boundary: "search_semantic(mode, query, threshold, source_id, limit) -> SemanticSearchResult"
+    source: src/services/semantic_search_service.py
+    compatibility: PRESERVED (R-3)
+    note: >
+      Signature unchanged; only threshold=None semantics change (full ranked list
+      -> default floor engaged). Consumers: linguistic_service dispatch
+      (aliases search_semantic) and records.py calls. Both pass threshold
+      positionally-by-name only — no consumer relies on the old None behavior.
+  - boundary: "SemanticSearchResult statuses (ok / empty_query / no_embeddings / stale_model)"
+    source: src/services/semantic_search_service.py
+    compatibility: PRESERVED (R-3)
+    note: >
+      No new status value; all-below-floor maps onto ok + empty results + message
+      (consistent with the existing empty-results branch verified at lines ~173-175
+      and the #36 R-7 pattern).
+  - boundary: "st.session_state['semantic_threshold'] : float"
+    source: src/frontend/pages/records.py
+    compatibility: KEY PRESERVED — default value changes
+    note: >
+      Currently initialized to hardcoded 0.80 (preference fallback also 0.80).
+      SC-9 requires the default to equal the published calibrated floor
+      within +/-0.01. The 0.80 fallback literals (lines ~75-83) need syncing;
+      the key name and 0.0<=v<=1.0 guard stay.
+  - boundary: "PreferenceService.get_preference(user_email, 'records', 'semantic_threshold', default)"
+    source: src/frontend/pages/records.py
+    compatibility: PRESERVED
+    note: >
+      Saved user preferences remain authoritative over the default; the default
+      literal changes from 0.80 to the calibrated floor. No schema change.
+  - boundary: "embedding_service.encode() / PIN ('thenlper/gte-small')"
+    source: src/services/embedding_service.py
+    compatibility: READ-ONLY dependency
+    note: >
+      Calibration anchors depend on the pin but the module is untouched
+      (blast-radius: dependency-only).
+
+dependency_contract:
+  calibration_constant:
+    real_source: "calibration evidence artifact (SC-1 output; per-anchor provenance: query battery, corpus pin, date)"
+    real_target: "src/services/semantic_search_service.py — module-level named calibration constant (R-2, no magic number); src/frontend/pages/records.py — default state parity within +/-0.01 (SC-9)"
+    type_constraints: >
+      float in (0.84, 0.93) exclusive interval per the measured distributions:
+      strictly greater than the measured out-of-corpus max (0.84) and strictly
+      less than the measured in-corpus minimum (0.93); SC-8 anchor demands
+      floor <= 0.90 supports rank-1 cosine >= 0.90 recall.
+  semantic_search_result:
+    real_source: "SemanticSearchResult(results: list[tuple[int, float]], status: str, message: str)"
+    real_target: "all callees (records.py, linguistic_service.py dispatch, pytest seam tests)"
+    type_constraints: "statuses limited to ok/empty_query/no_embeddings/stale_model; records list is (record_id:int, score:float) sorted desc"
+  ui_threshold:
+    real_source: "st.session_state['semantic_threshold'] float in [0.0, 1.0]"
+    real_target: "search_semantic(threshold=...)"
+    type_constraints: "float only; persisted as string preference via PreferenceService; out-of-range rejected by _validate_threshold guard"

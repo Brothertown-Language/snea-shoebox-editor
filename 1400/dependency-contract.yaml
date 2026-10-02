@@ -1,0 +1,47 @@
+# dependency-contract.yaml — .issues/1400
+schema_version: 1
+issue: 1400
+description: >
+  Phase-completion contract for issue 1400. Variables represent phase completion
+  booleans; invariants encode the dependency DAG edges from structure.yaml.
+# Extracted as-is from interface-compatibility.yaml dependency_contract section
+dependency_contract_from_interface_compatibility:
+  calibration_constant:
+    real_source: "calibration evidence artifact (SC-1 output; per-anchor provenance: query battery, corpus pin, date)"
+    real_target: "src/services/semantic_search_service.py — module-level named calibration constant (R-2, no magic number); src/frontend/pages/records.py — default state parity within +/-0.01 (SC-9)"
+    type_constraints: >
+      float in (0.84, 0.93) exclusive interval per the measured distributions:
+      strictly greater than the measured out-of-corpus max (0.84) and strictly
+      less than the measured in-corpus minimum (0.93); SC-8 anchor demands
+      floor <= 0.90 supports rank-1 cosine >= 0.90 recall.
+  semantic_search_result:
+    real_source: "SemanticSearchResult(results: list[tuple[int, float]], status: str, message: str)"
+    real_target: "all callees (records.py, linguistic_service.py dispatch, pytest seam tests)"
+    type_constraints: "statuses limited to ok/empty_query/no_embeddings/stale_model; records list is (record_id:int, score:float) sorted desc"
+  ui_threshold:
+    real_source: "st.session_state['semantic_threshold'] float in [0.0, 1.0]"
+    real_target: "search_semantic(threshold=...)"
+    type_constraints: "float only; persisted as string preference via PreferenceService; out-of-range rejected by _validate_threshold guard"
+
+variables:
+  phase1_complete: {type: bool, description: "calibration anchors + evidence artifact + published floor constant derived from real corpus queries (SC-1, SC-8)"}
+  phase2_complete: {type: bool, description: "seam threshold=None default-floor semantics + explicit override/restore + all-below-floor ok/empty/message outcome (SC-2..SC-7)"}
+  phase3_complete: {type: bool, description: "UI threshold default parity within +/-0.01 and override preservation (SC-9, SC-10)"}
+  all_phases_done: {type: bool, description: "conjunction of all phase completions"}
+
+preconditions:
+  - "z3.Implies(phase2_complete, phase1_complete)"
+  - "z3.Implies(phase3_complete, phase2_complete)"
+
+invariants:
+  # DAG edges (structure.yaml dependency_dag)
+  - "all_phases_done == z3.And(phase1_complete, phase2_complete, phase3_complete)"
+  - "z3.Not(z3.And(phase3_complete, z3.Not(phase2_complete)))"
+  - "z3.Not(z3.And(phase2_complete, z3.Not(phase1_complete)))"
+  # Triplet co-location: each SC committed within its phase — phases are atomic
+  - "z3.Or(z3.Not(phase1_complete), phase1_complete)"
+  - "z3.Or(z3.Not(phase2_complete), phase2_complete)"
+  - "z3.Or(z3.Not(phase3_complete), phase3_complete)"
+
+postconditions:
+  - "all_phases_done"

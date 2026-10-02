@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: MIT
+issue: 1400
+artifact: solve-output
+generated_by: writing-plans/tasks/research
+generated_at: 2026-10-02
+
+solve_status: SAT
+plan_status: SOLVED_SATISFICING
+
+solve_model:
+  command: "./.opencode/tools/solve model --contract-path .issues/1400/dependency-contract.yaml --query all_phases_done"
+  result: "SAT (+ postconditions + invariants)"
+  model:
+    all_phases_done: true
+    phase1_complete: true
+    phase2_complete: true
+    phase3_complete: true
+
+solve_check:
+  command: "./.opencode/tools/solve check --contract-path .issues/1400/dependency-contract.yaml --state-path .issues/1400/artifacts/state-analysis.yaml"
+  result: "SAT (+ postconditions + invariants)"
+
+plan_plan:
+  command: "./.opencode/tools/plan plan --problem tmp/issue-1400-planning-problem.yaml"
+  output: ".issues/1400/artifacts/plan-output.yaml"
+  validation_note: >
+    Task card step 12 named --contract-path/--output flags; live CLI surface
+    verified as --problem (075-docs-verification). Problem file derived from the
+    dependency-contract phase DAG at tmp/issue-1400-planning-problem.yaml.
+
+phases:
+  - id: 1
+    scs: [SC-1, SC-8]
+    concern: "Calibration — real-data anchors, evidence artifact, published floor constant"
+  - id: 2
+    scs: [SC-2, SC-3, SC-4, SC-5, SC-6, SC-7]
+    concern: "Seam — threshold=None default floor, override/restore, all-below-floor outcome"
+  - id: 3
+    scs: [SC-9, SC-10]
+    concern: "UI plumbing — threshold default parity and override preservation"
+
+  planner_reachability: PASS
+plan_length: 13
+dag_edges:
+  - "phase1 -> phase2"
+  - "phase2 -> phase3"
+cycle_check: "no cycles — linear chain"

@@ -1,0 +1,54 @@
+# SPDX-License-Identifier: MIT
+issue: 1400
+artifact: testability-assessment
+generated_by: writing-plans/tasks/backfill
+generated_at: 2026-10-02
+verified_by: spec evidence table + working-tree test inventory (2026-10-02)
+
+assessments:
+  - sc: SC-1
+    evidence_type: behavioral
+    instrument: "pytest calibration module producing per-anchor evidence artifact (provenance-recorded, production replica, no synthetic queries — R-1)"
+    runnable_now: true
+  - sc: SC-2
+    evidence_type: behavioral
+    instrument: "pytest seam test: default engaged at threshold=None"
+    runnable_now: true
+  - sc: SC-3
+    evidence_type: behavioral
+    instrument: "pytest seam test: explicit override wins over default"
+    runnable_now: true
+  - sc: SC-4
+    evidence_type: behavioral
+    instrument: "pytest seam test: override-then-None re-engages default (no sticky state)"
+    runnable_now: true
+  - sc: SC-5
+    evidence_type: behavioral
+    instrument: "pytest edge-input matrix: below-floor input -> ok + empty results + message"
+    runnable_now: true
+  - sc: SC-6
+    evidence_type: behavioral
+    instrument: "pytest edge-input matrix: zero above-floor rows -> no exception"
+    runnable_now: true
+  - sc: SC-7
+    evidence_type: behavioral
+    instrument: "pytest edge-input matrix: results empty when all scores < floor (no noise served)"
+    runnable_now: true
+  - sc: SC-8
+    evidence_type: behavioral
+    instrument: "pytest regression battery vs production replica probe: anchors rank 1 with cosine >= 0.90 (water / how many / beaver)"
+    runnable_now: "requires local production replica database (synced 2026-10-02) + embedding model assets"
+  - sc: SC-9
+    evidence_type: behavioral
+    instrument: "Playwright live-app UI check per docs/development/ui_testing_standard.md — AppTest alone insufficient; E2E skips unless SNEA_E2E=1 + app on :8501, skipping reported as skipped"
+    runnable_now: "requires live app + auth state per ui_testing_standard"
+  - sc: SC-10
+    evidence_type: behavioral
+    instrument: "Playwright live-app UI check per docs/development/ui_testing_standard.md (override preserved, not silently replaced)"
+    runnable_now: "requires live app + auth state per ui_testing_standard"
+
+notes: >
+  All ten SCs are behavioral per the spec evidence table — no structural or
+  string-only evidence is permitted (080-code-standards classification gate).
+  SC-9/SC-10 assertions live in test/ui/test_semantic_search_ui_flow_e2e.py
+  additions (existing e2e file verified in blast-radius).

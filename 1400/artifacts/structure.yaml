@@ -1,0 +1,118 @@
+# structure.yaml — phase decomposition for .issues/1400
+schema_version: 1
+issue: 1400
+generated_by: writing-plans/tasks/research
+generated_at: 2026-10-02
+sc_source: >
+  sc-summary.yaml (regenerated from the approved spec — 10 SCs, SC-1..SC-10,
+  plan_item 1-10). Used as the SC source per analysis-summary.yaml.
+
+phases:
+  - id: phase-1
+    name: "Real-data calibration of the semantic-seam default floor"
+    concern: "calibration"
+    scs: [SC-1, SC-8]
+    items:
+      - sc_id: SC-1
+        plan_item: 1
+        red: "RED: failing test asserting the calibration evidence artifact exists with per-anchor floor values + source provenance (query battery, corpus pin, date) for both in-corpus and out-of-corpus batteries; no synthetic queries"
+        green: "GREEN: derive calibration anchors from real corpus queries; record per-anchor floors with provenance in the calibration evidence artifact"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+      - sc_id: SC-8
+        plan_item: 8
+        red: "RED: failing calibration-battery check asserting in-corpus targets rank at rank 1 with cosine >= 0.90 under the default threshold (no recall regression vs the measured pre-calibration baseline of 0.93-1.00)"
+        green: "GREEN: publish the calibrated default floor constant derived from the anchors (float strictly between 0.84 and 0.93; floor <= 0.90 to support SC-8 recall)"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+    skill_task_selection:
+      red: "test-driven-development — execute red task from test-driven-development"
+      green: "test-driven-development — execute green task from test-driven-development"
+      post_regression: "test-driven-development — execute phase-4 task from test-driven-development"
+      verify: "verification-before-completion — execute verify task from verification-before-completion"
+      commit: "(orchestrator) commit-inline"
+
+  - id: phase-2
+    name: "Seam default-floor semantics (threshold=None) + all-below-floor outcome"
+    concern: "seam"
+    scs: [SC-2, SC-3, SC-4, SC-5, SC-6, SC-7]
+    items:
+      - sc_id: SC-2
+        plan_item: 2
+        red: "RED: failing seam test asserting search_semantic(threshold=None) filters on the module-level calibrated default floor constant"
+        green: "GREEN: implement threshold=None -> resolve calibration constant and filter (R-2 named constant, no magic number)"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+      - sc_id: SC-3
+        plan_item: 3
+        red: "RED: failing test asserting an explicit threshold value passed by the caller overrides the calibrated default"
+        green: "GREEN: preserve/verify explicit-value override path wins over the default"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+      - sc_id: SC-4
+        plan_item: 4
+        red: "RED: failing test asserting threshold=None restores the calibrated default after a prior explicit override call"
+        green: "GREEN: verify per-call statelessness — None re-engages the default after any override"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+      - sc_id: SC-5
+        plan_item: 5
+        red: "RED: failing test asserting all scores below the calibrated floor -> status=ok, results=[], deficiency message naming the floor (e.g. 'no gloss results meet the sensitivity floor')"
+        green: "GREEN: route the all-below-floor set through the existing empty-results branch shape (ok + message), consistent with #36 R-7"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+      - sc_id: SC-6
+        plan_item: 6
+        red: "RED: failing test asserting the all-below-floor outcome never raises an exception"
+        green: "GREEN: ensure the below-floor path returns normally (no exception) for any below-floor score distribution"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+      - sc_id: SC-7
+        plan_item: 7
+        red: "RED: failing test asserting the all-below-floor outcome never serves below-floor rows as ranked results"
+        green: "GREEN: guarantee below-floor rows are excluded from results under the default path"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+    skill_task_selection:
+      red: "test-driven-development — execute red task from test-driven-development"
+      green: "test-driven-development — execute green task from test-driven-development"
+      post_regression: "test-driven-development — execute phase-4 task from test-driven-development"
+      verify: "verification-before-completion — execute verify task from verification-before-completion"
+      commit: "(orchestrator) commit-inline"
+
+  - id: phase-3
+    name: "UI threshold plumbing — default parity and override preservation"
+    concern: "ui plumbing"
+    scs: [SC-9, SC-10]
+    items:
+      - sc_id: SC-9
+        plan_item: 9
+        red: "RED: failing Playwright/AppTest-standard check asserting st.session_state.semantic_threshold default equals the published calibrated floor within +/-0.01 on a fresh session"
+        green: "GREEN: sync the records.py 0.80 default literals (~lines 75-83) to the published calibrated floor; keep key name, [0.0,1.0] guard, and PreferenceService authority"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+      - sc_id: SC-10
+        plan_item: 10
+        red: "RED: failing Playwright test asserting a user override in the UI threshold control reaches search_semantic() and is not silently replaced by the default"
+        green: "GREEN: verify (and fix if needed) override passthrough from the UI control through to the seam"
+        verify: "verify task from verification-before-completion"
+        commit: "commit-inline (orchestrator)"
+    skill_task_selection:
+      red: "test-driven-development — execute red task from test-driven-development"
+      green: "test-driven-development — execute green task from test-driven-development"
+      post_regression: "test-driven-development — execute phase-4 task from test-driven-development"
+      verify: "verification-before-completion — execute verify task from verification-before-completion"
+      commit: "(orchestrator) commit-inline"
+
+dependency_dag:
+  edges:
+    - from: phase-1
+      to: phase-2
+      reason: "the seam's threshold=None path consumes the module-level calibration constant published by phase-1"
+    - from: phase-2
+      to: phase-3
+      reason: "the UI default parity (SC-9) must equal the published floor engaged by the seam (phase-2); override passthrough (SC-10) is verified against phase-2 seam semantics"
+
+verification:
+  triplet_colocation: "PASS — each SC's RED/GREEN/COMMIT steps are within a single phase (SC-1..SC-10 each map to exactly one phase and one plan_item)"
+  cross_phase_dependency: "PASS — no RED test in an earlier phase depends on output from a later phase; DAG edges only point forward (phase-1 -> phase-2 -> phase-3)"

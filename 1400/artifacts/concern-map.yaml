@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: MIT
+issue: 1400
+artifact: concern-map
+generated_by: writing-plans/tasks/backfill
+generated_at: 2026-10-02
+verified_by: grounding reads against spec SCs + working tree (2026-10-02)
+
+concern_groups:
+  - concern: calibration
+    scs: [SC-1, SC-8]
+    phase_boundary_hint: "Phase 1 — derive and publish the calibration evidence artifact before any seam change"
+    rationale: >
+      Calibration anchors (SC-1) and recall-regression battery (SC-8) share the
+      probe corpus path and the evidence artifact; the published floor constant
+      they produce is the input every later phase consumes.
+  - concern: seam_default_floor_semantics
+    scs: [SC-2, SC-3, SC-4, SC-5, SC-6, SC-7]
+    phase_boundary_hint: "Phase 2 — seam behavior change in src/services/semantic_search_service.py"
+    rationale: >
+      All six are properties of the single search_semantic() seam: default-on-None
+      (SC-2), explicit override (SC-3), no sticky state (SC-4), and the
+      all-below-floor outcome triple (SC-5/SC-6/SC-7) sharing the #36 R-7 pattern.
+  - concern: ui_threshold_plumbing
+    scs: [SC-9, SC-10]
+    phase_boundary_hint: "Phase 3 — src/frontend/pages/records.py default state + Playwright evidence"
+    rationale: >
+      UI default parity (SC-9) and override preservation (SC-10) both live in
+      records.py and both require Playwright live-app evidence per
+      docs/development/ui_testing_standard.md.
+
+dependency_order:
+  - "Phase 1 (calibration) publishes the floor constant used by Phases 2 and 3."
+  - "Phase 2 (seam) engages the constant behind threshold=None."
+  - "Phase 3 (UI) sets the session-state default from the published constant."
