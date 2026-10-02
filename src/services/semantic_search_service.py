@@ -149,6 +149,8 @@ def search_semantic(mode="gloss", query="", threshold=None, source_id=None, limi
         params["thr"] = str(float(effective_threshold))
     if source_id is not None:
         params["source_id"] = source_id
+    if limit is not None:
+        params["lim"] = int(limit)
     sql = text(
         _candidate_sql(
             mode,
