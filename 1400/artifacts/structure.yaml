@@ -1,0 +1,92 @@
+# Structure Artifact — Issue #1400 phase decomposition (research task)
+issue: 1400
+spec_version: "post-revision 11-SC (SC-1..SC-10 + SC-8a); floor interval (0.9018, 0.9753); SC-5 pinned message"
+
+phases:
+  - id: phase-1
+    name: calibration
+    scs: [SC-1, SC-8, SC-8a]
+    items:
+      - sc: SC-1
+        description: "Derive calibration anchors from real corpus queries (in-corpus: water/beaver/how many/money/gun/book; out-of-corpus: 17 real queries); record per-anchor floor values with provenance in calibration evidence artifact; no synthetic queries"
+        cycle: {red: phase-1, green: phase-1, commit: phase-1}
+        skill_task:
+          red: "test-driven-development --task red"
+          green: "test-driven-development --task green"
+          verify: "verification-before-completion --task verify"
+          commit: "orchestrator commit-inline"
+      - sc: SC-8
+        description: "Floor-clearing in-corpus anchors (water 1.0000, beaver 0.9753, money 0.9970, gun 0.9959, book 0.9936) rank at rank 1 with cosine score >= published floor under default threshold"
+        cycle: {red: phase-1, green: phase-1, commit: phase-1}
+        skill_task: as above
+      - sc: SC-8a
+        description: "Anchor 'how many' (0.8917) falls below default floor by measurement and returns the below-floor empty outcome (SC-5 semantics), not a rank-1 serve"
+        cycle: {red: phase-1, green: phase-1, commit: phase-1}
+        skill_task: as above
+    rationale: "Calibration evidence artifact is the source of truth the seam (phase-2) and UI (phase-3) import; SC-8/SC-8a regression assertions re-derive anchors from the same artifact, so they co-locate here."
+
+  - id: phase-2
+    name: seam-default-floor
+    scs: [SC-2, SC-3, SC-4, SC-5, SC-6, SC-7]
+    items:
+      - sc: SC-2
+        description: "search_semantic() consumes the calibrated default floor when caller passes threshold=None"
+        cycle: {red: phase-2, green: phase-2, commit: phase-2}
+        skill_task:
+          red: "test-driven-development --task red"
+          green: "test-driven-development --task green"
+          verify: "verification-before-completion --task verify"
+          commit: "orchestrator commit-inline"
+      - sc: SC-3
+        description: "Explicit threshold value overrides the calibrated default"
+        cycle: {red: phase-2, green: phase-2, commit: phase-2}
+        skill_task: as above
+      - sc: SC-4
+        description: "threshold=None after a prior explicit override re-engages the calibrated default"
+        cycle: {red: phase-2, green: phase-2, commit: phase-2}
+        skill_task: as above
+      - sc: SC-5
+        description: "All-below-floor outcome: status=ok, empty results, pinned message exactly 'No gloss results meet the sensitivity floor.'"
+        cycle: {red: phase-2, green: phase-2, commit: phase-2}
+        skill_task: as above
+      - sc: SC-6
+        description: "All-below-floor outcome never raises an exception"
+        cycle: {red: phase-2, green: phase-2, commit: phase-2}
+        skill_task: as above
+      - sc: SC-7
+        description: "All-below-floor outcome never serves below-floor rows as ranked results"
+        cycle: {red: phase-2, green: phase-2, commit: phase-2}
+        skill_task: as above
+    rationale: "All seam-concern SCs live in src/services/semantic_search_service.py: default binding (SC-2), override precedence (SC-3/SC-4), and the below-floor outcome contract (SC-5..SC-7). One concern boundary, one file."
+
+  - id: phase-3
+    name: ui-threshold-plumbing
+    scs: [SC-9, SC-10]
+    items:
+      - sc: SC-9
+        description: "UI default threshold state (st.session_state.semantic_threshold) equals published calibrated floor within ±0.01"
+        cycle: {red: phase-3, green: phase-3, commit: phase-3}
+        skill_task:
+          red: "test-driven-development --task red"
+          green: "test-driven-development --task green"
+          verify: "verification-before-completion --task verify"
+          commit: "orchestrator commit-inline"
+      - sc: SC-10
+        description: "User override in the UI threshold control is preserved (override value used by the seam, not silently replaced)"
+        cycle: {red: phase-3, green: phase-3, commit: phase-3}
+        skill_task: as above
+    rationale: "UI concern in src/frontend/pages/records.py + PreferenceService; depends on the published floor constant (phase-1) and the seam contract (phase-2)."
+
+dependency_dag:
+  edges:
+    - from: phase-1
+      to: phase-2
+      reason: "Phase-2 imports the published calibrated floor constant from the phase-1 calibration evidence artifact (SC-2/SC-3/SC-4 binding; SC-5 floor comparisons)."
+    - from: phase-2
+      to: phase-3
+      reason: "Phase-3 UI plumbing passes session-state threshold into search_semantic(threshold=...) and asserts parity with the seam's default (SC-9/SC-10); requires seam default-floor semantics committed in phase-2."
+
+triplet_colocation_check: PASS   # every SC has RED/GREEN/COMMIT within its single phase (see items[].cycle)
+cross_phase_dependency_check: PASS  # no RED in a phase depends on SC output from a later phase; phase-2 RED depends only on phase-1 calibration constant (Y < X, allowed); phase-3 RED depends on phase-1 constant and phase-2 seam semantics (both earlier phases)
+
+# 🤖 Co-authored with AI: OpenCode (zai-org/GLM-5.3-Flash)

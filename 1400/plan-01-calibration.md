@@ -7,7 +7,7 @@
 - `src/services/semantic_search_service.py` (module-level named calibration constant only; seam behavior unchanged in this phase)
 - new pytest calibration test module (calibration module per SC evidence test)
 
-**SCs:** SC-1, SC-8
+**SCs:** SC-1, SC-8, SC-8a
 
 **Dependencies:** None (first phase)
 
@@ -23,11 +23,12 @@
 
 **Code Path Coverage:**
 - SC-1: calibration module (pytest) + calibration evidence artifact — calibration runs on the production replica via the same encode/query path the seam uses (`embedding_service` encode → cosine ranking); no `src/` behavior change in this phase
-- SC-8: calibration evidence artifact + production replica probe — recall regression battery over in-corpus anchors (floor-clearing: water / beaver / money / gun / book; below-floor documented case: how many)
+- SC-8: calibration evidence artifact + production replica probe — recall regression battery over in-corpus floor-clearing anchors (water / beaver / money / gun / book) asserted at rank 1 with cosine ≥ published floor
+- SC-8a: calibration evidence artifact + production replica probe — "how many" (0.8917) asserted to return the below-floor empty outcome (SC-5 semantics, pinned message), not a rank-1 serve
 
 **Cross-Cutting SCs:**
 - SC-2 spans calibration and seam concerns — the Phase 2 seam change consumes the constant published here
-- SC-8 spans calibration and seam concerns — the regression battery exercises the seam under the default floor while evidence lives in the calibration artifact
+- SC-8/SC-8a span calibration and seam concerns — the regression battery exercises the seam under the default floor while evidence lives in the calibration artifact
 
 **Interface Boundaries:**
 - `embedding_service.encode()` / PIN `thenlper/gte-small` — read-only dependency, untouched
@@ -50,20 +51,29 @@
 - [ ] 6. **Verify (**task-card**).** Dispatch the verify task from verification-before-completion: verify the evidence artifact carries per-anchor floors + provenance and the constant respects the interval constraint. **→ SC-1**
 - [ ] 7. **Commit (**direct**).** Stage and commit the test, the evidence artifact, and the calibration constant together as one atomic slice (no co-author trailers). **→ SC-1**
 
-### Item 2 — SC-8: recall regression under the default floor
+### Item 2 — SC-8: floor-clearing anchors recall regression under the default floor
 
-- [ ] 8. **RED (**task-card**).** Dispatch the red task from test-driven-development: write a failing calibration-battery check asserting floor-clearing in-corpus anchors (water / beaver / money / gun / book) rank at rank 1 with cosine ≥ published floor under the default threshold, AND asserting anchor "how many" (0.8917) returns the below-floor empty outcome (SC-5 semantics). The test FAILS because the default-floor engagement does not exist yet. **→ SC-8**
-- [ ] 9. **GREEN (**task-card**).** Dispatch the green task from test-driven-development: run the battery over the published constant; confirm every floor-clearing in-corpus anchor (water / beaver / money / gun / book) lands at rank 1 with cosine ≥ published floor, and "how many" returns the below-floor empty outcome; record baseline-vs-post-change evidence in the calibration artifact. **→ SC-8**
+- [ ] 8. **RED (**task-card**).** Dispatch the red task from test-driven-development: write a failing calibration-battery check asserting floor-clearing in-corpus anchors (water / beaver / money / gun / book) rank at rank 1 with cosine ≥ published floor under the default threshold. The test FAILS because the default-floor engagement does not exist yet. **→ SC-8**
+- [ ] 9. **GREEN (**task-card**).** Dispatch the green task from test-driven-development: run the battery over the published constant; confirm every floor-clearing in-corpus anchor (water / beaver / money / gun / book) lands at rank 1 with cosine ≥ published floor; record baseline-vs-post-change evidence in the calibration artifact. **→ SC-8**
 - [ ] 10. **Post-regression (**task-card**).** Dispatch the phase-4 task from test-driven-development: full regression batch — no existing behavior regressed by the published constant. **→ non-regression for SC-8**
-- [ ] 11. **Verify (**task-card**).** Dispatch the verify task from verification-before-completion: verify battery evidence shows rank 1 with cosine ≥ published floor per floor-clearing anchor and the below-floor empty outcome for "how many", sourced from the production replica probe. **→ SC-8**
+- [ ] 11. **Verify (**task-card**).** Dispatch the verify task from verification-before-completion: verify battery evidence shows rank 1 with cosine ≥ published floor per floor-clearing anchor, sourced from the production replica probe. **→ SC-8**
 - [ ] 12. **Commit (**direct**).** Stage and commit the battery test and artifact update together. **→ SC-8**
+
+### Item 3 — SC-8a: below-floor anchor "how many" returns the honest empty outcome
+
+- [ ] 13. **RED (**task-card**).** Dispatch the red task from test-driven-development: write a failing calibration-battery check asserting anchor "how many" (0.8917) returns the below-floor empty outcome under the default floor (`ok` + empty results + pinned SC-5 message "No gloss results meet the sensitivity floor.") — not a rank-1 serve. The test FAILS because the below-floor outcome is not yet implemented. **→ SC-8a**
+- [ ] 14. **GREEN (**task-card**).** Dispatch the green task from test-driven-development: run the battery over the published constant; confirm "how many" returns the below-floor empty outcome with the pinned message; record the documented-overlap evidence in the calibration artifact. **→ SC-8a**
+- [ ] 15. **Post-regression (**task-card**).** Dispatch the phase-4 task from test-driven-development: full regression batch — no existing behavior regressed. **→ non-regression for SC-8a**
+- [ ] 16. **Verify (**task-card**).** Dispatch the verify task from verification-before-completion: verify battery evidence shows "how many" below-floor empty with pinned message, sourced from the production replica probe. **→ SC-8a**
+- [ ] 17. **Commit (**direct**).** Stage and commit the battery test and artifact update together. **→ SC-8a**
 
 ---
 
 ## Phase 1 VbC Completion Block
 
 - [ ] Verify SC-1: evidence artifact exists with per-anchor floors + provenance, zero synthetic queries.
-- [ ] Verify SC-8: battery regression check passes — rank 1, cosine ≥ published floor for every floor-clearing in-corpus anchor under the default, and below-floor empty outcome for "how many".
+- [ ] Verify SC-8: battery regression check passes — rank 1, cosine ≥ published floor for every floor-clearing in-corpus anchor under the default.
+- [ ] Verify SC-8a: "how many" (0.8917) returns the below-floor empty outcome with the pinned SC-5 message — documented measured behavior, not recall regression.
 - [ ] Verify no `src/` seam behavior changed in this phase (constant is additive; signature untouched).
 - [ ] Verify both commits contain test + artifact + constant as atomic slices.
 

@@ -1,0 +1,36 @@
+# Concern Map — Issue #1400 (grounded in post-revision spec, 11-SC version)
+issue: 1400
+
+concerns:
+  - concern: calibration (evidence derivation)
+    phase: calibration
+    scs: [SC-1]
+    boundary: "calibration module + evidence artifact ONLY; no runtime code reads the artifact at import time except the recorded constant it publishes"
+    separation: "measurement vs consumption kept separate (R-2: constant with provenance in interval (0.9018, 0.9753), not inline magic number); real battery only (R-1)"
+  - concern: seam default-threshold semantics
+    phase: seam-default
+    scs: [SC-2, SC-3, SC-4]
+    boundary: "src/services/semantic_search_service.py only; UI does not re-implement floor logic"
+    separation: "service owns default; UI mirrors the constant via shared import — single source of truth; threshold=None engages default (SC-2), explicit value overrides (SC-3), None-after-override re-engages default (SC-4)"
+  - concern: below-floor outcome rendering
+    phase: floor-empty
+    scs: [SC-5, SC-6, SC-7]
+    boundary: "seam returns status=ok + empty results + pinned message 'No gloss results meet the sensitivity floor.'; no exception; no below-floor rows served"
+    separation: "no new status value (R-3); message naming deficiency is seam responsibility; consistent with #36 R-7 pattern"
+  - concern: recall regression / documented overlap behavior
+    phase: recall-regression
+    scs: [SC-8, SC-8a]
+    boundary: "regression battery asserts floor-clearing anchors at rank 1 with cosine >= published floor (SC-8) and 'how many' as below-floor empty outcome per SC-5 semantics (SC-8a) — documented measured behavior from overlapping distributions, not recall regression"
+    separation: "measured evidence only (probe artifact tmp/1400/artifacts/verification-probe.yaml); no synthetic data (R-1)"
+  - concern: UI default state and override preservation
+    phase: ui-default
+    scs: [SC-9, SC-10]
+    boundary: "records.py session-state init + fallback defaults only"
+    separation: "user-override path (PreferenceService) untouched; Playwright live-app evidence per ui_testing_standard"
+
+cross_concern_rules:
+  - "no synthetic data crosses any boundary (R-1, Global Absolute Prohibition)"
+  - "signature-unchanged constraint holds across all seams (R-3)"
+  - "all-or-nothing enforcement: every SC must pass; partial implementation not permitted"
+
+# 🤖 Co-authored with AI: OpenCode (zai-org/GLM-5.3-Flash)

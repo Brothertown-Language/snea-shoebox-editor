@@ -43,21 +43,21 @@
 
 ## Step-by-step
 
-### Item 9 — SC-9: UI default equals the published floor
+### Item 10 — SC-9: UI default equals the published floor
 
-- [ ] 43. **RED (**task-card**).** Dispatch the red task from test-driven-development: write a failing Playwright/AppTest-standard check asserting `st.session_state.semantic_threshold` default equals the published calibrated floor within ±0.01 on a fresh session. The check FAILS because the default is still 0.80. **→ SC-9**
-- [ ] 44. **GREEN (**task-card**).** Dispatch the green task from test-driven-development: sync the 0.80 default literals in the `semantic_threshold` initialization block to the published calibrated floor; keep the session-state key name, the [0.0, 1.0] guard, and PreferenceService authority. Minimum change only. **→ SC-9**
-- [ ] 45. **Post-regression (**task-card**).** Dispatch the phase-4 task from test-driven-development: existing UI/seam tests and preference-handling tests unaffected. **→ non-regression for SC-9**
-- [ ] 46. **Verify (**task-card**).** Dispatch the verify task from verification-before-completion: verify parity within ±0.01 with live-browser evidence per the ui testing standard (AppTest smoke acceptable only as auxiliary; skips reported as skipped). **→ SC-9**
-- [ ] 47. **Commit (**direct**).** Stage and commit test + implementation together. **→ SC-9**
+- [ ] 48. **RED (**task-card**).** Dispatch the red task from test-driven-development: write a failing Playwright/AppTest-standard check asserting `st.session_state.semantic_threshold` default equals the published calibrated floor within ±0.01 on a fresh session. The check FAILS because the default is still 0.80. **→ SC-9**
+- [ ] 49. **GREEN (**task-card**).** Dispatch the green task from test-driven-development: sync the 0.80 default literals in the `semantic_threshold` initialization block to the published calibrated floor; keep the session-state key name, the [0.0, 1.0] guard, and PreferenceService authority. Minimum change only. **→ SC-9**
+- [ ] 50. **Post-regression (**task-card**).** Dispatch the phase-4 task from test-driven-development: existing UI/seam tests and preference-handling tests unaffected. **→ non-regression for SC-9**
+- [ ] 51. **Verify (**task-card**).** Dispatch the verify task from verification-before-completion: verify parity within ±0.01 with live-browser evidence per the ui testing standard (AppTest smoke acceptable only as auxiliary; skips reported as skipped). **→ SC-9**
+- [ ] 52. **Commit (**direct**).** Stage and commit test + implementation together. **→ SC-9**
 
-### Item 10 — SC-10: UI override preserved through to the seam
+### Item 11 — SC-10: UI override preserved through to the seam
 
-- [ ] 48. **RED (**task-card**).** Dispatch the red task from test-driven-development: write a failing Playwright test asserting a user override in the UI threshold control reaches `search_semantic()` and is not silently replaced by the default. The test FAILS because the override passthrough is unverified against the new default behavior. **→ SC-10**
-- [ ] 49. **GREEN (**task-card**).** Dispatch the green task from test-driven-development: verify (and fix if needed) override passthrough from the UI control through to the seam. **→ SC-10**
-- [ ] 50. **Post-regression (**task-card**).** Dispatch the phase-4 task from test-driven-development: `_validate_threshold` guard tests and preference tests unaffected. **→ non-regression for SC-10**
-- [ ] 51. **Verify (**task-card**).** Dispatch the verify task from verification-before-completion: verify the override value flows from the control to the seam unchanged, with live-browser evidence per the ui testing standard (skips reported as skipped). **→ SC-10**
-- [ ] 52. **Commit (**direct**).** Stage and commit test + implementation together. **→ SC-10**
+- [ ] 53. **RED (**task-card**).** Dispatch the red task from test-driven-development: write a failing Playwright test asserting a user override in the UI threshold control reaches `search_semantic()` and is not silently replaced by the default. The test FAILS because the override passthrough is unverified against the new default behavior. **→ SC-10**
+- [ ] 54. **GREEN (**task-card**).** Dispatch the green task from test-driven-development: verify (and fix if needed) override passthrough from the UI control through to the seam. **→ SC-10**
+- [ ] 55. **Post-regression (**task-card**).** Dispatch the phase-4 task from test-driven-development: `_validate_threshold` guard tests and preference tests unaffected. **→ non-regression for SC-10**
+- [ ] 56. **Verify (**task-card**).** Dispatch the verify task from verification-before-completion: verify the override value flows from the control to the seam unchanged, with live-browser evidence per the ui testing standard (skips reported as skipped). **→ SC-10**
+- [ ] 57. **Commit (**direct**).** Stage and commit test + implementation together. **→ SC-10**
 
 ---
 

@@ -27,7 +27,7 @@ dependency_contract_from_interface_compatibility:
     type_constraints: "float only; persisted as string preference via PreferenceService; out-of-range rejected by _validate_threshold guard"
 
 variables:
-  phase1_complete: {type: bool, description: "calibration anchors + evidence artifact + published floor constant derived from real corpus queries (SC-1, SC-8)"}
+  phase1_complete: {type: bool, description: "calibration anchors + evidence artifact + published floor constant derived from real corpus queries (SC-1, SC-8, SC-8a)"}
   phase2_complete: {type: bool, description: "seam threshold=None default-floor semantics + explicit override/restore + all-below-floor ok/empty/message outcome (SC-2..SC-7)"}
   phase3_complete: {type: bool, description: "UI threshold default parity within +/-0.01 and override preservation (SC-9, SC-10)"}
   all_phases_done: {type: bool, description: "conjunction of all phase completions"}

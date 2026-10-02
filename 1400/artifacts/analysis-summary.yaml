@@ -1,0 +1,29 @@
+# Analysis Summary — Issue #1400 analytical artifacts (retroactive backfill)
+issue: 1400
+mode: retroactive
+generated: "2026-10-02"
+spec_path: .issues/1400/spec.md
+spec_version: "post-revision 11-SC version (SC-1..SC-10 + SC-8a); floor interval (0.9018, 0.9753); SC-5 message pinned 'No gloss results meet the sensitivity floor.'"
+
+sc_count: 11
+sc_list: [SC-1, SC-2, SC-3, SC-4, SC-5, SC-6, SC-7, SC-8, SC-8a, SC-9, SC-10]
+
+artifact_status:
+  analysis-summary.yaml: backfilled
+  blast-radius.yaml: backfilled
+  concern-map.yaml: backfilled
+  code-path-inventory.yaml: backfilled
+  cross-cutting-matrix.yaml: backfilled
+  interface-compatibility.yaml: backfilled
+  state-analysis.yaml: backfilled
+  testability-assessment.yaml: backfilled
+
+scope_summary: "Calibrate a real-data default threshold for the gloss-space search_semantic() seam from the live production replica (6,681 embedded glosses, pin thenlper/gte-small, 2026-10-02 probe). Measured distributions overlap (out-of-corpus max 0.9018 'light bulb' > in-corpus anchor 'how many' 0.8917), so the calibrated default floor is constrained to (0.9018, 0.9753). Seam engages the default at threshold=None (SC-2), preserves explicit override (SC-3/SC-4/SC-10); all-below-floor returns status=ok + empty results + pinned message (SC-5..SC-7); floor-clearing anchors rank 1 (SC-8) with 'how many' documented below-floor empty (SC-8a); UI default state synced (SC-9). Derived-index-only; no production data mutation. Phases: calibration, seam-default, floor-empty, recall-regression, ui-default."
+
+stale_reference_remediation:
+  - "testability-assessment.yaml regenerated from pre-decomposition SC-1..SC-5 phase mapping to per-SC mapping (SC-1..SC-10 + SC-8a) matching the revised spec"
+  - "all pre-decomposition numeric values (floor 0.80, out-of-corpus 0.83/0.84, in-corpus 0.93–1.00) superseded by measured probe values: out-of-corpus max 0.9018, in-corpus anchors water 1.0000 / beaver 0.9753 / how many 0.8917 / money 0.9970 / gun 0.9959 / book 0.9936"
+
+grounding_evidence: tmp/1400/artifacts/verification-probe.yaml
+
+# 🤖 Co-authored with AI: OpenCode (zai-org/GLM-5.3-Flash)

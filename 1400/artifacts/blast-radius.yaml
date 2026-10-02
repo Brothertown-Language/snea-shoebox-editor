@@ -1,0 +1,28 @@
+# Blast Radius — Issue #1400 (grounded in post-revision spec, 11-SC version)
+issue: 1400
+grounding: "Spec scope sections (issue body affected surfaces) grounded FIRST; bounded reads confirmed: semantic_search_service.py seam block, records.py threshold plumbing, linguistic_service.py dispatch. No deep implementation reads needed (R-18). Spec revision 2026-10-02 restates floor interval (0.9018, 0.9753) from measured probe tmp/1400/artifacts/verification-probe.yaml."
+
+affected_components:
+  - component: src/services/semantic_search_service.py (seam)
+    phases: [calibration, seam-default, floor-empty, recall-regression]
+    ripple: "threshold-binding branch (default floor engaged at threshold=None per SC-2); calibrated-floor constant import; below-floor empty outcome message pinned to 'No gloss results meet the sensitivity floor.' (SC-5); status vocabulary unchanged (R-3)"
+  - component: src/frontend/pages/records.py (UI)
+    phases: [ui-default]
+    ripple: "hardcoded 0.80 fallbacks -> calibrated floor constant (SC-9 parity within ±0.01); override passthrough preserved (SC-10); validation guard untouched"
+  - component: test/ (new calibration + regression modules; existing seam tests)
+    phases: [calibration, recall-regression, seam-default, floor-empty]
+    ripple: "existing threshold tests asserting no-filter-on-None behavior must be re-baselined to default-floor semantics (SC-2/SC-4); regression battery asserts floor-clearing anchors (water 1.0000, beaver 0.9753, money 0.9970, gun 0.9959, book 0.9936) at rank 1 with cosine >= published floor (SC-8) and 'how many' (0.8917) as below-floor empty (SC-8a)"
+
+unaffected:
+  - src/services/linguistic_service.py (dispatch table — signature unchanged, R-3)
+  - embedding_service.py (no re-embedding — out of scope R-4)
+  - schema/migrations (derived-index-only, no DDL)
+  - vernacular term space (#1386 e5 floors not touched)
+  - #1399 limit-binding fix (separate issue per spec Not Included)
+
+ripple_effects:
+  - "records.py cached ranked digest includes threshold float — no change needed (default engages seam-side)"
+  - "PreferenceService 'semantic_threshold' persisted default '0.80' string — SC-9 updates fallback default, stored user values preserved (SC-10)"
+  - "measured overlap: out-of-corpus max 0.9018 > in-corpus anchor 'how many' 0.8917 — any floor in (0.9018, 0.9753) routes 'how many' to SC-5/SC-8a empty outcome by design, not regression"
+
+# 🤖 Co-authored with AI: OpenCode (zai-org/GLM-5.3-Flash)

@@ -1,0 +1,32 @@
+# SC Summary — Issue #1401: Search-match highlighting in Records view
+# 1 SC = 1 plan item = 1 RED/GREEN/verify/COMMIT cycle (per-SC decomposition)
+sc_count: 7
+scs:
+  - id: "SC-1"
+    description: "Pure stored-term span helper locates each stored raw term verbatim in a rendered line via deterministic left-to-right whole-term substring find, returning per-line (start, end) offsets; absent terms and empty term lists yield no spans."
+    evidence_type: "behavioral"
+    plan_item: 1
+  - id: "SC-2"
+    description: "Pure FTS span helper normalizes the query with the service normalizer, extracts tokens with tsquery-unsafe stripping and :* prefix semantics, tokenizes rendered lines with Unicode-safe word matching (no ASCII-only classes), and emits whole-word spans for candidates matching any query token."
+    evidence_type: "behavioral"
+    plan_item: 2
+  - id: "SC-3"
+    description: "Service search collects matched raw term values grouped by record for Lexeme/Headword/Gloss modes in the same query pass, returned via an additive optional result field defaulting to None; the page-local mirror container gains the same optional field so the semantic seam construction stays intact; FTS and Semantic modes return None."
+    evidence_type: "behavioral"
+    plan_item: 3
+  - id: "SC-4"
+    description: "The MDF block renderer accepts default-off highlight span parameters and wraps matched text in search-token mark elements with escaping preserved, defined coexistence with diagnostics diff-token spans and status line tints, and clamped handling of malformed spans; non-target call sites render byte-identically."
+    evidence_type: "behavioral"
+    plan_item: 4
+  - id: "SC-5"
+    description: "Search-token marks render with a teal/cyan tint plus bold weight, visually distinct from the yellow diff-token marks and status tints, with both light and dark theme variants and reasonable contrast on both block backgrounds."
+    evidence_type: "behavioral"
+    plan_item: 5
+  - id: "SC-6"
+    description: "The Records page threads query, mode, and matched-term spans into the View-mode render call only; highlighting activates automatically when a lexical-mode query is present, deactivates on empty query, and never activates in Semantic modes; no new session-state keys or preference toggle."
+    evidence_type: "behavioral"
+    plan_item: 6
+  - id: "SC-7"
+    description: "Gated Playwright E2E on the live local app verifies the full search-to-highlight flow across all lexical modes, absence of highlighting in Semantic modes and on empty query, with screenshots archived; skipping via the gate is by design and never silently treated as a pass."
+    evidence_type: "behavioral"
+    plan_item: 7

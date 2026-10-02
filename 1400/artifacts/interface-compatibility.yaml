@@ -1,0 +1,41 @@
+# Interface Compatibility — Issue #1400 (grounded in post-revision spec, 11-SC version)
+issue: 1400
+
+interfaces:
+  - name: "search_semantic(mode, query, threshold=None, source_id=None, limit=None)"
+    file: src/services/semantic_search_service.py
+    status: modified        # behavior of threshold=None only
+    change: "threshold=None resolves to the calibrated default floor (SC-2); explicit float filters at that value (SC-3, override precedence); threshold=None after an explicit override re-engages the default (SC-4); an explicitly passed value equal to the calibrated floor keeps override semantics"
+    compatibility: backward_compatible_scorewise   # signature unchanged; result shape unchanged
+    notes: "signature default None and explicit-None are the same value — both resolve to the calibrated default; no sentinel needed. Default engages only when threshold=None (spec Approach step 4)."
+  - name: "SemanticSearchResult(results, status, message)"
+    file: src/services/semantic_search_service.py
+    status: unchanged
+    change: none
+    compatibility: backward_compatible
+  - name: "status_values vocabulary ok|empty_query|no_embeddings|stale_model"
+    file: src/services/semantic_search_service.py
+    status: unchanged       # R-3 signature-unchanged constraint
+    change: none
+    compatibility: backward_compatible
+    notes: "all-below-floor outcome maps onto status=ok + empty results + pinned message 'No gloss results meet the sensitivity floor.' (SC-5) per #36 R-7 — no new status value"
+  - name: "records.py threshold UI state + PreferenceService 'semantic_threshold'"
+    file: src/frontend/pages/records.py
+    status: modified        # default value only
+    change: "0.80 fallback -> calibrated floor constant (SC-9 parity within ±0.01); slider/number widget range may need upper-bound re-check if floor exceeds 0.80; user override passthrough to seam preserved (SC-10)"
+    compatibility: internal_only    # persisted user preferences preserved
+
+breaking_changes: []        # none — consumers see same statuses/shape; only ranking floor changes
+removed_interfaces: []       # none
+
+dependency_contract:
+  - source: "semantic_search_service.search_semantic seam contract"
+    target: "records.py semantic call sites + PreferenceService default string"
+    type: artifact schema
+    constraint: "calibration evidence artifact publishes the default-floor constant (interval (0.9018, 0.9753), provenance-recorded per R-2); both seam and UI import it from one source of truth — UI must not recompute or hardcode (SC-9 requires parity within ±0.01)"
+  - source: "calibration evidence artifact (per-anchor floors + provenance)"
+    target: "pytest calibration module + recall-regression battery"
+    type: artifact schema
+    constraint: "artifact schema must be stable enough for the regression battery to re-derive/re-assert anchors (water 1.0000, beaver 0.9753, money 0.9970, gun 0.9959, book 0.9936 floor-clearing; 'how many' 0.8917 below-floor); provenance fields mandatory (R-1); measured probe baseline tmp/1400/artifacts/verification-probe.yaml (2026-10-02, 6,681 embedded glosses, pin thenlper/gte-small)"
+
+# 🤖 Co-authored with AI: OpenCode (zai-org/GLM-5.3-Flash)

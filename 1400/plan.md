@@ -45,12 +45,12 @@ dispatch:
 
 | Phase | Name | Concern | SCs | Depends On | Step Range | Dispatch |
 |-------|------|---------|-----|------------|-----------|----------|
-| 1 | Real-data calibration of the semantic-seam default floor | calibration | SC-1, SC-8 | — | 3-12 | direct (2) + task-card (3-12) |
-| 2 | Seam default-floor semantics (threshold=None) + all-below-floor outcome | seam | SC-2..SC-7 | 1 | 13-42 | direct (0) + task-card (13-42) |
-| 3 | UI threshold plumbing — default parity and override preservation | ui plumbing | SC-9, SC-10 | 2 | 43-52 | direct (0) + task-card (43-52) |
-| — | Post-implementation (audit → PR) | pipeline closeout | all | 1,2,3 | 53-60 | mixed (per step) |
+| 1 | Real-data calibration of the semantic-seam default floor | calibration | SC-1, SC-8, SC-8a | — | 3-17 | direct (2) + task-card (3-17) |
+| 2 | Seam default-floor semantics (threshold=None) + all-below-floor outcome | seam | SC-2..SC-7 | 1 | 18-47 | direct (0) + task-card (18-47) |
+| 3 | UI threshold plumbing — default parity and override preservation | ui plumbing | SC-9, SC-10 | 2 | 48-57 | direct (0) + task-card (48-57) |
+| — | Post-implementation (audit → PR) | pipeline closeout | all | 1,2,3 | 58-65 | mixed (per step) |
 
-Pre-implementation steps 1-2 run once before Phase 1. Post-implementation steps 53-60 run once after Phase 3.
+Pre-implementation steps 1-2 run once before Phase 1. Post-implementation steps 58-65 run once after Phase 3.
 
 ---
 
@@ -63,7 +63,7 @@ Pre-implementation steps 1-2 run once before Phase 1. Post-implementation steps 
 | Skill | `test-driven-development`, `verification-before-completion` |
 | Task | red, green, post-regression, verify, commit |
 | Target | calibration evidence artifact + module-level calibration constant in `src/services/semantic_search_service.py` |
-| SCs | SC-1, SC-8 |
+| SCs | SC-1, SC-8, SC-8a |
 | Depends On | — |
 
 **Context:**
@@ -114,8 +114,8 @@ Pre-implementation steps 1-2 run once before Phase 1. Post-implementation steps 
 
 ## Pre-Implementation (once per plan)
 
-- [ ] 1. **Coherence gate (**direct**).** Read the ledger at `.issues/1400/artifacts/plan-input-verification.md`; confirm every SC (SC-1..SC-10) maps to exactly one phase and one plan item, the phase DAG is linear and acyclic (1 → 2 → 3), and each phase's red/green/post-regression/verify/commit skill+task selection matches the implementation-workflow reference card. **→ all SCs**
-- [ ] 2. **Baseline check (**direct**).** Verify production replica is freshly synced (`bash scripts/sync_prod_to_local.sh`), the feature branch exists, and existing seam/UI tests (`test/test_semantic_threshold_red.py` and siblings listed in the blast radius) pass before the first RED. Record the measured pre-calibration baseline (floor-clearing in-corpus anchors water 1.0000 / beaver 0.9753 / money 0.9970 / gun 0.9959 / book 0.9936 at rank 1; anchor "how many" 0.8917 documented below floor per SC-8) for SC-8 comparison. **→ all SCs**
+- [ ] 1. **Coherence gate (**direct**).** Read the ledger at `.issues/1400/artifacts/plan-input-verification.md`; confirm every SC (SC-1..SC-10 incl. SC-8a) maps to exactly one phase and one plan item, the phase DAG is linear and acyclic (1 → 2 → 3), and each phase's red/green/post-regression/verify/commit skill+task selection matches the implementation-workflow reference card. **→ all SCs**
+- [ ] 2. **Baseline check (**direct**).** Verify production replica is freshly synced (`bash scripts/sync_prod_to_local.sh`), the feature branch exists, and existing seam/UI tests (`test/test_semantic_threshold_red.py` and siblings listed in the blast radius) pass before the first RED. Record the measured pre-calibration baseline (floor-clearing in-corpus anchors water 1.0000 / beaver 0.9753 / money 0.9970 / gun 0.9959 / book 0.9936 at rank 1; anchor "how many" 0.8917 documented below floor per SC-8a) for SC-8/SC-8a comparison. **→ all SCs**
 
 ---
 
@@ -139,14 +139,14 @@ Pre-implementation steps 1-2 run once before Phase 1. Post-implementation steps 
 
 ## Post-Implementation (once per plan)
 
-- [ ] 53. **Audit (**task-card**).** Dispatch `task(..., prompt: "execute verification-audit DiMo investigator from audit. Read \`audit/tasks/verification-audit-investigator.md\` first")`, then validator, evaluator, arbiter in sequence. **→ all SCs**
-- [ ] 54. **Z3 check (**direct**).** Run `.opencode/tools/solve check --state-path {project_root}/tmp/1400/state.yaml --contract-path {project_root}/tmp/1400/constraints.yaml` directly. **→ pipeline dependency integrity**
-- [ ] 55. **Structural checks (**task-card**).** `task(..., prompt: "execute checklist task from finishing-a-development-branch")` — lint, typecheck, finishing checklist. **→ all SCs (code hygiene)**
-- [ ] 56. **Pre-PR gate (**task-card**).** `task(..., prompt: "execute verify task from verification-before-completion")` — read all SC verdicts; BLOCK if any FAIL (DONE_WITH_CONCERNS coerces to FAIL). **→ all SCs**
-- [ ] 57. **Regression check (**task-card**).** `task(..., prompt: "execute phase-4 task from test-driven-development")` — final regression batch before PR. **→ all SCs (non-regression)**
-- [ ] 58. **Review prep (**task-card**).** `task(..., prompt: "execute review-prep from git-workflow-pr. Read \`git-workflow-pr/tasks/review-prep.md\` first")`. **→ review readiness**
-- [ ] 59. **Create PR (**task-card**).** `task(..., prompt: "execute create task from git-workflow-pr")` — stacked PR targeting the trunk; squash to one commit for the issue at PR creation. PR creation then HALT for human review — agents never merge. **→ pr_created**
-- [ ] 60. **Executive summary (**task-card**).** `task(..., prompt: "execute completion task from completion-core")` — completion report with SC verdict table and byline. **→ completion**
+- [ ] 58. **Audit (**task-card**).** Dispatch `task(..., prompt: "execute verification-audit DiMo investigator from audit. Read \`audit/tasks/verification-audit-investigator.md\` first")`, then validator, evaluator, arbiter in sequence. **→ all SCs**
+- [ ] 59. **Z3 check (**direct**).** Run `.opencode/tools/solve check --state-path {project_root}/tmp/1400/state.yaml --contract-path {project_root}/tmp/1400/constraints.yaml` directly. **→ pipeline dependency integrity**
+- [ ] 60. **Structural checks (**task-card**).** `task(..., prompt: "execute checklist task from finishing-a-development-branch")` — lint, typecheck, finishing checklist. **→ all SCs (code hygiene)**
+- [ ] 61. **Pre-PR gate (**task-card**).** `task(..., prompt: "execute verify task from verification-before-completion")` — read all SC verdicts; BLOCK if any FAIL (DONE_WITH_CONCERNS coerces to FAIL). **→ all SCs**
+- [ ] 62. **Regression check (**task-card**).** `task(..., prompt: "execute phase-4 task from test-driven-development")` — final regression batch before PR. **→ all SCs (non-regression)**
+- [ ] 63. **Review prep (**task-card**).** `task(..., prompt: "execute review-prep from git-workflow-pr. Read \`git-workflow-pr/tasks/review-prep.md\` first")`. **→ review readiness**
+- [ ] 64. **Create PR (**task-card**).** `task(..., prompt: "execute create task from git-workflow-pr")` — stacked PR targeting the trunk; squash to one commit for the issue at PR creation. PR creation then HALT for human review — agents never merge. **→ pr_created**
+- [ ] 65. **Executive summary (**task-card**).** `task(..., prompt: "execute completion task from completion-core")` — completion report with SC verdict table and byline. **→ completion**
 
 ---
 
@@ -156,9 +156,10 @@ Pre-implementation steps 1-2 run once before Phase 1. Post-implementation steps 
 - [ ] C2. Published calibrated default floor is a named constant strictly between 0.9018 and 0.9753, carrying provenance. **→ SC-1, SC-2**
 - [ ] C3. `search_semantic(threshold=None)` filters on the calibrated floor; explicit values override; `None` after an override re-engages the default. **→ SC-2, SC-3, SC-4**
 - [ ] C4. All-below-floor outcome returns `status=ok`, empty `results`, deficiency message — no exception, no below-floor rows served. **→ SC-5, SC-6, SC-7**
-- [ ] C5. Default threshold: floor-clearing in-corpus battery anchors (water / beaver / money / gun / book) rank at rank 1 with cosine ≥ published floor; anchor "how many" (0.8917) returns the below-floor empty outcome per SC-5 semantics (no recall regression for floor-clearing anchors). **→ SC-8**
+- [ ] C5. Default threshold: floor-clearing in-corpus battery anchors (water / beaver / money / gun / book) rank at rank 1 with cosine ≥ published floor. **→ SC-8**
+- [ ] C5a. Anchor "how many" (0.8917) returns the below-floor empty outcome per SC-5 semantics (documented overlap behavior, not recall regression). **→ SC-8a**
 - [ ] C6. Fresh-session `st.session_state.semantic_threshold` equals the published floor within ±0.01; UI overrides reach the seam unchanged. **→ SC-9, SC-10**
-- [ ] C7. All pytest suites pass; Playwright SC-9/SC-10 evidence captured per ui_testing_standard (skips reported as skipped, never as PASS). **→ SC-8, SC-9, SC-10, non-regression**
+- [ ] C7. All pytest suites pass; Playwright SC-9/SC-10 evidence captured per ui_testing_standard (skips reported as skipped, never as PASS). **→ SC-8, SC-8a, SC-9, SC-10, non-regression**
 - [ ] C8. Stacked PR created; all post-implementation gates (audit, Z3, structural checks, pre-PR gate, regression check) PASS. **→ pipeline completion**
 
 ---
@@ -175,4 +176,5 @@ Check your tool list for a tool named `task`.
 ## lifecycle_events
 
 - 2026-10-02T16:13:51Z — plan_created — plan verified at `.issues/1400/plan.md`; 3 phases + pre-implementation (2 steps) + post-implementation (8 steps); dispatch: phase-1/2/3 task-card via test-driven-development + verification-before-completion with orchestrator commit-inline; dependency contract present at `.issues/1400/dependency-contract.yaml`.
+- 2026-10-02T17:10:00Z — plan_revised — regenerated against revised spec (structure/decomposition revision: compound SC-8 split into atomic SC-8 (floor-clearing anchors rank 1 + cosine ≥ published floor) and SC-8a ("how many" below-floor empty outcome with pinned SC-5 message); SC-5 deficiency message pinned to "No gloss results meet the sensitivity floor."; SC count 10 → 11). Plan updated: Phase 1 SCs SC-1/SC-8/SC-8a with new Item 3 (SC-8a, steps 13-17); Phase 2 items/steps renumbered (18-47); Phase 3 renumbered (48-57); post-implementation renumbered (58-65); exit criteria C5 split into C5/C5a; phase plan files updated.
 - 2026-10-02T16:40:31Z — plan_revised — regenerated against revised spec (measured-reality recalibration: floor interval (0.9018, 0.9753), in-corpus anchors incl. "how many" 0.8917 below-floor, OOC max "light bulb" 0.9018; probe `tmp/1400/artifacts/verification-probe.yaml`); Architecture, Phase 1 context, step 2 baseline, C2, C5 updated to match revised SC-8; phase plan files and dependency contract updated.
