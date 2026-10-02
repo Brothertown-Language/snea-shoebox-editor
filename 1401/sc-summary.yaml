@@ -1,32 +1,96 @@
 # SC Summary — Issue #1401: Search-match highlighting in Records view
 # 1 SC = 1 plan item = 1 RED/GREEN/verify/COMMIT cycle (per-SC decomposition)
-sc_count: 7
+sc_count: 23
 scs:
   - id: "SC-1"
-    description: "Pure stored-term span helper locates each stored raw term verbatim in a rendered line via deterministic left-to-right whole-term substring find, returning per-line (start, end) offsets; absent terms and empty term lists yield no spans."
+    description: "Pure stored-term span helper returns a whole-term (start, end) offset pair for every verbatim occurrence of every provided stored raw term in a rendered line, scanning deterministically left-to-right."
     evidence_type: "behavioral"
     plan_item: 1
   - id: "SC-2"
-    description: "Pure FTS span helper normalizes the query with the service normalizer, extracts tokens with tsquery-unsafe stripping and :* prefix semantics, tokenizes rendered lines with Unicode-safe word matching (no ASCII-only classes), and emits whole-word spans for candidates matching any query token."
+    description: "Pure stored-term span helper returns an empty span list when a provided term does not occur in the rendered line, when the term list is empty, or when the rendered line is empty."
     evidence_type: "behavioral"
     plan_item: 2
   - id: "SC-3"
-    description: "Service search collects matched raw term values grouped by record for Lexeme/Headword/Gloss modes in the same query pass, returned via an additive optional result field defaulting to None; the page-local mirror container gains the same optional field so the semantic seam construction stays intact; FTS and Semantic modes return None."
+    description: "Pure FTS span helper emits a whole-word span for every rendered-line word whose normalized form matches any query token, where query tokens are produced by the service normalizer with the FTS strategy's tsquery-unsafe stripping and :* prefix semantics."
     evidence_type: "behavioral"
     plan_item: 3
   - id: "SC-4"
-    description: "The MDF block renderer accepts default-off highlight span parameters and wraps matched text in search-token mark elements with escaping preserved, defined coexistence with diagnostics diff-token spans and status line tints, and clamped handling of malformed spans; non-target call sites render byte-identically."
+    description: "Pure FTS span helper returns an empty span list when the query yields no tokens (including queries containing only tsquery-unsafe characters) or when no rendered-line word matches a query token."
     evidence_type: "behavioral"
     plan_item: 4
   - id: "SC-5"
-    description: "Search-token marks render with a teal/cyan tint plus bold weight, visually distinct from the yellow diff-token marks and status tints, with both light and dark theme variants and reasonable contrast on both block backgrounds."
+    description: "Service search result container gains an additive optional matched-terms field defaulting to None such that all existing construction sites remain source-compatible."
     evidence_type: "behavioral"
     plan_item: 5
   - id: "SC-6"
-    description: "The Records page threads query, mode, and matched-term spans into the View-mode render call only; highlighting activates automatically when a lexical-mode query is present, deactivates on empty query, and never activates in Semantic modes; no new session-state keys or preference toggle."
+    description: "Page-local mirror container carries the same optional matched-terms field such that semantic seam construction completes without raising."
     evidence_type: "behavioral"
     plan_item: 6
   - id: "SC-7"
-    description: "Gated Playwright E2E on the live local app verifies the full search-to-highlight flow across all lexical modes, absence of highlighting in Semantic modes and on empty query, with screenshots archived; skipping via the gate is by design and never silently treated as a pass."
+    description: "Service search method collects the deduplicated set of matched raw term values grouped by record identifier for Lexeme, Headword, and Gloss modes within the existing paginated query pass."
     evidence_type: "behavioral"
     plan_item: 7
+  - id: "SC-8"
+    description: "FTS and Semantic mode searches return the matched-terms field as None."
+    evidence_type: "behavioral"
+    plan_item: 8
+  - id: "SC-9"
+    description: "Every MDF block renderer call site that does not supply the new optional highlight span parameters renders byte-identically to its current output."
+    evidence_type: "behavioral"
+    plan_item: 9
+  - id: "SC-10"
+    description: "When highlight spans are supplied, the renderer wraps each span's covered text range in mark.search-token elements with output escaping preserved."
+    evidence_type: "behavioral"
+    plan_item: 10
+  - id: "SC-11"
+    description: "Highlight spans that are malformed or out of range (negative offsets, start >= end, or end beyond the line length) are ignored by the renderer — dropped without raising — and rendering of all other content is unaffected."
+    evidence_type: "behavioral"
+    plan_item: 11
+  - id: "SC-12"
+    description: "The renderer applies the defined precedence rule: where a highlight span overlaps a diff-token span, the diff-token span renders unchanged and the overlapping search-token mark is omitted."
+    evidence_type: "behavioral"
+    plan_item: 12
+  - id: "SC-13"
+    description: "Status line tints render unchanged when search-token highlighting is active."
+    evidence_type: "behavioral"
+    plan_item: 13
+  - id: "SC-14"
+    description: "Search-token marks render with the defined teal/cyan background tint and bold font weight."
+    evidence_type: "behavioral"
+    plan_item: 14
+  - id: "SC-15"
+    description: "Computed background-color of search-token marks differs from the computed background-colors of diff-token marks and of status line tints in both the light and dark theme variants."
+    evidence_type: "behavioral"
+    plan_item: 15
+  - id: "SC-16"
+    description: "Contrast ratio between the search-token mark's text color and the underlying block background is at least 4.5:1 (WCAG 2.1 AA normal-text threshold) in both the light and dark theme variants."
+    evidence_type: "behavioral"
+    plan_item: 16
+  - id: "SC-17"
+    description: "Records page supplies highlight context (query, mode, and computed spans) only to the View-mode render call."
+    evidence_type: "behavioral"
+    plan_item: 17
+  - id: "SC-18"
+    description: "With a lexical-mode query active, highlighting activates automatically in the rendered block in a fresh session, without any preference toggle or prior configuration."
+    evidence_type: "behavioral"
+    plan_item: 18
+  - id: "SC-19"
+    description: "With an empty search query, the rendered block contains no search-token marks."
+    evidence_type: "behavioral"
+    plan_item: 19
+  - id: "SC-20"
+    description: "In Semantic Gloss and Semantic All modes, the rendered block contains no search-token marks even with an active query."
+    evidence_type: "behavioral"
+    plan_item: 20
+  - id: "SC-21"
+    description: "Gated end-to-end suite on the live local app verifies that a search in each lexical mode highlights matches in the rendered block."
+    evidence_type: "behavioral"
+    plan_item: 21
+  - id: "SC-22"
+    description: "Gated end-to-end suite on the live local app verifies the absence of search-token marks in Semantic modes."
+    evidence_type: "behavioral"
+    plan_item: 22
+  - id: "SC-23"
+    description: "Gated end-to-end suite on the live local app verifies the absence of search-token marks on an empty query."
+    evidence_type: "behavioral"
+    plan_item: 23
