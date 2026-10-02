@@ -335,3 +335,11 @@ Check your tool list for a tool named `task`.
 - [ ] C6. Search-token styling meets 4.5:1 WCAG 2.1 AA contrast in both themes and is computed-distinct from diff-token marks and status tints (SC-15, SC-16)
 - [ ] C7. Gated E2E suite executed when `SNEA_E2E=1` and live app on port 8501 are present; any gate-skip recorded as skipped by design, never as a pass (SC-21 through SC-23)
 - [ ] C8. Audit, structural checks, pre-PR gate, and final regression check all pass before PR creation
+
+## lifecycle_events
+
+- timestamp: 2026-10-02T19:55:00-04:00
+  event: plan_created
+  plan_file: .issues/1401/plan.md
+  phase_count: 5
+  issue: 1401

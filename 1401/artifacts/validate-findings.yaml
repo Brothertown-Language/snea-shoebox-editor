@@ -1,0 +1,77 @@
+# Validation findings for issue 1401 plan
+artifact: validate-findings
+issue: 1401
+validated_at: "2026-10-02"
+plan_path: .issues/1401/plan.md
+solve_output: .issues/1401/artifacts/solve-output.yaml (SAT)
+overall_status: PASS
+
+category_1_structural:
+  status: PASS
+  checks:
+    - check: phase_table_required_columns
+      result: PASS
+      evidence: "Phase Table has columns Phase | Name | Concern | SCs | Depends On | Step Range | Dispatch (plan.md lines 54-62)"
+    - check: procedure_sections_with_numbered_steps
+      result: PASS
+      evidence: "All 4 SC phases + Pre-Implementation + Post-Implementation have '### Step-by-Step' sections with numbered checkbox steps; 139 checkbox items total"
+    - check: exit_criteria_sc_to_phase_mapping
+      result: PASS
+      evidence: "Exit Criteria C1-C8 present; SC-to-phase mapping in Phase Table SCs column and spec.md Traceability table; every SC referenced in at least one exit criterion"
+
+category_2_skill_task_validity:
+  status: PASS
+  checks:
+    - check: dispatch_strings_match_implementation_workflow
+      result: PASS
+      evidence: "All task-card dispatch strings match skills/writing-plans/reference/implementation-workflow.md: red/green/post-regression (test-driven-development), phase-0 pre-regression, verify (verification-before-completion), checklist (finishing-a-development-branch), review-prep/create (git-workflow-pr), completion (completion-core), audit DiMo investigator. Direct steps commit-inline and z3-check match orchestrator entries."
+    - check: no_invalid_skill_task_references
+      result: PASS
+      evidence: "No dispatch string references a skill+task pair absent from the reference card"
+
+category_3_sc_coverage:
+  status: PASS
+  checks:
+    - check: all_scs_covered
+      result: PASS
+      evidence: "23/23 SCs from spec.md and sc-summary.yaml mapped in Phase Table: SC-1..4→Phase 1, SC-5..8→Phase 2, SC-9..20→Phase 3, SC-21..23→Phase 4; each appears in that phase's SCs header and per-step '→ SC-N' markers"
+    - check: triplet_split_detection
+      result: PASS
+      evidence: "Every SC's RED/GREEN/COMMIT steps are contiguous within one phase (e.g. SC-1: steps 5,6,9; SC-7: steps 35,36,39; SC-21: steps 105,106,109); no SC has steps split across phases"
+
+category_4_concern_separation:
+  status: PASS
+  checks:
+    - check: each_phase_one_concern
+      result: PASS
+      evidence: "Phase Table concerns are distinct and single: P1 pure-span-computation, P2 service-data-layer, P3 renderer/styling/page-wiring, P4 gated E2E verification"
+    - check: no_two_phases_same_concern
+      result: PASS
+      evidence: "Concern-map.yaml groups page-wiring-and-gating across Phases 3 (SC-17..20) and 4 (SC-21..23), but the group itself declares the two boundaries and the plan splits them into distinct concerns (page wiring vs E2E verification); no concern is addressed by two plan phases"
+      note: "Concern-map aggregation spans two phases for traceability; plan-level concern assignment remains one-to-one"
+
+category_5_dag_validation:
+  status: PASS
+  checks:
+    - check: no_cycles
+      result: PASS
+      evidence: "Edge set {P3→P1, P3→P2, P4→P3, P5→P1..P4} is acyclic; matches dependency-contract.yaml invariants (phase3 implies phase1+phase2; phase4 implies all three)"
+    - check: all_phases_reachable
+      result: PASS
+      evidence: "P1, P2 reachable from start; P3 via P1/P2; P4 via P3; P5 via P1-P4"
+    - check: no_orphan_phases
+      result: PASS
+      evidence: "Every phase has at least one edge: P1/P2 outgoing (P3, P5), P3 in+out, P4 in+out, P5 incoming"
+
+category_6_holistic_quality:
+  status: PASS
+  checks:
+    - check: no_tbd_todo_placeholders
+      result: PASS
+      evidence: "grep for TBD/TODO/FIXME in plan.md returned no matches"
+    - check: checkbox_format
+      result: PASS
+      evidence: "139 items use '- [ ]' checkbox format"
+    - check: dispatch_mode_consistency
+      result: PASS
+      evidence: "Task-card steps contain only task() dispatches; commit steps are orchestrator-direct (commit-inline per reference card); Post-Implementation 'mixed' matches reference card's split of direct (z3-check) and task-card steps; no phase mixes inline implementation with task-card execution"
