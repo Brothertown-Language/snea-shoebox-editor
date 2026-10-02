@@ -72,6 +72,9 @@ try:
         return SemanticSearchResult(results=list(_ranked), status="ok", message="")
 
     mock_seam = MagicMock()
+    # Issue #1400 SC-9: records.py imports CALIBRATED_FLOOR from the seam for
+    # the semantic_threshold default — pin the real calibrated value.
+    mock_seam.CALIBRATED_FLOOR = 0.93
     mock_seam.search_semantic = MagicMock(side_effect=_spy_search)
     sys.modules["src.services.semantic_search_service"] = mock_seam
     sys.modules["src.services.semantic_search_service"].SemanticSearchResult = SemanticSearchResult

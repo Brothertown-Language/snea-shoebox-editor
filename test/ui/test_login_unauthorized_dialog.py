@@ -4,9 +4,13 @@ contact label — never the raw ``<MAINTAINER_CONTACT>`` token.
 Evidence type: behavioral (Playwright real-browser test against the live app
 on :8501, per docs/development/ui_testing_standard.md and test/ui/AGENTS.md).
 
-Auth model: saved OAuth storage state at tmp/issue-1385/auth-state.json
-(carries the app's own gh_auth_token cookie; sanity-checked before use —
-never fabricated). The unauthorized (Access Restricted) dialog is shown when
+Auth model: the app process is restarted with SNEA_SIMULATE_AUTH=unauthorized
+(the legacy local-mode hook, which takes precedence over the SNEA_E2E bypass
+in src/services/security_manager.py::rehydrate_session); the saved OAuth
+storage state at tmp/issue-1385/auth-state.json (carrying the app's own
+gh_auth_token cookie; sanity-checked before use — never fabricated)
+supplies the authenticated transport. The unauthorized (Access Restricted)
+dialog is shown when
 IdentityService marks the session unauthorized; the dialog body must contain
 ``contact.maintainer_label`` ("Michael Conrad (@michaelconrad on Mastodon)")
 and must NOT contain the literal ``<MAINTAINER_CONTACT>`` token.
@@ -22,16 +26,22 @@ Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
 
 import json
 import os
+import subprocess
 import threading
+import time
+import urllib.error
+import urllib.request
 
 import pytest
 from playwright.sync_api import sync_playwright
 
 APP_URL = "http://localhost:8501"
+HEALTH_URL = f"{APP_URL}/_stcore/health"
 ARTIFACTS_DIR = os.path.join("tmp", "issue-1392", "artifacts")
 STORAGE_PATH = os.path.join("tmp", "issue-1385", "auth-state.json")
 MAINTAINER_LABEL = "Michael Conrad (@michaelconrad on Mastodon)"
 RAW_TOKEN = "<MAINTAINER_CONTACT>"
+SIM_ENV_VAR = "SNEA_SIMULATE_AUTH"
 
 pytest.importorskip("playwright.sync_api")
 
@@ -75,6 +85,65 @@ def assert_dialog_text_has_no_raw_token(dialog_text: str) -> None:
     )
 
 
+def _health_ok() -> bool:
+    try:
+        with urllib.request.urlopen(HEALTH_URL, timeout=2) as resp:
+            return resp.status == 200
+    except (urllib.error.URLError, OSError):
+        return False
+
+
+def _restart_app(sim_value: str | None) -> None:
+    """Restart the local Streamlit app, optionally carrying SNEA_SIMULATE_AUTH.
+
+    The SNEA_SIMULATE_AUTH hook resolves BEFORE the SNEA_E2E bypass in
+    SecurityManager.rehydrate_session, so a fresh app process started with
+    SNEA_SIMULATE_AUTH=unauthorized yields the legacy unauthorized state
+    (Access Restricted dialog) while the default (sim unset) keeps the
+    SNEA_E2E bypass-authenticated session.
+    """
+    subprocess.run(["pkill", "-f", "streamlit run streamlit_app.py"], check=False, capture_output=True)
+    deadline = time.monotonic() + 20
+    while time.monotonic() < deadline and _health_ok():
+        time.sleep(0.5)
+
+    env = dict(os.environ)
+    env.pop(SIM_ENV_VAR, None)
+    if sim_value is not None:
+        env[SIM_ENV_VAR] = sim_value
+
+    log_path = os.path.join(ARTIFACTS_DIR, f"streamlit-sc1-{sim_value or 'clean'}.log")
+    os.makedirs(ARTIFACTS_DIR, exist_ok=True)
+    with open(log_path, "w") as log_fh:
+        subprocess.Popen(
+            [
+                "uv", "run", "--extra", "local", "python", "-m", "streamlit",
+                "run", "streamlit_app.py",
+                "--server.address", "0.0.0.0", "--server.port", "8501",
+            ],
+            env=env,
+            stdout=log_fh,
+            stderr=subprocess.STDOUT,
+        )
+
+    deadline = time.monotonic() + 90
+    while time.monotonic() < deadline:
+        if _health_ok():
+            return
+        time.sleep(1.0)
+    raise AssertionError(f"App did not become healthy on :8501 (SNEA_SIMULATE_AUTH={sim_value!r}).")
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _restore_bypass_app():
+    """Leave the app running with the SNEA_E2E bypass (sim variable unset)."""
+    yield
+    try:
+        _restart_app(None)
+    except Exception:  # noqa: BLE001 — teardown must not mask test results
+        pass
+
+
 def _run_in_worker_thread(fn):
     """Run a sync_playwright body in a worker thread (pytest 9 + anyio keeps
     an asyncio loop on the main thread; the Playwright sync API forbids
@@ -102,6 +171,7 @@ def test_access_restricted_dialog_shows_resolved_maintainer_label_sc1():
     storage = _require_auth_storage()
     os.makedirs(ARTIFACTS_DIR, exist_ok=True)
     screenshot = os.path.join(ARTIFACTS_DIR, "e2e-sc1-login-dialog.png")
+    _restart_app("unauthorized")
 
     def _body():
         with sync_playwright() as pw:

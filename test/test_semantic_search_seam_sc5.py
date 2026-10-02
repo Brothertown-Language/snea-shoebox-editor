@@ -259,6 +259,9 @@ class TestSemanticSearchSeamSc5(unittest.TestCase):
         Query vector == E_POS (normalized). Pinned 'ge' rows must rank: both
         E_POS cosine=1.0 rows first (tie -> record_id asc), then PERP ~0,
         then E_NEG -1.0 if the threshold admits it. Stale/NULL rows excluded.
+
+        Post-#1400 SC-2: threshold=None engages the calibrated floor (0.93),
+        so only the 1.0 rows survive; 0.0 and -1.0 rows are below floor.
         """
         with self._txn() as conn:
             self._seed_rows(conn)
@@ -268,12 +271,11 @@ class TestSemanticSearchSeamSc5(unittest.TestCase):
             self.assertEqual(result.status, "ok")
             got = result.results
             scores = [round(s, 6) for _, s in got]
-            # Deterministic exact ranking in 'gloss' mode over the seeded pinned
-            # rows: E_POS (1.0), E_PERP (0.0), E_NEG (-1.0); threshold=None
-            # applies no score filter; the stale and NULL fixture rows are
-            # excluded by the pin-join. (The pre-repair `>= 4` floor only held
-            # when stale committed fixtures padded the result set.)
-            self.assertEqual(scores, [1.0, 0.0, -1.0], "exact deterministic ranking")
+            # Issue #1400 SC-2: threshold=None engages the calibrated score
+            # floor (0.93), so only the E_POS cosine=1.0 pinned rows survive;
+            # the 0.0 and -1.0 rows are below floor and excluded. The stale
+            # and NULL fixture rows are excluded by the pin-join.
+            self.assertEqual(scores, [1.0], "exact deterministic ranking under calibrated floor")
             self.assertLessEqual(
                 0.99, scores[0], "top hit must be the exact-match pinned row (cosine>=0.99)"
             )

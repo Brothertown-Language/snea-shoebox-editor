@@ -7,3 +7,4 @@ gatherUsageStats = false
 runOnSave = true
 enableCORS = false
 enableXsrfProtection = false
+headless = true

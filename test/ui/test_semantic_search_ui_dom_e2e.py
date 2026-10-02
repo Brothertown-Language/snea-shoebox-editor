@@ -5,8 +5,10 @@ language-filter gating). No search execution, no embedding-model invocation.
 Harness: ONE module-scoped Chromium session (launched in a worker thread —
 pytest 9 + anyio keeps an asyncio loop on the main thread and the Playwright
 sync API forbids entering under a running loop). All three checks share that
-session with a context loaded from tmp/issue-36/auth-state.json (verified
-admin OAuth state). One page.goto per test (3 total); interactions poll with
+session with a FRESH context: with SNEA_E2E=1 the app-side TEST-ONLY auth
+bypass hook establishes the session (no saved auth state needed); without
+the gate the legacy tmp/issue-36/auth-state.json saved state is loaded.
+One page.goto per test (3 total); interactions poll with
 wait_for selectors/functions (~10-15s) instead of fixed sleeps.
 
 Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash)
@@ -40,7 +42,14 @@ pytestmark = [
 ]
 
 
-def _require_auth_storage() -> str:
+def _require_auth_storage() -> str | None:
+    """Issue #1400 SC-11: with SNEA_E2E=1 the app-side TEST-ONLY auth bypass
+    hook (src/services/security_manager.py) establishes the session, so the
+    harness starts a FRESH context — no saved auth state, no headed GitHub
+    OAuth login, no fabricated credentials. Without SNEA_E2E the legacy
+    saved-state requirement applies."""
+    if os.environ.get("SNEA_E2E") == "1":
+        return None
     if not os.path.exists(STORAGE_PATH):
         raise AssertionError(
             "No saved OAuth session at tmp/issue-36/auth-state.json — "
@@ -58,7 +67,7 @@ class _BrowserSession:
     thread. Test bodies are queued into that thread via run(); results and
     exceptions propagate back to the pytest thread."""
 
-    def __init__(self, storage: str):
+    def __init__(self, storage: str | None):
         self._jobs: queue.Queue = queue.Queue()
         self._result_box: list[BaseException | None] = []
         self._done_evt = threading.Event()

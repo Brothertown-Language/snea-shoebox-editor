@@ -17,7 +17,7 @@ export PYTHONUNBUFFERED=1
 
 # Run the mock viewer in background
 # PYTHONPATH=. is required so mocks can import from src/
-nohup bash -c "PYTHONPATH=. uv run streamlit run tests/ui/mocks/view_mocks.py --server.port 8502" > "$LOG_FILE" 2>&1 &
+nohup bash -c "PYTHONPATH=. uv run streamlit run tests/ui/mocks/view_mocks.py --server.port 8502 --server.headless true" > "$LOG_FILE" 2>&1 &
 
 PID=$!
 echo "Mock Viewer started with PID: $PID"

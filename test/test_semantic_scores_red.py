@@ -42,6 +42,9 @@ try:
     # LinguisticService classmethod. The module is mocked wholesale.
     _ranked = [(3, 0.92), (1, 0.81)]
     mock_seam = MagicMock()
+    # Issue #1400 SC-9: records.py imports CALIBRATED_FLOOR from the seam for
+    # the semantic_threshold default — pin the real calibrated value.
+    mock_seam.CALIBRATED_FLOOR = 0.93
     mock_seam.search_semantic = MagicMock(
         return_value=SemanticSearchResult(results=_ranked, status="ok", message="")
     )

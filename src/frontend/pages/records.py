@@ -36,7 +36,7 @@ def records():
     from src.services.linguistic_service import LinguisticService
     from src.services.navigation_service import NavigationService
     from src.services.preference_service import PreferenceService
-    from src.services.semantic_search_service import search_semantic
+    from src.services.semantic_search_service import CALIBRATED_FLOOR, search_semantic
     from src.services.upload_service import UploadService
 
     # Hide the main navigation menu — this view owns the sidebar entirely
@@ -70,17 +70,21 @@ def records():
     if "page_size" not in st.session_state:
         st.session_state.page_size = 25
     if "semantic_threshold" not in st.session_state:
+        # SC-9 (Issue #1400): fresh-session default is the published calibrated
+        # floor from the calibration concern — no magic-number duplication.
         saved_threshold = None
         if user_email:
-            saved_threshold = PreferenceService.get_preference(user_email, "records", "semantic_threshold", "0.80")
+            saved_threshold = PreferenceService.get_preference(
+                user_email, "records", "semantic_threshold", str(CALIBRATED_FLOOR)
+            )
         if saved_threshold is None:
-            saved_threshold = "0.80"
+            saved_threshold = str(CALIBRATED_FLOOR)
         try:
             parsed_threshold = float(saved_threshold)
         except (TypeError, ValueError):
-            parsed_threshold = 0.80
+            parsed_threshold = CALIBRATED_FLOOR
         if not (0.0 <= parsed_threshold <= 1.0):
-            parsed_threshold = 0.80
+            parsed_threshold = CALIBRATED_FLOOR
         st.session_state.semantic_threshold = parsed_threshold
 
     # SC-3 (Issue #1385, R-3): validation guard for the semantic threshold

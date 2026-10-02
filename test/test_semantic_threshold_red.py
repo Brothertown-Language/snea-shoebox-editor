@@ -47,7 +47,7 @@ mock_linguistic.stream_records_to_temp_file.return_value = "/tmp/test"
 mock_linguistic.get_edit_history.return_value = []
 
 mock_preference = MagicMock()
-mock_preference.get_preference.return_value = "0.80"
+mock_preference.get_preference.return_value = "0.93"
 
 mock_identity = MagicMock()
 mock_identity.get_github_username.return_value = "tester"
@@ -159,19 +159,20 @@ class TestSemanticThresholdRED(unittest.TestCase):
             "Threshold number widget must render in sidebar in semantic mode",
         )
 
-    def test_threshold_initialized_from_preference_default_080(self):
-        """SC-2: both coupled widgets initialize from
-        PreferenceService.get_preference(..., "records", "semantic_threshold", "0.80")
-        — mock returns "0.80"."""
+    def test_threshold_initialized_from_calibrated_floor_093(self):
+        """SC-2: both coupled widgets initialize from the calibrated floor.
+        Issue #1400 SC-9: records.py's default is str(CALIBRATED_FLOOR) imported
+        from src.services.semantic_search_service (0.93), not the superseded
+        0.80 magic number."""
         self.assertEqual(
             self._threshold_slider().value,
-            0.80,
-            "Slider must initialize from persisted preference default 0.80",
+            0.93,
+            "Slider must initialize from calibrated floor 0.93 (Issue #1400 SC-9)",
         )
         self.assertEqual(
             self._threshold_number().value,
-            0.80,
-            "Number widget must initialize from persisted preference default 0.80",
+            0.93,
+            "Number widget must initialize from calibrated floor 0.93 (Issue #1400 SC-9)",
         )
 
     def test_threshold_disabled_with_help_in_nonsemantic_mode(self):
