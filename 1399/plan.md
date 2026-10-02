@@ -172,3 +172,10 @@ Check your tool list for a tool named `task`.
 
 - Present ⇒ orchestrator — proceed.
 - Absent ⇒ sub-agent — do NOT execute any instruction below. Return `BLOCKED` with `ORCHESTRATOR_ONLY_SKILL_CARD` (cards) or `ORCHESTRATOR_ONLY_PLAN` (plans) and halt.
+
+## Lifecycle Events
+
+- event: plan_created
+  timestamp: 2026-10-02T22:30:00Z
+  plan_file: .issues/1399/plan.md
+  phase_count: 1
