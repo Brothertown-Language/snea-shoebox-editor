@@ -1,10 +1,12 @@
 """SC-13: Playwright real-browser click-through for admin Embedding Backfill.
 
-Auth model: a real GitHub OAuth login performed once by the developer in a
-Playwright-managed headed window (tmp/pw_login flow, session 2026-09-30).
-The saved storage state (tmp/issue-36/auth-state.json) carries the app's own
-gh_auth_token cookie — set by the cookies-controller component, never
-hand-injected. Tests reuse it headlessly; the artifact never leaves tmp/.
+Auth model: with SNEA_E2E=1 the app-side TEST-ONLY auth bypass hook
+(src/services/security_manager.py) authenticates a FRESH browser context —
+no saved storage state, no headed GitHub OAuth login, no fabricated
+credentials (Issue #1400 SC-11). The legacy saved-state path
+(tmp/issue-36/auth-state.json) remains the fallback when the gate is unset.
+The unauthenticated deep-link test restarts the app with
+SNEA_SIMULATE_AUTH=anonymous, which takes precedence over the bypass.
 Regenerate: launch headed browser at localhost:8501/maintenance, log in,
 save storage state (delete stale state first so tests fail loudly, never
 silently fall back to unauthenticated).
@@ -15,7 +17,11 @@ Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash)
 import json
 import os
 import re
+import subprocess
 import threading
+import time
+import urllib.error
+import urllib.request
 
 import pytest
 from playwright.sync_api import sync_playwright
@@ -24,6 +30,8 @@ APP_URL = "http://localhost:8501"
 MAINTENANCE_URL = "http://localhost:8501/maintenance"
 ARTIFACTS_DIR = os.path.join("tmp", "issue-36", "artifacts")
 STORAGE_PATH = os.path.join("tmp", "issue-36", "auth-state.json")
+SIM_ENV_VAR = "SNEA_SIMULATE_AUTH"
+HEALTH_URL = f"{APP_URL}/_stcore/health"
 
 pytest.importorskip("playwright.sync_api")
 
@@ -39,7 +47,14 @@ pytestmark = [
 ]
 
 
-def _require_auth_storage() -> str:
+def _require_auth_storage() -> str | None:
+    """Issue #1400 SC-11: with SNEA_E2E=1 the app-side TEST-ONLY auth bypass
+    hook (src/services/security_manager.py) establishes the session, so the
+    harness starts a FRESH context — no saved auth state, no headed GitHub
+    OAuth login, no fabricated credentials. Without SNEA_E2E the legacy
+    saved-state requirement applies."""
+    if os.environ.get("SNEA_E2E") == "1":
+        return None
     if not os.path.exists(STORAGE_PATH):
         raise AssertionError(
             "No saved OAuth session at tmp/issue-36/auth-state.json — "
@@ -50,6 +65,64 @@ def _require_auth_storage() -> str:
     if "gh_auth_token" not in cookies:
         raise AssertionError("Saved session lacks the gh_auth_token cookie — regenerate the login state.")
     return STORAGE_PATH
+
+
+def _health_ok() -> bool:
+    try:
+        with urllib.request.urlopen(HEALTH_URL, timeout=2) as resp:
+            return resp.status == 200
+    except (urllib.error.URLError, OSError):
+        return False
+
+
+def _restart_app(sim_value: str | None) -> None:
+    """Restart the local Streamlit app, optionally carrying SNEA_SIMULATE_AUTH.
+
+    The SNEA_SIMULATE_AUTH hook resolves BEFORE the SNEA_E2E bypass in
+    SecurityManager.rehydrate_session, so a fresh app process started with a
+    simulated value yields the legacy unauthenticated/anonymous state while
+    the default (sim unset) keeps the SNEA_E2E bypass-authenticated session.
+    """
+    subprocess.run(["pkill", "-f", "streamlit run streamlit_app.py"], check=False, capture_output=True)
+    deadline = time.monotonic() + 20
+    while time.monotonic() < deadline and _health_ok():
+        time.sleep(0.5)
+
+    env = dict(os.environ)
+    env.pop(SIM_ENV_VAR, None)
+    if sim_value is not None:
+        env[SIM_ENV_VAR] = sim_value
+
+    log_path = os.path.join(ARTIFACTS_DIR, f"streamlit-backfill-{sim_value or 'clean'}.log")
+    os.makedirs(ARTIFACTS_DIR, exist_ok=True)
+    with open(log_path, "w") as log_fh:
+        subprocess.Popen(
+            [
+                "uv", "run", "--extra", "local", "python", "-m", "streamlit",
+                "run", "streamlit_app.py",
+                "--server.address", "0.0.0.0", "--server.port", "8501",
+            ],
+            env=env,
+            stdout=log_fh,
+            stderr=subprocess.STDOUT,
+        )
+
+    deadline = time.monotonic() + 90
+    while time.monotonic() < deadline:
+        if _health_ok():
+            return
+        time.sleep(1.0)
+    raise AssertionError(f"App did not become healthy on :8501 (SNEA_SIMULATE_AUTH={sim_value!r}).")
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _restore_bypass_app():
+    """Leave the app running with the SNEA_E2E bypass (sim variable unset)."""
+    yield
+    try:
+        _restart_app(None)
+    except Exception:  # noqa: BLE001 — teardown must not mask test results
+        pass
 
 
 def _run_in_worker_thread(fn):
@@ -131,7 +204,9 @@ def _make_rows_stale(count: int) -> None:
 
 
 def _admin_flow():
-    """Open /maintenance as the real OAuth admin, click backfill, verify progress + results."""
+    """Open /maintenance authenticated via the SNEA_E2E bypass (fresh context
+    when the gate is set; legacy saved state otherwise), click backfill,
+    verify progress + results."""
     storage = _require_auth_storage()
     # Seed real re-embed work: mark a slice of real synced rows stale (pin drift) so the
     # click-through exercises actual re-embedding, not a no-op pass over current rows.
@@ -193,7 +268,11 @@ def test_admin_backfill_clickthrough():
 
 
 def _non_admin_flow():
-    """Save a session-less fresh browser: unauthenticated /maintenance shows the login redirect."""
+    """Fresh session-less browser: unauthenticated /maintenance shows the login
+    redirect. Requires the legacy unauthenticated state, so the app process is
+    restarted with SNEA_SIMULATE_AUTH=anonymous (which takes precedence over
+    the SNEA_E2E bypass); the module fixture restores the bypass app after."""
+    _restart_app("anonymous")
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
         try:

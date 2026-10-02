@@ -19,9 +19,41 @@ MUST read and follow [the UI testing standard](../../docs/development/ui_testing
   screenshots** attached under `tmp/<issue>/artifacts/` — text extraction
   alone misses empty panels and layout corruption.
 
-## One-time login setup — DISPLAY THE LOGIN WINDOW FOR THE DEVELOPER
+## Starting the app — ALWAYS use --server.headless true
 
-Saved OAuth state is required before any E2E run. When the saved state is
+Enforced globally: `.streamlit/config.toml` sets `server.headless = true`, so
+every Streamlit invocation in this project runs headless regardless of CLI
+args. Do not remove or override this setting; do not launch Streamlit any
+other way.
+
+Without `--server.headless true`, Streamlit auto-opens the system default
+browser (the developer's desktop browser) on every server start. Agents MUST
+NOT open the app in the developer's browser — all agent interaction happens
+through the agent's own Playwright instances. Canonical launch:
+
+```bash
+# E2E runs (auth bypass active):
+SNEA_E2E=1 nohup uv run --extra local python -m streamlit run streamlit_app.py \
+  --server.address 0.0.0.0 --server.port 8501 --server.headless true \
+  > tmp/<issue>/artifacts/streamlit.log 2>&1 &
+# wait for /_stcore/health -> 200
+```
+
+## E2E authentication — SNEA_E2E test-only bypass (default)
+
+Established 2026-10-02 (issue #1400 SC-11/SC-11a, developer directive): with
+`SNEA_E2E=1` the app authenticates via the test-only bypass hook in
+`src/services/security_manager.py::rehydrate_session` — a clearly-marked
+synthetic test-only identity, no real GitHub credentials. E2E tests start a
+fresh browser context with NO `storage_state` and NO headed login; the
+saved-state path below is a legacy fallback only. With `SNEA_E2E` unset the
+auth path is byte-identical to production (verified by
+`test/test_security_manager_e2e_bypass_inert_sc11a_red.py`).
+
+## Legacy fallback — headed login window (only when the bypass is unavailable)
+
+When the bypass hook is unavailable (e.g. older branch), saved OAuth state is
+required before any E2E run. When the saved state is
 missing or stale (401/dehydrated-to-login during a probe run), the AI agent
 MUST generate the login session by **opening a headed browser window and
 handing it to the developer to complete the GitHub OAuth login** — never
@@ -31,8 +63,8 @@ is a fallback, not the default).
 
 Agent-side preparation (all steps the agent CAN do autonomously):
 
-1. Start the local app: `bash scripts/start_streamlit.sh` — wait for
-   `/_stcore/health` → 200 on `http://localhost:8501`.
+1. Start the local app with `--server.headless true` (see the launch section
+   above) — wait for `/_stcore/health` → 200 on `http://localhost:8501`.
 2. Verify the saved state location for the current issue scope:
    `tmp/issue-36/auth-state.json` is the established path (the E2E harness
    loads it via `STORAGE_PATH`); per-issue copies may be written alongside.
@@ -64,14 +96,18 @@ Agent-side preparation (all steps the agent CAN do autonomously):
 The headed window is the default and the developer-facing step — the agent
 does not authenticate on the developer's behalf.
 
-## Automated E2E runs (after saved state exists)
+## Automated E2E runs (bypass active with SNEA_E2E=1)
 
-1. App must be running: `/_stcore/health` → 200 (agent-owned).
+1. App must be running: `/_stcore/health` → 200 (agent-owned, launched with
+   `--server.headless true`).
 2. `SNEA_E2E=1 uv run pytest test/ui/<file>.py` — the `playwright_e2e`
-   marker gates these tests so plain `pytest test/` stays green serverless.
-3. Tests load the saved `storage_state` fresh — no cookie injection, no
-   token minting in tests. Stale state fails loudly; regenerate via the
-   headed-login step above, never by falling back to unauthenticated.
+   marker gates these tests so plain `pytest test/` stays green serverless;
+   the app-side auth bypass authenticates the fresh context (no saved
+   state, no headed login).
+3. Legacy saved-state runs (bypass unavailable) load the saved
+   `storage_state` fresh — no cookie injection, no token minting in tests.
+   Stale state fails loudly; regenerate via the headed-login fallback
+   above, never by falling back to unauthenticated.
 4. Attach screenshots to `tmp/<issue>/artifacts/` and apply vision review
    per the standard.
 

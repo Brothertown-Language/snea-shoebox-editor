@@ -332,7 +332,10 @@ def main():
                     if "cookie_controller" in st.session_state:
                         from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
 
-                        st.session_state["cookie_controller"].remove(GH_AUTH_TOKEN_COOKIE)
+                        cookie_controller = st.session_state["cookie_controller"]
+
+                        if GH_AUTH_TOKEN_COOKIE in cookie_controller.getAll():
+                            cookie_controller.remove(GH_AUTH_TOKEN_COOKIE)
                     st.rerun()
 
     # Define navigation

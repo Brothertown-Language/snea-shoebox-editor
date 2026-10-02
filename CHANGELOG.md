@@ -10,6 +10,12 @@ and this project adheres to
 For AI agent infrastructure changes (`.opencode/` directory), see
 [`.opencode/CHANGELOG.md`](.opencode/CHANGELOG.md).
 
+### feature/1400-semantic-threshold-calibration
+
+- **Gloss-Space Semantic Threshold Calibration** (#1400) — Published `CALIBRATED_FLOOR=0.93` in `src/services/calibration/gloss_space_calibration.yaml` with per-anchor provenance evidence (SC-1; SC-8/SC-8a recall battery and below-floor overlap evidence). `search_semantic()` now engages the calibrated floor when `threshold=None` (SC-2), honors explicit caller thresholds over the calibrated default (SC-3), re-engages the default statelessly on subsequent calls (SC-4), pins the honest below-floor deficiency message via the `BELOW_FLOOR_MESSAGE` constant (SC-5), never raises on edge inputs (SC-6), and excludes below-floor rows with explicit-threshold per-row filtering invariants (SC-7). The Records-page semantic-threshold control default is synced to 0.93 with saved override values preserved (SC-9, SC-10).
+- **SNEA_E2E Test-Only Auth Bypass** (#1400) — Fixed the E2E auth regression by adding an `SNEA_E2E=1`-gated test-only authentication bypass: headless Playwright runs authenticate as a seeded simulated identity (synthetic identity + DB user row, `SNEA_SIMULATE_AUTH` precedence), removing the headed-GitHub-login dependency from the harness. The bypass is provably inert in production with `SNEA_E2E` unset (SC-11, SC-11a guard suite); Streamlit launches are enforced headless project-wide (`.streamlit/config.toml`, start scripts, UI testing standard).
+- **search_semantic limit Bind-Param Fix** (#1399) — Restored `search_semantic(limit=<n>)`: the `:lim` bind parameter is now populated (`params["lim"] = int(limit)`), fixing the `InvalidRequestError` (`':lim' bind param never populated`) raised on every bounded semantic search call; cap semantics (limit=1 returns the top-ranked pair of the unlimited ordering) and `limit=None` invariance are pinned by regression tests.
+
 ### feature/1392-maintainer-contact-placeholder
 
 - **sync_prod_to_local DDL Builder Vector Typmod Fix** (#1394) — Fixed the `CREATE TABLE` builder in `scripts/sync_prod_to_local.py` to restore vector column typmod during local schema reconstruction: `records.embedding` rebuilds as `vector(1536)`, `gloss_search_entries.embedding` and `semantic_search_entries.embedding` as `vector(384)`, exactly matching production. Previously the builder emitted bare `vector`, degrading the synced schema and blocking the mandated pre-regression sync protocol.

@@ -53,6 +53,9 @@ try:
     # R-8: the UI binds to the seam MODULE function search_semantic, not a
     # LinguisticService classmethod. The module is mocked wholesale.
     mock_seam = MagicMock()
+    # Issue #1400 SC-9: records.py imports CALIBRATED_FLOOR from the seam for
+    # the semantic_threshold default — pin the real calibrated value.
+    mock_seam.CALIBRATED_FLOOR = 0.93
     mock_seam.search_semantic = MagicMock(return_value=_payload)
     sys.modules["src.services.semantic_search_service"] = mock_seam
     sys.modules["src.services.semantic_search_service"].SemanticSearchResult = SemanticSearchResult
@@ -158,7 +161,7 @@ class TestSemanticEmptyStatesSC6(unittest.TestCase):
             f"zero-results threshold copy missing: {info_texts}",
         )
         self.assertTrue(
-            any("0.80" in t for t in info_texts),
+            any("0.93" in t for t in info_texts),
             f"threshold value not named in zero-results copy: {info_texts}",
         )
         self.assertFalse(

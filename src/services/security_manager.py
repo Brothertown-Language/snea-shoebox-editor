@@ -1,5 +1,6 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
+import os
 from typing import Any
 
 import streamlit as st
@@ -10,6 +11,11 @@ from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
 from src.logging_config import get_logger
 
 logger = get_logger("snea.security")
+
+# TEST-ONLY (Issue #1400 SC-11): clearly-marked synthetic access token for the
+# SNEA_E2E-gated auth bypass. This is NOT a credential — it is never sent to
+# GitHub and is only accepted when SNEA_E2E=1 (unreachable in production).
+E2E_TEST_ONLY_SYNTHETIC_TOKEN = "snea-e2e-TEST-ONLY-synthetic-identity-not-a-credential"
 
 
 class SecurityManager:
@@ -23,6 +29,79 @@ class SecurityManager:
         Extract cookie-based rehydration logic from streamlit_app.py.
         """
         if "cookie_controller" not in st.session_state:
+            return
+
+        # Issue #1400 precedence: the SNEA_SIMULATE_AUTH local-mode hook
+        # resolves BEFORE the SNEA_E2E test bypass. Legacy tests that
+        # restart the app with a simulated value get that state
+        # (unauthorized/anonymous semantics applied downstream by
+        # IdentityService.sync_identity via the normal cookie path); only
+        # when the hook resolves None does the TEST-ONLY bypass apply.
+        from src.services.identity_service import resolve_simulated_auth
+
+        simulated = resolve_simulated_auth()
+        if simulated is not None:
+            logger.warning(
+                "SNEA_SIMULATE_AUTH=%s resolved — SNEA_E2E test bypass not engaged.",
+                simulated,
+            )
+        # TEST-ONLY auth bypass hook (Issue #1400 SC-11): when SNEA_E2E=1 is
+        # set in the environment, short-circuit session-token establishment —
+        # establish an authenticated test session with a clearly-marked
+        # synthetic identity, without any real GitHub token or headed login.
+        # Unreachable in production (SNEA_E2E is unset), so real production
+        # auth behavior is unchanged.
+        elif os.environ.get("SNEA_E2E") == "1" and "auth" not in st.session_state:
+            logger.warning(
+                "TEST-ONLY auth bypass engaged (SNEA_E2E=1): establishing a "
+                "synthetic authenticated session — not a real credential."
+            )
+            st.session_state["auth"] = {
+                "token": {"access_token": E2E_TEST_ONLY_SYNTHETIC_TOKEN},
+                "test_only": True,
+            }
+            st.session_state["logged_in"] = True
+            # Seed the identity keys so IdentityService.sync_identity()
+            # short-circuits via is_identity_synchronized() and never contacts
+            # GitHub with the synthetic token. Reuses the simulated identity
+            # constants from identity_service (test-only data).
+            from src.services.identity_service import (
+                _SIMULATED_USER_INFO,
+                _SIMULATED_USER_ORGS,
+                _SIMULATED_USER_TEAMS,
+                IdentityService,
+            )
+
+            st.session_state["user_info"] = dict(_SIMULATED_USER_INFO)
+            st.session_state["user_orgs"] = [dict(o) for o in _SIMULATED_USER_ORGS]
+            # The E2E harness must exercise BOTH role tiers (admin backfill
+            # click-through SC-13 + editor-level flows), so the bypass session
+            # carries the admin team from the real permission seed
+            # (scripts/seed_permissions.py: proto-SNEA-admin -> admin) in
+            # addition to the simulated editor team; the role is derived
+            # through the real RBAC path, never hardcoded.
+            st.session_state["user_teams"] = [dict(t) for t in _SIMULATED_USER_TEAMS] + [
+                {
+                    "slug": "proto-SNEA-admin",
+                    "name": "proto-SNEA-admin",
+                    "organization": {"login": "Brothertown-Language"},
+                }
+            ]
+            # user_role is deliberately NOT seeded here: the app derives it
+            # lazily from user_teams via SecurityManager.get_user_role()
+            # (streamlit_app navigation block), exercising the real RBAC
+            # path — proto-SNEA-admin resolves to admin, proto-SNEA to editor.
+            st.session_state["user_email"] = "e2e-test-only-synthetic@invalid"
+            # Mirror the real identity path (fetch_github_user_info ->
+            # sync_user_to_db): create the test-only user record so
+            # FK-backed persistence (e.g. user_preferences.user_email)
+            # works for the bypass session exactly as for a real login.
+            # DB access is gated on a live Streamlit script-run context so
+            # bare unit-test invocations (no app runtime) stay inert.
+            from streamlit.runtime.scriptrunner import get_script_run_ctx
+
+            if get_script_run_ctx() is not None:
+                IdentityService.sync_user_to_db(_SIMULATED_USER_INFO, st.session_state["user_email"])
             return
 
         controller = st.session_state["cookie_controller"]

@@ -20,8 +20,10 @@ This file executes real searches through the live app:
 Harness: ONE module-scoped Chromium session (worker-thread pattern from
 test_semantic_search_ui_dom_e2e.py — pytest 9 + anyio keeps an asyncio
 loop on the main thread and the Playwright sync API forbids entering under
-a running loop). All tests share one authed context loaded from
-tmp/issue-36/auth-state.json. One page.goto per test (3 total). After a
+a running loop). All tests share one authed context: with SNEA_E2E=1 a
+FRESH context authenticated by the app-side TEST-ONLY bypass hook (Issue
+#1400 SC-11); otherwise loaded from tmp/issue-36/auth-state.json. One
+page.goto per test (3 total). After a
 Search click, polling waits for real result cards to stream with
 wait_for_selector — up to 60s ONLY for the first semantic query (one-time
 embedding-model warm load; subsequent queries are fast), 20s for exact
@@ -61,7 +63,14 @@ pytestmark = [
 ]
 
 
-def _require_auth_storage() -> str:
+def _require_auth_storage() -> str | None:
+    """Issue #1400 SC-11: with SNEA_E2E=1 the app-side TEST-ONLY auth bypass
+    hook (src/services/security_manager.py) establishes the session, so the
+    harness starts a FRESH context — no saved auth state, no headed GitHub
+    OAuth login, no fabricated credentials. Without SNEA_E2E the legacy
+    saved-state requirement applies."""
+    if os.environ.get("SNEA_E2E") == "1":
+        return None
     if not os.path.exists(STORAGE_PATH):
         raise AssertionError(
             "No saved OAuth session at tmp/issue-36/auth-state.json — "
@@ -79,7 +88,7 @@ class _BrowserSession:
     thread. Test bodies are queued into that thread via run(); results and
     exceptions propagate back to the pytest thread."""
 
-    def __init__(self, storage: str):
+    def __init__(self, storage: str | None):
         self._jobs: queue.Queue = queue.Queue()
         self._result_box: list[BaseException | None] = []
         self._done_evt = threading.Event()
@@ -144,6 +153,18 @@ def _body_text(page: Page) -> str:
 
 def _goto_records(page: Page):
     page.goto(APP_URL, wait_until="domcontentloaded")
+    page.wait_for_timeout(3000)
+    if page.url.rstrip("/").endswith("/login"):
+        page.screenshot(
+            path=os.path.join(ARTIFACTS_DIR, "e2e-stale-auth-login-redirect.png"),
+            full_page=True,
+        )
+        raise AssertionError(
+            "Saved OAuth session is STALE — the app redirected to /login. "
+            "Regenerate tmp/issue-36/auth-state.json via the headed-login "
+            "procedure in test/ui/AGENTS.md (developer completes the GitHub "
+            "OAuth in the visible window). Never fabricate auth state."
+        )
     page.wait_for_selector('[data-testid="stRadio"] input[type="radio"]', state="attached", timeout=45_000)
     page.wait_for_function(
         """() => {
@@ -523,3 +544,68 @@ def _sc6_flow(page: Page):
 
 def test_empty_states_clean(session):
     session.run(_sc6_flow)
+
+
+# ---------- Issue #1400 SC-10: UI override preserved through to the seam ----------
+
+
+def _get_number_input_value(page: Page) -> str:
+    return page.locator('[data-testid="stSidebar"] input[type="number"]').last.input_value()
+
+
+def _sc10_flow(page: Page):
+    _goto_records(page)
+
+    _select_mode(page, "Semantic Gloss")
+    _wait_for_rerun(page, MODE_INDEX["Semantic Gloss"])
+
+    # User override: threshold = 1.0 (the strict ceiling). The in-corpus
+    # anchor "beaver" scores 0.9753 (measured probe, tmp/1400/artifacts/
+    # verification-probe.yaml, query 'beaver' top-1 record 8491) — ABOVE the
+    # calibrated default floor 0.93 but strictly BELOW the 1.0 override.
+    # Discriminating observable: if the override reaches the seam unchanged,
+    # "beaver" returns zero results; if the default floor silently replaced
+    # the override, "beaver" would be served as a rank-1 record card.
+    # (Note: the original draft used "water", whose measured top cosine is
+    # exactly 1.0 — equal to the override, so the seam serves it under a
+    # `score >= threshold` comparison and the query does not discriminate.)
+    _set_threshold(page, 1.0)
+    assert abs(float(_get_number_input_value(page)) - 1.0) < 1e-9, (
+        f"Threshold control did not accept the 1.0 override "
+        f"(shows {_get_number_input_value(page)!r})"
+    )
+
+    _search(page, "beaver", expect_cards_timeout=60_000)
+    body = _body_text(page)
+    assert not any(m in body for m in CRASH_MARKERS), (
+        f"Crash markers present after override search: body tail {body[-600:]!r}"
+    )
+    record_cards = _card_headers(page)
+    assert record_cards == [], (
+        f"SC-10 VIOLATION: override threshold 1.0 was not honored by the "
+        f"seam — 'beaver' (cosine 0.9753 < 1.0) should return zero results, "
+        f"but record cards were served: {record_cards[:5]} "
+        f"(the default floor 0.93 must NOT silently replace the override)"
+    )
+    assert _page_label(page), "App not responsive after override search (pager label missing)"
+
+    # The override must persist in the control — not be reset to the default
+    # by the search rerun. The widget formats the value (e.g. "1.00"), so
+    # compare numerically rather than against a literal string.
+    assert abs(float(_get_number_input_value(page)) - 1.0) < 1e-9, (
+        f"SC-10 VIOLATION: threshold control shows "
+        f"{_get_number_input_value(page)!r} after search — the override was "
+        f"reset to the default instead of being preserved"
+    )
+    page.screenshot(
+        path=os.path.join("tmp", "1400", "artifacts", "e2e-sc10-override-ceiling.png"),
+        full_page=True,
+    )
+
+    # Restore the shared per-user threshold so later tests / the developer's
+    # browsing session aren't left at the zero-result ceiling.
+    _set_threshold(page, 0.7)
+
+
+def test_ui_override_reaches_seam(session):
+    session.run(_sc10_flow)

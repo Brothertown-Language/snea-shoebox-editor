@@ -10,7 +10,7 @@ rows whose `embedding_model` equals the pinned model name participate; NULL
 or stale-model rows are excluded by the join. Results are returned as a
 full ranked list ordered by score descending with record_id-ascending
 tie-break; an explicit threshold filters rows below the cutoff while
-threshold=None returns the full ranked list.
+threshold=None filters on the calibrated default floor CALIBRATED_FLOOR.
 
 Degraded legs observable at the seam: empty_query (empty/whitespace query,
 guarded before any model load), no_embeddings (zero embedded rows — remedies
@@ -31,6 +31,21 @@ from src.services import embedding_service
 
 # Canonical pin lives in embedding_service; re-exported for callers.
 PIN = embedding_service.PIN
+
+# Calibrated similarity floor for the gloss-space semantic seam (Issue
+# #1400, SC-1). Measured from real corpus queries against the production
+# replica (6,681 embedded glosses, pin thenlper/gte-small, probe date
+# 2026-10-02); evidence and full provenance:
+# src/services/calibration/gloss_space_calibration.yaml
+# (probe artifact: tmp/1400/artifacts/verification-probe.yaml).
+# The value lies strictly within the measured interval (0.9018, 0.9753):
+# above the out-of-corpus battery max ("light bulb", 0.9018) and below the
+# smallest floor-clearing in-corpus anchor ("beaver", 0.9753).
+CALIBRATED_FLOOR = 0.93
+
+# Issue #1400 SC-5: pinned deficiency message for the all-below-floor /
+# empty-results outcome (named constant — no magic string duplication).
+BELOW_FLOOR_MESSAGE = "No gloss results meet the sensitivity floor."
 
 status_values_or_enum = lambda: [  # noqa: E731
     "ok",
@@ -127,14 +142,19 @@ def search_semantic(mode="gloss", query="", threshold=None, source_id=None, limi
 
     qv = "[" + ",".join(repr(float(v)) for v in query_vector) + "]"
     params = {"qv": qv, "pin": PIN}
-    if threshold is not None:
-        params["thr"] = str(float(threshold))
+    # Issue #1400 SC-2: threshold=None engages the calibrated default floor
+    # (named constant — no magic number in the query path).
+    effective_threshold = CALIBRATED_FLOOR if threshold is None else threshold
+    if effective_threshold is not None:
+        params["thr"] = str(float(effective_threshold))
     if source_id is not None:
         params["source_id"] = source_id
+    if limit is not None:
+        params["lim"] = int(limit)
     sql = text(
         _candidate_sql(
             mode,
-            has_threshold=threshold is not None,
+            has_threshold=effective_threshold is not None,
             has_source=source_id is not None,
             has_limit=limit is not None,
         )
@@ -170,7 +190,7 @@ def search_semantic(mode="gloss", query="", threshold=None, source_id=None, limi
             ).one()
         if diagnostics.pinned:
             return SemanticSearchResult(
-                results=[], status="ok", message="No matches above the configured threshold."
+                results=[], status="ok", message=BELOW_FLOOR_MESSAGE
             )
         if diagnostics.embedded:
             return SemanticSearchResult(
