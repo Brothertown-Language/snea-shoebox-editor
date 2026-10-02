@@ -1,0 +1,35 @@
+---
+remote_issue: 1399
+remote_url: "https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1399"
+last_sync: '2026-10-02T15:00:00Z'
+source: github.com
+title: 'Bug: search_semantic(limit=<n>) raises InvalidRequestError — '':lim'' bind param never populated'
+status: open
+labels:
+- bug
+body: |-
+  ## Bug
+
+  `search_semantic()` crashes whenever a non-None `limit` is passed.
+
+  `_candidate_sql()` at src/services/semantic_search_service.py:104 emits `LIMIT :lim` when `has_limit`, but the caller (src/services/semantic_search_service.py:133) never adds `"lim"` to the `params` dict:
+
+  ```python
+  params = {"qv": qv, "pin": PIN}
+  if threshold is not None: params["thr"] = ...
+  if source_id is not None: params["source_id"] = ...
+  ```
+
+  Result: `sqlalchemy.exc.InvalidRequestError: A value is required for bind parameter 'lim'`.
+
+  Verified live on the freshly synced local DB (2026-10-02): `search_semantic(mode="gloss", query="water", limit=5)` raises; `limit=None` works.
+
+  The UI (src/frontend/pages/records.py:248) currently passes `limit=None`, so the defect is latent — any future caller using the documented `limit` parameter (e.g. a cap in another surface) hits it immediately.
+
+  ## Fix direction
+
+  Add `params["lim"] = limit` when `limit is not None`, or bind it as a literal int; add a seam test asserting `limit=5` returns exactly 5 rows in rank order.
+
+  🤖 Co-authored with AI: OpenCode (ollama-cloud/glm-5.3-flash)
+created_at: '2026-10-02T14:43:06+00:00'
+updated_at: '2026-10-02T14:43:06+00:00'
