@@ -1,0 +1,56 @@
+# validate-findings.yaml — .issues/1397
+schema_version: 1
+issue: 1397
+overall_status: PASS
+
+category_1_structural:
+  status: PASS
+  checks:
+    phase_table_required_columns: PASS  # Phase|Name|Concern|SCs|Depends On|Step Range|Dispatch all present
+    per_phase_procedure_numbered_steps: PASS  # each phase has "### Steps" with numbered checkbox steps (5-9, 10-19, 20-24, 25-29, plus pre/post sections)
+    exit_criteria_sc_mapping: PASS  # "Exit Criteria" section C1-C7 maps SC-1..SC-5 plus pipeline gates
+
+category_2_skill_task_validity:
+  status: PASS
+  checks:
+    dispatch_strings_match_reference_card: PASS  # all task-card steps match implementation-workflow.md canonical strings:
+    # pre-regression (phase-0, tdd), pre-regression-verify (verify, vbc), red/green/post-regression (tdd),
+    # verify (vbc), commit-inline (orchestrator direct), audit (DiMo investigator chain),
+    # z3-check (orchestrator solve check), structural-checks (finishing-a-development-branch checklist),
+    # pre-pr-gate (vbc verify), regression-check (tdd phase-4), review-prep (git-workflow-pr), create-pr (git-workflow-pr), exec-summary (completion-core)
+    no_invalid_references: PASS
+
+category_3_sc_coverage:
+  status: PASS
+  checks:
+    every_sc_in_exit_criteria: PASS  # SC-1→C1, SC-2→C2, SC-3→C3, SC-4→C4, SC-5→C5
+    every_sc_in_phase: PASS  # SC-1→phase1, SC-2+SC-5→phase2, SC-3→phase3, SC-4→phase4
+    triplet_split_detection: PASS  # no triplet split across phases:
+    # SC-1: RED 5 / GREEN 6 / COMMIT 9 (all phase 1)
+    # SC-2: RED 10 / GREEN 11 / COMMIT 14 (all phase 2)
+    # SC-5: RED 15 / GREEN 16 / COMMIT 19 (all phase 2)
+    # SC-3: RED 20 / GREEN 21 / COMMIT 24 (all phase 3)
+    # SC-4: RED 25 / GREEN 26 / COMMIT 29 (all phase 4)
+
+category_4_concern_separation:
+  status: PASS
+  checks:
+    one_concern_per_phase: PASS  # phase1=required-secrets-manifest, phase2=preflight-verification (+SC-5 as cross-cutting constraint co-located per concern-map phase_boundary), phase3=guard-manifest-coupling, phase4=production-remediation
+    no_duplicate_concern: PASS  # no concern addressed by two phases; SC-5 co-location matches concern-map cross-cutting declaration
+
+category_5_dag_validation:
+  status: PASS
+  checks:
+    no_cycles: PASS  # edges 1→2, 1→3, 2→3, 2→4 (plan step 1 matches dependency-contract invariants and structure.yaml DAG)
+    all_phases_reachable: PASS  # phase-1 is the root; 2,3,4 all reachable
+    no_orphan_phases: PASS  # phase-1 is the start node (no incoming by design, not orphan); every other phase has incoming and outgoing edges
+
+category_6_holistic_quality:
+  status: PASS
+  checks:
+    no_tbd_todo_placeholders: PASS  # none in plan body; "<files>" placeholders in commit steps are declared as resolved-at-execution-time
+    checkbox_format_all_steps: PASS  # all steps use "- [ ]" format
+    dispatch_mode_consistency: PASS  # task-card steps dispatch via task() (pre-clean is per-step protocol, not inline work); direct steps (coherence gate, baseline, commits, z3-check) are orchestrator-inline per reference card
+
+observations:
+  - "Minor naming drift: structure.yaml RED text uses .streamlit/required-secrets.yaml; plan.md uses .streamlit/required_secrets.yaml. Plan is authoritative for execution; no functional impact."

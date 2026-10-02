@@ -378,3 +378,10 @@ Check your tool list for a tool named `task`.
 - C5: No secret VALUES are logged or exposed anywhere in preflight output (SC-5 PASS).
 - C6: Audit, z3-check, structural checks, pre-PR gate, and final regression check all PASS.
 - C7: PR created (stacked strategy); completion summary emitted.
+
+## lifecycle_events
+
+- event: plan_created
+  timestamp: "2026-10-01T23:15:00-04:00"
+  plan_path: ".issues/1397/plan.md"
+  phase_count: 4
