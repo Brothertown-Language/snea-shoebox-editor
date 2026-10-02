@@ -1,22 +1,42 @@
-sc_count: 5
+sc_count: 10
 scs:
   - id: "SC-1"
     description: "Calibration anchors derived from real corpus queries (in-corpus and out-of-corpus batteries) with per-anchor floor values recorded with source provenance in a calibration evidence artifact; no synthetic queries as evidence"
     evidence_type: "behavioral"
     plan_item: 1
   - id: "SC-2"
-    description: "The calibrated default threshold is consumed by search_semantic() when threshold=None; explicit threshold values override the default; explicit threshold=None restores the default"
+    description: "search_semantic() consumes the calibrated default floor when the caller passes threshold=None"
     evidence_type: "behavioral"
     plan_item: 2
   - id: "SC-3"
-    description: "All-below-floor queries return status=ok with empty results and a message naming the deficiency; never an exception; never serves below-floor noise as ranked results"
+    description: "An explicit threshold value provided by the caller overrides the calibrated default"
     evidence_type: "behavioral"
     plan_item: 3
   - id: "SC-4"
-    description: "In-corpus targets in the calibration battery still rank at or near rank 1 under the default threshold (no recall regression vs pre-calibration measured baseline)"
+    description: "An explicit threshold=None restores the calibrated default after a prior explicit override call"
     evidence_type: "behavioral"
     plan_item: 4
   - id: "SC-5"
-    description: "The UI default threshold state (st.session_state.semantic_threshold) reflects the calibrated floor; user override in the UI is preserved"
+    description: "When all ranked scores fall below the calibrated floor, the seam returns status=ok with empty results and a message naming the deficiency (e.g. \"no gloss results meet the sensitivity floor\")"
     evidence_type: "behavioral"
     plan_item: 5
+  - id: "SC-6"
+    description: "The all-below-floor outcome never raises an exception"
+    evidence_type: "behavioral"
+    plan_item: 6
+  - id: "SC-7"
+    description: "The all-below-floor outcome never serves below-floor rows as ranked results"
+    evidence_type: "behavioral"
+    plan_item: 7
+  - id: "SC-8"
+    description: "Under the default threshold, in-corpus targets in the calibration battery rank at rank 1 with cosine score >= 0.90 (no recall regression vs the measured pre-calibration baseline of 0.93-1.00 at rank 1)"
+    evidence_type: "behavioral"
+    plan_item: 8
+  - id: "SC-9"
+    description: "The UI default threshold state (st.session_state.semantic_threshold) equals the published calibrated default floor within ±0.01"
+    evidence_type: "behavioral"
+    plan_item: 9
+  - id: "SC-10"
+    description: "A user override in the UI threshold control is preserved (override value is used by the seam, not silently replaced by the default)"
+    evidence_type: "behavioral"
+    plan_item: 10
