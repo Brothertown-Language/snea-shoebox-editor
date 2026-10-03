@@ -3,52 +3,75 @@ status: open
 labels:
 - needs-approval
 - spec-draft
-body: '## Problem
-
-  On the Records page sidebar, Streamlit shows a warning: "The widget with key ''semantic_threshold_slider''
-  was created with a default value but also had its value set via the Session State
-  API." The semantic_threshold_number widget has the same defect.
+body: '> Full spec and plan artifacts: https://github.com/Brothertown-Language/snea-shoebox-editor/tree/issues-data/.issues/1409/
 
 
-  ## Root cause (verified)
+  ## Problem
 
-  records.py:412-419 writes the widget keys via st.session_state BEFORE widget instantiation,
-  while the widget calls (records.py:440 slider, records.py:453 number input) also
-  pass explicit value= — Streamlit''s documented anti-pattern (dual-set). The path
-  requires a stored records/semantic_threshold preference; E2E fixtures delete saved
-  preferences, so synthetic sessions never hit it and no test asserts warning-box
-  absence.
+
+  On the Records page sidebar, Streamlit emits a dual-set warning (`SessionStateReinitializationWarning`)
+  for both `semantic_threshold_slider` and `semantic_threshold_number` whenever a
+  saved `records/semantic_threshold` preference exists: the pre-instantiation block
+  writes widget-bound keys via the Session State API while the keyed widget calls
+  also pass an explicit `value=` argument. Every real user with a saved preference
+  sees this warning on page load, and no test asserts warning absence.
 
 
   ## Scope
 
-  - Seed widget values via session state only (drop value= args, or set session state
-  exactly once on first instantiation) and remove the redundant pre-instantiation
-  sync writes.
 
-  - Preserve #1400 behavior: calibrated default 0.93 when no preference exists; saved
-  user overrides preserved and honored (0.85-style values are legitimate overrides,
-  not bugs).
+  - Restructure the Records-page widget instantiation block so widget-bound keys are
+  written to session state exactly once (at/before first instantiation) and the explicit
+  `value=` arguments are removed from `st.slider` / `st.number_input`.
 
-  - No service-layer, preference-store, or calibration changes.
+  - Preserve the #1400 contract: calibrated default 0.93 with no saved preference;
+  saved user overrides honored and round-tripping across reruns.
+
+  - Add a Playwright real-browser test asserting dual-set warning absence with a saved
+  preference present (existing E2E fixture deletes saved preferences and never exercises
+  this branch).
+
+  - Full-suite regression gate with zero new failures.
 
 
-  ## Success criteria (draft)
+  **Out of scope:** Preference service / persistence layer changes; `CALIBRATED_FLOOR`
+  calibration changes; other pages or widget keys (grep-verified no other references);
+  Unicode/linguistic data processing paths.
 
-  - SC-1: with a saved threshold preference present, the Records page renders with
-  no Streamlit widget dual-set warning (Playwright real-browser evidence).
 
-  - SC-2: with no saved preference, the slider defaults to the calibrated floor 0.93
-  (behavior preserved).
+  ## Approach
 
-  - SC-3: saved user overrides are preserved and honored after the change (override
-  round-trips across reruns).
 
-  - SC-4: full pytest suite passes with zero new failures.
+  Fix the defect at its root — the Streamlit-documented dual-set anti-pattern — rather
+  than suppressing the warning. Widget values flow solely from session state: widget
+  keys are seeded exactly once, and the redundant pre-instantiation re-sync writes
+  are removed. Backing-value seeding, `_validate_threshold()` validation, `on_change`
+  callback propagation, and preference persistence are untouched, isolating the change
+  to widget-instantiation mechanics in a single file. Evidence is behavioral (Playwright
+  real-browser) per the repo UI testing standard, since warning absence is a user-visible-behavior
+  criterion.
+
+
+  ## Impact
+
+
+  - **Risk: regression to default/override rendering** — mitigated by SC-2/SC-3 preservation
+  gates reusing existing Playwright tests plus a rerun assertion.
+
+  - **Risk: new test fixture defeated by existing preference-deletion fixture** —
+  mitigated by a dedicated fixture that seeds its own saved preference (R-6).
+
+  - **Risk: E2E gating skips masking test outcomes** — skips are never treated as
+  PASS per the repo standard.
+
+  - Dependencies: #1385 (validation guard) and #1400 (calibrated default) must remain
+  in place; live app on :8501 with `SNEA_E2E=1` for E2E evidence.
+
+  - Call to action: approve to proceed to plan creation and implementation.
 
 
   🤖 Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
 
   '
 created_at: '2026-10-03T23:33:50+00:00'
-updated_at: '2026-10-03T23:35:25+00:00'
+updated_at: '2026-10-03T23:36:06+00:00'
