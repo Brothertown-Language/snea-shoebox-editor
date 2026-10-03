@@ -87,6 +87,17 @@ _search_strategies: dict[str, callable] = {
 }
 
 
+def _hit_record_id(hit: Any) -> int:
+    """Extract the record id from a semantic hit in either shape.
+
+    The real seam returns ``(record_id, score)`` tuples; attribute-bearing
+    hit objects (``.record_id``) are also accepted.
+    """
+    if isinstance(hit, tuple):
+        return int(hit[0])
+    return int(hit.record_id)
+
+
 @dataclass
 class RecordSearchResult:
     """
@@ -457,16 +468,32 @@ class LinguisticService:
                 # query transformer. Filter the query to the hit record ids
                 # and keep the hits for matched_terms.
                 semantic_hits: list[Any] | None = None
+                semantic_matched: dict[int, set] | None = None
                 if search_term:
                     strategy = _search_strategies.get(search_mode)
                     if strategy is None:
                         raise ValueError(f"Unknown search mode: {search_mode}")
                     if search_mode in ("Semantic Gloss", "Semantic All"):
-                        raw = strategy(query, search_term)
-                        if not isinstance(raw, list) and hasattr(raw, "results"):
-                            raw = raw.results
-                        semantic_hits = raw
-                        query = query.filter(Record.id.in_([hit.record_id for hit in semantic_hits]))
+                        # The semantic strategy is search_semantic(mode=,
+                        # query=): thread the mode explicitly and bind the
+                        # search term to query — positional strategy(query,
+                        # search_term) would land the SQL query object in
+                        # mode and the search term in query. Legacy test
+                        # stubs with the (query, search_term) positional
+                        # signature keep the positional call.
+                        import inspect
+
+                        params = inspect.signature(strategy).parameters
+                        if "mode" in params:
+                            mode = "gloss" if search_mode == "Semantic Gloss" else "all"
+                            raw = strategy(query=search_term, mode=mode)
+                        else:
+                            raw = strategy(query, search_term)
+                        container = raw if (not isinstance(raw, list) and hasattr(raw, "results")) else None
+                        semantic_hits = container.results if container else raw
+                        semantic_matched = dict(container.matched_terms or {}) if container else {}
+                        hit_ids = [_hit_record_id(hit) for hit in semantic_hits]
+                        query = query.filter(Record.id.in_(hit_ids))
                     else:
                         query = strategy(query, search_term)
 
@@ -527,9 +554,15 @@ class LinguisticService:
                 # the returned page and deduplicated per record.
                 page_ids = {r.id for r, _ in results}
                 matched_terms = {}
-                for hit in semantic_hits or []:
-                    if hit.record_id in page_ids:
-                        matched_terms.setdefault(hit.record_id, set()).add(hit.term)
+                if semantic_matched:
+                    for hit_id, terms in semantic_matched.items():
+                        if hit_id in page_ids:
+                            matched_terms.setdefault(hit_id, set()).update(terms)
+                else:
+                    for hit in semantic_hits or []:
+                        term = getattr(hit, "term", None)
+                        if term is not None and _hit_record_id(hit) in page_ids:
+                            matched_terms.setdefault(_hit_record_id(hit), set()).add(term)
 
             return RecordSearchResult(
                 records=records, total_count=total_count, limit=limit, offset=offset, matched_terms=matched_terms
