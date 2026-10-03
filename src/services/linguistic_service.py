@@ -451,11 +451,24 @@ class LinguisticService:
                 if is_locked is not None:
                     query = query.filter(Record.is_locked == is_locked)
 
+                # SC-8: semantic strategies return semantic-search hits
+                # (either a hit list or a container exposing .results)
+                # carrying (record_id, entry_type, term, similarity) — not a
+                # query transformer. Filter the query to the hit record ids
+                # and keep the hits for matched_terms.
+                semantic_hits: list[Any] | None = None
                 if search_term:
                     strategy = _search_strategies.get(search_mode)
                     if strategy is None:
                         raise ValueError(f"Unknown search mode: {search_mode}")
-                    query = strategy(query, search_term)
+                    if search_mode in ("Semantic Gloss", "Semantic All"):
+                        raw = strategy(query, search_term)
+                        if not isinstance(raw, list) and hasattr(raw, "results"):
+                            raw = raw.results
+                        semantic_hits = raw
+                        query = query.filter(Record.id.in_([hit.record_id for hit in semantic_hits]))
+                    else:
+                        query = strategy(query, search_term)
 
             # Efficient Sorting: sort_lx (NFD/No-Punct), hm, ps, primary_lang, ge
             query = query.order_by(Record.sort_lx, Record.hm, Record.ps, primary_lang.c.lang_name, Record.ge)
@@ -507,6 +520,16 @@ class LinguisticService:
                         matched_terms = {}
                         for rec_id, term in term_rows:
                             matched_terms.setdefault(rec_id, set()).add(term)
+
+            elif search_term and record_ids is None and search_mode in ("Semantic Gloss", "Semantic All"):
+                # SC-8: semantic modes populate matched_terms from the
+                # semantic layer's per-hit source-field terms, bounded to
+                # the returned page and deduplicated per record.
+                page_ids = {r.id for r, _ in results}
+                matched_terms = {}
+                for hit in semantic_hits or []:
+                    if hit.record_id in page_ids:
+                        matched_terms.setdefault(hit.record_id, set()).add(hit.term)
 
             return RecordSearchResult(
                 records=records, total_count=total_count, limit=limit, offset=offset, matched_terms=matched_terms

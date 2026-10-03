@@ -1,24 +1,28 @@
 # SPDX-FileCopyrightText: 2026 michael-conrad
 # SPDX-License-Identifier: MIT
 # Provenance: AI-generated
-"""SC-8 RED: FTS and Semantic strategies leave matched_terms as None.
+"""SC-8 RED (revised 2026-10-03): FTS keeps matched_terms None; Semantic modes populate it.
 
 The service ``search_records()`` in ``src/services/linguistic_service.py``
-must return ``RecordSearchResult.matched_terms`` as ``None`` for FTS mode
-and for Semantic Gloss / Semantic All modes whenever a search query is
-present. Matched-term collection is an ILIKE-mode-only contract (SC-7);
-the FTS and Semantic strategies must never fabricate a term map.
+must return ``RecordSearchResult.matched_terms`` as ``None`` for FTS mode,
+and must POPULATE ``matched_terms`` for Semantic Gloss / Semantic All modes
+from the matched source-field term values carried by the semantic search
+layer's ``SemanticSearchResult`` hits — grouped per record identifier and
+deduplicated per record.
 
 Fixture data lives in an isolated ephemeral PostgreSQL instance (pgserver) —
 NEVER production data. The service is wired to the test DB by patching
-``linguistic_service.get_session``. Semantic modes are exercised with the
-seam strategy stubbed as a passthrough query transformer: the production
-Records page dispatches Semantic Gloss / Semantic All through the #36 seam
-directly (never through ``search_records``), and the real seam function
-returns a ``SemanticSearchResult`` rather than a query transformer. The
-stub isolates SC-8's contract — the ILIKE-only mode guard keeps
-``matched_terms`` as None whenever a Semantic strategy is dispatched with
-a query present — from that unrelated dispatch type mismatch.
+``linguistic_service.get_session``. The fixture seeds ``SemanticSearchEntry``
+rows with embeddings (pinned model) so the semantic layer's data model is
+present. Semantic modes are exercised with the strategy dispatch stubbed as
+a passthrough returning ``SemanticSearchResult`` hit instances (carrying
+``record_id``, ``entry_type``, ``term``, ``similarity``) instead of running
+the real embedding seam — the same isolation pattern the existing SC-8
+semantic cases use; the stub isolates SC-8's matched-terms population
+contract from the real vector-encoding path.
+
+Pre-GREEN the Semantic cases must FAIL: ``matched_terms`` is currently None
+for semantic modes (ILIKE-only collection branch).
 
 Run: uv run pytest test/test_search_records_matched_terms_none_sc8_red.py
 
@@ -48,7 +52,7 @@ def make_get_session(engine):
 
 
 class TestSearchRecordsMatchedTermsNoneSc8(unittest.TestCase):
-    """SC-8 (behavioral): matched_terms stays None for FTS and Semantic modes."""
+    """SC-8: FTS matched_terms None; Semantic modes populate per-record terms."""
 
     @classmethod
     def setUpClass(cls):  # noqa: N802
@@ -93,8 +97,9 @@ class TestSearchRecordsMatchedTermsNoneSc8(unittest.TestCase):
     @classmethod
     def _seed(cls):
         from src.database.models.core import Record, Source
-        from src.database.models.search import FTSEntry, SearchEntry
+        from src.database.models.search import FTSEntry, SearchEntry, SemanticSearchEntry
         from src.services.linguistic_service import LinguisticService
+        from src.services.semantic_search_service import PIN
 
         norm = LinguisticService.generate_sort_lx
 
@@ -104,9 +109,11 @@ class TestSearchRecordsMatchedTermsNoneSc8(unittest.TestCase):
         session.flush()
         cls.source_id = source.id
 
-        # Record A: matches FTS query "cawap" via its FTS vector, and also
-        # carries a Lexeme search entry. Its matched_terms must stay None
-        # in FTS and Semantic modes.
+        # Record A: matches FTS query "cawap" via its FTS vector, carries a
+        # Lexeme search entry, and a semantic entry ("cawapou") with an
+        # embedding under the pinned model. matched_terms: None in FTS mode;
+        # populated from the semantic layer's source-field terms in Semantic
+        # modes.
         rec_a = Record(lx="cawapou", source_id=source.id, mdf_data="")
         session.add(rec_a)
         session.flush()
@@ -125,9 +132,18 @@ class TestSearchRecordsMatchedTermsNoneSc8(unittest.TestCase):
                 fts_vector=func.to_tsvector("simple", norm("cawapou cawapou wren")),
             )
         )
+        session.add(
+            SemanticSearchEntry(
+                record_id=rec_a.id,
+                entry_type="lx",
+                term="cawapou",
+                embedding=[0.1] * 384,
+                embedding_model=PIN,
+            )
+        )
 
-        # Record B: FTS-vector-only record that also matches "wren", proving
-        # the FTS path returns multiple records whose matched_terms stay None.
+        # Record B: FTS-vector-only record that also matches "wren", plus a
+        # semantic entry ("wrenuw") — proves multi-record semantic population.
         rec_b = Record(lx="wrenuw", source_id=source.id, mdf_data="")
         session.add(rec_b)
         session.flush()
@@ -136,6 +152,15 @@ class TestSearchRecordsMatchedTermsNoneSc8(unittest.TestCase):
             FTSEntry(
                 record_id=rec_b.id,
                 fts_vector=func.to_tsvector("simple", norm("wren heki")),
+            )
+        )
+        session.add(
+            SemanticSearchEntry(
+                record_id=rec_b.id,
+                entry_type="va",
+                term="wrenuw",
+                embedding=[0.2] * 384,
+                embedding_model=PIN,
             )
         )
 
@@ -153,7 +178,7 @@ class TestSearchRecordsMatchedTermsNoneSc8(unittest.TestCase):
         self._patcher.start()
         self.addCleanup(self._patcher.stop)
 
-    # --- FTS mode ---
+    # --- FTS mode: matched_terms stays None (unchanged contract) ---
 
     def test_fts_mode_leaves_matched_terms_none_sc8(self):
         from src.services.linguistic_service import LinguisticService
@@ -168,7 +193,7 @@ class TestSearchRecordsMatchedTermsNoneSc8(unittest.TestCase):
         )
         self.assertIsNone(
             result.matched_terms,
-            "FTS mode must leave matched_terms as None (ILIKE-only collection)",
+            "FTS mode must leave matched_terms as None (no raw-term anchor)",
         )
 
     def test_fts_mode_none_across_multiple_records_sc8(self):
@@ -180,27 +205,60 @@ class TestSearchRecordsMatchedTermsNoneSc8(unittest.TestCase):
         self.assertGreaterEqual(result.total_count, 1)
         self.assertIsNone(result.matched_terms)
 
-    # --- Semantic modes ---
+    # --- Semantic modes: matched_terms populated from the semantic layer ---
 
-    def test_semantic_gloss_mode_leaves_matched_terms_none_sc8(self):
+    @staticmethod
+    def _make_semantic_stub(hits):
+        """Strategy stub returning SemanticSearchResult hit instances.
+
+        Isolation pattern: the strategy dict binds the seam function at
+        import time, so the dict entry is patched (not the module attribute).
+        The stub returns the semantic search layer's per-hit objects — each
+        carrying (record_id, entry_type, term, similarity) — instead of
+        running the real vector-encoding seam.
+        """
+        from src.database.models.search import SemanticSearchResult
+
+        def _stub(query, search_term):
+            return [
+                SemanticSearchResult(
+                    record_id=hit.record_id,
+                    entry_type=hit.entry_type,
+                    term=hit.term,
+                    similarity=hit.similarity,
+                )
+                for hit in hits
+            ]
+
+        return _stub
+
+    def test_semantic_gloss_populates_matched_terms_dedup_sc8(self):
         from unittest.mock import patch
 
-        from src.services.linguistic_service import LinguisticService
+        from src.services import linguistic_service
 
-        # SC-8 contract under test: when a Semantic strategy is dispatched
-        # with a query present, the ILIKE-only collection branch must not
-        # fire — matched_terms stays None. The seam is stubbed as a
-        # passthrough query transformer because the production page consumes
-        # the real seam directly (SemanticSearchResult), never via
-        # search_records; the stub isolates the mode-guard behavior. The
-        # strategy dict binds the seam function at import time, so the dict
-        # entry is patched, not the module attribute.
-        passthrough = lambda query, search_term: query  # noqa: E731
+        # Record A matched with the same term carried under two entry types
+        # plus a second distinct source-field term — the per-record set must
+        # be deduplicated to {"cawapou", "cawap"}.
+        from src.database.models.search import SemanticSearchResult
+
+        hits = [
+            SemanticSearchResult(
+                record_id=self.rec_a_id, entry_type="lx", term="cawapou", similarity=0.97
+            ),
+            SemanticSearchResult(
+                record_id=self.rec_a_id, entry_type="ge", term="cawapou", similarity=0.96
+            ),
+            SemanticSearchResult(
+                record_id=self.rec_a_id, entry_type="ge", term="cawap", similarity=0.95
+            ),
+        ]
+        stub = self._make_semantic_stub(hits)
         with patch.dict(
             "src.services.linguistic_service._search_strategies",
-            {"Semantic Gloss": passthrough, "Semantic All": passthrough},
+            {"Semantic Gloss": stub},
         ):
-            result = LinguisticService.search_records(
+            result = linguistic_service.LinguisticService.search_records(
                 source_id=self.source_id,
                 search_term="cawap",
                 search_mode="Semantic Gloss",
@@ -208,30 +266,75 @@ class TestSearchRecordsMatchedTermsNoneSc8(unittest.TestCase):
         self.assertGreater(
             result.total_count,
             0,
-            "fixture must produce matches so the None assertion is meaningful",
+            "fixture must produce semantic matches so the presence assertion is meaningful",
         )
-        self.assertIsNone(
+        self.assertIsNotNone(
             result.matched_terms,
-            "Semantic Gloss mode must leave matched_terms as None",
+            "Semantic Gloss mode must populate matched_terms from the "
+            "matched source-field terms",
+        )
+        self.assertIsInstance(result.matched_terms, dict)
+        self.assertIn(
+            self.rec_a_id,
+            result.matched_terms,
+            "matched_terms must be keyed by record id",
+        )
+        self.assertEqual(
+            result.matched_terms[self.rec_a_id],
+            {"cawapou", "cawap"},
+            "matched_terms per record must be the deduplicated set of "
+            "matched source-field terms",
         )
 
-    def test_semantic_all_mode_leaves_matched_terms_none_sc8(self):
+    def test_semantic_all_populates_matched_terms_multiple_records_sc8(self):
         from unittest.mock import patch
 
-        from src.services.linguistic_service import LinguisticService
+        from src.database.models.search import SemanticSearchResult
+        from src.services import linguistic_service
 
-        passthrough = lambda query, search_term: query  # noqa: E731
+        hits = [
+            SemanticSearchResult(
+                record_id=self.rec_a_id, entry_type="lx", term="cawapou", similarity=0.97
+            ),
+            SemanticSearchResult(
+                record_id=self.rec_a_id, entry_type="ge", term="cawapou", similarity=0.96
+            ),
+            SemanticSearchResult(
+                record_id=self.rec_b_id, entry_type="va", term="wrenuw", similarity=0.94
+            ),
+            SemanticSearchResult(
+                record_id=self.rec_b_id, entry_type="ge", term="wrenuw", similarity=0.93
+            ),
+        ]
+        stub = self._make_semantic_stub(hits)
         with patch.dict(
             "src.services.linguistic_service._search_strategies",
-            {"Semantic All": passthrough},
+            {"Semantic All": stub},
         ):
-            result = LinguisticService.search_records(
+            result = linguistic_service.LinguisticService.search_records(
                 source_id=self.source_id,
                 search_term="wren",
                 search_mode="Semantic All",
             )
-        self.assertGreater(result.total_count, 0)
-        self.assertIsNone(
+        self.assertGreaterEqual(result.total_count, 2)
+        self.assertIsNotNone(
             result.matched_terms,
-            "Semantic All mode must leave matched_terms as None",
+            "Semantic All mode must populate matched_terms from the "
+            "matched source-field terms",
         )
+        self.assertIn(self.rec_a_id, result.matched_terms)
+        self.assertIn(self.rec_b_id, result.matched_terms)
+        self.assertEqual(
+            result.matched_terms[self.rec_a_id],
+            {"cawapou"},
+            "duplicate source-field terms must deduplicate per record",
+        )
+        self.assertEqual(
+            result.matched_terms[self.rec_b_id],
+            {"wrenuw"},
+            "duplicate source-field terms must deduplicate per record",
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()
