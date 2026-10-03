@@ -57,11 +57,16 @@ status_values_or_enum = lambda: [  # noqa: E731
 
 @dataclass
 class SemanticSearchResult:
-    """Result of a semantic search: ranked (record_id, score) pairs."""
+    """Result of a semantic search: ranked (record_id, score) pairs.
+
+    matched_terms maps record_id -> set of matched source-field terms
+    (SC-20 revised) for highlight-span computation on the Records page.
+    """
 
     results: list
     status: str
     message: str
+    matched_terms: dict | None = None
 
 
 _query_encoder = None
@@ -92,7 +97,10 @@ def _get_engine():
     global _ENGINE
     with _ENGINE_LOCK:
         if _ENGINE is None:
-            _ENGINE = create_engine(get_db_url())
+            # pool_pre_ping mirrors get_engine(): discards pooled connections
+            # killed by a local pgserver restart instead of raising
+            # OperationalError on the next semantic query.
+            _ENGINE = create_engine(get_db_url(), pool_pre_ping=True)
         return _ENGINE
 
 
@@ -106,7 +114,7 @@ def _candidate_sql(mode, has_threshold, has_source, has_limit):
     if has_source:
         where += " AND record_id = :source_id"
     selects = [
-        "SELECT record_id, 1 - (embedding <=> CAST(:qv AS vector)) AS score "
+        "SELECT record_id, 1 - (embedding <=> CAST(:qv AS vector)) AS score, term "
         f"FROM {table} WHERE {where}"
         for table in tables
     ]
@@ -117,7 +125,7 @@ def _candidate_sql(mode, has_threshold, has_source, has_limit):
         inner = "(" + " UNION ALL ".join(selects) + ") AS ranked"
         thr = ""
     lim = " LIMIT :lim" if has_limit else ""
-    return f"SELECT record_id, score FROM {inner}{thr} ORDER BY score DESC, record_id ASC{lim}"
+    return f"SELECT record_id, score, term FROM {inner}{thr} ORDER BY score DESC, record_id ASC{lim}"
 
 
 def search_semantic(mode="gloss", query="", threshold=None, source_id=None, limit=None):
@@ -165,10 +173,15 @@ def search_semantic(mode="gloss", query="", threshold=None, source_id=None, limi
         rows = conn.execute(sql, params).all()
 
     results = []
-    for record_id, score in rows:
+    # SC-20 revised: collect per-record matched source-field terms for
+    # highlight-span computation on the Records page.
+    matched_terms: dict[int, set] = {}
+    for record_id, score, term in rows:
         value = float(score)
         value = max(-1.0, min(1.0, value))
         results.append((int(record_id), value))
+        if term:
+            matched_terms.setdefault(int(record_id), set()).add(term)
 
     if not results:
         with engine.connect() as conn:
@@ -213,7 +226,10 @@ def search_semantic(mode="gloss", query="", threshold=None, source_id=None, limi
         )
 
     return SemanticSearchResult(
-        results=results, status="ok", message=f"{len(results)} match(es) ranked by cosine similarity."
+        results=results,
+        status="ok",
+        message=f"{len(results)} match(es) ranked by cosine similarity.",
+        matched_terms=matched_terms,
     )
 
 

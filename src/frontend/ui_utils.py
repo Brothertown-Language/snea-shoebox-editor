@@ -183,12 +183,91 @@ def _arrow_svg(color: str) -> str:
     return quote(svg, safe="")
 
 
-def render_mdf_block(mdf_text: str, key: str = "", diagnostics: list[dict] | None = None) -> None:
+def _as_span(s: object) -> tuple[int, int] | None:
+    """Return (start, end) when s is a 2-element pair of ints, else None."""
+    if not isinstance(s, (tuple, list)) or len(s) != 2:
+        return None
+    start, end = s
+    if not isinstance(start, int) or not isinstance(end, int):
+        return None
+    return (start, end)
+
+
+def _normalize_highlight_spans(
+    highlight_spans: list[tuple[int, int]] | list[list[tuple[int, int]]] | None,
+    n_lines: int,
+) -> list[list[tuple[int, int]]] | None:
+    """Normalize highlight_spans into a per-line list of (start, end) spans.
+
+    A flat list of (start, end) tuples is applied to every line; a list of
+    lists is used per line (missing/empty entries mean no highlights).
+    Returns None when highlight_spans is None (default rendering unchanged).
+    """
+    if highlight_spans is None:
+        return None
+    pairs = [_as_span(s) for s in highlight_spans]
+    if all(p is not None for p in pairs):
+        flat = [p for p in pairs if p is not None]
+        return [list(flat) for _ in range(n_lines)]
+    per_line: list[list[tuple[int, int]]] = []
+    for i in range(n_lines):
+        row: list[tuple[int, int]] = []
+        if i < len(highlight_spans):
+            for entry in highlight_spans[i]:
+                span = _as_span(entry)
+                if span is not None:
+                    row.append(span)
+        per_line.append(row)
+    return per_line
+
+
+def _search_token_wrap(text: str, spans: list[tuple[int, int]] | None) -> str:
+    """Escape text, wrapping highlight-span-covered ranges in search-token marks.
+
+    Markup-sensitive characters are HTML-escaped exactly as the surrounding
+    output; only the covered ranges gain a ``<mark class="search-token">``.
+    With no spans the result is identical to plain ``html.escape``.
+    """
+    import html as _html
+
+    if not spans or not text:
+        return _html.escape(text)
+    mask = [False] * len(text)
+    for start, end in spans:
+        if start < 0 or start >= end or end > len(text):
+            continue  # malformed or out-of-range span: drop entirely, no clamping
+        for j in range(start, end):
+            mask[j] = True
+    parts: list[str] = []
+    k = 0
+    n = len(text)
+    while k < n:
+        cov = mask[k]
+        j = k
+        while j < n and mask[j] == cov:
+            j += 1
+        seg = _html.escape(text[k:j])
+        parts.append(f'<mark class="search-token">{seg}</mark>' if cov else seg)
+        k = j
+    return "".join(parts)
+
+
+def render_mdf_block(
+    mdf_text: str,
+    key: str = "",
+    diagnostics: list[dict] | None = None,
+    highlight_spans: list[tuple[int, int]] | list[list[tuple[int, int]]] | None = None,
+) -> None:
     """Render MDF data in a soft-wrapped <pre> block with structural highlighting.
 
     Lines that wrap display a continuation marker (↩) via a hanging indent.
     If 'diagnostics' is provided, lines are highlighted based on their status
     (error, warning, ok).
+
+    'highlight_spans' optionally carries (start, end) character offsets into
+    the rendered lines (a flat list applied to every line, or a per-line list
+    of lists). It is accepted for downstream highlight markup (SC-10); when
+    None (default) rendering is unchanged.
     """
     import html as _html
 
@@ -196,12 +275,14 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: list[dict] | Non
 
     mdf_text = format_mdf_record(mdf_text)
     lines = mdf_text.split("\n")
+    line_spans = _normalize_highlight_spans(highlight_spans, len(lines))
 
     line_html_parts = []
     for i, line in enumerate(lines):
         diag = diagnostics[i] if diagnostics and i < len(diagnostics) else {"status": "ok"}
         status_cls = f"status-{diag['status']}"
         msg = diag.get("message", "")
+        hl = line_spans[i] if line_spans else []
 
         # Build inner HTML: use span-level markup when intra-line spans are available
         spans = diag.get("spans")
@@ -210,19 +291,43 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: list[dict] | Non
                 "".join(
                     f'<mark class="diff-token">{_html.escape(s["text"])}</mark>'
                     if s["changed"]
-                    else _html.escape(s["text"])
+                    else _search_token_wrap(s["text"], hl)
                     for s in spans
                 )
                 or "&nbsp;"
             )
         else:
-            inner_html = _html.escape(line) if line else "&nbsp;"
+            inner_html = (_search_token_wrap(line, hl) if hl else _html.escape(line)) or "&nbsp;"
 
         # Build line with optional tooltip/highlight
         title_attr = f'title="{_html.escape(msg)}"' if msg else ""
         line_html_parts.append(f'<div class="mdf-line {status_cls}" {title_attr}>{inner_html}</div>')
 
     line_divs = "".join(line_html_parts)
+    # The search-token stylesheet is injected only when highlight spans are
+    # supplied, so call sites that omit the highlight parameters render
+    # byte-identically to their pre-feature output (SC-9).
+    search_token_css = (
+        """
+        mark.search-token {
+            color: inherit;
+            font-weight: bold;
+            border-radius: 2px;
+            padding: 0 1px;
+        }
+        @media (prefers-color-scheme: light) {
+            mark.search-token {
+                background-color: rgba(0, 160, 170, 0.35);
+            }
+        }
+        @media (prefers-color-scheme: dark) {
+            mark.search-token {
+                background-color: rgba(0, 190, 200, 0.5);
+            }
+        }"""
+        if highlight_spans is not None
+        else ""
+    )
     # st.html() renders inside an iframe that does NOT inherit Streamlit's
     # CSS custom properties.  We must read the theme colours from the parent
     # frame via JavaScript and apply them to the block.
@@ -282,7 +387,7 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: list[dict] | Non
             color: inherit;
             border-radius: 2px;
             padding: 0 1px;
-        }}
+        }}{search_token_css}
         /* Light theme arrow (deep orange on light bg) */
         @media (prefers-color-scheme: light) {{
             .mdf-wrap-block {{ color: #31333F; background-color: #f0f2f6; border-color: #31333F; }}
