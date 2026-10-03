@@ -1,0 +1,42 @@
+# Solve output — issue #1404
+spec: .issues/1404/spec.md
+generated: 2026-10-03
+
+solve_status: SAT
+solve_query: "z3.And(sc1_committed, sc2_committed, sc3_committed, sc4_checked)"
+solve_model:
+  sc1_committed: true
+  sc2_committed: true
+  sc3_committed: true
+  sc4_checked: true
+
+check_status: SAT (+ postconditions + invariants)
+check_note: >
+  tools/solve check against state-analysis.yaml returned SAT for preconditions,
+  then SAT again after adding postconditions + invariants. State-analysis.yaml has
+  no `variables` section, so no state equality assertions were bound; verdict rests
+  on contract constraint satisfiability.
+
+plan_status: SOLVED_SATISFICING
+plan_engine: tamer
+plan_length: 10
+plan_problem_path: .issues/1404/artifacts/plan-problem.yaml
+plan_output_path: .issues/1404/artifacts/plan-output.yaml
+plan_steps:
+  - red_sc2
+  - red_sc1
+  - red_sc3
+  - green_sc1
+  - commit_sc1
+  - green_sc2
+  - commit_sc2
+  - green_sc3
+  - commit_sc3
+  - regression_check_sc4
+
+tool_invocation_notes:
+  - >
+    Task-file procedure specified `plan plan --contract-path ... --output ...`;
+    the actual CLI requires `--problem <yaml>` and prints the plan (no --output
+    flag). Adapted: problem file written to artifacts/plan-problem.yaml, output
+    captured to artifacts/plan-output.yaml.

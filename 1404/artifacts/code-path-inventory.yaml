@@ -1,0 +1,51 @@
+# Code path inventory — issue #1404
+spec: .issues/1404/spec.md
+generated: backfill (retroactive)
+
+paths:
+  - id: P1-semantic-dispatch
+    entry: LinguisticService.search_records (src/services/linguistic_service.py:388)
+    flow:
+      - strategy lookup: _search_strategies.get(search_mode) (~line 461)
+      - semantic branch: search_mode in ("Semantic Gloss", "Semantic All") (~line 464)
+      - strategy(query, search_term) call (~line 465) — mode NOT threaded (defect)
+      - container unwrap: hasattr(raw, "results") → raw.results (~line 466-467)
+      - id filter: Record.id.in_([hit.record_id ...]) (~line 469) — raises on tuple hits
+    success_criteria: [SC-1, SC-2]
+    defects:
+      - "AttributeError: 'tuple' object has no attribute 'record_id'"
+
+  - id: P2-matched-terms-loop
+    entry: semantic matched_terms branch (src/services/linguistic_service.py:524)
+    flow:
+      - page_ids = {r.id for r, _ in results} (~line 528)
+      - for hit in semantic_hits: hit.record_id / hit.term attribute access (~lines 530-532)
+      - ignores seam's matched_terms dict entirely
+    success_criteria: [SC-1, SC-2]
+    defects:
+      - matched_terms empty/incorrect with real tuple hits
+
+  - id: P3-seam-contract
+    entry: search_semantic (src/services/semantic_search_service.py:131)
+    flow:
+      - mode param: "gloss" | "all"; defaults mode="gloss"
+      - rows unpacked as (record_id, score, term); results.append((int(record_id), value)) (~lines 179-182)
+      - matched_terms.setdefault(int(record_id), set()).add(term) (~lines 178-184)
+      - returns SemanticSearchResult(results, status, message, matched_terms) (~line 229)
+    success_criteria: [SC-1, SC-2, SC-3]
+    role: authoritative interface the consumer must normalize against
+
+  - id: P4-regression-test-suite
+    entry: test/test_search_records_matched_terms_none_sc8_red.py
+    flow:
+      - current SC-8 tests stub _search_strategies with attribute-bearing container hits
+      - masks real tuple contract (root cause of #1403 regression escape)
+    success_criteria: [SC-3]
+
+  - id: P5-non-semantic-strategies
+    entry: _search_strategies Lexeme/FTS/Headword/Gloss branches (src/services/linguistic_service.py:80-85, ~line 471)
+    flow:
+      - strategy(query, search_term) returns transformed SQLAlchemy query (~line 471)
+      - SC-7 matched-terms ILIKE block (~lines 504-522)
+    success_criteria: [SC-4]
+    role: must not regress; these strategies legitimately consume (query, search_term)

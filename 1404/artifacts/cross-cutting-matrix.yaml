@@ -1,0 +1,25 @@
+# Cross-cutting matrix — issue #1404
+spec: .issues/1404/spec.md
+generated: backfill (retroactive)
+
+cross_cutting:
+  - id: CC1
+    scs: [SC-1, SC-2, SC-3]
+    spans: [service-consumption, seam-contract, test-suite]
+    description: Hit-shape normalization (C1) and mode threading (C3) are single-site changes in linguistic_service.py, but their correctness is only observable against the real seam contract (P3) and must be pinned by the rewritten tests (C4) — one implementation concern spanning three layers.
+    mitigation: Single phase-1 change; tests in phase 2 exercise both modes through the real seam with only DB/encoder isolation.
+
+  - id: CC2
+    scs: [SC-1, SC-2, SC-4]
+    spans: [semantic-branch, non-semantic-strategies]
+    description: The dispatch site is shared by all five search modes; a fix touching strategy invocation semantics must preserve the (query, search_term) transformer contract for Lexeme/FTS/Headword/Gloss.
+    mitigation: Change confined to the Semantic branch condition; non-semantic strategy call sites left intact; SC-4 regression run covers.
+
+  - id: CC3
+    scs: [SC-1, SC-2]
+    spans: [consumption, data-shape]
+    description: matched_terms population (C2) crosses the seam boundary — consumer must switch from re-deriving terms to consuming the seam's dict while bounding to page ids.
+    mitigation: Page-id intersection preserved from existing loop structure.
+
+not_cross_cutting:
+  - SC-4 is a verification-only criterion (no code of its own).

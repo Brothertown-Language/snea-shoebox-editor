@@ -26,5 +26,5 @@ provenance:
     target: "src/services/linguistic_service.py"
     relationship: "search_highlight imports generate_sort_lx (and FTS token-cleaning semantics reference) — service is the single normalization authority"
     type_constraint: "generate_sort_lx(lx: str) -> str; FTS query tokens are strings post-cleaning; span helpers return list[tuple[int, int]] per rendered line; no Streamlit/database imports in the pure module"
-    matched_terms_field: "matched_terms: dict[int, list[str]] | None = None on RecordSearchResult — record id -> deduplicated raw term values; None for FTS/Semantic"
+    matched_terms_field: "matched_terms: dict[int, list[str]] | None = None on RecordSearchResult — record id -> deduplicated raw term values; None for FTS; populated for Semantic Gloss/Semantic All from the matched SemanticSearchResult source-field term values, per-record deduplicated (spec revision 2026-10-03: all-modes highlighting)"
     real_data_basis: "field names and signatures read live from src/services/linguistic_service.py and src/frontend/pages/records.py, 2026-10-02"

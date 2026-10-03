@@ -1,0 +1,29 @@
+# Testability assessment — issue #1404
+spec: .issues/1404/spec.md
+generated: backfill (retroactive)
+
+assessments:
+  - sc: SC-1
+    evidence_type: behavioral
+    instrument: pytest unit/regression — real search_semantic seam with DB session + query encoder patched; assert no raise and matched_terms populated from seam dict for Semantic Gloss
+    red_state: currently latent-shape crash masked; RED = test against real tuples fails before fix
+    test_file: test/test_search_records_matched_terms_none_sc8_red.py (rewrite)
+
+  - sc: SC-2
+    evidence_type: behavioral
+    instrument: pytest — same harness as SC-1 with search_mode='Semantic All' (real 'all' seam path hits UNION ALL of gloss_search_entries + semantic_search_entries); assert no raise and matched_terms populated
+    red_state: RED reproduces 'tuple' object has no attribute 'record_id' live today
+
+  - sc: SC-3
+    evidence_type: behavioral
+    instrument: pytest — assert isolation is session/encoder-only (no _search_strategies stubbing); both hit shapes (container hits and tuples) exercised; verify by asserting the tests patch only sanctioned seams
+    red_state: existing stubbed tests pass while live code crashes — RED is the live-crash evidence already recorded
+
+  - sc: SC-4
+    evidence_type: behavioral
+    instrument: full pytest run uv run pytest test/ — zero failures in existing suites (SC-7 matched terms, FTS/Lexeme/Headword/Gloss, seam/empty-state suites)
+    red_state: n/a (verification-only)
+
+verification_notes:
+  - SC-1/SC-2 need a real-record + real-embedding fixture or encoder override via set_query_encoder; follow existing semantic test isolation patterns (test_semantic_*.py).
+  - Empty/early-return seam outcomes (empty_query, no_embeddings, below_floor) should be covered as boundary cases of SC-1/SC-2 per B2 constraints.

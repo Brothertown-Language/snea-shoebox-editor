@@ -1,0 +1,29 @@
+# State analysis — issue #1404
+spec: .issues/1404/spec.md
+generated: backfill (retroactive)
+
+state_transitions:
+  - id: ST1
+    sc: [SC-1, SC-2]
+    location: search_records semantic dispatch (~line 465)
+    transition: "strategy invocation state: bare (query, search_term) call → explicit (mode, query) call; mode value derived from search_mode mapping {'Semantic Gloss' → 'gloss', 'Semantic All' → 'all'}"
+
+  - id: ST2
+    sc: [SC-1, SC-2]
+    location: semantic_hits materialization (~lines 466-469)
+    transition: "hit shape: attribute-bearing assumption → normalized per-hit (record_id, score) access; empty-seam outcomes (results=[]) flow to id-filter as no-op (empty in_ clause must not crash)"
+
+  - id: ST3
+    sc: [SC-1, SC-2]
+    location: matched_terms block (~lines 524-532)
+    transition: "matched_terms state: None (crash path) → dict[int, set[str]] populated from seam matched_terms intersected with page_ids; None remains valid when semantic_hits is None or page empty"
+
+  - id: ST4
+    sc: [SC-3]
+    location: test fixtures (test/test_search_records_matched_terms_none_sc8_red.py)
+    transition: "isolation state: _search_strategies stubbed with attribute hits → only DB session/query-encoder patched; real search_semantic tuple contract exercised for both modes"
+
+invariants:
+  - Non-semantic modes: strategy(query, search_term) transformer contract unchanged (state preserved)
+  - RecordSearchResult return shape invariant across the fix
+  - matched_terms typed dict[int, set[str]] | None per B3

@@ -1,0 +1,29 @@
+# Analysis summary — issue #1404
+spec_path: .issues/1404/spec.md
+generated: backfill (retroactive)
+sc_count: 4
+success_criteria: [SC-1, SC-2, SC-3, SC-4]
+
+artifact_status:
+  blast-radius.yaml: backfilled
+  concern-map.yaml: backfilled
+  code-path-inventory.yaml: backfilled
+  cross-cutting-matrix.yaml: backfilled
+  interface-compatibility.yaml: backfilled
+  state-analysis.yaml: backfilled
+  testability-assessment.yaml: backfilled
+
+scope_summary: >
+  Fix LinguisticService.search_records semantic dispatch (src/services/linguistic_service.py):
+  thread the caller's mode ('gloss'/'all') into search_semantic, normalize both real hit
+  shapes (attribute-bearing hits and (record_id, score) tuples), and populate matched_terms
+  from the seam's real matched_terms dict bounded to the returned page. Rewrite the stubbed
+  SC-8 regression tests (test/test_search_records_matched_terms_none_sc8_red.py) against
+  the real seam contract with only DB/encoder isolation. No regression in existing suites.
+  SemanticSearchService seam itself is the fixed contract source (no change expected).
+
+grounding:
+  live_code_inspection:
+    - src/services/linguistic_service.py (search_records ~388-536; _search_strategies 80-87)
+    - src/services/semantic_search_service.py (search_semantic 131; SemanticSearchResult 59; matched_terms 178-184)
+    - test/test_search_records_matched_terms_none_sc8_red.py (stubbed SC-8 suite)

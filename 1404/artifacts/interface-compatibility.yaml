@@ -1,0 +1,38 @@
+# Interface compatibility — issue #1404
+spec: .issues/1404/spec.md
+generated: backfill (retroactive)
+
+boundaries:
+  - id: B1
+    source: LinguisticService.search_records (src/services/linguistic_service.py:388)
+    target: search_semantic (src/services/semantic_search_service.py:131)
+    interface: Python function call via _search_strategies table
+    current_violation: Dispatch calls strategy(query, search_term) — search_semantic's first positional param is mode, so search_term silently lands in mode and the real query is empty/wrong; caller mode ('gloss'/'all') never threaded.
+    compat_requirement: Fix must invoke the seam with explicit mode ("gloss"|"all") and query keywords; seam signature unchanged.
+
+  - id: B2
+    source: SemanticSearchResult (src/services/semantic_search_service.py:59)
+    target: search_records semantic consumption block
+    interface: results list + matched_terms dict
+    real_contract: results is a list of plain tuples (int record_id, float score); matched_terms is dict[int record_id] -> set[str] of source-field terms.
+    current_violation: Consumer accesses hit.record_id / hit.term attribute-style — valid only for stub-shaped hits, crashes on real tuples ('tuple' object has no attribute 'record_id').
+    compat_requirement: Consumer must accept BOTH attribute-bearing hits and (record_id, score) tuples (normalize via index access or getattr), and must consume matched_terms dict directly.
+
+  - id: B3
+    source: RecordSearchResult (src/services/linguistic_service.py:91)
+    target: callers (pages, tests)
+    interface: records/total_count/limit/offset/matched_terms
+    compat_requirement: Return shape unchanged; matched_terms remains dict[int] -> set[str] | None keyed by record id, bounded to the returned page.
+
+dependency_contract:
+  - source: search_semantic (seam)
+    target: LinguisticService.search_records
+    dependency_type: function-call
+    signature: search_semantic(mode="gloss", query="", threshold=None, source_id=None, limit=None) -> SemanticSearchResult
+    constraints:
+      - mode is the FIRST positional parameter — positional strategy(query, search_term) invocation binds search_term into mode (latent contract break)
+      - mode must be "gloss" for Semantic Gloss, "all" for Semantic All
+      - SemanticSearchResult.results is list[tuple[int, float]] (NOT attribute-bearing objects)
+      - SemanticSearchResult.matched_terms is dict[int, set[str]] or None (None only on early-return outcomes)
+      - empty-query / no-embeddings / below-floor outcomes return results=[] with non-"ok" status — consumer must handle empty results without attribute access
+    consumers_of_seam: [search_records semantic branch, page-local mirror container (production route — unchanged)]

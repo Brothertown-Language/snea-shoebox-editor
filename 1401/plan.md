@@ -18,7 +18,7 @@ dispatch:
 
 **Goal:** Visually highlight matched search terms inside the rendered MDF block in Records View mode for the lexical search modes (Lexeme, Headword, Gloss, FTS) via a three-layer additive design: pure span-computation helpers, an additive service `matched_terms` field, and default-off renderer highlight parameters threaded only into the View-mode render call.
 
-**Architecture:** A new pure span-computation module (`src/frontend/search_highlight.py`) produces per-line offsets from stored raw terms (verbatim find) and from FTS-normalized query tokens (reusing the service normalizer as the single normalization entry point). The service search layer collects matched raw terms per record during the existing paginated query and returns them in an additive optional `matched_terms` field (None for FTS and Semantic modes). The MDF block renderer accepts default-off highlight span parameters and wraps matches in `mark.search-token` elements with ignore-not-clamp malformed-span handling and diff-token precedence. The Records page threads query, mode, and computed spans into the View-mode render call only. Key design decisions pinned by the spec: whole-term granularity, single-normalizer reuse (`generate_sort_lx`), additive-optional field, ignore-not-clamp for malformed spans, WCAG 2.1 AA 4.5:1 contrast threshold, diff-token precedence, no session-state keys, no caching layer, no database schema change.
+**Architecture:** A new pure span-computation module (`src/frontend/search_highlight.py`) produces per-line offsets from stored raw terms (verbatim find) and from FTS-normalized query tokens (reusing the service normalizer as the single normalization entry point). The service search layer collects matched raw terms per record during the existing paginated query and returns them in an additive optional `matched_terms` field (None for FTS; populated for Semantic modes from the matched `SemanticSearchResult` source-field term values, per-record deduplicated). The MDF block renderer accepts default-off highlight span parameters and wraps matches in `mark.search-token` elements with ignore-not-clamp malformed-span handling and diff-token precedence. The Records page threads query, mode, and computed spans into the View-mode render call only. Key design decisions pinned by the spec: whole-term granularity, single-normalizer reuse (`generate_sort_lx`), additive-optional field, ignore-not-clamp for malformed spans, WCAG 2.1 AA 4.5:1 contrast threshold, diff-token precedence, no session-state keys, no caching layer, no database schema change.
 
 **Files:**
 - `src/frontend/search_highlight.py` (new — pure span helpers)
@@ -32,7 +32,7 @@ dispatch:
 
 - **Directly modified:** `src/frontend/search_highlight.py` (new), `src/services/linguistic_service.py`, `src/frontend/ui_utils.py`, `src/frontend/pages/records.py`
 - **Test zones:** `test/` unit and integration suites; `test/ui/` gated Playwright E2E suite
-- **Impact zones protected (read-path only):** MDF parsing and database write paths untouched; revision-history and import-diff renderer call sites byte-identical; `fts_entries` table untouched; no new session-state keys; no migrations; no new endpoints
+- **Impact zones protected (read-path only):** MDF parsing and database write paths untouched; revision-history and import-diff renderer call sites markup-identical (CSS styling blocks excluded from comparison); `fts_entries` table untouched; no new session-state keys; no migrations; no new endpoints
 
 ## Pre-Flight Guard (Mandatory)
 
@@ -56,7 +56,7 @@ Check your tool list for a tool named `task`.
 | Phase | Name | Concern | SCs | Depends On | Step Range | Dispatch |
 |-------|------|---------|-----|------------|------------|----------|
 | 1 | Pure span-computation module | Verbatim stored-term find and FTS normalized query-token scan producing per-line offsets | SC-1, SC-2, SC-3, SC-4 | — | 5-24 | task-card (5-24) + direct (commits) |
-| 2 | Service data layer | Additive matched-terms field, mirror container field, ILIKE-mode collection, FTS/Semantic None | SC-5, SC-6, SC-7, SC-8 | — | 25-44 | task-card (25-44) + direct (commits) |
+| 2 | Service data layer | Additive matched-terms field, mirror container field, ILIKE-mode collection, FTS None, Semantic source-field-term population | SC-5, SC-6, SC-7, SC-8 | — | 25-44 | task-card (25-44) + direct (commits) |
 | 3 | Renderer, styling, and page wiring | Default-off highlight parameters, markup, precedence, styling, View-mode threading | SC-9 through SC-20 | 1, 2 | 45-104 | task-card (45-104) + direct (commits) |
 | 4 | Gated Playwright E2E | Live-app end-to-end verification of highlight flow and absence boundaries | SC-21, SC-22, SC-23 | 3 | 105-119 | task-card (105-119) + direct (commits) |
 | 5 | Post-implementation | Audit, structural checks, gates, PR | — | 1-4 | 120-127 | mixed |
@@ -125,7 +125,7 @@ Check your tool list for a tool named `task`.
 **Concern transition:** Leaving pure span computation → entering the service data layer. Phase 2 is independent of Phase 1's deliverables; Phase 3 consumes both.
 # Phase 2 — Service Data Layer
 
-**Concern:** Additive matched-terms data flow from the service search layer without breaking existing construction sites or the semantic seam contract.
+**Concern:** Additive matched-terms data flow from the service search layer without breaking existing construction sites; FTS leaves the field None while Semantic modes populate it from the semantic search layer's matched source-field terms.
 
 **Files:** `src/services/linguistic_service.py`; integration tests under `test/`
 
@@ -135,11 +135,11 @@ Check your tool list for a tool named `task`.
 
 **Entry Conditions:** Pre-implementation steps 1-4 complete; local PostgreSQL test instance available; tests never run against production data.
 
-**Exit Conditions:** `matched_terms` additive optional field exists on both containers; ILIKE modes collect deduplicated per-record matched terms within the paginated query; FTS and Semantic modes return None; all Phase 2 integration suites pass.
+**Exit Conditions:** `matched_terms` additive optional field exists on both containers; ILIKE modes collect deduplicated per-record matched terms within the paginated query; FTS mode returns None; Semantic modes (Semantic Gloss, Semantic All) populate the field from the matched `SemanticSearchResult` source-field term values, grouped and deduplicated per record identifier; all Phase 2 integration suites pass.
 
-**Code Path Coverage:** Service search result container, page-local mirror container, and the service search method's post-dispatch collection path. Semantic strategies untouched except for the None guarantee; no database schema change, no migration, no new endpoints.
+**Code Path Coverage:** Service search result container, page-local mirror container, and the service search method's post-dispatch collection path. FTS strategy leaves the field None; Semantic strategies supply their matched source-field terms as the population source; no database schema change, no migration, no new endpoints.
 
-**Cross-Cutting SCs:** R-7 (additive optional field, semantic seam preserved), R-9 (collection after strategy dispatch, one shared ILIKE implementation), R-15 (no schema change), R-18 (join-side aggregation bounded to the paginated window).
+**Cross-Cutting SCs:** R-7 (additive optional field, semantic seam preserved), R-9 (collection after strategy dispatch, one shared ILIKE implementation plus semantic source-field term reuse), R-15 (no schema change), R-18 (join-side aggregation bounded to the paginated window).
 
 **Interface Boundaries:** The result container gains an additive optional field defaulting to None — all existing construction sites remain source-compatible. The page-local mirror gains the same field so semantic seam construction completes without raising.
 
@@ -164,15 +164,15 @@ Check your tool list for a tool named `task`.
 - [ ] 37. **Post-regression (**task-card**).** Dispatch `task(..., prompt: "execute phase-4 task from test-driven-development")` — run regression test patterns after GREEN. **→ SC-7**
 - [ ] 38. **Verify (**task-card**).** Dispatch `task(..., prompt: "execute verify task from verification-before-completion")` — run the integration suite and confirm the collected map matches the SC-7 contract (per-mode collection, dedup, bounded to the paginated window). **→ SC-7**
 - [ ] 39. **Commit (**direct**).** Orchestrator runs `git add <files> && git commit -m "feat(search): matched-term collection for ILIKE modes (SC-7)"`.
-- [ ] 40. **RED (**task-card**).** Dispatch `task(..., prompt: "execute red task from test-driven-development")` — write a failing pytest integration test for SC-8: FTS and Semantic strategies do not leave the matched-terms field as None. **→ SC-8**
-- [ ] 41. **GREEN (**task-card**).** Dispatch `task(..., prompt: "execute green task from test-driven-development")` — ensure FTS and Semantic mode searches return the matched-terms field as None. **→ SC-8**
+- [ ] 40. **RED (**task-card**).** Dispatch `task(..., prompt: "execute red task from test-driven-development")` — rework the existing SC-8 integration test (`test/test_search_records_matched_terms_none_sc8_red.py`): the FTS-None cases stay; the Semantic cases flip from absence to presence assertions — Semantic Gloss and Semantic All searches populate `matched_terms` from the matched `SemanticSearchResult` source-field term values, grouped and deduplicated per record identifier. Existing implementation state: the ILIKE wiring and renderer already exist and pass; this item's delta is the service-side semantic population. **→ SC-8**
+- [ ] 41. **GREEN (**task-card**).** Dispatch `task(..., prompt: "execute green task from test-driven-development")` — implement the minimum change: the service search method populates `matched_terms` for Semantic modes from the matched source-field terms of the semantic search layer's `SemanticSearchResult` results, per-record grouped and deduplicated; FTS mode keeps `matched_terms` as None. **→ SC-8**
 - [ ] 42. **Post-regression (**task-card**).** Dispatch `task(..., prompt: "execute phase-4 task from test-driven-development")` — run regression test patterns after GREEN. **→ SC-8**
-- [ ] 43. **Verify (**task-card**).** Dispatch `task(..., prompt: "execute verify task from verification-before-completion")` — run the integration suite and confirm None for both strategies. **→ SC-8**
-- [ ] 44. **Commit (**direct**).** Orchestrator runs `git add <files> && git commit -m "feat(search): matched_terms stays None for FTS and Semantic modes (SC-8)"`.
+- [ ] 43. **Verify (**task-card**).** Dispatch `task(..., prompt: "execute verify task from verification-before-completion")` — run the integration suite and confirm None for FTS and per-record deduplicated source-field terms for both Semantic strategies. **→ SC-8**
+- [ ] 44. **Commit (**direct**).** Orchestrator runs `git add <files> && git commit -m "feat(search): matched_terms from semantic source-field terms, FTS stays None (SC-8)"`.
 
 #### Phase 2 Completion Block (VbC)
 
-- [ ] Dispatch `task(..., prompt: "execute verify task from verification-before-completion")` — verify SC-5 through SC-8 integration suites pass; confirm the semantic seam construction is intact and no schema change was introduced.
+- [ ] Dispatch `task(..., prompt: "execute verify task from verification-before-completion")` — verify SC-5 through SC-8 integration suites pass; confirm the semantic seam construction is intact, FTS returns None, and Semantic modes populate matched source-field terms per record with no schema change introduced.
 
 **Concern transition:** Leaving the service data layer → entering renderer, styling, and page wiring. Phase 3 depends on Phase 1's span contract (SC-1, SC-3) and Phase 2's matched-terms data (SC-7).
 # Phase 3 — Renderer, Styling, and Page Wiring
@@ -187,24 +187,24 @@ Check your tool list for a tool named `task`.
 
 **Entry Conditions:** Phases 1 and 2 complete with their VbC blocks passed; UI testing standard read; Playwright real-browser environment available; AppTest used for smoke only.
 
-**Exit Conditions:** Renderer renders byte-identically without highlight parameters, wraps supplied spans in `mark.search-token` with escaping preserved, ignores malformed spans, honors diff-token precedence, and the styling meets the measured criteria; Records page threads highlight context into the View-mode render call only with auto-activation and both no-highlight boundaries; all Phase 3 suites pass with archived screenshots where required.
+**Exit Conditions:** Renderer renders markup-identically without highlight parameters (CSS styling blocks excluded from the comparison), wraps supplied spans in `mark.search-token` with escaping preserved, ignores malformed spans, honors diff-token precedence, and the styling meets the measured criteria; Records page threads highlight context into the View-mode render call only with auto-activation, and Semantic Gloss/Semantic All modes highlight their matched source-field terms via the same span computation with the empty-query no-highlight boundary intact; all Phase 3 suites pass with archived screenshots where required.
 
 **Code Path Coverage:** MDF block renderer signature and markup path; renderer CSS block; Records page View-mode render call and mirror construction. Revision-history and import-diff call sites stay untouched via default-off parameters; MDF parsing untouched.
 
 **Cross-Cutting SCs:** R-8 (default-off parameters), R-16 (diff-token precedence + status tint non-interference), R-17 (4.5:1 contrast in both themes), R-13 (teal/cyan tint + bold, computed-distinct), R-20 (ignore-not-clamp), R-19 (Playwright real-browser standard, AppTest smoke-only), R-10 (no new session-state keys, no preference toggle).
 
-**Interface Boundaries:** Renderer highlight parameters are optional with defaults that preserve current output byte-for-byte. Page wiring supplies query, mode, and computed spans only to the View-mode render call — revision-history and diff renders receive no highlight parameters.
+**Interface Boundaries:** Renderer highlight parameters are optional with defaults that preserve current rendered markup (CSS styling blocks excluded from the comparison). Page wiring supplies query, mode, and computed spans only to the View-mode render call — revision-history and diff renders receive no highlight parameters.
 
-**State Transitions:** Highlight context derives from session search state and the search result per render; user switching lexical/semantic modes and clearing the search box activate/deactivate highlighting per the spec's edge-case table; no new session-state keys introduced.
+**State Transitions:** Highlight context derives from session search state and the search result per render; highlighting activates when a query is present in any mode (lexical or semantic) and deactivates when the search box is cleared, per the spec's edge-case table; no new session-state keys introduced.
 
 **Cost frame:** Running the Phase 3 smoke and Playwright suites costs minutes of execution time — markup, escaping, precedence, and styling defects are caught before UI review with archived screenshots as evidence. Skipping costs days-to-weeks — corrupted markup, crashes on malformed spans, or theme-variant contrast defects surface as user complaints that are expensive to reproduce.
 
 ### Step-by-Step
 
-- [ ] 45. **RED (**task-card**).** Dispatch `task(..., prompt: "execute red task from test-driven-development")` — write a failing output-comparison smoke test for SC-9: the renderer has no highlight parameters and any parameterless change would alter output; establish the byte-identity baseline for revision-history and import-diff call sites. **→ SC-9**
-- [ ] 46. **GREEN (**task-card**).** Dispatch `task(..., prompt: "execute green task from test-driven-development")` — add optional default-off highlight span parameters to the MDF block renderer; call sites that do not supply them render byte-identically. **→ SC-9**
+- [ ] 45. **RED (**task-card**).** Dispatch `task(..., prompt: "execute red task from test-driven-development")` — write a failing markup-comparison smoke test for SC-9: the renderer has no highlight parameters and any parameterless change would alter output; establish the markup-identity baseline (CSS styling blocks excluded from the comparison) for revision-history and import-diff call sites. **→ SC-9**
+- [ ] 46. **GREEN (**task-card**).** Dispatch `task(..., prompt: "execute green task from test-driven-development")` — add optional default-off highlight span parameters to the MDF block renderer; call sites that do not supply them render markup-identically (CSS excluded from comparison). **→ SC-9**
 - [ ] 47. **Post-regression (**task-card**).** Dispatch `task(..., prompt: "execute phase-4 task from test-driven-development")` — run regression test patterns after GREEN. **→ SC-9**
-- [ ] 48. **Verify (**task-card**).** Dispatch `task(..., prompt: "execute verify task from verification-before-completion")` — run the smoke tests and output comparison; confirm byte-identity at all untouched call sites. **→ SC-9**
+- [ ] 48. **Verify (**task-card**).** Dispatch `task(..., prompt: "execute verify task from verification-before-completion")` — run the smoke tests and markup comparison; confirm markup-identity at all untouched call sites. **→ SC-9**
 - [ ] 49. **Commit (**direct**).** Orchestrator runs `git add <files> && git commit -m "feat(render): default-off highlight parameters on MDF block renderer (SC-9)"`.
 - [ ] 50. **RED (**task-card**).** Dispatch `task(..., prompt: "execute red task from test-driven-development")` — write failing markup smoke test plus Playwright DOM assertion for SC-10: the renderer emits no `mark.search-token` elements. **→ SC-10**
 - [ ] 51. **GREEN (**task-card**).** Dispatch `task(..., prompt: "execute green task from test-driven-development")` — wrap each supplied span's covered text range in `mark.search-token` elements with output escaping preserved. **→ SC-10**
@@ -256,11 +256,11 @@ Check your tool list for a tool named `task`.
 - [ ] 97. **Post-regression (**task-card**).** Dispatch `task(..., prompt: "execute phase-4 task from test-driven-development")` — run regression test patterns after GREEN. **→ SC-19**
 - [ ] 98. **Verify (**task-card**).** Dispatch `task(..., prompt: "execute verify task from verification-before-completion")` — run Playwright behavioral assertions on empty-query searches with DOM assertions. **→ SC-19**
 - [ ] 99. **Commit (**direct**).** Orchestrator runs `git add <files> && git commit -m "feat(page): empty-query no-highlight boundary (SC-19)"`.
-- [ ] 100. **RED (**task-card**).** Dispatch `task(..., prompt: "execute red task from test-driven-development")` — write a failing Playwright behavioral test for SC-20: Semantic Gloss or Semantic All renders contain search-token marks. **→ SC-20**
-- [ ] 101. **GREEN (**task-card**).** Dispatch `task(..., prompt: "execute green task from test-driven-development")` — ensure Semantic Gloss and Semantic All modes never receive highlight parameters, so no search-token marks appear even with an active query. **→ SC-20**
+- [ ] 100. **RED (**task-card**).** Dispatch `task(..., prompt: "execute red task from test-driven-development")` — rework the existing SC-20 DOM tests (`test/ui/test_records_semantic_no_highlight_dom_sc20.py` and its SC-22 counterpart `test/ui/test_records_semantic_switch_no_highlight_dom_sc22.py`): the semantic no-highlight assertions flip to presence assertions — Semantic Gloss and Semantic All renders contain `mark.search-token` marks whose text contains the matched source-field term; keep the empty-query absence assertions. Existing implementation state: the renderer and View-mode wiring already exist and pass for lexical modes; this item's delta is removing the `is_semantic_mode` suppression in `src/frontend/pages/records.py` and computing spans for semantic modes from `matched_terms` via `compute_term_spans`. **→ SC-20**
+- [ ] 101. **GREEN (**task-card**).** Dispatch `task(..., prompt: "execute green task from test-driven-development")` — implement the minimum change: remove the semantic-mode suppression in the Records page so Semantic Gloss and Semantic All receive highlight context like the lexical modes; compute spans from the per-record `matched_terms` (semantic source-field terms) using the same `compute_term_spans` verbatim whole-term computation used for stored terms — no approximate or fabricated spans. **→ SC-20**
 - [ ] 102. **Post-regression (**task-card**).** Dispatch `task(..., prompt: "execute phase-4 task from test-driven-development")` — run regression test patterns after GREEN. **→ SC-20**
-- [ ] 103. **Verify (**task-card**).** Dispatch `task(..., prompt: "execute verify task from verification-before-completion")` — run Playwright behavioral assertions across both semantic modes. **→ SC-20**
-- [ ] 104. **Commit (**direct**).** Orchestrator runs `git add <files> && git commit -m "feat(page): semantic-mode no-highlight boundary (SC-20)"`.
+- [ ] 103. **Verify (**task-card**).** Dispatch `task(..., prompt: "execute verify task from verification-before-completion")` — run the reworked Playwright DOM tests across both semantic modes; confirm marks contain the matched source-field term and empty-query absence still holds. **→ SC-20**
+- [ ] 104. **Commit (**direct**).** Orchestrator runs `git add <files> && git commit -m "feat(page): semantic-mode matched source-field term highlighting (SC-20)"`.
 
 #### Phase 3 Completion Block (VbC)
 
@@ -279,7 +279,7 @@ Check your tool list for a tool named `task`.
 
 **Entry Conditions:** Phase 3 complete with its VbC block passed; `docs/development/ui_testing_standard.md` read; live local app runnable on port 8501; local test database synced.
 
-**Exit Conditions:** Gated E2E suite exists and, when the gate is enabled, verifies the lexical-mode highlight flow (SC-21), semantic-mode absence (SC-22), and empty-query absence (SC-23) with screenshots archived; any gate-skipped run is recorded as skipped by design and never silently treated as a pass.
+**Exit Conditions:** Gated E2E suite exists and, when the gate is enabled, verifies the lexical-mode highlight flow (SC-21), semantic-mode matched-term presence with term-containment assertion and absence only when no term matches or the query is empty (SC-22), and empty-query absence (SC-23) with screenshots archived; any gate-skipped run is recorded as skipped by design and never silently treated as a pass.
 
 **Code Path Coverage:** Full user path from search submission through rendered MDF block on the live app; no new production code paths — this phase verifies Phases 1-3 deliverables as users experience them.
 
@@ -287,7 +287,7 @@ Check your tool list for a tool named `task`.
 
 **Interface Boundaries:** Tests interact only through the app's user-visible surface (search box, mode selector, rendered block DOM); no direct database or service-layer assertions.
 
-**State Transitions:** Fresh session state for SC-21 (auto-activation without prior configuration); query cleared for SC-23; mode switched to Semantic Gloss and Semantic All for SC-22 — each transition is exercised exactly as the spec's edge-case table defines.
+**State Transitions:** Fresh session state for SC-21 (auto-activation without prior configuration); query cleared for SC-23; mode switched to Semantic Gloss and Semantic All for SC-22 with an active query (presence with term containment) and separately with no term matches (absence) — each transition is exercised exactly as the spec's edge-case table defines.
 
 **Cost frame:** Running the gated E2E when enabled costs minutes of execution time — the full search-to-highlight flow is verified as users experience it. Skipping the gate is legitimate; silently treating a gate-skip as a pass costs the entire verification chain its meaning — every upstream behavioral claim degrades to structural theater with discovery latency measured in production incidents.
 
@@ -298,11 +298,11 @@ Check your tool list for a tool named `task`.
 - [ ] 107. **Post-regression (**task-card**).** Dispatch `task(..., prompt: "execute phase-4 task from test-driven-development")` — run regression test patterns after GREEN. **→ SC-21**
 - [ ] 108. **Verify (**task-card**).** Dispatch `task(..., prompt: "execute verify task from verification-before-completion")` — run the gated suite; record a gate-skipped run as skipped by design, never as a pass; archive screenshots under the issue's artifact directory when executed. **→ SC-21**
 - [ ] 109. **Commit (**direct**).** Orchestrator runs `git add <files> && git commit -m "test(e2e): gated lexical-mode highlight flow verification (SC-21)"`.
-- [ ] 110. **RED (**task-card**).** Dispatch `task(..., prompt: "execute red task from test-driven-development (E2E gating per test/ui/AGENTS.md)")` — write the gated E2E assertion for SC-22 that fails because Semantic modes show highlighting when enabled. **→ SC-22**
-- [ ] 111. **GREEN (**task-card**).** Dispatch `task(..., prompt: "execute green task from test-driven-development (E2E gating per test/ui/AGENTS.md)")` — verify end-to-end on the live local app that Semantic Gloss and Semantic All modes show no search-token marks. **→ SC-22**
+- [ ] 110. **RED (**task-card**).** Dispatch `task(..., prompt: "execute red task from test-driven-development (E2E gating per test/ui/AGENTS.md)")` — rework the gated E2E assertions for SC-22: the semantic no-highlight assertions flip to a term-containment presence assertion — in Semantic Gloss and Semantic All modes with an active query, `mark.search-token` marks appear and their text contains the matched source-field term; absence is asserted only in the no-term-match / empty-query sub-case. Existing implementation state: lexical-mode E2E flow already passes; the delta is the semantic-mode presence path. **→ SC-22**
+- [ ] 111. **GREEN (**task-card**).** Dispatch `task(..., prompt: "execute green task from test-driven-development (E2E gating per test/ui/AGENTS.md)")` — verify end-to-end on the live local app that Semantic Gloss and Semantic All modes with an active query show search-token marks containing the matched source-field term, and that absence holds only when no term matches or the query is empty. **→ SC-22**
 - [ ] 112. **Post-regression (**task-card**).** Dispatch `task(..., prompt: "execute phase-4 task from test-driven-development")` — run regression test patterns after GREEN. **→ SC-22**
-- [ ] 113. **Verify (**task-card**).** Dispatch `task(..., prompt: "execute verify task from verification-before-completion")` — run the gated suite; record a gate-skipped run as skipped by design; archive screenshots when executed. **→ SC-22**
-- [ ] 114. **Commit (**direct**).** Orchestrator runs `git add <files> && git commit -m "test(e2e): gated semantic-mode absence verification (SC-22)"`.
+- [ ] 113. **Verify (**task-card**).** Dispatch `task(..., prompt: "execute verify task from verification-before-completion")` — run the gated suite; record a gate-skipped run as skipped by design; archive screenshots when executed, covering both the presence and no-match/empty sub-cases. **→ SC-22**
+- [ ] 114. **Commit (**direct**).** Orchestrator runs `git add <files> && git commit -m "test(e2e): gated semantic-mode matched-term presence verification (SC-22)"`.
 - [ ] 115. **RED (**task-card**).** Dispatch `task(..., prompt: "execute red task from test-driven-development (E2E gating per test/ui/AGENTS.md)")` — write the gated E2E assertion for SC-23 that fails because an empty query shows highlighting when enabled. **→ SC-23**
 - [ ] 116. **GREEN (**task-card**).** Dispatch `task(..., prompt: "execute green task from test-driven-development (E2E gating per test/ui/AGENTS.md)")` — verify end-to-end on the live local app that an empty query shows no search-token marks. **→ SC-23**
 - [ ] 117. **Post-regression (**task-card**).** Dispatch `task(..., prompt: "execute phase-4 task from test-driven-development")` — run regression test patterns after GREEN. **→ SC-23**
@@ -329,8 +329,8 @@ Check your tool list for a tool named `task`.
 
 - [ ] C1. All 23 SCs verified PASS with behavioral evidence matching their declared evidence type
 - [ ] C2. Every item committed as one atomic RED/GREEN slice with its test
-- [ ] C3. Revision-history and import-diff renderer call sites render byte-identically (SC-9, SC-17)
-- [ ] C4. FTS and Semantic modes return `matched_terms` as None and render no search-token marks (SC-8, SC-20, SC-22)
+- [ ] C3. Revision-history and import-diff renderer call sites render markup-identically, CSS styling blocks excluded from comparison (SC-9, SC-17)
+- [ ] C4. FTS mode returns `matched_terms` as None; Semantic Gloss and Semantic All modes populate `matched_terms` from the matched source-field terms (per-record deduplicated) and render search-token marks containing the matched term, with marks absent only when no term matches or the query is empty (SC-8, SC-20, SC-22)
 - [ ] C5. Empty query produces no search-token marks (SC-19, SC-23)
 - [ ] C6. Search-token styling meets 4.5:1 WCAG 2.1 AA contrast in both themes and is computed-distinct from diff-token marks and status tints (SC-15, SC-16)
 - [ ] C7. Gated E2E suite executed when `SNEA_E2E=1` and live app on port 8501 are present; any gate-skip recorded as skipped by design, never as a pass (SC-21 through SC-23)
@@ -347,4 +347,14 @@ Check your tool list for a tool named `task`.
   event: plan_revised
   plan_file: .issues/1401/plan.md
   revision_source: validate-findings.yaml review + contract gap fix (phase5_variable_added, phase_count_corrected)
+  issue: 1401
+- timestamp: 2026-10-02T21:30:00-04:00
+  event: plan_revised
+  plan_file: .issues/1401/plan.md
+  revision_source: "developer directive — byte-exact tests are fabricated ceremony; SC-9/R-8/C3 wording revised from byte-identically to markup-identically with CSS styling blocks excluded from comparison (root-cause fix so future agents do not cargo-cult byte-exact baselines)"
+  issue: 1401
+- timestamp: 2026-10-03T11:05:00-04:00
+  event: plan_revised
+  plan_file: .issues/1401/plan.md
+  revision_source: "spec revision 2026-10-03 (developer-confirmed) — all search modes highlight. SC-8 revised: Semantic modes populate matched_terms from the matched SemanticSearchResult source-field term, per-record deduplicated; FTS stays None. SC-20 revised: Semantic Gloss/All highlight matched source-field terms via compute_term_spans verbatim find; no-highlight boundary removed. SC-22 revised: E2E semantic presence with term-containment assertion; absence only when no term matches or query empty. Phases 2 (steps 40-44), 3 (steps 100-104), 4 (steps 110-114) and exit criterion C4 regenerated; existing ILIKE wiring and renderer already pass — delta is semantic matched_terms population (service), removal of is_semantic_mode suppression + compute_term_spans for semantic modes (records.py), and rework of test_search_records_matched_terms_none_sc8_red.py, test_records_semantic_no_highlight_dom_sc20.py, test_records_semantic_switch_no_highlight_dom_sc22.py to presence tests keeping empty-query absence. SC numbering unchanged."
   issue: 1401

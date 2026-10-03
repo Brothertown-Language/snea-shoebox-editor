@@ -1,0 +1,55 @@
+engine: tamer
+status: SOLVED_SATISFICING
+problem built: snea-1404-semantic-dispatch-fix
+  objects: 0
+  fluents: 10
+  actions: 10
+  goals:   4
+[96m[1mNOTE: To disable printing of planning engine credits, add this line to your code: `up.shortcuts.get_environment().credits_stream = None`
+[0m[96m  *** Credits ***
+[0m[96m  * In operation mode `OneshotPlanner` at line 523 of `/home/muksihs/git/snea-shoebox-editor/./.opencode/tools/plan`, [0m[96myou are using the following planning engine:
+[0m[96m  * Engine name: Tamer
+  * Developers:  FBK Tamer Development Team
+[0m[96m  * Description: [0m[96mTamer offers the capability to generate a plan for classical, numerical and temporal problems.
+  *              For those kind of problems tamer also offers the possibility of validating a submitted plan.[0m[96m
+[0m[96m
+[0m
+plan length: 10
+
+- [ ] 1. red_sc2()
+- [ ] 2. red_sc1()
+- [ ] 3. red_sc3()
+- [ ] 4. green_sc1()
+- [ ] 5. commit_sc1()
+- [ ] 6. green_sc2()
+- [ ] 7. commit_sc2()
+- [ ] 8. green_sc3()
+- [ ] 9. commit_sc3()
+- [ ] 10. regression_check_sc4()
+
+---
+actions:
+- name: red_sc2
+  parameters: []
+- name: red_sc1
+  parameters: []
+- name: red_sc3
+  parameters: []
+- name: green_sc1
+  parameters: []
+- name: commit_sc1
+  parameters: []
+- name: green_sc2
+  parameters: []
+- name: commit_sc2
+  parameters: []
+- name: green_sc3
+  parameters: []
+- name: commit_sc3
+  parameters: []
+- name: regression_check_sc4
+  parameters: []
+domain: snea-1404-semantic-dispatch-fix
+engine: tamer
+plan_length: 10
+status: SOLVED_SATISFICING

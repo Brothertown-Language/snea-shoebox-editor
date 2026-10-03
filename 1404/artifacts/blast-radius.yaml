@@ -1,0 +1,36 @@
+# Blast radius — issue #1404
+spec: .issues/1404/spec.md
+generated: backfill (retroactive)
+verified_against_live_code: true
+
+affected_files:
+  - path: src/services/linguistic_service.py
+    exists: true
+    symbols:
+      - search_records() (lines ~388-536)
+      - _search_strategies table (lines 80-87) — maps both "Semantic Gloss" and "Semantic All" to _search_semantic
+      - semantic dispatch/consumption block (lines ~454-471: hit unpack + Record.id.in_ filter)
+      - matched_terms semantic loop (lines ~524-532: hit.record_id / hit.term attribute access)
+      - RecordSearchResult dataclass (line 91)
+    change_type: modify
+    rationale: SC-1..SC-3 fix site — normalize tuple/attribute hit shapes, consume seam matched_terms, thread mode.
+
+  - path: src/services/semantic_search_service.py
+    exists: true
+    symbols:
+      - search_semantic(mode="gloss", query="", ...) (line 131) — returns list of (record_id, score) tuples
+      - SemanticSearchResult dataclass (line 59) — results/status/message/matched_terms
+      - matched_terms dict[int, set] (line 178-184) — real per-record matched source-field terms
+    change_type: possibly_none
+    rationale: Contract source of record; no change expected unless mode threading requires signature accommodation.
+
+  - path: test/test_search_records_matched_terms_none_sc8_red.py
+    exists: true
+    change_type: modify
+    rationale: SC-3 — existing SC-8 tests stub attribute-bearing hit shapes, masking the real (record_id, score) tuple contract; must be rewritten against the real seam.
+
+out_of_scope_files:
+  - path: src/pages (Records page / seam wiring)
+    rationale: Production page routes Semantic modes through the seam path; page wiring unchanged by spec scope.
+  - path: src/services/semantic_search_service.py SQL/candidate logic
+    rationale: Seam return contract is treated as the fixed interface; normalization happens in the consumer.

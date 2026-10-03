@@ -4,38 +4,38 @@
 
 ## Intent and Executive Summary
 
-**Problem Statement:** When a search returns records in the Records view, the rendered MDF block gives no indication of which text matched the query, forcing manual scanning of every rendered entry to locate the match. The system SHALL visually highlight matched terms inside the rendered MDF block in View mode for the lexical search modes (Lexeme, Headword, Gloss, FTS).
+**Problem Statement:** When a search returns records in the Records view, the rendered MDF block gives no indication of which text matched the query, forcing manual scanning of every rendered entry to locate the match. The system SHALL visually highlight matched terms inside the rendered MDF block in View mode for all search modes (Lexeme, Headword, Gloss, FTS, Semantic Gloss, Semantic All).
 
 **Root Cause / Motivation:** The search pipeline stops at returning records — no matched-term data flows from the service layer to the renderer, and the renderer has no highlight mechanism for search matches. The existing diagnostics mechanism (`mark.diff-token` spans) proves the markup path is viable, but no search-side span data exists. Highlighting is needed now because search quality verification on real Algonquian corpus data (diacritics, IPA characters, infinity symbols) is a daily user activity and unlocatable matches erode trust in the search modes.
 
-**Approach Chosen:** A three-layer additive design: a new pure span-computation module (stored-term verbatim find plus FTS normalized query-token scan) produces per-line offsets; the service search layer collects matched raw terms per record during the existing paginated query and returns them in an additive optional field; the MDF block renderer accepts default-off highlight parameters and wraps matches in `mark.search-token` elements, with the Records page threading spans into the single View-mode render call.
+**Approach Chosen:** A three-layer additive design: a new pure span-computation module (stored-term verbatim find plus FTS normalized query-token scan) produces per-line offsets; the service search layer collects matched raw terms per record during the existing paginated query (query tokens for FTS, matched source-field terms for the semantic modes via the semantic search layer) and returns them in an additive optional field; the MDF block renderer accepts default-off highlight parameters and wraps matches in `mark.search-token` elements, with the Records page threading spans into the single View-mode render call.
 
 **Alternatives Considered & Why Discarded:**
 - *PostgreSQL `ts_headline` for FTS highlighting* — discarded: the FTS table stores only the tsvector of fully-normalized text, with no raw document and no positions, so `ts_headline` cannot mark raw rendered text (normalized positions refer to a string that is not stored).
 - *Highlighting inside the MDF parser/formatter* — discarded: it would couple presentation state into the read-path parser, touching a surface the scope explicitly excludes, and would leak highlight concerns into revision-history and diff call sites that must stay untouched.
-- *Semantic-mode highlighting via embedding similarity* — discarded by design decision: similarity scores are already the semantic feedback surface, and approximate/fuzzy highlighting is prohibited by the data-integrity mandate.
+- *Semantic-mode highlighting via embedding similarity scores* — discarded by design decision: approximate/fuzzy highlighting is prohibited by the data-integrity mandate; the confirmed design instead anchors semantic highlights on the matched source-field term returned by the semantic search layer (deterministic verbatim span computation), not on similarity scores.
 
 **Key Design Decisions:**
 - *Whole-term granularity over sub-word spans* — tradeoff: simpler, deterministic spans that match user expectation of "the term lit up" at the cost of not pinpointing the exact sub-word character range.
 - *Pure span-computation module separate from the renderer* — tradeoff: one new file and an import of the normalizer into presentation-adjacent code, in exchange for unit-testability without Streamlit or database and an additive-only renderer.
 - *Single normalizer reuse (`generate_sort_lx`) for the FTS scan* — tradeoff: a service-layer dependency in presentation code, in exchange for guaranteed normalization parity between what FTS indexes and what gets highlighted (infinity→oozzz mapping preserved).
-- *Additive optional `matched_terms` field defaulting to None* — tradeoff: a nullable field threading through the result contract, in exchange for zero breakage of existing construction sites and the semantic seam mirror.
+- *Additive optional `matched_terms` field defaulting to None* — tradeoff: a nullable field threading through the result contract, in exchange for zero breakage of existing construction sites and the semantic seam mirror; FTS leaves the field None, while Semantic modes populate it from the matched source-field term of the matched `SemanticSearchEntry` (`SemanticSearchResult` returns record_id, entry_type, term, similarity).
 - *Ignore-not-clamp for malformed spans* — tradeoff: a highlight span whose offsets are invalid is dropped rather than clamped to the line boundary, in exchange for never highlighting text the span did not intend (clamping can fabricate a highlight over unintended characters, violating the data-integrity posture); the render always completes.
 - *Measured styling criteria over quality adjectives* — tradeoff: the spec pins a WCAG 2.1 AA contrast ratio of at least 4.5:1 and computed-color distinctness instead of the unverifiable terms "reasonable contrast" and "visually distinct", in exchange for mechanically verifiable CSS targets in both theme variants.
 - *Diff-token precedence in the coexistence rule* — tradeoff: where a highlight span overlaps a diagnostics diff-token span, the diff-token span wins and the overlapping search-token mark is omitted, in exchange for guaranteed behavioral stability of diagnostics rendering as mandated by R-16.
 
-**User Intent / Original Prompt:** Stakeholder request: search matches should be highlighted in the rendered record so users can see where their search term occurs; brainstorming session confirmed whole-term granularity, teal/cyan styling, lexical-modes-only coverage, View-mode-only application, and no highlight when the search box is empty (design approved; handoff artifacts under `tmp/issue-1401/artifacts/preliminary/`).
+**User Intent / Original Prompt:** Stakeholder request: search matches should be highlighted in the rendered record so users can see where their search term occurs; brainstorming session confirmed whole-term granularity, teal/cyan styling, all-modes coverage (semantic modes anchored on matched source-field terms), View-mode-only application, and no highlight when the search box is empty (design approved; handoff artifacts under `tmp/issue-1401/artifacts/preliminary/`).
 
 ## Not Included
 
-- **Semantic Gloss / Semantic All highlighting** — similarity scores are already rendered as the semantic feedback surface; approximate highlighting is prohibited (data-integrity mandate).
+- **Approximate or fuzzy semantic highlighting** — similarity scores remain the semantic relevance surface; semantic highlighting anchors only on the matched source-field term returned by the semantic search layer, never on similarity-derived approximations (data-integrity mandate).
 - **Edit-mode highlighting** — the Streamlit textarea cannot render rich markup; highlighting there is technically impossible without replacing the editor.
 - **Revision history and import diff views** — their renderer call sites stay untouched via default-off parameters; highlighting there was not requested and would couple diff semantics to search state.
 - **Sub-word / partial-term spans** — developer decision: whole-term granularity only; partial spans add complexity without user value.
 - **Fuzzy or approximate matching** — absent terms degrade to a no-op; fabricating approximate matches violates the data-integrity mandate.
 - **Database schema changes, migrations, new endpoints** — search tables already store raw `term` values verbatim; `fts_entries` is untouched.
 - **`ts_headline` usage** — not viable against stored data (no raw document, no positions).
-- **New session-state keys, preference toggle, caching layer** — highlighting activates automatically with a lexical-mode query; span computation is cheap enough per page render that caching adds state without need.
+- **New session-state keys, preference toggle, caching layer** — highlighting activates automatically with an active-mode query; span computation is cheap enough per page render that caching adds state without need.
 
 ## Success Criteria
 
@@ -48,8 +48,8 @@
 | SC-5 | The service search result container gains an additive optional matched-terms field defaulting to None such that all existing construction sites remain source-compatible. | behavioral | pytest integration execution against the test database with output inspection (field default value, construction-site compatibility) | `src/services/linguistic_service.py` |
 | SC-6 | The page-local mirror container carries the same optional matched-terms field such that semantic seam construction completes without raising. | behavioral | pytest integration execution constructing the mirror container with the new field and output inspection | `src/frontend/pages/records.py` (mirror container) |
 | SC-7 | The service search method collects the deduplicated set of matched raw term values grouped by record identifier for Lexeme, Headword, and Gloss modes within the existing paginated query pass. | behavioral | pytest integration execution against the test database with output inspection (per-mode collection, per-record dedup, bounded to the paginated window) | `src/services/linguistic_service.py` |
-| SC-8 | FTS and Semantic mode searches return the matched-terms field as None. | behavioral | pytest integration execution with output inspection (None for FTS and Semantic strategies) | `src/services/linguistic_service.py` |
-| SC-9 | Every MDF block renderer call site that does not supply the new optional highlight span parameters renders byte-identically to its current output. | behavioral | pytest/AppTest smoke execution plus output comparison confirming the revision-history and import-diff call sites are unchanged | `src/frontend/ui_utils.py` |
+| SC-8 | FTS mode searches return the matched-terms field as None (no raw-term anchor); Semantic mode searches (Semantic Gloss, Semantic All) populate matched-terms from the matched source-field terms of the semantic search layer (`SemanticSearchResult` term values), grouped and deduplicated per record identifier. | behavioral | pytest integration execution with output inspection (None for FTS; per-record deduplicated source-field terms for Semantic strategies) | `src/services/linguistic_service.py` |
+| SC-9 | Every MDF block renderer call site that does not supply the new optional highlight span parameters renders markup-identically to its current output — identical rendered markup for identical inputs, with CSS styling blocks excluded from the comparison (styling is separately governed by SC-14 through SC-16). | behavioral | pytest/AppTest smoke execution plus markup comparison (CSS excluded) confirming the revision-history and import-diff call sites are unchanged | `src/frontend/ui_utils.py` |
 | SC-10 | When highlight spans are supplied, the renderer wraps each span's covered text range in `mark.search-token` elements with output escaping preserved. | behavioral | pytest/AppTest smoke execution for markup structure plus Playwright DOM assertions on rendered output | `src/frontend/ui_utils.py` |
 | SC-11 | Highlight spans that are malformed or out of range (negative offsets, start greater than or equal to end, or end beyond the line length) are ignored by the renderer — dropped without raising — and rendering of all other content is unaffected. | behavioral | pytest/AppTest smoke execution feeding malformed and out-of-range span samples and asserting no exception and no mark for dropped spans | `src/frontend/ui_utils.py` |
 | SC-12 | The renderer applies the defined precedence rule: where a highlight span overlaps a diff-token span, the diff-token span renders unchanged and the overlapping search-token mark is omitted. | behavioral | pytest/AppTest smoke execution plus Playwright DOM assertions with overlapping span samples | `src/frontend/ui_utils.py` |
@@ -60,22 +60,22 @@
 | SC-17 | The Records page supplies highlight context (query, mode, and computed spans) only to the View-mode render call. | behavioral | Playwright real-browser behavioral execution confirming revision-history and diff renders receive no highlight parameters | `src/frontend/pages/records.py`; `docs/development/ui_testing_standard.md` |
 | SC-18 | With a lexical-mode query active, highlighting activates automatically in the rendered block in a fresh session, without any preference toggle or prior configuration. | behavioral | Playwright real-browser behavioral execution across Lexeme, Headword, Gloss, and FTS modes from a fresh session state | `src/frontend/pages/records.py`; `docs/development/ui_testing_standard.md` |
 | SC-19 | With an empty search query, the rendered block contains no search-token marks. | behavioral | Playwright real-browser behavioral execution on empty-query searches with DOM assertions | `src/frontend/pages/records.py`; `docs/development/ui_testing_standard.md` |
-| SC-20 | In Semantic Gloss and Semantic All modes, the rendered block contains no search-token marks even with an active query. | behavioral | Playwright real-browser behavioral execution across both semantic modes with DOM assertions | `src/frontend/pages/records.py`; `docs/development/ui_testing_standard.md` |
+| SC-20 | In Semantic Gloss and Semantic All modes with an active query, the rendered block highlights the matched source-field terms using the same verbatim whole-term span computation (`compute_term_spans`) used for stored terms; no approximate or fabricated spans. | behavioral | Playwright real-browser behavioral execution across both semantic modes with DOM assertions on matched-term marks | `src/frontend/pages/records.py`; `docs/development/ui_testing_standard.md` |
 | SC-21 | The gated end-to-end suite on the live local app verifies that a search in each lexical mode highlights matches in the rendered block. | behavioral | Playwright E2E execution gated by `SNEA_E2E=1` plus live app on port 8501, with screenshots archived under the issue's artifact directory; gate-skipping is by design and never silently treated as a pass | `test/ui/` (Playwright suite); `docs/development/ui_testing_standard.md` |
-| SC-22 | The gated end-to-end suite on the live local app verifies the absence of search-token marks in Semantic modes. | behavioral | Playwright E2E execution gated by `SNEA_E2E=1` plus live app on port 8501; gate-skipping is by design and never silently treated as a pass | `test/ui/` (Playwright suite); `docs/development/ui_testing_standard.md` |
+| SC-22 | The gated end-to-end suite on the live local app verifies that Semantic modes with an active query produce search-token marks containing the matched source-field term; absence of marks is verified only when no term matches or the query is empty. | behavioral | Playwright E2E execution gated by `SNEA_E2E=1` plus live app on port 8501; gate-skipping is by design and never silently treated as a pass | `test/ui/` (Playwright suite); `docs/development/ui_testing_standard.md` |
 | SC-23 | The gated end-to-end suite on the live local app verifies the absence of search-token marks on an empty query. | behavioral | Playwright E2E execution gated by `SNEA_E2E=1` plus live app on port 8501; gate-skipping is by design and never silently treated as a pass | `test/ui/` (Playwright suite); `docs/development/ui_testing_standard.md` |
 
 ## Requirements
 
-R-1. The system SHALL visually highlight matched terms inside the rendered MDF block in Records View mode when a search query is active in a lexical mode.
+R-1. The system SHALL visually highlight matched terms inside the rendered MDF block in Records View mode when a search query is active in any search mode.
 R-2. The system SHALL apply highlighting at whole-term granularity: any term containing a match SHALL highlight in full, never as a sub-word span.
-R-3. The system SHALL apply highlighting in the Lexeme, Headword, Gloss, and FTS modes and SHALL NOT apply highlighting in the Semantic Gloss or Semantic All modes.
+R-3. The system SHALL apply highlighting in all search modes: Lexeme, Headword, and Gloss via stored raw-term verbatim find; FTS via query-token normalized scan; and Semantic Gloss and Semantic All via the matched source-field term returned by the semantic search layer (`SemanticSearchEntry`/`SemanticSearchResult`), anchored with the same whole-term verbatim span computation used for stored terms.
 R-4. The system SHALL locate stored raw terms verbatim in rendered text for ILIKE modes (Lexeme, Headword, Gloss) using a plain substring find of the whole term string.
 R-5. The system SHALL, for FTS mode, normalize the query tokens the same way the FTS search strategy does and perform a Unicode-aware normalized scan of rendered lines, honoring prefix semantics for `:*` and multi-token queries.
 R-6. The system SHALL degrade gracefully when a matched term cannot be located in rendered text: it SHALL yield no highlight span for that term and SHALL NOT use fuzzy or approximate matching.
 R-7. The system SHALL expose matched terms through an additive optional field on the service search result container that defaults to None, and the page-local mirror container SHALL gain the same optional field so the semantic seam construction remains intact.
-R-8. The system SHALL expose highlight rendering through optional default-off parameters on the MDF block renderer, leaving the revision-history and import-diff call sites byte-identical without edits.
-R-9. The system SHALL collect matched terms inside the service search method after strategy dispatch, so all ILIKE modes share one implementation and semantic strategies remain untouched.
+R-8. The system SHALL expose highlight rendering through optional default-off parameters on the MDF block renderer, leaving the revision-history and import-diff call sites markup-identical (CSS styling blocks excluded from the comparison) without edits.
+R-9. The system SHALL collect matched terms inside the service search method after strategy dispatch, so all ILIKE modes share one implementation; FTS SHALL leave the field as None, and semantic strategies SHALL populate matched terms from their matched source-field entries (`SemanticSearchEntry` term values).
 R-10. The Records page SHALL thread search context (query, mode, matched-term spans) from session state and the search result into the View-mode render call only, introducing no new session-state keys and no preference toggle.
 R-11. The FTS span scan SHALL reuse the service normalization function as the single normalizer; a second normalizer implementation SHALL NOT be introduced.
 R-12. Span computation SHALL be implemented as pure helpers, testable without Streamlit or database dependencies.
@@ -139,18 +139,18 @@ R-20. The renderer SHALL ignore highlight spans that are malformed or out of ran
 - verify: run the service integration suite; confirm the collected map matches the defined contract.
 - commit: service collection logic plus integration tests.
 
-### Item 8 (SC-8): None for FTS and Semantic modes
+### Item 8 (SC-8): FTS None; Semantic matched source-field terms
 
-- RED: pytest integration test that fails because the FTS and Semantic strategies do not leave the matched-terms field as None.
-- GREEN: ensure FTS and Semantic mode searches return the matched-terms field as None.
-- verify: run the service integration suite; confirm None for both strategies.
-- commit: strategy-level guard plus integration tests.
+- RED: pytest integration test that fails because the FTS strategy does not leave the matched-terms field as None and the Semantic strategies do not populate it with matched source-field terms.
+- GREEN: FTS leaves matched-terms as None; Semantic Gloss and Semantic All populate matched-terms from `SemanticSearchResult` term values (the matched source-field term of the matched `SemanticSearchEntry`), grouped and deduplicated per record identifier.
+- verify: run the service integration suite; confirm None for FTS and per-record deduplicated source-field terms for both semantic strategies.
+- commit: strategy-level guards plus integration tests.
 
-### Item 9 (SC-9): Default-off highlight parameters — byte-identical default rendering
+### Item 9 (SC-9): Default-off highlight parameters — markup-identical default rendering
 
-- RED: output-comparison smoke test that fails because the renderer has no highlight parameters and any parameterless change would alter output.
-- GREEN: add optional default-off highlight span parameters to the MDF block renderer; call sites that do not supply them render byte-identically.
-- verify: run the smoke tests and output comparison; confirm the revision-history and import-diff call sites render byte-identically.
+- RED: markup-comparison smoke test that fails because the renderer has no highlight parameters and any parameterless change would alter output. CSS styling blocks are excluded from the comparison.
+- GREEN: add optional default-off highlight span parameters to the MDF block renderer; call sites that do not supply them render markup-identically.
+- verify: run the smoke tests and markup comparison; confirm the revision-history and import-diff call sites render markup-identically.
 - commit: renderer signature change plus comparison tests.
 
 ### Item 10 (SC-10): Search-token markup wrapping with escaping preserved
@@ -223,12 +223,12 @@ R-20. The renderer SHALL ignore highlight spans that are malformed or out of ran
 - verify: run Playwright behavioral assertions on empty-query searches.
 - commit: boundary wiring plus behavioral tests.
 
-### Item 20 (SC-20): Semantic-mode no-highlight boundary
+### Item 20 (SC-20): Semantic-mode source-field-term highlighting
 
-- RED: Playwright behavioral test that fails because Semantic Gloss or Semantic All renders contain search-token marks.
-- GREEN: ensure Semantic Gloss and Semantic All modes never receive highlight parameters, so no search-token marks appear even with an active query.
+- RED: Playwright behavioral test that fails because Semantic Gloss or Semantic All renders do not highlight the matched source-field terms.
+- GREEN: thread the semantic matched source-field terms into the View-mode render and highlight them with the same verbatim whole-term span computation used for stored terms; never approximate or fabricate spans.
 - verify: run Playwright behavioral assertions across both semantic modes.
-- commit: mode guard plus behavioral tests.
+- commit: semantic wiring plus behavioral tests.
 
 ### Item 21 (SC-21): Gated E2E — lexical-mode highlight flow
 
@@ -237,10 +237,10 @@ R-20. The renderer SHALL ignore highlight spans that are malformed or out of ran
 - verify: run the gated suite; a gate-skipped run is recorded as skipped by design, never as a pass.
 - commit: E2E suite plus archived screenshots when executed.
 
-### Item 22 (SC-22): Gated E2E — semantic-mode absence
+### Item 22 (SC-22): Gated E2E — semantic-mode matched-term presence
 
-- RED: gated E2E assertion that fails because Semantic modes show highlighting when enabled.
-- GREEN: verify end-to-end on the live local app that Semantic modes show no search-token marks.
+- RED: gated E2E assertion that fails because Semantic modes do not show matched-term highlighting when enabled.
+- GREEN: verify end-to-end on the live local app that Semantic modes with an active query show search-token marks containing the matched source-field term, and that no marks appear when no term matches or the query is empty.
 - verify: run the gated suite; a gate-skipped run is recorded as skipped by design, never as a pass.
 - commit: E2E assertions plus archived screenshots when executed.
 
@@ -269,7 +269,7 @@ R-20. The renderer SHALL ignore highlight spans that are malformed or out of ran
 |-------------|-------|----------|
 | R-1 | SC-10, SC-18 | Phase 3 |
 | R-2 | SC-1, SC-3 | Phase 1 |
-| R-3 | SC-8, SC-18, SC-20, SC-21 | Phase 2, Phase 3, Phase 4 |
+| R-3 | SC-8, SC-18, SC-20, SC-21, SC-22 | Phase 2, Phase 3, Phase 4 |
 | R-4 | SC-1 | Phase 1 |
 | R-5 | SC-3 | Phase 1 |
 | R-6 | SC-2, SC-4, SC-11 | Phase 1, Phase 3 |
@@ -320,8 +320,8 @@ Cost is measured in defect-discovery-latency, not tool calls. Correctness is the
 - SC-5: Running the container-field integration suite costs minutes of execution time — a broken additive field is caught at the gate. Skipping costs hours-to-days — a TypeError in an existing construction site surfaces only when a user opens search, requiring data-integrity investigation.
 - SC-6: Running the mirror-construction integration suite costs minutes of execution time — a broken semantic seam is caught at the gate. Skipping costs data-integrity investigation when semantic search raises on the new field.
 - SC-7: Running the collection integration suite costs minutes of execution time — a collection or dedup defect is caught before UI wiring. Skipping costs days — a silently fabricated or missing matched-terms map propagates wrong highlights into the renderer.
-- SC-8: Running the mode-guard integration suite costs minutes of execution time — a mode leak is caught at the gate. Skipping ships fabricated matches into FTS/Semantic results — a data-integrity violation surfacing as wrong highlighting in the excluded modes.
-- SC-9: Running the byte-identity smoke suite costs minutes of execution time — a rendering regression is caught before UI review. Skipping costs days — altered diagnostics rendering ships to users, and the regression hunt spans renderer call sites that were supposed to stay byte-identical.
+- SC-8: Running the strategy-contract integration suite costs minutes of execution time — a mode-contract defect (an FTS leak into matched-terms, or missing or duplicated semantic source-field terms) is caught at the gate. Skipping ships wrong or missing semantic anchors — highlights that disagree with the semantic search layer's matched terms, a data-integrity violation surfacing as wrong highlighting.
+- SC-9: Running the markup-identity smoke suite costs minutes of execution time — a rendering regression is caught before UI review. Skipping costs days — altered diagnostics rendering ships to users, and the regression hunt spans renderer call sites that were supposed to stay markup-identical.
 - SC-10: Running the markup smoke plus Playwright DOM assertions costs minutes of execution time — markup or escaping defects are caught before UI review. Skipping costs days — corrupted markup on matched text ships to users.
 - SC-11: Running the malformed-span smoke suite costs minutes of execution time — a crash defect is caught before UI review. Skipping costs days — a span defect crashes the record view in production.
 - SC-12: Running the precedence-rule assertions costs minutes of execution time — a coexistence defect is caught before UI review. Skipping costs days of regression hunting in diagnostics rendering that was supposed to stay stable.
@@ -332,21 +332,21 @@ Cost is measured in defect-discovery-latency, not tool calls. Correctness is the
 - SC-17: Running the View-mode-only behavioral suite costs minutes of execution time — a wrong-call-site wiring defect is caught as behavior. Skipping costs days-to-weeks — highlight appears in revision history or diff views where it was explicitly excluded.
 - SC-18: Running the auto-activation behavioral suite costs minutes of execution time — an activation defect is caught as behavior. Skipping costs weeks — dead highlighting ships, eroding trust in the search modes.
 - SC-19: Running the empty-query behavioral suite costs minutes of execution time — a boundary leak is caught as behavior. Skipping costs days — stray highlights appear on empty searches.
-- SC-20: Running the semantic-mode behavioral suite costs minutes of execution time — a mode leak is caught as behavior. Skipping costs weeks — highlight appears in the mode where it was explicitly excluded, and users lose trust in the modes that were supposed to remain untouched.
+- SC-20: Running the semantic-mode behavioral suite costs minutes of execution time — a semantic anchoring defect is caught as behavior. Skipping costs weeks — semantic highlights disagree with the matched source-field term or fail to appear, and users lose trust in semantic search feedback.
 - SC-21: Running the gated E2E when enabled costs minutes of execution time — the full search-to-highlight flow is verified as users experience it. Skipping the gate is legitimate; silently treating a gate-skip as a pass costs the entire verification chain its meaning — every upstream behavioral claim degrades to structural theater with discovery latency measured in production incidents.
-- SC-22: Running the gated semantic-absence E2E when enabled costs minutes of execution time — semantic-mode absence is verified as users experience it. Skipping the gate is legitimate; silently treating a gate-skip as a pass degrades every upstream behavioral claim to structural theater.
+- SC-22: Running the gated semantic-presence E2E when enabled costs minutes of execution time — semantic matched-term highlighting and its no-match/empty-query absence boundary are verified as users experience it. Skipping the gate is legitimate; silently treating a gate-skip as a pass degrades every upstream behavioral claim to structural theater.
 - SC-23: Running the gated empty-query-absence E2E when enabled costs minutes of execution time — the empty-query boundary is verified as users experience it. Skipping the gate is legitimate; silently treating a gate-skip as a pass degrades every upstream behavioral claim to structural theater.
 
 ## Edge Cases
 
 **Input boundaries:**
-- Condition: empty search query. Expected behavior: no highlight parameters are threaded and rendering is identical to today. Resolution: the page computes spans only when a lexical-mode query is present.
+- Condition: empty search query. Expected behavior: no highlight parameters are threaded and rendering is identical to today. Resolution: the page computes spans only when a query is present in the active mode.
 - Condition: empty term list or empty rendered line. Expected behavior: the span helpers return empty span lists. Resolution: empty input short-circuits to a no-op.
 - Condition: a stored term longer than the rendered line or containing line-wrap artifacts. Expected behavior: no span is emitted for that term. Resolution: verbatim find simply does not match; no approximation is attempted.
 - Condition: FTS query containing only tsquery-unsafe characters. Expected behavior: no tokens survive cleaning and no spans are emitted. Resolution: mirrors the FTS strategy's own token cleaning, producing a consistent no-op.
 
 **State transitions:**
-- Condition: user switches between lexical and semantic modes with a query active. Expected behavior: highlight parameters appear for lexical modes and disappear for semantic modes. Resolution: mode is part of the threaded context; semantic modes never receive spans.
+- Condition: user switches between modes with a query active. Expected behavior: highlight parameters appear in every mode — lexical modes from stored terms or query tokens, semantic modes from the matched source-field term — and disappear when the query is empty. Resolution: mode is part of the threaded context; spans are anchored only on matched terms returned by the active mode's search layer, never fabricated.
 - Condition: user clears the search box. Expected behavior: highlighting deactivates entirely. Resolution: the empty-query boundary takes precedence.
 - Condition: user paginates through results. Expected behavior: spans are recomputed per rendered page from the per-record matched terms. Resolution: matched-term collection is bounded to the paginated query window; nothing is cached across pages.
 
@@ -367,5 +367,16 @@ Cost is measured in defect-discovery-latency, not tool calls. Correctness is the
 |------|--------|--------|---------------|
 | 2026-10-02 | Initial spec draft | — | spec-creation pipeline |
 | 2026-10-02 | Split all 7 compound SCs into 23 atomic single-deliverable SCs (1:1 with plan items); fixed SC-4's "clamps or ignores" disjunction to the single ignore strategy (new R-20); replaced SC-5 subjective contrast language with the WCAG 2.1 AA 4.5:1 threshold and a computed-color distinctness criterion; collapsed R-7 "(or tolerate its absence)" to the single mirror-contract path; stated the coexistence/precedence rule content explicitly in R-16; updated Items, Traceability, Cost Frame, and Edge Cases to match | Validation findings: aggregate FAIL on 7 of 25 checks in two clusters — decomposition (compound-sc-detection, decomposition-atomicity, decomposition-single-deliverable, decomposition-binary-verifiability) and determinism/ambiguity (determinism, 1-implementability, 3-completeness, 5-testability) — with the validator's remediation directives | spec-creation validation pipeline (orchestrator-dispatched revision per validator remediation directives) |
+| 2026-10-03 | Developer-confirmed revision: ALL search modes produce highlighting. SC-8 revised (FTS leaves matched_terms as None; Semantic modes now populate matched_terms from the matched source-field terms, per-record deduplicated); SC-20 revised (Semantic Gloss and Semantic All highlight the matched source-field terms in the rendered block — never-highlight boundary removed); SC-22 revised (E2E semantic presence: search-token marks contain the matched term; absence boundary only when no term matches or query is empty); R-1, R-3 and R-9 revised to all-modes scope; Problem Statement, Approach, Alternatives, Design Decisions, Not Included, Items 8/20/22, Traceability (R-3 row), Cost Frame (SC-8/20/22) and Edge Cases updated. SC numbering unchanged; all other SCs unchanged | Developer directive (2026-10-03): the spec-creation pipeline missed an explicit prior discussion; confirmed intent is all-modes highlighting anchored on the matched source-field term via the semantic search layer | Developer (Michael Conrad), 2026-10-03 |
+
+## Revision Note — 2026-10-03
+
+**Source of this revision:** developer-confirmed directive. The spec-creation pipeline missed an explicit prior discussion between developer and agent; the confirmed intent is that **ALL search modes produce highlighting** — not only the lexical ones.
+
+**What changed in one paragraph:** The semantic modes (Semantic Gloss, Semantic All) now highlight using the **matched source-field term** from the semantic search layer. `SemanticSearchEntry` stores (record_id, entry_type 'lx'/'va'/'ge'/etc., term, embedding) and `SemanticSearchResult` returns (record_id, entry_type, term, similarity). The matched term is the highlight anchor, applied through the **same verbatim whole-term span computation (`compute_term_spans`) used for stored terms** — no similarity-based or approximate highlighting, preserving the data-integrity mandate.
+
+**Revised items:** SC-8 (FTS keeps matched_terms as None; Semantic modes populate it per-record, deduplicated), SC-20 (semantic modes highlight the matched source-field terms in the rendered block), SC-22 (E2E semantic presence; absence boundary only when no term matches or query is empty), R-1/R-3/R-9 (all-modes scope), plus supporting updates in Problem Statement, Approach, Alternatives, Key Design Decisions, Not Included, Items 8/20/22, Traceability, Cost Frame and Edge Cases.
+
+**Unchanged:** SC numbering (SC-1 through SC-23) and every other success criterion, requirement and item.
 
 *Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)*

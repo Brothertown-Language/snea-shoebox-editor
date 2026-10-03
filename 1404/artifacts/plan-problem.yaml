@@ -1,0 +1,58 @@
+# Planning problem — issue #1404
+# Derived from structure.yaml phase DAG: P1 (SC-1..SC-3 per-SC RED/GREEN/COMMIT) → P2 (SC-4 regression check)
+domain: snea-1404-semantic-dispatch-fix
+
+fluents:
+  - name: sc1_red
+  - name: sc1_green
+  - name: sc1_committed
+  - name: sc2_red
+  - name: sc2_green
+  - name: sc2_committed
+  - name: sc3_red
+  - name: sc3_green
+  - name: sc3_committed
+  - name: sc4_checked
+
+actions:
+  - name: red_sc1
+    preconditions: []
+    effects: [sc1_red]
+  - name: green_sc1
+    preconditions: [sc1_red]
+    effects: [sc1_green]
+  - name: commit_sc1
+    preconditions: [sc1_green]
+    effects: [sc1_committed]
+
+  - name: red_sc2
+    preconditions: []
+    effects: [sc2_red]
+  - name: green_sc2
+    preconditions: [sc2_red, sc1_committed]
+    effects: [sc2_green]
+  - name: commit_sc2
+    preconditions: [sc2_green]
+    effects: [sc2_committed]
+
+  - name: red_sc3
+    preconditions: []
+    effects: [sc3_red]
+  - name: green_sc3
+    preconditions: [sc3_red, sc1_committed, sc2_committed]
+    effects: [sc3_green]
+  - name: commit_sc3
+    preconditions: [sc3_green]
+    effects: [sc3_committed]
+
+  - name: regression_check_sc4
+    preconditions: [sc1_committed, sc2_committed, sc3_committed]
+    effects: [sc4_checked]
+
+init: []
+
+goals:
+  - sc1_committed
+  - sc2_committed
+  - sc3_committed
+  - sc4_checked

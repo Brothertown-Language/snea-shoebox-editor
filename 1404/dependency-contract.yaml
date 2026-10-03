@@ -1,0 +1,34 @@
+# Dependency contract — issue #1404
+# dependency_contract block extracted as-is from interface-compatibility.yaml;
+# variables/preconditions/postconditions/invariants added for tools/solve + tools/plan.
+spec: .issues/1404/spec.md
+generated: 2026-10-03
+
+variables:
+  sc1_committed: {type: bool}
+  sc2_committed: {type: bool}
+  sc3_committed: {type: bool}
+  sc4_checked: {type: bool}
+
+preconditions:
+  - "z3.Or(sc4_checked, z3.Or(z3.Not(sc4_checked), sc1_committed))"
+
+postconditions:
+  - "z3.And(sc1_committed, sc2_committed, sc3_committed, sc4_checked)"
+
+invariants:
+  - "z3.Implies(sc4_checked, z3.And(sc1_committed, sc2_committed, sc3_committed))"
+  - "z3.Implies(sc3_committed, z3.And(sc1_committed, sc2_committed))"
+
+dependency_contract:
+  - source: search_semantic (seam)
+    target: LinguisticService.search_records
+    dependency_type: function-call
+    signature: search_semantic(mode="gloss", query="", threshold=None, source_id=None, limit=None) -> SemanticSearchResult
+    constraints:
+      - mode is the FIRST positional parameter — positional strategy(query, search_term) invocation binds search_term into mode (latent contract break)
+      - mode must be "gloss" for Semantic Gloss, "all" for Semantic All
+      - SemanticSearchResult.results is list[tuple[int, float]] (NOT attribute-bearing objects)
+      - SemanticSearchResult.matched_terms is dict[int, set[str]] or None (None only on early-return outcomes)
+      - empty-query / no-embeddings / below-floor outcomes return results=[] with non-"ok" status — consumer must handle empty results without attribute access
+    consumers_of_seam: [search_records semantic branch, page-local mirror container (production route — unchanged)]

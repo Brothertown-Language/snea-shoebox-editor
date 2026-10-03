@@ -1,0 +1,87 @@
+# Structure — issue #1404
+spec: .issues/1404/spec.md
+generated: 2026-10-03
+
+phases:
+  - id: P1
+    name: semantic-dispatch-fix-and-real-shape-tests
+    scs: [SC-1, SC-2, SC-3]
+    rationale: >
+      SC-1 and SC-2 share one code-path concern (search_records semantic dispatch:
+      mode threading, hit-shape normalization, matched_terms consumption) and SC-3
+      rewrites the regression tests against the real seam contract — same files
+      (src/services/linguistic_service.py, test/test_search_records_matched_terms_none_sc8_red.py),
+      same concern boundary. Each SC keeps its own RED/GREEN/verify/commit cycle
+      (per-SC decomposition); no batching across SCs.
+    items:
+      - sc: SC-1
+        description: >
+          search_records(search_mode='Semantic Gloss') does not raise; matched_terms
+          populated from the seam's real per-record matched terms. RED: live-path
+          regression test against real search_semantic tuple contract fails. GREEN:
+          thread mode='gloss' explicitly into search_semantic, normalize hit shapes
+          ((record_id, score) tuples AND attribute-bearing hits), consume seam
+          matched_terms dict bounded to returned page.
+      - sc: SC-2
+        description: >
+          Same dispatch fix for search_mode='Semantic All' (mode='all'); RED test
+          exercising the real 'all' contract fails before the shared-mode fix lands.
+      - sc: SC-3
+        description: >
+          Rewrite SC-8 regression tests (test/test_search_records_matched_terms_none_sc8_red.py)
+          against REAL search_semantic hit shapes for both modes — only DB
+          session/encoder patched, no _search_strategies shape stubs.
+    skill_task_selection:
+      red: "task(..., prompt: \"execute red task from test-driven-development\")"
+      green: "task(..., prompt: \"execute green task from test-driven-development\")"
+      verify: "task(..., prompt: \"execute verify task from verification-before-completion\")"
+      commit: "(orchestrator) git add <files> && git commit — commit-inline, no dispatch"
+
+  - id: P2
+    name: no-regression-check
+    scs: [SC-4]
+    rationale: >
+      SC-4 (no regression in existing suites) is a whole-suite verification concern
+      that depends on all P1 changes being committed.
+    items:
+      - sc: SC-4
+        description: >
+          Run existing test suites (uv run pytest test/) after P1; zero failures.
+          RED-equivalent: post-regression pattern run; verify + commit of any
+          incidental fixes required to keep suites green.
+    skill_task_selection:
+      post-regression: "task(..., prompt: \"execute phase-4 task from test-driven-development\")"
+      verify: "task(..., prompt: \"execute verify task from verification-before-completion\")"
+      commit: "(orchestrator) commit-inline"
+
+dependency_dag:
+  edges:
+    - from: P1
+      to: P2
+      reason: SC-4 regression check requires P1's SC-1..SC-3 changes committed first
+  sc_dependencies:
+    - sc: SC-2
+      depends_on: []   # shares the dispatch-fix code path with SC-1 but no output dependency
+    - sc: SC-3
+      depends_on: [SC-1, SC-2]  # rewritten real-shape tests validate the fixed dispatch
+    - sc: SC-4
+      depends_on: [SC-1, SC-2, SC-3]
+
+triplet_colocation:
+  SC-1: {phase: P1, red: P1, green: P1, commit: P1, ok: true}
+  SC-2: {phase: P1, red: P1, green: P1, commit: P1, ok: true}
+  SC-3: {phase: P1, red: P1, green: P1, commit: P1, ok: true}
+  SC-4: {phase: P2, red: P2, green: P2, commit: P2, ok: true}
+
+cross_phase_dependency_check:
+  ok: true
+  note: >
+    No RED test in any phase depends on SC output from a later phase. P2's SC-4 is a
+    regression check over completed P1 output — a forward dependency, which is valid.
+    SC-3 RED tests exercise the real seam contract and fail before SC-1/SC-2 GREEN
+    lands; all three live in the same phase.
+
+notes:
+  - sc-summary.yaml absent from artifacts; SC list and definitions taken from
+    analysis-summary.yaml (success_criteria: [SC-1, SC-2, SC-3, SC-4]) and spec.md
+    "Revised success criteria".
