@@ -245,7 +245,7 @@ def _click_search(page: Page):
 
 def _fill_search_input(page: Page, query: str):
     """Type a query into the sidebar search text input (select + fill)."""
-    inp = page.locator('[data-testid="stSidebar"] input[aria-label="Enter text..."]').first
+    inp = page.locator('[data-testid="stSidebar"] input[aria-label="Search terms..."]').first
     inp.wait_for(state="visible", timeout=30_000)
     inp.click()
     inp.fill("")
