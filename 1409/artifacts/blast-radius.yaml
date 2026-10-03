@@ -1,0 +1,33 @@
+# Analytical Artifact: Blast Radius — Issue #1409
+issue: 1409
+generated: 2026-10-03
+source: .issues/1409/spec.md
+
+affected_files:
+  - path: src/frontend/pages/records.py
+    role: primary
+    region: widget instantiation block (lines ~408-453: pre-instantiation session-state seeding, redundant re-sync writes, on_change callbacks, st.slider / st.number_input with explicit value=)
+    verified: true
+  - path: test/ui/test_sc9_ui_threshold_default_red.py
+    role: test
+    region: existing SC-9 fresh-default / SC-2 round-trip Playwright tests; fixture reference for new saved-preference test
+    verified: true
+  - path: docs/development/ui_testing_standard.md
+    role: doc-requirement
+    region: Playwright standard of record for UI evidence
+    verified: true
+  - path: test/ (pytest suite)
+    role: verification-surface
+    region: SC-4 full-suite regression gate (`uv run pytest test/`)
+    verified: true
+
+dependencies_untouched:
+  - "#1385 _validate_threshold guard (merged) — semantics preserved, R-3"
+  - "#1400 CALIBRATED_FLOOR 0.93 backing-value contract (merged) — preserved, R-2"
+  - PreferenceService persistence layer — verified correct and unaffected (spec alternative (c) rejected)
+
+out_of_scope:
+  - Preference service / persistence layer
+  - CALIBRATED_FLOOR constant
+  - Other frontend pages / other widget keys (grep verified: no other src/ references to semantic_threshold_slider or semantic_threshold_number)
+  - Unicode/linguistic text processing

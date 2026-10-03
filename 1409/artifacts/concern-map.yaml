@@ -1,0 +1,41 @@
+# Analytical Artifact: Concern Map — Issue #1409
+issue: 1409
+generated: 2026-10-03
+source: .issues/1409/spec.md
+
+concern_groups:
+  - concern: widget-instantiation-mechanics
+    description: Single-source-of-value restructure — seed widget keys once at/before first instantiation, remove explicit value= from st.slider/st.number_input, drop redundant unconditional re-sync writes.
+    scs: [SC-1a]
+    items: [Item 1]
+    phase_boundary: Phase 1 (core fix)
+  - concern: saved-preference-rendering
+    description: Slider renders the saved preference value when present; same Playwright test surface as SC-1a.
+    scs: [SC-1b]
+    items: [Item 2]
+    phase_boundary: Phase 1 (preservation gate on Phase 1 restructure)
+  - concern: default-seeding-preservation
+    description: Fresh session with no preference still renders CALIBRATED_FLOOR 0.93 (existing SC-9 test as preservation gate).
+    scs: [SC-2]
+    items: [Item 3]
+    phase_boundary: Phase 1 (preservation gate on Phase 1 restructure)
+  - concern: edit-roundtrip-persistence
+    description: on_change callback → backing value → PreferenceService persistence → render flow intact after restructure.
+    scs: [SC-3a]
+    items: [Item 4]
+    phase_boundary: Phase 1 (preservation gate)
+  - concern: rerun-stability
+    description: No re-seeding writes on rerun/navigation; widgets read existing session-state values; saved value does not reset to default.
+    scs: [SC-3b]
+    items: [Item 5]
+    phase_boundary: Phase 1 (preservation gate)
+  - concern: regression-gate
+    description: Full pytest suite passes with zero new failures vs pre-change baseline.
+    scs: [SC-4]
+    items: [Item 6]
+    phase_boundary: Phase 2 (verification)
+
+single_concern_note: >
+  All six SCs target a single affected file region (records.py widget block) and one concern
+  (widget-instantiation mechanics); SC-1b/SC-2/SC-3a/SC-3b are preservation gates on the same
+  restructure. Each SC retains its own RED/GREEN/verify/commit cycle per per-SC decomposition.

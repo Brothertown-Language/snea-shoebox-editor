@@ -1,0 +1,60 @@
+# Analytical Artifact: State Analysis — Issue #1409
+issue: 1409
+generated: 2026-10-03
+source: .issues/1409/spec.md
+scope: st.session_state key lifecycle for semantic_threshold, semantic_threshold_slider, semantic_threshold_number
+
+state_variables:
+  - name: st.session_state.semantic_threshold
+    role: backing value
+    transitions:
+      - from: absent
+        to: CALIBRATED_FLOOR (0.93)
+        trigger: first page load, no saved preference
+        scs: [SC-2]
+      - from: absent
+        to: saved preference value
+        trigger: first page load, saved records/semantic_threshold present and parses in-range
+        scs: [SC-1b]
+      - from: absent
+        to: CALIBRATED_FLOOR (0.93)
+        trigger: PreferenceService read failure or missing row (fallback)
+        scs: [SC-2]
+      - from: current
+        to: widget effective value
+        trigger: on_change callback (logged-in users also persist via PreferenceService.set_preference)
+        scs: [SC-3a]
+      - from: current
+        to: st.session_state._accepted_threshold
+        trigger: _validate_threshold rejects non-numeric/out-of-range edit (pre-instantiation)
+        scs: [SC-3a, SC-3b]
+  - name: st.session_state.semantic_threshold_slider
+    role: widget-bound key (st.slider)
+    transitions:
+      - from: absent
+        to: backing value
+        trigger: pre-instantiation seeding, first instantiation only (at-most-once, R-1)
+        scs: [SC-1a, SC-3b]
+      - from: seeded
+        to: seeded
+        trigger: rerun/navigation — NO re-seeding writes; widget reads existing value
+        scs: [SC-3b]
+  - name: st.session_state.semantic_threshold_number
+    role: widget-bound key (st.number_input)
+    transitions: same shape as semantic_threshold_slider
+    scs: [SC-1a, SC-3b]
+
+invariants:
+  - Each widget-bound key is written to session state at most once per session (R-1).
+  - No explicit value= kwarg on a widget whose key is pre-seeded (eliminates dual-set warning).
+  - Rendered values identical to pre-change behavior across first load, rerun, navigation (R-5).
+  - Invalid edits render last accepted value (R-3).
+
+forbidden_transitions:
+  - Unconditional re-sync writes of widget keys on every rerun (current defect contributor, removed).
+  - value= argument overriding seeded session-state value on reruns (would break SC-3a/SC-3b).
+
+edge_cases:
+  - Non-numeric/unparseable/out-of-range saved preference → _validate_threshold restores last accepted value pre-instantiation; widget keys still not dual-set.
+  - Preference deleted between page loads → next session re-seeds from CALIBRATED_FLOOR.
+  - Multiple sessions independent (per-session st.session_state); no shared-state race.

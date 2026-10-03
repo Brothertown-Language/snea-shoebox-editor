@@ -1,0 +1,137 @@
+# Structure Artifact — Issue #1409
+issue: 1409
+generated: 2026-10-03
+
+phases:
+  - id: phase-1
+    name: Core dual-set fix
+    scs: [SC-1a]
+    items:
+      - sc_id: SC-1a
+        red: >
+          Playwright real-browser test: seed a saved records/semantic_threshold
+          preference via a dedicated fixture that survives
+          _delete_saved_threshold_preferences, load Records, assert no Streamlit
+          widget-state warning box for semantic_threshold_slider /
+          semantic_threshold_number — fails against current code.
+        green: >
+          Restructure records.py widget instantiation block: write widget-bound
+          keys to session state exactly once at/before first instantiation;
+          remove explicit value= args from st.slider / st.number_input; remove
+          redundant unconditional pre-instantiation re-sync writes.
+        verify: SC-1a Playwright test passes (live app :8501, SNEA_E2E=1); screenshot artifact.
+        commit: Widget block change + new test in one commit.
+    skill_selection:
+      red: "test-driven-development — task(..., prompt: \"execute red task from test-driven-development\")"
+      green: "test-driven-development — task(..., prompt: \"execute green task from test-driven-development\")"
+      verify: "verification-before-completion — task(..., prompt: \"execute verify task from verification-before-completion\")"
+      commit: "(orchestrator) commit-inline"
+
+  - id: phase-2
+    name: Preservation gates (behavioral invariants)
+    scs: [SC-1b, SC-2, SC-3a, SC-3b]
+    depends_on: [phase-1]
+    items:
+      - sc_id: SC-1b
+        red: >
+          Extend the SC-1a Playwright test to assert the slider renders the
+          seeded saved value; passes against pre-change code (preservation
+          gate); recorded as baseline.
+        green: >
+          No production change beyond phase-1; fix any regression the
+          restructure introduced to saved-value rendering.
+        verify: Slider renders saved value with saved preference present; screenshot artifact.
+        commit: Test assertion + any regression fix in one commit.
+      - sc_id: SC-2
+        red: >
+          Baseline run of the existing SC-9 fresh-default Playwright test against
+          pre-change code to record the passing state (preservation gate).
+        green: >
+          No production change beyond phase-1; fix any regression to
+          fresh-default seeding (0.93) introduced by the restructure.
+        verify: Fresh-default test asserts 0.93 rendering with no-preference precondition.
+        commit: Any regression fix included in this commit.
+      - sc_id: SC-3a
+        red: >
+          Baseline run of the existing DOM round-trip Playwright test
+          (edit → persist → render) against pre-change code.
+        green: >
+          Ensure on_change callback → backing value → persistence flow is
+          intact after the widget-block restructure.
+        verify: Round-trip test passes post-change.
+        commit: Test additions + any needed adjustment in one commit.
+      - sc_id: SC-3b
+        red: >
+          Add a rerun/navigation Playwright assertion (saved value survives a
+          page rerun without resetting to default); unconditionally in suite.
+        green: >
+          Ensure widget-block restructure preserves rerun stability — no
+          re-seeding writes; widgets read existing session-state values on rerun.
+        verify: Rerun assertion passes post-change.
+        commit: Test addition + any needed adjustment in one commit.
+    skill_selection:
+      red: "test-driven-development — task(..., prompt: \"execute red task from test-driven-development\")"
+      green: "test-driven-development — task(..., prompt: \"execute green task from test-driven-development\")"
+      verify: "verification-before-completion — task(..., prompt: \"execute verify task from verification-before-completion\")"
+      commit: "(orchestrator) commit-inline"
+
+  - id: phase-3
+    name: Full suite regression gate
+    scs: [SC-4]
+    depends_on: [phase-2]
+    items:
+      - sc_id: SC-4
+        red: >
+          Record pre-change baseline of `uv run pytest test/` pass/fail set.
+        green: >
+          Post-change, run the full suite (`uv run pytest test/`, with
+          SNEA_E2E=1 when live app is up); zero new failures vs baseline.
+        verify: Baseline comparison before/after.
+        commit: No production change; verification item committed as test evidence.
+    skill_selection:
+      red: "test-driven-development — task(..., prompt: \"execute red task from test-driven-development\")"
+      green: "test-driven-development — task(..., prompt: \"execute green task from test-driven-development\")"
+      verify: "verification-before-completion — task(..., prompt: \"execute verify task from verification-before-completion\")"
+      commit: "(orchestrator) commit-inline"
+
+dependency_dag:
+  edges:
+    - from: phase-1
+      to: phase-2
+      reason: SC-1b/SC-2/SC-3a/SC-3b preservation gates run against the restructured widget block produced in phase-1 (SC-1b RED extends the SC-1a test).
+    - from: phase-2
+      to: phase-3
+      reason: Full-suite regression gate (SC-4) runs after all widget-block changes and test additions are committed.
+
+triplet_colocation_check:
+  passed: true
+  detail: >
+    Every SC has RED, GREEN, and COMMIT steps in exactly one phase:
+    SC-1a → phase-1; SC-1b, SC-2, SC-3a, SC-3b → phase-2; SC-4 → phase-3.
+
+cross_phase_dependency_check:
+  passed: true
+  detail: >
+    No RED test in a phase depends on output from a later phase. phase-2 REDs
+    depend only on phase-1 output (SC-1a committed) or pre-change baseline
+    state; phase-3 RED is the pre-change baseline record.
+
+sc_item_mapping:
+  - sc_id: SC-1a
+    item: 1
+    phase: phase-1
+  - sc_id: SC-1b
+    item: 2
+    phase: phase-2
+  - sc_id: SC-2
+    item: 3
+    phase: phase-2
+  - sc_id: SC-3a
+    item: 4
+    phase: phase-2
+  - sc_id: SC-3b
+    item: 5
+    phase: phase-2
+  - sc_id: SC-4
+    item: 6
+    phase: phase-3

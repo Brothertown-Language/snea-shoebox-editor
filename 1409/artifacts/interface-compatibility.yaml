@@ -1,0 +1,71 @@
+# Analytical Artifact: Interface Compatibility — Issue #1409
+issue: 1409
+generated: 2026-10-03
+source: .issues/1409/spec.md
+
+interfaces:
+  - boundary: widget-block → session_state (backing value)
+    status: preserved
+    contract: >
+      st.session_state.semantic_threshold remains the backing value seeded from
+      CALIBRATED_FLOOR (0.93) or saved preference; consumers at records.py lines ~250,
+      ~259, ~289 (query construction) and ~838 (caption) read it unchanged.
+  - boundary: on_change callbacks → backing value → PreferenceService
+    status: preserved
+    contract: >
+      Callbacks propagate widget → backing value and persist via
+      PreferenceService.set_preference(user_email, "records", "semantic_threshold", str(effective))
+      for logged-in users. Signature/behavior unchanged (R-4).
+  - boundary: _validate_threshold → session_state
+    status: preserved
+    contract: >
+      Pre-instantiation rejection restores st.session_state._accepted_threshold (R-3).
+      Widget keys must not be dual-set in the invalid-edit path either.
+  - boundary: widget calls → Streamlit session-state API
+    status: CHANGED (internal to records.py)
+    contract: >
+      st.slider / st.number_input for keys semantic_threshold_slider / semantic_threshold_number
+      drop the explicit value= argument; value flows solely from session state. This is the
+      fix itself; no external caller depends on the value= kwarg.
+  - boundary: test fixture contract
+    status: extended
+    contract: >
+      New SC-1a/SC-1b Playwright fixture seeds records/semantic_threshold via a mechanism
+      that survives _delete_saved_threshold_preferences deletion; existing tests in
+      test/ui/test_sc9_ui_threshold_default_red.py reused as preservation gates.
+
+dependency_contract:
+  source: src/frontend/pages/records.py (widget instantiation block)
+  target: streamlit session-state API + PreferenceService
+  contract_items:
+    - dependency: streamlit.st.session_state
+      type: runtime API
+      constraint: >
+        Widget-bound keys (semantic_threshold_slider, semantic_threshold_number) must be
+        written at most once per session at/before first instantiation; a pre-seeded key
+        combined with an explicit value= kwarg on the keyed widget call is the documented
+        invalid combination that emits SessionStateReinitializationWarning.
+    - dependency: streamlit.st.slider / st.number_input
+      type: runtime API
+      constraint: >
+        Called with key= and no value= for the keyed widgets; on_change= callbacks retained;
+        min/max/step/label args unchanged.
+    - dependency: PreferenceService.get_preference(user_email, "records", "semantic_threshold")
+      type: service call (read)
+      constraint: >
+        Returns str or None; parsed via existing in-range parse logic; read-failure/missing
+        row falls back to CALIBRATED_FLOOR per existing seeding contract (preserved).
+    - dependency: PreferenceService.set_preference(user_email, "records", "semantic_threshold", str(effective))
+      type: service call (write)
+      constraint: >
+        Called only from on_change callbacks for logged-in users; call sites unchanged.
+    - dependency: CALIBRATED_FLOOR (module constant, 0.93)
+      type: constant
+      constraint: >
+        Backing-value default when no saved preference exists or preference unparseable;
+        value preserved per #1400 (R-2); constant itself NOT modified.
+    - dependency: test/ui/test_sc9_ui_threshold_default_red.py
+      type: test dependency
+      constraint: >
+        Reused as SC-2/SC-3a/SC-3b preservation gates and fixture reference; existing
+        passing behavior must not regress.

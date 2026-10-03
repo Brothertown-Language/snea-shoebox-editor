@@ -1,0 +1,101 @@
+# Dependency contract for issue #1409 — Fix Streamlit dual-set widget warning on semantic threshold slider
+# Source: .issues/1409/artifacts/interface-compatibility.yaml dependency_contract section
+# (extracted as-is; file contains a dependency_contract section — no auto-backfill needed)
+# Structure augmentation: phase DAG per structure.yaml (phase-1 core fix → phase-2
+# preservation gates → phase-3 full-suite regression gate)
+#
+# Use:
+#   ./.opencode/tools/solve model --contract-path .issues/1409/dependency-contract.yaml --query <expr>
+#   ./.opencode/tools/solve check --state-path <state> --contract-path .issues/1409/dependency-contract.yaml
+
+schema_version: "1.0"
+generated_at: "20261003194600"
+
+phases:
+  - id: 1
+    name: "Core dual-set fix — SC-1a (warning absence under saved-preference load)"
+    concern: "records.py widget instantiation block restructure: widget-bound keys seeded to session state exactly once at/before first instantiation; explicit value= removed from st.slider/st.number_input; redundant unconditional pre-instantiation re-sync writes removed (R-1). New Playwright fixture survives _delete_saved_threshold_preferences (R-6)."
+    depends_on: []
+    scs: ["SC-1a"]
+  - id: 2
+    name: "Preservation gates — SC-1b, SC-2, SC-3a, SC-3b (behavioral invariants preserved)"
+    concern: "Saved-value rendering (SC-1b), calibrated 0.93 default (SC-2), edit→persist→render round-trip (SC-3a), rerun survival (SC-3b) — each verified post-restructure against the committed phase-1 change; regression fixes only, no new behavior (R-2, R-3, R-4, R-5)."
+    depends_on: [1]
+    scs: ["SC-1b", "SC-2", "SC-3a", "SC-3b"]
+  - id: 3
+    name: "Full suite regression gate — SC-4"
+    concern: "uv run pytest test/ baseline comparison before/after change; zero new failures (SNEA_E2E=1 for UI standard-of-record tier when live app is up)."
+    depends_on: [2]
+    scs: ["SC-4"]
+
+# Dependency contract extracted verbatim from interface-compatibility.yaml
+description: "Concrete dependency data derived from spec affected files and SCs (real sources, real targets, real type constraints)."
+external_packages: []
+internal_modules:
+  - source: "src/frontend/pages/records.py (widget instantiation block)"
+    target: "streamlit.st.session_state (widget-bound keys semantic_threshold_slider, semantic_threshold_number)"
+    sc: "SC-1a"
+    type_constraint: "widget-bound keys written at most once per session at/before first instantiation; pre-seeded key + explicit value= on keyed widget call is the documented invalid combination (SessionStateReinitializationWarning)"
+    reason: "the fix itself (R-1)"
+  - source: "src/frontend/pages/records.py (keyed widget calls)"
+    target: "streamlit.st.slider / st.number_input"
+    sc: "SC-1a"
+    type_constraint: "key= and on_change= retained; value= dropped; min/max/step/label unchanged"
+    reason: "single-source-of-value: widget values flow solely from session state"
+  - source: "src/frontend/pages/records.py (backing value)"
+    target: "PreferenceService.get_preference(user_email, 'records', 'semantic_threshold')"
+    sc: "SC-1b, SC-2"
+    type_constraint: "returns str or None; in-range parse seeds saved value; read-failure/missing row falls back to CALIBRATED_FLOOR (0.93)"
+    reason: "backing-value seeding contract preserved (R-2)"
+  - source: "src/frontend/pages/records.py (on_change callbacks)"
+    target: "PreferenceService.set_preference(user_email, 'records', 'semantic_threshold', str(effective))"
+    sc: "SC-3a"
+    type_constraint: "callback propagates widget → backing value and persists for logged-in users; call sites unchanged"
+    reason: "override round-trip preservation (R-4)"
+  - source: "src/frontend/pages/records.py (rerun path)"
+    target: "st.session_state semantic_threshold / semantic_threshold_slider / semantic_threshold_number lifecycle"
+    sc: "SC-3b"
+    type_constraint: "no re-seeding writes on rerun; widgets read existing session-state values (forbidden transition: unconditional re-sync writes)"
+    reason: "rerun survival (R-5)"
+  - source: "test/ui/test_sc9_ui_threshold_default_red.py"
+    target: "SC-2/SC-3a/SC-3b preservation gates + fixture reference"
+    sc: "SC-2, SC-3a, SC-3b"
+    type_constraint: "existing passing behavior must not regress"
+    reason: "reuse as preservation gates"
+  - source: "_validate_threshold guard (#1385) + CALIBRATED_FLOOR constant (#1400)"
+    target: "records.py pre-instantiation path"
+    sc: "SC-3a, SC-3b, SC-2"
+    type_constraint: "guard runs pre-instantiation, restores last accepted value; constant 0.93 NOT modified; widget keys not dual-set in invalid-edit path"
+    reason: "preserved dependencies from merged issues #1385/#1400"
+
+cross_spec:
+  consumer: "#1409 (this spec)"
+  sc: "SC-1a, SC-1b, SC-2, SC-3a, SC-3b"
+  contract: "#1385 _validate_threshold guard semantics and #1400 calibrated 0.93 default remain in place and unchanged; #1409 owns only the widget-instantiation mechanics in records.py."
+
+# --- Solver sections (Z3) ---
+variables:
+  phase_1_done:
+    type: bool
+  phase_2_done:
+    type: bool
+  phase_3_done:
+    type: bool
+  all_phases_done:
+    type: bool
+
+# Dependency ordering: phase-2 requires phase-1; phase-3 requires phase-2
+preconditions:
+  - "z3.Implies(phase_2_done, phase_1_done)"
+  - "z3.Implies(phase_3_done, phase_2_done)"
+
+# Invariants: completion is monotonically ordered
+invariants:
+  - "z3.Implies(all_phases_done, z3.And(phase_1_done, phase_2_done, phase_3_done))"
+  - "all_phases_done == z3.And(phase_1_done, phase_2_done, phase_3_done)"
+
+postconditions:
+  - "all_phases_done"
+
+queries:
+  - "all_phases_done"

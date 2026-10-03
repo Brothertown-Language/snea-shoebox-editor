@@ -1,0 +1,50 @@
+# Analytical Artifact: Testability Assessment — Issue #1409
+issue: 1409
+generated: 2026-10-03
+source: .issues/1409/spec.md
+
+evidence_types:
+  - sc: SC-1a
+    evidence_type: behavioral
+    instrument: Playwright real-browser test against live app on :8501 (SNEA_E2E=1)
+    method: >
+      Seed saved records/semantic_threshold preference via dedicated fixture surviving
+      _delete_saved_threshold_preferences; navigate to Records; assert rendered page
+      contains no Streamlit widget-state warning box for semantic_threshold_slider /
+      semantic_threshold_number in captured console/page errors; screenshot artifact
+      under tmp/<issue>/artifacts/.
+    red_green: RED fails pre-change (warning present with saved preference).
+  - sc: SC-1b
+    evidence_type: behavioral
+    instrument: same Playwright test as SC-1a
+    method: Assert slider rendered value equals seeded saved preference; screenshot artifact.
+    red_green: Preservation gate — passes pre-change; baseline recorded.
+  - sc: SC-2
+    evidence_type: behavioral
+    instrument: existing SC-9 fresh-default Playwright test (test/ui/test_sc9_ui_threshold_default_red.py)
+    method: No-preference precondition; assert 0.93 rendering; must still pass post-change.
+    red_green: Preservation gate — baseline run pre-change records passing state.
+  - sc: SC-3a
+    evidence_type: behavioral
+    instrument: existing SC-2 DOM round-trip Playwright test
+    method: edit → persist → render; rendered value equals edited value after persistence.
+    red_green: Preservation gate — baseline run pre-change.
+  - sc: SC-3b
+    evidence_type: behavioral
+    instrument: new Playwright rerun/navigation assertion (unconditional in suite)
+    method: After a page rerun, rendered value equals saved value and does not reset to default.
+    red_green: New assertion added; must pass post-change (preservation of rerun stability).
+  - sc: SC-4
+    evidence_type: behavioral
+    instrument: uv run pytest test/ (plus SNEA_E2E=1 UI standard-of-record tier when live app is up)
+    method: Baseline pass/fail set before change compared to post-change run; zero new failures.
+
+constraints:
+  - UI testing standard: Playwright real-browser tests are the standard of record for
+    user-visible-behavior claims (docs/development/ui_testing_standard.md); AppTest is
+    in-process smoke only.
+  - E2E tests skip unless SNEA_E2E=1 + live app on :8501; skipping is never silently PASS.
+  - Layout-sensitive criteria require vision review of Playwright screenshots under
+    tmp/<issue>/artifacts/.
+  - SC-1a fixture must not be defeated by _delete_saved_threshold_preferences deletion
+    of user preference rows (R-6).
