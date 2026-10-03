@@ -11,7 +11,11 @@ deterministic transaction-scoped fixture rows:
 1. The service module exists and exposes `search_semantic` with the exact
    v1 signature (mode, query, threshold=None, source_id=None, limit=None).
 2. `SemanticSearchResult` carries exactly the fields `results`, `status`,
-   `message`; `results` is a list of `(record_id, score)` pairs.
+   `message`, plus the additive-optional `matched_terms` (2026-10-03 spec
+   revision, SC-8 revised — semantic modes surface matched source-field
+   terms; defaults to None, mirroring the SC-5/SC-6 additive-optional
+   pattern on `RecordSearchResult`); `results` is a list of
+   `(record_id, score)` pairs.
 3. Status enum values are exactly {ok, empty_query, no_embeddings, stale_model}.
 4. Ranked leg: cosine desc order, record_id-asc tie-break, threshold filter
    (None -> 0.80), pin-join exclusion (embedding_model == pin), NULL/stale
@@ -201,13 +205,29 @@ class TestSemanticSearchSeamSc5(unittest.TestCase):
             self.assertEqual(d, None, "threshold/source_id/limit must default to None")
 
     def test_result_dataclass_field_list_exact(self):
+        """Additive-optional container contract (2026-10-03 spec revision).
+
+        SC-8 revised mandates an additive optional `matched_terms` field
+        (default None) on `SemanticSearchResult`, mirroring the SC-5/SC-6
+        additive-optional pattern on `RecordSearchResult`. The original
+        three fields (`results`, `status`, `message`) remain
+        positionally/keyword construction-compatible at existing sites.
+        """
+        # Existing 3-field construction sites remain source-compatible
+        # (positional and keyword).
         result = self.svc.SemanticSearchResult(
             results=[(1, 0.5)], status="ok", message="m"
         )
-        self.assertEqual(set(vars(result).keys()), {"results", "status", "message"})
+        positional = self.svc.SemanticSearchResult([(2, 0.9)], "ok", "m")
+        self.assertEqual(set(vars(result).keys()), {"results", "status", "message", "matched_terms"})
         self.assertEqual(result.results, [(1, 0.5)])
         self.assertEqual(result.status, "ok")
         self.assertEqual(result.message, "m")
+        # matched_terms is additive-optional: defaults to None, accepts a value.
+        self.assertIsNone(result.matched_terms)
+        self.assertIsNone(positional.matched_terms)
+        result.matched_terms = {1: {"seed-pos-a"}}
+        self.assertEqual(result.matched_terms, {1: {"seed-pos-a"}})
 
     def test_status_enum_exact(self):
         expected = {"ok", "empty_query", "no_embeddings", "stale_model"}

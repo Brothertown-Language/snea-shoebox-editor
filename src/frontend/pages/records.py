@@ -249,6 +249,7 @@ def records():
                 float(st.session_state.semantic_threshold),
                 source_filter_id,
             )
+            semantic_matched_terms = None
             cached_ranked = st.session_state.get("_semantic_ranked_cache")
             if cached_ranked is None or cached_ranked[0] != semantic_digest:
                 semantic_result = search_semantic(
@@ -261,15 +262,20 @@ def records():
                 # SC-6: a degraded (non-ok) payload is never cached as a
                 # ranked list — re-search retries the seam.
                 if getattr(semantic_result, "status", "ok") == "ok":
+                    # SC-20 (revised): thread per-record matched source-field
+                    # terms alongside the ranked pairs so the page-local
+                    # result container can carry them for span computation.
+                    semantic_matched_terms = getattr(semantic_result, "matched_terms", None)
                     cached_ranked = (
                         semantic_digest,
                         sorted(semantic_result.results, key=lambda p: (-p[1], p[0])),
+                        semantic_matched_terms,
                     )
                     st.session_state._semantic_ranked_cache = cached_ranked
                     semantic_status = None
                 else:
                     semantic_status = semantic_result.status
-                    cached_ranked = (semantic_digest, [])
+                    cached_ranked = (semantic_digest, [], None)
                     st.session_state._semantic_ranked_cache = cached_ranked
             elif cached_ranked[1]:
                 ranked_pairs = cached_ranked[1]
@@ -286,8 +292,10 @@ def records():
                 if getattr(semantic_result, "status", "ok") != "ok":
                     semantic_status = semantic_result.status
                 ranked_pairs = []
+                semantic_matched_terms = getattr(semantic_result, "matched_terms", None)
             if semantic_status is None and cached_ranked is not None:
                 ranked_pairs = cached_ranked[1]
+                semantic_matched_terms = cached_ranked[2]
             else:
                 ranked_pairs = []
             semantic_scores = dict(ranked_pairs)
@@ -305,6 +313,7 @@ def records():
                 total_count=len(ranked_pairs),
                 limit=limit,
                 offset=offset,
+                matched_terms=semantic_matched_terms,
             )
         else:
             # No query in a semantic mode: match exact-mode empty-query
@@ -919,11 +928,13 @@ def records():
                     # into the View-mode render call ONLY. Lexical modes use
                     # the service's matched raw terms (verbatim term spans);
                     # FTS mode derives spans from the query tokens via the
-                    # single normalizer; Semantic modes highlight nothing.
+                    # single normalizer; SC-20 (revised): Semantic modes use
+                    # the seam's per-record matched source-field terms with
+                    # the same verbatim compute_term_spans computation.
                     # Revision-history and import-diff render call sites
                     # receive no highlight parameters (markup-identical, SC-9).
                     view_highlight_spans = None
-                    if search_term and not is_semantic_mode:
+                    if search_term:
                         if st.session_state.search_mode == "FTS":
                             view_highlight_spans = [compute_fts_spans(line, search_term) for line in mdf_lines]
                         else:
