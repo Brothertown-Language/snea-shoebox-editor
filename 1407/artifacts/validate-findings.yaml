@@ -1,0 +1,44 @@
+# Validate Findings — Issue 1407
+
+validated_plan: .issues/1407/plan.md
+solve_output: .issues/1407/artifacts/solve-output.yaml (SAT / SOLVED_SATISFICING)
+
+category_1_structural:
+  phase_table_columns: PASS  # Phase | Name | Concern | SCs | Depends On | Step Range | Dispatch — all present, in order
+  procedure_numbered_steps: PASS  # Phase 1 Step-by-step: 30 numbered checkbox steps
+  exit_criteria_sc_mapping: PASS  # C1-C5 map SC-1, SC-2, SC-3, SC-4a, SC-4b to Phase 1
+
+category_2_skill_task_validity:
+  result: PASS
+  detail: >
+    All skill+task references match the implementation-workflow reference card:
+    pre-regression, pre-regression-verify (pre-implementation); red, green,
+    post-regression, verify (per item); commit-inline (orchestrator direct);
+    audit, z3-check, structural-checks, pre-pr-gate, regression-check (post-implementation).
+    Review-prep / create-pr / exec-summary intentionally omitted — authorization_scope
+    is for_implementation (halt at verification_complete).
+
+category_3_sc_coverage:
+  result: PASS
+  covered: [SC-1, SC-2, SC-3, SC-4a, SC-4b]
+  triplet_split: none  # all RED/GREEN/COMMIT steps colocated in Phase 1
+  uncovered: []
+
+category_4_concern_separation:
+  result: PASS
+  detail: Single phase addresses exactly one concern (enter-key-search-restoration); no two phases share a concern.
+
+category_5_dag_validation:
+  result: PASS
+  cycles: none
+  reachable_from_start: all items reachable (item1 root; chain item1→item2, item1→item3, item3→item4a, item4a→item4b)
+  orphan_phases: none
+  evidence: solve check SAT (+ postconditions + invariants); plan SOLVED_SATISFICING with ordering encoded in action preconditions
+
+category_6_holistic_quality:
+  no_tbd_todo: PASS  # grep found zero TBD/TODO occurrences
+  checkbox_format: PASS  # 30/30 steps use "- [ ] N." numbered checkbox format with sub-bullets
+  dispatch_mode_consistency: PASS  # phase dispatch column explicitly declares mixed "direct + task-card"; every one of the 30 steps carries an explicit per-step indicator per plan-structure-standards §Dispatch Indicators
+
+overall_status: PASS
+findings: []
