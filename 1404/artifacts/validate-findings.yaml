@@ -1,0 +1,62 @@
+# Validation findings — issue #1404
+# Re-validation after concern-map phase-boundary sync (2026-10-03)
+plan: .issues/1404/plan.md
+spec: .issues/1404/spec.md
+solve_output: .issues/1404/artifacts/solve-output.yaml (SAT)
+validated: 2026-10-03
+
+overall_status: PASS
+
+category_1_structural:
+  status: PASS
+  checks:
+    phase_table_required_columns: PASS  # Phase, Name, Concern, SCs, Depends On, Step Range, Dispatch — all present
+    phase_procedure_sections: PASS      # Both phases have Step-by-step with numbered checkbox steps (3–25, 26–30)
+    exit_criteria_sc_mapping: PASS      # C1–C5 map to SC-1..SC-4 plus pre-PR gate
+
+category_2_skill_task_validity:
+  status: PASS
+  checks:
+    dispatch_strings_match_reference: PASS
+    notes:
+      - "All task-card dispatch strings match canonical forms in skills/writing-plans/reference/implementation-workflow.md (pre-regression→phase-0, red, green, post-regression→phase-4, verify, audit, checklist, review-prep, create-pr, completion)."
+      - "commit-inline and z3-check correctly marked direct (orchestrator) per reference card."
+      - "Informational: step 30 (Phase 2 VbC) is a direct phase-exit confirm with no skill+task reference — not a violation, no invalid reference exists."
+
+category_3_sc_coverage:
+  status: PASS
+  checks:
+    all_scs_covered: PASS  # SC-1→C1, SC-2→C2, SC-3→C3, SC-4→C4; C5 is the pre-PR gate
+    triplet_split_detection: PASS
+    details:
+      - "SC-1: RED steps 6–7, GREEN steps 8–9, COMMIT step 12 — all Phase 1"
+      - "SC-2: RED steps 13–14, GREEN steps 15–16, COMMIT step 19 — all Phase 1"
+      - "SC-3: RED step 20, GREEN step 21, COMMIT step 24 — all Phase 1"
+      - "SC-4: verification-only SC; steps 26–29 all Phase 2 — no split"
+
+category_4_concern_separation:
+  status: PASS
+  checks:
+    phase_concern_alignment: PASS  # Remediated by concern-map sync
+    no_cross_phase_concern: PASS
+    details:
+      - "concern-map.yaml (post-sync): C1-hit-shape-normalization, C2-matched-terms-from-seam, C3-mode-threading, C4-regression-tests-real-shapes → Phase 1; C5-no-regression → Phase 2"
+      - "Matches plan phase boundaries exactly; no concern spans two phases; no phase overlap"
+      - "Previous FAIL (pre-sync boundary mismatch) is resolved by the non-substantive artifact sync"
+
+category_5_dag_validation:
+  status: PASS
+  checks:
+    no_cycles: PASS        # Single edge Phase 1 → Phase 2 (Depends On: 1)
+    all_reachable: PASS    # Both phases reachable from Phase 1 start
+    no_orphans: PASS       # Phase 1 has no incoming (entry phase), outgoing to Phase 2; Phase 2 connected
+    contract_invariants_consistent: PASS  # SC-3 ⇒ SC-1∧SC-2; SC-4 ⇒ SC-1∧SC-2∧SC-3 — matches plan daisy-chain ordering
+    notes:
+      - "Informational: dependency-contract.yaml has no explicit phase-edge DAG section; DAG inferred from phase-table Depends-On + postconditions. Non-blocking."
+
+category_6_holistic_quality:
+  status: PASS
+  checks:
+    no_tbd_todo_placeholders: PASS
+    checkbox_format_all_steps: PASS
+    dispatch_mode_consistency: PASS  # Direct steps (5,10,12,14,17,19,22,24,28,30,32) contain no task dispatches; task-card steps contain dispatches only

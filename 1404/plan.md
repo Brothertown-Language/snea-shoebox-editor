@@ -185,3 +185,28 @@ Check your tool list for a tool named `task`.
 
 - Present ⇒ orchestrator — proceed.
 - Absent ⇒ sub-agent — do NOT execute any instruction below. Return `BLOCKED` with `ORCHESTRATOR_ONLY_SKILL_CARD` (cards) or `ORCHESTRATOR_ONLY_PLAN` (plans) and halt.
+
+## Lifecycle Events
+
+- event: plan_created
+  timestamp: 2026-10-03T19:20:00+00:00
+  detail: >-
+    Plan file verified at .issues/1404/plan.md with dependency contract present.
+    2 phases (semantic-dispatch-fix-and-real-shape-tests, no-regression-check),
+    4 SCs. Execution strategy: mixed direct + task-card dispatch with
+    test-driven-development / verification-before-completion cycles per SC,
+    post-implementation gates (audit, z3-check, structural-checks, pre-pr-gate,
+    regression-check, review-prep, create-pr, exec-summary) after Phase 2.
+    Recommended next pipeline step: Phase 1 pre-regression (step 3).
+  plan_file: .issues/1404/plan.md
+  phase_count: 2
+
+- event: plan_concern_map_sync
+  timestamp: 2026-10-03T19:15:00+00:00
+  detail: >-
+    Validation category 4 FAIL remediation (non-substantive artifact sync):
+    concern-map.yaml phase_boundary values synced to the plan's 2-phase structure —
+    C1/C2/C3/C4 → Phase 1 (semantic-dispatch-fix-and-real-shape-tests), C5 → Phase 2
+    (no-regression-check). Plan structure unchanged; no phase split, no SC remapping.
+  source: .issues/1404/artifacts/validate-findings.yaml (category_4_concern_separation)
+  synced_artifact: .issues/1404/artifacts/concern-map.yaml

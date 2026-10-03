@@ -1,29 +1,32 @@
 # Concern map — issue #1404
 spec: .issues/1404/spec.md
 generated: backfill (retroactive)
+# 2026-10-03: phase_boundary values synced to the plan's 2-phase structure
+# (.issues/1404/plan.md) per validate-findings.yaml category_4 FAIL —
+# non-substantive artifact sync; plan structure unchanged.
 
 concerns:
   - id: C1-hit-shape-normalization
     concern: Normalize both real hit shapes — attribute-bearing hit objects and (record_id, score) tuples — in the search_records semantic consumption path (id filter at ~line 469 and matched_terms loop at ~lines 524-532).
     success_criteria: [SC-1, SC-2]
-    phase_boundary: Phase 1 (service consumption fix)
+    phase_boundary: Phase 1 (semantic-dispatch-fix-and-real-shape-tests)
 
   - id: C2-matched-terms-from-seam
     concern: Populate matched_terms from the seam's real matched_terms dict (record_id -> set of terms) instead of re-deriving from hit attributes; bound to returned page ids.
     success_criteria: [SC-1, SC-2]
-    phase_boundary: Phase 1 (service consumption fix)
+    phase_boundary: Phase 1 (semantic-dispatch-fix-and-real-shape-tests)
 
   - id: C3-mode-threading
     concern: Thread the caller's mode ('gloss' for Semantic Gloss, 'all' for Semantic All) explicitly into search_semantic; the strategy table currently maps both modes to the bare function and dispatch calls strategy(query, search_term), dropping mode.
     success_criteria: [SC-1, SC-2]
-    phase_boundary: Phase 1 (service consumption fix)
+    phase_boundary: Phase 1 (semantic-dispatch-fix-and-real-shape-tests)
 
   - id: C4-regression-tests-real-shapes
     concern: Rewrite SC-8 regression tests to exercise the REAL search_semantic hit shapes for both modes with only the DB session/encoder patched — no attribute-shape stubs.
     success_criteria: [SC-3]
-    phase_boundary: Phase 2 (test rewrite)
+    phase_boundary: Phase 1 (semantic-dispatch-fix-and-real-shape-tests)
 
   - id: C5-no-regression
     concern: Existing suites (FTS/Lexeme/Headword/Gloss paths, SC-7 matched-terms, seam paths) remain green.
     success_criteria: [SC-4]
-    phase_boundary: Phase 3 (verification)
+    phase_boundary: Phase 2 (no-regression-check)
