@@ -283,4 +283,10 @@ Check your tool list for a tool named `task`.
 
 ---
 
+## Lifecycle Events
+
+- 20261003235343 — plan_created — plan verified at `.issues/1409/plan.md`; 3 implementation phases + post-implementation; dependency contract present at `.issues/1409/dependency-contract.yaml`.
+
+---
+
 🤖 Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
