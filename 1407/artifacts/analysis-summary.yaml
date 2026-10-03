@@ -1,0 +1,26 @@
+# Analysis Summary — Issue 1407
+
+spec_path: .issues/1407/spec.md
+sc_count: 6   # SC-1, SC-2, SC-3, SC-4a, SC-4b (5 SC IDs; SC-4 split into 4a/4b)
+scope_summary: >
+  Restore Enter-key search triggering in the Records sidebar text_input.
+  Sole code-change surface is src/frontend/pages/records.py (on_search_change
+  callback reads the dynamically suffixed widget key; on_change re-attached;
+  placeholder reworded). Coupled E2E selector update in
+  test/ui/test_semantic_search_ui_flow_e2e.py in the same cycle (R-9).
+  All requirements trace to Phase 1.
+
+artifact_status:
+  blast-radius.yaml: backfilled
+  concern-map.yaml: backfilled
+  code-path-inventory.yaml: backfilled
+  cross-cutting-matrix.yaml: backfilled
+  interface-compatibility.yaml: backfilled (includes dependency_contract)
+  state-analysis.yaml: backfilled
+  testability-assessment.yaml: backfilled
+
+grounding_evidence:
+  - src/frontend/pages/records.py:170-172 — on_search_change reads stale un-suffixed key
+  - src/frontend/pages/records.py:373-379 — text_input with suffixed key, no on_change attachment, label "Enter text..."
+  - src/frontend/pages/records.py:59 — clear handler increments _search_input_key
+  - test/ui/test_semantic_search_ui_flow_e2e.py:248 — aria-label "Enter text..." selector

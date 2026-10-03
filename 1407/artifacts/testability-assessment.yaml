@@ -1,28 +1,23 @@
-artifact: testability-assessment
-issue: 1407
-repo: Brothertown-Language/snea-shoebox-editor
-date: 2026-10-03
+# Testability Assessment — Issue 1407
 
-strategy_per_sc:
-  - sc: SC-1
-    unit: AppTest in-process wiring smoke — assert text_input carries on_change and that triggering the callback commits search_query + page reset (RED before change, GREEN after)
-    integration: Playwright live-browser — type query, press Enter, assert filtered results render (STANDARD OF RECORD for the user-visible claim per docs/development/ui_testing_standard.md; screenshots under tmp/1407/artifacts/ for vision review)
-    classification: behavioral
-  - sc: SC-2
-    unit: AppTest sequence — clear (simulate preamble) then Enter; assert empty state persists, no stale query committed
-    integration: Playwright — clear, then confirm input empty and no re-search fires
-    classification: behavioral
-  - sc: SC-3
-    unit: AppTest button-click smoke pinning existing single-commit behavior (regression guard; exists-and-passes both before and after the change)
-    integration: Playwright — button click executes search exactly once
-    classification: behavioral
-  - sc: SC-4
-    unit: string-level assertion placeholder != "Enter text..." + full pytest suite for zero regressions
-    integration: Playwright — render review of the new placeholder
-    classification: behavioral + suite regression run
+> Evidence types per SC, from spec §Success Criteria.
+
+SC-1:
+  evidence_type: behavioral
+  verification: Playwright live-browser (standard of record, docs/development/ui_testing_standard.md) + AppTest in-process for wiring; RED via AppTest (on_change absent / dead callback), GREEN via AppTest, verify via Playwright screenshot under tmp/1407/artifacts/
+SC-2:
+  evidence_type: behavioral
+  verification: Playwright — clear then Enter, assert no stale re-search; AppTest sequence clear-then-Enter
+SC-3:
+  evidence_type: behavioral
+  verification: Playwright — button click triggers exactly one search; AppTest regression guard (passes before AND after)
+SC-4a:
+  evidence_type: behavioral
+  verification: Playwright placeholder render + execution of coupled E2E test test/ui/test_semantic_search_ui_flow_e2e.py against updated aria-label selector (or AppTest selector check) — proof by execution, not by diff
+SC-4b:
+  evidence_type: behavioral
+  verification: full pytest suite run — zero new failures
 
 notes:
-  - AppTest is sanctioned ONLY for in-process wiring smoke; user-visible Enter behavior claims MUST be backed by Playwright real-browser evidence with screenshots under tmp/1407/artifacts/ (layout-sensitive criteria require vision review).
-  - E2E tests skip unless SNEA_E2E=1 + live app on :8501 — skipping is by design, never silently treated as PASS; the plan must route the Playwright evidence through a live-app run.
-  - The E2E selector at test/ui/test_semantic_search_ui_flow_e2e.py:248 is a hard coupling for SC-4 — must be updated in the same cycle or the suite regresses.
-  - Database dependency: none of the SCs require schema changes; live-app E2E uses the existing local dev DB.
+  - E2E tests are SNEA_E2E-gated; skipping is by design and never counted as PASS
+  - no structural/string substitution permitted for behavioral SCs (critical-rules-BEH-EV)

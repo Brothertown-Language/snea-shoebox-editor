@@ -1,0 +1,34 @@
+# Dependency contract for issue 1407 — Z3 form derived from interface-compatibility.yaml dependency_contract
+artifact: dependency-contract
+issue: 1407
+variables:
+  item1_complete:
+    type: bool
+  item2_complete:
+    type: bool
+  item3_complete:
+    type: bool
+  item4a_complete:
+    type: bool
+  item4b_complete:
+    type: bool
+preconditions: []
+invariants:
+  - "z3.Implies(item2_complete, item1_complete)"
+  - "z3.Implies(item3_complete, item1_complete)"
+  - "z3.Implies(item4a_complete, item3_complete)"
+  - "z3.Implies(item4b_complete, z3.And(item1_complete, item2_complete, item3_complete, item4a_complete))"
+  - "z3.Or(item1_complete, item2_complete, item3_complete, item4a_complete, item4b_complete)"
+provenance:
+  source: interface-compatibility.yaml dependency_contract section (real data below)
+  dependency_contract:
+    - source: records-sidebar-text_input-contract
+      target: streamlit-session-state
+      type: runtime-behavior
+      constraint: callback reads dynamic suffix key search_query_input_{_search_input_key}; writes search_query + current_page only; no self-key write; no st.rerun
+      verified_at: src/frontend/pages/records.py lines 59, 170-172, 373-379 (live read 2026-10-03)
+    - source: e2e-selector-contract
+      target: test_ui_aria_label_locator
+      type: string-equality
+      constraint: locator aria-label == text_input label string; updated in same cycle as placeholder change (R-9)
+      verified_at: test/ui/test_semantic_search_ui_flow_e2e.py line 248 (live grep 2026-10-03)

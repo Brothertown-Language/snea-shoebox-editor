@@ -1,0 +1,56 @@
+domain: snea-records-enter-search
+
+types:
+  - name: item
+
+objects:
+  - name: item1
+    type: item
+  - name: item2
+    type: item
+  - name: item3
+    type: item
+  - name: item4a
+    type: item
+  - name: item4b
+    type: item
+
+fluents:
+  - name: done
+    params:
+      - name: i
+        type: item
+
+actions:
+  - name: complete-item1
+    preconditions: []
+    effects:
+      - done(item1)
+  - name: complete-item2
+    preconditions:
+      - done(item1)
+    effects:
+      - done(item2)
+  - name: complete-item3
+    preconditions:
+      - done(item1)
+    effects:
+      - done(item3)
+  - name: complete-item4a
+    preconditions:
+      - done(item3)
+    effects:
+      - done(item4a)
+  - name: complete-item4b
+    preconditions:
+      - done(item1)
+      - done(item2)
+      - done(item3)
+      - done(item4a)
+    effects:
+      - done(item4b)
+
+init: []
+
+goals:
+  - done(item4b)

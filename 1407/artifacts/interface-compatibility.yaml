@@ -1,38 +1,33 @@
-artifact: interface-compatibility
-issue: 1407
-repo: Brothertown-Language/snea-shoebox-editor
-date: 2026-10-03
+# Interface Compatibility — Issue 1407
+
+> Interface boundaries between affected modules.
 
 interfaces:
-  - name: text_input widget binding
-    type: internal UI
-    status: modified
-    detail: gains on_change callback; key scheme `search_query_input_{_search_input_key}` unchanged; value binding unchanged
-    backward_compatible: true
-  - name: on_search_change callback signature
-    type: internal UI (zero-arg Streamlit callback)
-    status: modified
-    detail: same zero-arg signature; body corrected to dynamic suffixed-key read
-    backward_compatible: true (no external callers)
-  - name: session-state contract (search_query, current_page, _search_input_key)
-    type: internal session state
-    status: unchanged
-    backward_compatible: true
-  - name: search_trigger / search_clear button handlers
-    type: internal UI
-    status: unchanged
-    backward_compatible: true
-  - name: text_input aria-label
-    type: UI contract consumed by test/ui/test_semantic_search_ui_flow_e2e.py:248
-    status: modified (placeholder reword changes aria-label)
-    backward_compatible: false for that one test selector — updated in the same SC-4 cycle
-    breaking: false (test-internal coupling only; no user-facing API)
+  - name: records-sidebar-text_input-contract
+    source: src/frontend/pages/records.py st.text_input block
+    target: Streamlit widget-state machinery (session_state keys)
+    contract: >
+      Widget key remains dynamically suffixed `search_query_input_{_search_input_key}`;
+      callback `on_search_change` reads the current suffixed key and writes ONLY backing
+      state keys `search_query` and `current_page` — never its own widget key (R-4),
+      never via diff+rerun pattern (R-5). `on_change` fires on Enter AND on blur —
+      accepted semantics per spec Edge Cases.
+  - name: e2e-selector-contract
+    source: src/frontend/pages/records.py text_input aria-label (placeholder/label text)
+    target: test/ui/test_semantic_search_ui_flow_e2e.py locator (line 248)
+    contract: aria-label string in the E2E locator MUST equal the rendered text_input label;
+      changing the placeholder REQUIRES updating the selector in the same delivery cycle (R-9).
 
-removed_interfaces: none
+removed_interfaces: []
+breaking_changes: []
+  - none — no public API, schema, or serialized-format change; single-page UI behavior restoration
 
 dependency_contract:
-  - source: text_input aria-label
-    target: test/ui/test_semantic_search_ui_flow_e2e.py:248
-    type: artifact schema
-    constraint: selector string must equal the new placeholder label; co-change mandatory
-breaking_changes: none (user-facing behavior strictly additive — Enter previously a no-op)
+  - source: records-sidebar-text_input-contract
+    target: streamlit-session-state
+    type: runtime-behavior
+    constraint: callback reads dynamic suffix key; writes search_query + current_page only; no self-key write; no st.rerun
+  - source: e2e-selector-contract
+    target: test_ui_aria_label_locator
+    type: string-equality
+    constraint: locator aria-label == text_input label string; updated in same cycle as placeholder change

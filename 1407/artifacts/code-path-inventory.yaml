@@ -1,29 +1,22 @@
-artifact: code-path-inventory
-issue: 1407
-repo: Brothertown-Language/snea-shoebox-editor
-date: 2026-10-03
+# Code Path Inventory — Issue 1407
 
-paths:
-  - phase: SC-1 Enter wiring
-    paths:
-      - "records.py on_search_change (170-172) — rewritten: reads st.session_state[f'search_query_input_{st.session_state.get(\"_search_input_key\", 0)}'] dynamically; writes search_query + current_page=1"
-      - "records.py st.text_input (374-379) — on_change=on_search_change added"
-    untouched: search dispatch (196-261), pagination (340-354)
-  - phase: SC-2 clear interplay
-    paths:
-      - "records.py clear preamble (56-59) — unchanged, verified ordering before widget creation"
-      - callback read path (same as SC-1) — exercised post-clear with incremented suffix
-    untouched: search_clear button handler (463-466)
-  - phase: SC-3 button path
-    paths:
-      - "records.py search_trigger handler (458-462) — unchanged (guard-only verification)"
-    untouched: everything
-  - phase: SC-4 placeholder
-    paths:
-      - "records.py text_input label (375) — neutral wording"
-      - "test/ui/test_semantic_search_ui_flow_e2e.py:248 — aria-label selector updated to match"
-    untouched: all other labels
+> Code paths implied by each SC; verified against live source this session.
 
-shared_infrastructure_read_only:
-  - st.session_state.search_query (records.py:200) — consumed by both exact and semantic dispatch; write-only from the callback's perspective
-  - PreferenceService — NOT touched (search_query is not persisted as a preference in current code)
+SC-1:
+  - path: src/frontend/pages/records.py "on_search_change" (line ~170)
+    current_state: reads stale key `st.session_state.search_query_input` (dead code — widget key is now suffixed `search_query_input_{_search_input_key}`)
+    change: read dynamic suffix `search_query_input_{st.session_state.get('_search_input_key', 0)}`; write search_query + current_page=1; attach `on_change=on_search_change` to the text_input (line ~374 block — attachment currently absent)
+SC-2:
+  - path: src/frontend/pages/records.py clear-button handler (line ~59: `_search_input_key` increment)
+    interaction: incremented suffix means callback must read the NEW suffixed key; no stale re-commit
+SC-3:
+  - path: src/frontend/pages/records.py magnifier button path (st.button → commit search_query + current_page=1)
+    change: none — pin with regression guard test only
+SC-4a:
+  - path: src/frontend/pages/records.py text_input label/placeholder ("Enter text..." at line ~375)
+    change: neutral wording (e.g. "Search...")
+  - path: test/ui/test_semantic_search_ui_flow_e2e.py (aria-label selector at line 248)
+    change: update selector to match new placeholder in the same cycle
+SC-4b:
+  - path: full pytest suite (uv run pytest test/)
+    change: none — verification-only run

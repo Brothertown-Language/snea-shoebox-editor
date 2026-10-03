@@ -1,24 +1,20 @@
-artifact: cross-cutting-matrix
-issue: 1407
-repo: Brothertown-Language/snea-shoebox-editor
-date: 2026-10-03
+# Cross-Cutting Matrix — Issue 1407
+
+> SCs spanning multiple concerns.
 
 matrix:
-  - concern: accessibility (aria-label = visible label)
-    affected_by: SC-4
-    handling: placeholder wording kept a valid, non-misleading accessible label; E2E selector updated in same cycle
-  - concern: unicode safety
-    affected_by: SC-1..SC-4
-    handling: search query strings (IPA/diacritics) pass through unchanged; no normalization introduced (AGENTS.md linguistic-data constraints); callback copies the raw widget value verbatim
-  - concern: session-state lifecycle
-    affected_by: SC-1, SC-2
-    handling: callback follows page convention (write backing state, reset page; no widget-key self-writes, no post-instantiation writes)
-  - concern: evidence standard
-    affected_by: all
-    handling: behavioral/user-visible claims require Playwright live-browser evidence (docs/development/ui_testing_standard.md); AppTest limited to in-process wiring smoke
-  - concern: role gating
-    affected_by: none
-    handling: no gating logic touched
-  - concern: performance
-    affected_by: none
-    handling: Enter commit triggers one rerun — same cost as the button path; no new service calls
+  - sc: SC-1
+    spans: [enter-key-search-wiring, post-clear-state-integrity]
+    reason: the suffixed-key read fixes both wiring and post-clear staleness (R-2 + R-7)
+  - sc: SC-3
+    spans: [button-path-regression-guard, enter-key-search-wiring]
+    reason: commit semantics of button and Enter must stay identical (R-3); verification ordered after SC-1 for context
+  - sc: SC-4a
+    spans: [placeholder-copy-and-coupled-selector]
+    reason: placeholder reword and E2E selector update are one delivery unit (R-9)
+  - sc: SC-4b
+    spans: [all concerns]
+    reason: global regression gate over the whole suite
+
+resolution:
+  - all cross-cutting SCs execute within Phase 1; no phase split required

@@ -1,0 +1,60 @@
+# Structure — Issue 1407
+
+> Phase decomposition, dependency DAG, skill+task selection per implementation-workflow reference card.
+
+phases:
+  - name: Phase 1
+    concern: enter-key-search-restoration
+    scs: [SC-1, SC-2, SC-3, SC-4a, SC-4b]
+    items:
+      - item: 1
+        sc: SC-1
+        cycle: RED (AppTest wiring assert) → GREEN (fix on_search_change suffixed read + re-attach on_change) → verify (Playwright live-browser) → commit-inline
+      - item: 2
+        sc: SC-2
+        cycle: RED (AppTest clear-then-Enter) → GREEN (covered by item 1 dynamic suffix read; test retains interaction) → verify (Playwright) → commit-inline
+      - item: 3
+        sc: SC-3
+        cycle: RED (AppTest button single-commit guard, passes before AND after) → GREEN (assert no behavioral delta) → verify (Playwright) → commit-inline
+      - item: 4a
+        sc: SC-4a
+        cycle: RED (placeholder string assert) → GREEN (neutral placeholder + E2E aria-label selector update same cycle) → verify (Playwright render + coupled E2E run) → commit-inline
+      - item: 4b
+        sc: SC-4b
+        cycle: RED n/a (global regression guard) → GREEN n/a (no code change) → verify (full pytest suite run) → no dedicated commit
+
+dag:
+  edges:
+    - from: item-1
+      to: item-2
+      reason: SC-2 GREEN is covered by item 1's dynamic suffix read
+    - from: item-1
+      to: item-3
+      reason: button-path verification ordered after Enter wiring for context
+    - from: item-3
+      to: item-4a
+      reason: placeholder/selector change must not disturb pinned button behavior
+    - from: item-4a
+      to: item-4b
+      reason: full-suite gate runs last, after all code changes
+  cycles: none
+
+triplet_colocation: all SCs have RED/GREEN/COMMIT within Phase 1 — no split
+cross_phase_dependencies: none (single phase)
+
+skill_task_selection:
+  pre_implementation:
+    - step: pre-regression
+      skill: test-driven-development
+      dispatch: task(..., prompt: "execute phase-0 task from test-driven-development")
+    - step: pre-regression-verify
+      skill: verification-before-completion
+      dispatch: task(..., prompt: "execute verify task from verification-before-completion")
+  per_item:
+    red: test-driven-development — task(..., prompt: "execute red task from test-driven-development")
+    green: test-driven-development — task(..., prompt: "execute green task from test-driven-development")
+    post_regression: test-driven-development — task(..., prompt: "execute phase-4 task from test-driven-development")
+    verify: verification-before-completion — task(..., prompt: "execute verify task from verification-before-completion")
+    commit-inline: orchestrator direct (git add && git commit)
+  post_implementation:
+    - audit → z3-check → structural-checks → pre-pr-gate → regression-check → review-prep → create-pr → exec-summary

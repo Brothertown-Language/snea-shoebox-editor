@@ -1,0 +1,25 @@
+# Solve Output — Issue 1407
+
+solve_status: SAT
+plan_status: SOLVED_SATISFICING
+
+checks:
+  solve_model:
+    query: "item4b_complete"
+    result: SAT
+    exit_code: 0
+    evidence: model assigns True to item1..item4b_complete
+  solve_check:
+    result: "SAT (+ postconditions + invariants)"
+    exit_code: 0
+    evidence: state (all items true) satisfies contract invariants (item2→item1, item3→item1, item4a→item3, item4b→all, at-least-one)
+  plan_plan:
+    result: SOLVED_SATISFICING
+    exit_code: 0
+    evidence: 5-step plan — complete-item1, complete-item3, complete-item2, complete-item4a, complete-item4b (respects DAG ordering encoded in action preconditions)
+
+provenance:
+  contract: .issues/1407/dependency-contract.yaml
+  state: .issues/1407/artifacts/state-analysis.yaml
+  problem: .issues/1407/artifacts/plan-problem.yaml
+  structure: .issues/1407/artifacts/structure.yaml
