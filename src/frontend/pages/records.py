@@ -14,14 +14,16 @@ class _RecordSearchResultLike:
     UI-level shim only — binds to the SemanticSearchResult contract (R-8),
     never to pgvector or ORM internals."""
 
-    def __init__(self, records, total_count, limit, offset):
+    def __init__(self, records, total_count, limit, offset, matched_terms=None):
         self.records = records
         self.total_count = total_count
         self.limit = limit
         self.offset = offset
+        self.matched_terms = matched_terms
 
 
 def records():
+    from src.frontend.search_highlight import compute_fts_spans, compute_term_spans
     from src.frontend.ui_utils import (
         apply_standard_layout_css,
         compute_mdf_line_diffs,
@@ -913,7 +915,29 @@ def records():
                     if st.session_state.structural_highlighting:
                         diagnostics = MDFValidator.diagnose_record(mdf_lines)
 
-                    render_mdf_block(mdf_data, diagnostics=diagnostics, key=f"render_{record_id}")
+                    # SC-17: thread query, mode, and computed highlight spans
+                    # into the View-mode render call ONLY. Lexical modes use
+                    # the service's matched raw terms (verbatim term spans);
+                    # FTS mode derives spans from the query tokens via the
+                    # single normalizer; Semantic modes highlight nothing.
+                    # Revision-history and import-diff render call sites
+                    # receive no highlight parameters (markup-identical, SC-9).
+                    view_highlight_spans = None
+                    if search_term and not is_semantic_mode:
+                        if st.session_state.search_mode == "FTS":
+                            view_highlight_spans = [compute_fts_spans(line, search_term) for line in mdf_lines]
+                        else:
+                            page_terms = getattr(search_result, "matched_terms", None)
+                            record_terms = sorted(page_terms.get(record_id, ())) if page_terms else []
+                            if record_terms:
+                                view_highlight_spans = [compute_term_spans(line, record_terms) for line in mdf_lines]
+
+                    render_mdf_block(
+                        mdf_data,
+                        diagnostics=diagnostics,
+                        key=f"render_{record_id}",
+                        highlight_spans=view_highlight_spans,
+                    )
 
                     # Action Toolbar
                     toolbar_cols = [1, 1]

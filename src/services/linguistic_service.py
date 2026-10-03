@@ -97,6 +97,7 @@ class RecordSearchResult:
     total_count: int
     limit: int
     offset: int
+    matched_terms: dict[str, Any] | None = None
 
 
 class LinguisticService:
@@ -484,7 +485,32 @@ class LinguisticService:
                     }
                 )
 
-            return RecordSearchResult(records=records, total_count=total_count, limit=limit, offset=offset)
+            # SC-7: collect matched raw terms for ILIKE modes, keyed per record
+            # on the returned page only, deduplicated per record.
+            matched_terms: dict[str, Any] | None = None
+            if search_term and record_ids is None and search_mode in ("Lexeme", "Headword", "Gloss"):
+                norm_search = LinguisticService.generate_sort_lx(search_term)
+                if norm_search:
+                    entry_model = {
+                        "Lexeme": SearchEntry,
+                        "Headword": HeadwordSearchEntry,
+                        "Gloss": GlossSearchEntry,
+                    }[search_mode]
+                    page_ids = [r.id for r, _ in results]
+                    if page_ids:
+                        term_rows = (
+                            session.query(entry_model.record_id, entry_model.term)
+                            .filter(entry_model.record_id.in_(page_ids))
+                            .filter(entry_model.normalized_term.ilike(f"%{norm_search}%"))
+                            .all()
+                        )
+                        matched_terms = {}
+                        for rec_id, term in term_rows:
+                            matched_terms.setdefault(rec_id, set()).add(term)
+
+            return RecordSearchResult(
+                records=records, total_count=total_count, limit=limit, offset=offset, matched_terms=matched_terms
+            )
 
     @staticmethod
     def get_all_records_for_export(
