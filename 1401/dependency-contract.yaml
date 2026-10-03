@@ -10,12 +10,15 @@ variables:
     type: bool
   phase4_complete:
     type: bool
+  phase5_complete:
+    type: bool
 preconditions: []
 invariants:
   - "z3.Implies(phase3_complete, phase1_complete)"
   - "z3.Implies(phase3_complete, phase2_complete)"
   - "z3.Implies(phase4_complete, z3.And(phase1_complete, phase2_complete, phase3_complete))"
-  - "z3.Or(phase1_complete, phase2_complete, phase3_complete, phase4_complete)"
+  - "z3.Implies(phase5_complete, z3.And(phase1_complete, phase2_complete, phase3_complete, phase4_complete))"
+  - "z3.Or(phase1_complete, phase2_complete, phase3_complete, phase4_complete, phase5_complete)"
 provenance:
   source: interface-compatibility.yaml dependency_contract section (extracted as-is below)
   dependency_contract:

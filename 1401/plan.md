@@ -4,7 +4,7 @@ issue: 1401
 title: "Search-match highlighting in Records view"
 authorization_scope: for_pr
 pr_strategy: stacked
-phase_count: 4
+phase_count: 5
 dispatch:
   - "Phase 1: test-driven-development — red/green/post-regression/verify task cards + commit-inline direct"
   - "Phase 2: test-driven-development — red/green/post-regression/verify task cards + commit-inline direct"
@@ -342,4 +342,9 @@ Check your tool list for a tool named `task`.
   event: plan_created
   plan_file: .issues/1401/plan.md
   phase_count: 5
+  issue: 1401
+- timestamp: 2026-10-02T20:05:00-04:00
+  event: plan_revised
+  plan_file: .issues/1401/plan.md
+  revision_source: validate-findings.yaml review + contract gap fix (phase5_variable_added, phase_count_corrected)
   issue: 1401

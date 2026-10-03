@@ -24,6 +24,10 @@ planner:
     - complete-phase3-renderer-styling-wiring(p1)
     - complete-phase4-playwright-e2e(p1)
   exit_code: 0
+reverification_2026-10-02:
+  model_check: SAT (exit 0)
+  state_check: SAT (+ postconditions + invariants, exit 0)
+  planner: SOLVED_SATISFICING, plan_length 4 (exit 0)
 notes:
   - "Task-card literal invocation '--query sat' is not a valid expression for tools/solve model; query replaced with 'phase4_complete == True' (Z3 expression over contract variables)"
   - "Task-card plan invocation (--contract-path/--output) does not match tools/plan interface; planner run with a --problem YAML encoding the phase DAG, output recorded here"
