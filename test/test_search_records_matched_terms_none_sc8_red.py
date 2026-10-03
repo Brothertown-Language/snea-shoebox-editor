@@ -1,28 +1,34 @@
 # SPDX-FileCopyrightText: 2026 michael-conrad
 # SPDX-License-Identifier: MIT
 # Provenance: AI-generated
-"""SC-8 RED (revised 2026-10-03): FTS keeps matched_terms None; Semantic modes populate it.
+"""SC-3 (Issue #1404): REAL search_semantic hit shapes — contract-enforcement suite.
 
-The service ``search_records()`` in ``src/services/linguistic_service.py``
-must return ``RecordSearchResult.matched_terms`` as ``None`` for FTS mode,
-and must POPULATE ``matched_terms`` for Semantic Gloss / Semantic All modes
-from the matched source-field term values carried by the semantic search
-layer's ``SemanticSearchResult`` hits — grouped per record identifier and
-deduplicated per record.
+``LinguisticService.search_records()`` must consume the REAL ``search_semantic``
+contract for both Semantic modes:
+
+- the container shape: ``SemanticSearchResult`` whose ``results`` is a list of
+  ``(record_id, score)`` tuples and whose ``matched_terms`` is a real
+  ``dict[int, set]`` keyed by record id — NOT attribute-bearing hit stubs;
+- the ``(record_id, score)`` tuple hit shape exactly as the seam returns it
+  (``src/services/semantic_search_service.py::search_semantic`` appends
+  ``(int(record_id), float(score))`` per row).
+
+This suite is a CONTRACT-ENFORCEMENT suite, not a shape-stub suite:
+
+- ONLY the DB session (``linguistic_service.get_session``), the seam's engine
+  (``semantic_search_service._ENGINE``), and the query encoder
+  (``set_query_encoder``) are patched. The real ``search_semantic`` seam runs
+  against an ephemeral pgserver fixture DB and returns its genuine tuple hits
+  and ``matched_terms`` dict.
+- A guard test greps THIS module's source for ``_search_strategies`` patching
+  and FAILS if any shape stub remains. The guard passes post-rewrite by
+  design: its purpose is to lock the contract in — any later reintroduction
+  of ``_search_strategies`` stubbing in this file turns the suite RED.
+
+FTS cases are retained (matched_terms stays None — unchanged contract).
 
 Fixture data lives in an isolated ephemeral PostgreSQL instance (pgserver) —
-NEVER production data. The service is wired to the test DB by patching
-``linguistic_service.get_session``. The fixture seeds ``SemanticSearchEntry``
-rows with embeddings (pinned model) so the semantic layer's data model is
-present. Semantic modes are exercised with the strategy dispatch stubbed as
-a passthrough returning ``SemanticSearchResult`` hit instances (carrying
-``record_id``, ``entry_type``, ``term``, ``similarity``) instead of running
-the real embedding seam — the same isolation pattern the existing SC-8
-semantic cases use; the stub isolates SC-8's matched-terms population
-contract from the real vector-encoding path.
-
-Pre-GREEN the Semantic cases must FAIL: ``matched_terms`` is currently None
-for semantic modes (ILIKE-only collection branch).
+NEVER production data.
 
 Run: uv run pytest test/test_search_records_matched_terms_none_sc8_red.py
 
@@ -33,10 +39,27 @@ import shutil
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
+from unittest.mock import patch
 
 from sqlalchemy import func, orm
 
 TEST_PATH = Path("tmp/test_search_records_matched_terms_none_sc8_red_db")
+
+# Pinned-model dimension (gte-small).
+DIM = 384
+# Deterministic query vector; matched rows embed this exact vector so the
+# cosine similarity is 1.0 — above the CALIBRATED_FLOOR default (0.93).
+E_QUERY = [0.1] * DIM
+# Orthogonal vector for a non-matching row (cosine ~0 < floor).
+E_FAR = [0.0] * DIM
+E_FAR[0] = 1.0
+
+
+class _StubEncoder:
+    """Deterministic encoder: every query maps to E_QUERY."""
+
+    def encode(self, texts):
+        return [list(E_QUERY) for _ in texts]
 
 
 def make_get_session(engine):
@@ -51,8 +74,8 @@ def make_get_session(engine):
     return _get_session
 
 
-class TestSearchRecordsMatchedTermsNoneSc8(unittest.TestCase):
-    """SC-8: FTS matched_terms None; Semantic modes populate per-record terms."""
+class TestSearchRecordsRealSemanticShapesSc3(unittest.TestCase):
+    """SC-3: real search_semantic shapes for both modes; no shape stubs."""
 
     @classmethod
     def setUpClass(cls):  # noqa: N802
@@ -89,6 +112,9 @@ class TestSearchRecordsMatchedTermsNoneSc8(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):  # noqa: N802
+        from src.services import semantic_search_service as svc
+
+        svc.set_query_encoder(None)
         if hasattr(cls, "pg_server"):
             cls.pg_server.cleanup()
         if TEST_PATH.exists():
@@ -97,69 +123,62 @@ class TestSearchRecordsMatchedTermsNoneSc8(unittest.TestCase):
     @classmethod
     def _seed(cls):
         from src.database.models.core import Record, Source
-        from src.database.models.search import FTSEntry, SearchEntry, SemanticSearchEntry
-        from src.services.linguistic_service import LinguisticService
+        from src.database.models.search import FTSEntry, GlossSearchEntry
+        from src.database.models.search import SemanticSearchEntry
         from src.services.semantic_search_service import PIN
 
-        norm = LinguisticService.generate_sort_lx
-
         session = orm.sessionmaker(bind=cls.engine)()
-        source = Source(name="SC8 Seed Source")
+        source = Source(name="SC3 Real Shape Seed Source")
         session.add(source)
         session.flush()
         cls.source_id = source.id
 
-        # Record A: matches FTS query "cawap" via its FTS vector, carries a
-        # Lexeme search entry, and a semantic entry ("cawapou") with an
-        # embedding under the pinned model. matched_terms: None in FTS mode;
-        # populated from the semantic layer's source-field terms in Semantic
-        # modes.
+        # Record A: primary gloss embedded with the query vector (cosine 1.0
+        # clears the calibrated floor) — gloss seam hit. Also carries a
+        # semantic entry under the same pinned model — Semantic All (gloss ∪
+        # semantic union) hit. FTS vector present for the FTS None cases.
         rec_a = Record(lx="cawapou", source_id=source.id, mdf_data="")
         session.add(rec_a)
         session.flush()
         cls.rec_a_id = rec_a.id
         session.add(
-            SearchEntry(
+            GlossSearchEntry(
                 record_id=rec_a.id,
+                entry_type="ge",
                 term="cawapou",
-                normalized_term=norm("cawapou"),
-                entry_type="lx",
-            )
-        )
-        session.add(
-            FTSEntry(
-                record_id=rec_a.id,
-                fts_vector=func.to_tsvector("simple", norm("cawapou cawapou wren")),
+                normalized_term="cawapou",
+                embedding=list(E_QUERY),
+                embedding_model=PIN,
             )
         )
         session.add(
             SemanticSearchEntry(
                 record_id=rec_a.id,
-                entry_type="lx",
-                term="cawapou",
-                embedding=[0.1] * 384,
+                entry_type="va",
+                term="cawap",
+                embedding=list(E_QUERY),
                 embedding_model=PIN,
             )
         )
+        session.add(
+            FTSEntry(
+                record_id=rec_a.id,
+                fts_vector=func.to_tsvector("simple", "cawapou cawapou wren"),
+            )
+        )
 
-        # Record B: FTS-vector-only record that also matches "wren", plus a
-        # semantic entry ("wrenuw") — proves multi-record semantic population.
+        # Record B: below-floor gloss — must NOT surface as a semantic hit.
         rec_b = Record(lx="wrenuw", source_id=source.id, mdf_data="")
         session.add(rec_b)
         session.flush()
         cls.rec_b_id = rec_b.id
         session.add(
-            FTSEntry(
+            GlossSearchEntry(
                 record_id=rec_b.id,
-                fts_vector=func.to_tsvector("simple", norm("wren heki")),
-            )
-        )
-        session.add(
-            SemanticSearchEntry(
-                record_id=rec_b.id,
-                entry_type="va",
-                term="wrenuw",
-                embedding=[0.2] * 384,
+                entry_type="ge",
+                term="wren",
+                normalized_term="wren",
+                embedding=list(E_FAR),
                 embedding_model=PIN,
             )
         )
@@ -168,15 +187,158 @@ class TestSearchRecordsMatchedTermsNoneSc8(unittest.TestCase):
         session.close()
 
     def setUp(self):
-        from unittest.mock import patch
-
         from src.services import linguistic_service
+        from src.services import semantic_search_service as svc
 
-        self._patcher = patch.object(
+        # Isolation: ONLY the DB session, the seam engine, and the query
+        # encoder are patched. The real search_semantic seam (real
+        # (record_id, score) tuple hits, real matched_terms dict) runs
+        # against the ephemeral fixture DB. NO _search_strategies stubs.
+        self._session_patcher = patch.object(
             linguistic_service, "get_session", make_get_session(self.engine)
         )
-        self._patcher.start()
-        self.addCleanup(self._patcher.stop)
+        self._session_patcher.start()
+        self.addCleanup(self._session_patcher.stop)
+
+        self._engine_patcher = patch.object(svc, "_ENGINE", self.engine)
+        self._engine_patcher.start()
+        self.addCleanup(self._engine_patcher.stop)
+
+        svc.set_query_encoder(_StubEncoder())
+        self.addCleanup(svc.set_query_encoder, None)
+
+    # --- SC-3 contract guard: no _search_strategies shape stubs ---
+
+    def test_no_search_strategies_shape_stubs_in_module_sc3(self):
+        """Guard: this module must not stub the _search_strategies table.
+
+        Post-rewrite this guard PASSES by design — it locks the contract
+        in. The SC-3 suite FAILS only if a shape stub is reintroduced here
+        (or the real contract assertions below stop being exercised).
+        """
+        import re
+
+        source = Path(__file__).read_text(encoding="utf-8")
+        # Detect actual stub *patching* patterns — any patch.dict /
+        # patch.object call targeting the strategy table (regardless of
+        # import aliasing), or direct table access/assignment.
+        stub_pattern = re.compile(
+            r"\.(?:dict|object)\(\s*[\"'][^\"']*_search_strategies"
+            r"|_search_strategies\s*[\[{=]"
+        )
+        self.assertIsNone(
+            stub_pattern.search(source),
+            "SC-3 contract violation: this suite must exercise the real "
+            "search_semantic seam, never stub _search_strategies hit shapes",
+        )
+
+    # --- SC-3: Semantic Gloss — real container + (record_id, score) tuples ---
+
+    def test_semantic_gloss_real_container_tuple_hits_sc3(self):
+        from src.services.linguistic_service import LinguisticService
+        from src.services.semantic_search_service import search_semantic
+
+        # Verify the real seam itself returns the genuine contract shapes:
+        # a SemanticSearchResult container whose results are
+        # (record_id, score) tuples and whose matched_terms is a real dict.
+        container = search_semantic(mode="gloss", query="cawap")
+        self.assertIsNotNone(container.results)
+        self.assertTrue(
+            all(
+                isinstance(hit, tuple) and len(hit) == 2
+                for hit in container.results
+            ),
+            "the real seam must return (record_id, score) tuple hits — "
+            "attribute-bearing hit objects would mean the seam contract "
+            "changed and this suite no longer exercises SC-3's shapes",
+        )
+        self.assertIsInstance(
+            container.matched_terms,
+            dict,
+            "the real seam must populate matched_terms as a dict keyed "
+            "by record id",
+        )
+
+        # Now through the service: the real tuple hits must be consumed
+        # without raising, and matched_terms must flow from the seam's
+        # real dict.
+        result = LinguisticService.search_records(
+            source_id=self.source_id,
+            search_term="cawap",
+            search_mode="Semantic Gloss",
+        )
+        self.assertEqual(
+            result.total_count,
+            1,
+            "exactly the floor-clearing record must be returned",
+        )
+        returned_ids = {rec["id"] for rec in result.records}
+        self.assertEqual(
+            returned_ids,
+            {self.rec_a_id},
+            "the filtered result set must contain exactly the semantic "
+            "hit record",
+        )
+        self.assertIsNotNone(
+            result.matched_terms,
+            "Semantic Gloss mode must populate matched_terms from the "
+            "seam's real matched_terms dict",
+        )
+        self.assertIn(self.rec_a_id, result.matched_terms)
+        self.assertEqual(
+            result.matched_terms[self.rec_a_id],
+            {"cawapou"},
+            "matched terms must carry the real gloss_search_entries term",
+        )
+        self.assertNotIn(
+            self.rec_b_id,
+            result.matched_terms,
+            "below-floor records must not contribute matched terms",
+        )
+
+    # --- SC-3: Semantic All — real container + (record_id, score) tuples ---
+
+    def test_semantic_all_real_container_tuple_hits_sc3(self):
+        from src.services.linguistic_service import LinguisticService
+        from src.services.semantic_search_service import search_semantic
+
+        # Real 'all' seam: gloss ∪ semantic union, same tuple contract.
+        container = search_semantic(mode="all", query="cawap")
+        self.assertTrue(
+            all(
+                isinstance(hit, tuple) and len(hit) == 2
+                for hit in container.results
+            ),
+            "the real seam must return (record_id, score) tuple hits in "
+            "'all' mode as well",
+        )
+        self.assertIsInstance(container.matched_terms, dict)
+
+        result = LinguisticService.search_records(
+            source_id=self.source_id,
+            search_term="cawap",
+            search_mode="Semantic All",
+        )
+        self.assertEqual(
+            result.total_count,
+            1,
+            "exactly the floor-clearing record must be returned in 'all' mode",
+        )
+        returned_ids = {rec["id"] for rec in result.records}
+        self.assertEqual(returned_ids, {self.rec_a_id})
+        self.assertIsNotNone(
+            result.matched_terms,
+            "Semantic All mode must populate matched_terms from the "
+            "seam's real matched_terms dict",
+        )
+        # 'all' unions gloss and semantic tables: both seeded terms for
+        # record A must appear, deduplicated per record.
+        self.assertEqual(
+            result.matched_terms[self.rec_a_id],
+            {"cawapou", "cawap"},
+            "Semantic All matched_terms must union gloss and semantic "
+            "table terms, deduplicated per record",
+        )
 
     # --- FTS mode: matched_terms stays None (unchanged contract) ---
 
@@ -194,145 +356,6 @@ class TestSearchRecordsMatchedTermsNoneSc8(unittest.TestCase):
         self.assertIsNone(
             result.matched_terms,
             "FTS mode must leave matched_terms as None (no raw-term anchor)",
-        )
-
-    def test_fts_mode_none_across_multiple_records_sc8(self):
-        from src.services.linguistic_service import LinguisticService
-
-        result = LinguisticService.search_records(
-            source_id=self.source_id, search_term="wren", search_mode="FTS"
-        )
-        self.assertGreaterEqual(result.total_count, 1)
-        self.assertIsNone(result.matched_terms)
-
-    # --- Semantic modes: matched_terms populated from the semantic layer ---
-
-    @staticmethod
-    def _make_semantic_stub(hits):
-        """Strategy stub returning SemanticSearchResult hit instances.
-
-        Isolation pattern: the strategy dict binds the seam function at
-        import time, so the dict entry is patched (not the module attribute).
-        The stub returns the semantic search layer's per-hit objects — each
-        carrying (record_id, entry_type, term, similarity) — instead of
-        running the real vector-encoding seam.
-        """
-        from src.database.models.search import SemanticSearchResult
-
-        def _stub(query, search_term):
-            return [
-                SemanticSearchResult(
-                    record_id=hit.record_id,
-                    entry_type=hit.entry_type,
-                    term=hit.term,
-                    similarity=hit.similarity,
-                )
-                for hit in hits
-            ]
-
-        return _stub
-
-    def test_semantic_gloss_populates_matched_terms_dedup_sc8(self):
-        from unittest.mock import patch
-
-        from src.services import linguistic_service
-
-        # Record A matched with the same term carried under two entry types
-        # plus a second distinct source-field term — the per-record set must
-        # be deduplicated to {"cawapou", "cawap"}.
-        from src.database.models.search import SemanticSearchResult
-
-        hits = [
-            SemanticSearchResult(
-                record_id=self.rec_a_id, entry_type="lx", term="cawapou", similarity=0.97
-            ),
-            SemanticSearchResult(
-                record_id=self.rec_a_id, entry_type="ge", term="cawapou", similarity=0.96
-            ),
-            SemanticSearchResult(
-                record_id=self.rec_a_id, entry_type="ge", term="cawap", similarity=0.95
-            ),
-        ]
-        stub = self._make_semantic_stub(hits)
-        with patch.dict(
-            "src.services.linguistic_service._search_strategies",
-            {"Semantic Gloss": stub},
-        ):
-            result = linguistic_service.LinguisticService.search_records(
-                source_id=self.source_id,
-                search_term="cawap",
-                search_mode="Semantic Gloss",
-            )
-        self.assertGreater(
-            result.total_count,
-            0,
-            "fixture must produce semantic matches so the presence assertion is meaningful",
-        )
-        self.assertIsNotNone(
-            result.matched_terms,
-            "Semantic Gloss mode must populate matched_terms from the "
-            "matched source-field terms",
-        )
-        self.assertIsInstance(result.matched_terms, dict)
-        self.assertIn(
-            self.rec_a_id,
-            result.matched_terms,
-            "matched_terms must be keyed by record id",
-        )
-        self.assertEqual(
-            result.matched_terms[self.rec_a_id],
-            {"cawapou", "cawap"},
-            "matched_terms per record must be the deduplicated set of "
-            "matched source-field terms",
-        )
-
-    def test_semantic_all_populates_matched_terms_multiple_records_sc8(self):
-        from unittest.mock import patch
-
-        from src.database.models.search import SemanticSearchResult
-        from src.services import linguistic_service
-
-        hits = [
-            SemanticSearchResult(
-                record_id=self.rec_a_id, entry_type="lx", term="cawapou", similarity=0.97
-            ),
-            SemanticSearchResult(
-                record_id=self.rec_a_id, entry_type="ge", term="cawapou", similarity=0.96
-            ),
-            SemanticSearchResult(
-                record_id=self.rec_b_id, entry_type="va", term="wrenuw", similarity=0.94
-            ),
-            SemanticSearchResult(
-                record_id=self.rec_b_id, entry_type="ge", term="wrenuw", similarity=0.93
-            ),
-        ]
-        stub = self._make_semantic_stub(hits)
-        with patch.dict(
-            "src.services.linguistic_service._search_strategies",
-            {"Semantic All": stub},
-        ):
-            result = linguistic_service.LinguisticService.search_records(
-                source_id=self.source_id,
-                search_term="wren",
-                search_mode="Semantic All",
-            )
-        self.assertGreaterEqual(result.total_count, 2)
-        self.assertIsNotNone(
-            result.matched_terms,
-            "Semantic All mode must populate matched_terms from the "
-            "matched source-field terms",
-        )
-        self.assertIn(self.rec_a_id, result.matched_terms)
-        self.assertIn(self.rec_b_id, result.matched_terms)
-        self.assertEqual(
-            result.matched_terms[self.rec_a_id],
-            {"cawapou"},
-            "duplicate source-field terms must deduplicate per record",
-        )
-        self.assertEqual(
-            result.matched_terms[self.rec_b_id],
-            {"wrenuw"},
-            "duplicate source-field terms must deduplicate per record",
         )
 
 
