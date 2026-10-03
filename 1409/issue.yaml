@@ -3,6 +3,52 @@ status: open
 labels:
 - needs-approval
 - '[SPEC]'
-body: ''
+body: '## Problem
+
+  On the Records page sidebar, Streamlit shows a warning: "The widget with key ''semantic_threshold_slider''
+  was created with a default value but also had its value set via the Session State
+  API." The semantic_threshold_number widget has the same defect.
+
+
+  ## Root cause (verified)
+
+  records.py:412-419 writes the widget keys via st.session_state BEFORE widget instantiation,
+  while the widget calls (records.py:440 slider, records.py:453 number input) also
+  pass explicit value= — Streamlit''s documented anti-pattern (dual-set). The path
+  requires a stored records/semantic_threshold preference; E2E fixtures delete saved
+  preferences, so synthetic sessions never hit it and no test asserts warning-box
+  absence.
+
+
+  ## Scope
+
+  - Seed widget values via session state only (drop value= args, or set session state
+  exactly once on first instantiation) and remove the redundant pre-instantiation
+  sync writes.
+
+  - Preserve #1400 behavior: calibrated default 0.93 when no preference exists; saved
+  user overrides preserved and honored (0.85-style values are legitimate overrides,
+  not bugs).
+
+  - No service-layer, preference-store, or calibration changes.
+
+
+  ## Success criteria (draft)
+
+  - SC-1: with a saved threshold preference present, the Records page renders with
+  no Streamlit widget dual-set warning (Playwright real-browser evidence).
+
+  - SC-2: with no saved preference, the slider defaults to the calibrated floor 0.93
+  (behavior preserved).
+
+  - SC-3: saved user overrides are preserved and honored after the change (override
+  round-trips across reruns).
+
+  - SC-4: full pytest suite passes with zero new failures.
+
+
+  🤖 Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
+
+  '
 created_at: '2026-10-03T23:33:50+00:00'
-updated_at: '2026-10-03T23:33:50+00:00'
+updated_at: '2026-10-03T23:33:54+00:00'
