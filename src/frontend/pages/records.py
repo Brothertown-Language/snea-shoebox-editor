@@ -168,7 +168,8 @@ def records():
                     handle_ui_error(e, f"Failed to load selection for {user_email}", logger_name="snea.pages.records")
 
     def on_search_change():
-        st.session_state.search_query = st.session_state.search_query_input
+        input_key = f"search_query_input_{st.session_state.get('_search_input_key', 0)}"
+        st.session_state.search_query = st.session_state.get(input_key, "")
         st.session_state.current_page = 1
 
     def on_mode_change():
@@ -372,10 +373,11 @@ def records():
 
         search_input_key = f"search_query_input_{st.session_state.get('_search_input_key', 0)}"
         st.text_input(
-            "Enter text...",
+            "Search terms...",
             value=st.session_state.search_query,
             key=search_input_key,
             label_visibility="collapsed",
+            on_change=on_search_change,
         )
 
         # Search Mode: Vertical Radio with Dynamic Caption
