@@ -32,7 +32,8 @@
 | SC-1 | Appuyer Entrée dans le text_input de recherche déclenche la recherche : `search_query` est commité depuis la clé suffixée courante et `current_page` est réinitialisé à 1 | behavioral | Playwright live-browser (standard of record, docs/development/ui_testing_standard.md) + AppTest in-process pour le wiring |
 | SC-2 | Après un effacement (❌), appuyer Entrée ne re-commite aucune requête obsolète : l'état vide persiste | behavioral | Playwright — effacer puis Entrée, vérifier absence de re-search |
 | SC-3 | Le clic sur 🔍 produit exactement un commit de la requête, comportement identique à avant le changement | behavioral | Playwright — clic bouton, un seul déclenchement ; AppTest garde-fou de régression |
-| SC-4 | Le placeholder n'instruit plus d'utiliser Entrée, et la suite pytest passe sans régression (sélecteur E2E mis à jour dans le même cycle) | behavioral | Playwright rendu du placeholder + run complet de la suite pytest |
+| SC-4a | Le placeholder n'instruit plus d'utiliser Entrée, et le sélecteur E2E couplé à l'aria-label est mis à jour dans le même cycle (une seule unité de livraison, par le couplage R-9) | behavioral | Playwright rendu du placeholder + exécution du test E2E couplé `test/ui/test_semantic_search_ui_flow_e2e.py` contre le sélecteur aria-label mis à jour (ou vérification AppTest du sélecteur) — preuve par exécution, pas par diff |
+| SC-4b | La suite pytest complète passe sans régression | behavioral | Run complet de la suite pytest — zéro échec nouveau |
 
 ## Requirements
 
@@ -46,6 +47,7 @@
 8. R-8. Le déclenchement SHALL fonctionner dans tous les modes de recherche (Headword, Gloss, Lexeme, FTS, Semantic Gloss, Semantic All).
 9. R-9. Le sélecteur E2E couplé à l'aria-label du placeholder SHALL être mis à jour dans le même cycle que R-6.
 10. R-10. Les chaînes de requête (caractères Unicode IPA, diacritiques) SHALL transiter sans normalisation ni altération.
+11. R-11. La suite pytest complète SHALL passer sans nouveaux échecs après les changements.
 
 ## Items
 
@@ -70,12 +72,19 @@
 - verify: Playwright — le clic bouton exécute la recherche exactement une fois
 - commit: un cycle RED→GREEN→COMMIT (ordonné après l'item 1 pour contexte de vérification)
 
-### Item 4 (SC-4): Placeholder neutre + zéro régression
+### Item 4a (SC-4a): Placeholder neutre + sélecteur E2E mis à jour dans le même cycle
 
 - RED: assertion string — placeholder ≠ « Enter text... » (échoue avant le changement)
-- GREEN: formulation neutre (ex. « Search... ») + mise à jour du sélecteur aria-label du test E2E dans le même cycle
-- verify: Playwright rendu du placeholder ; run complet de la suite pytest
+- GREEN: formulation neutre (ex. « Search... ») + mise à jour du sélecteur aria-label du test E2E dans le même cycle — une seule unité de livraison (couplage R-9)
+- verify: Playwright rendu du placeholder + exécution du test E2E couplé (ou vérification AppTest du sélecteur) contre le sélecteur aria-label mis à jour — preuve par exécution, pas par diff
 - commit: un cycle RED→GREEN→COMMIT
+
+### Item 4b (SC-4b): Zéro régression — suite pytest complète
+
+- RED: n/a (garde-fou de régression global — pas de nouveau comportement)
+- GREEN: aucune modification de code ; l'item vérifie l'absence de delta sur l'ensemble de la suite
+- verify: run complet de la suite pytest — zéro échec nouveau
+- commit: pas de commit dédié (critère de vérification globale, ordonné après l'item 4a)
 
 ## Dependencies
 
@@ -93,11 +102,12 @@
 | R-3 | SC-1, SC-3 | Phase 1 |
 | R-4 | SC-1 | Phase 1 |
 | R-5 | SC-1 | Phase 1 |
-| R-6 | SC-4 | Phase 1 |
+| R-6 | SC-4a | Phase 1 |
 | R-7 | SC-2 | Phase 1 |
 | R-8 | SC-1, SC-2, SC-3 | Phase 1 |
-| R-9 | SC-4 | Phase 1 |
+| R-9 | SC-4a | Phase 1 |
 | R-10 | SC-1, SC-2, SC-3 | Phase 1 |
+| R-11 | SC-4b | Phase 1 |
 
 ## Documentation Sources
 
@@ -115,10 +125,22 @@
 
 ## Cost Frame
 
+> Cost is measured in defect-discovery-latency, not tool calls. Correctness is the only metric.
+
 - **SC-1:** Vérifier le wiring Entrée via AppTest + Playwright coûte un cycle de test — le défaut autrement ne se découvre qu'à l'usage, quand l'utilisateur tape Entrée et que rien ne se passe. Sauter la vérification coûte une régression UX invisible en CI — la confiance dans la fonctionnalité s'effondre.
 - **SC-2:** Vérifier la séquence effacement-puis-Entrée coûte un scénario de test — sauter laisse un bug de requête obsolète qui réapparaît dès qu'un utilisateur efface puis recherche. La correction a posteriori coûte plus cher que le test.
 - **SC-3:** Épingler le comportement du bouton coûte un garde-fou de régression — sauter, et un double-commit ou un changement silencieux du bouton passe inaperçu jusqu'au signalement utilisateur.
-- **SC-4:** Vérifier placeholder + suite complète coûte un run pytest et une capture Playwright — sauter, et le sélecteur E2E cassé fait échouer la suite pour tout le monde. La correction est l'unique métrique.
+- **SC-4a:** Vérifier placeholder + exécution du test E2E couplé coûte une capture Playwright + un run E2E/AppTest — sauter, et le sélecteur cassé fait échouer la suite pour tout le monde. La correction est l'unique métrique.
+- **SC-4b:** Vérifier la suite pytest complète coûte un run pytest — sauter, et une régression ailleurs sur la page Records passe inaperçue jusqu'à la CI ou au signalement utilisateur.
+
+## Change Control
+
+| Date | Change | Reason | Authorized By |
+|------|--------|--------|---------------|
+| 2026-10-03 | SC-4 scindé en SC-4a (reword placeholder + mise à jour du sélecteur E2E aria-label dans le même cycle, une seule unité de livraison par couplage R-9) et SC-4b (suite pytest complète sans régression) ; Items, table de Traceability et dénombrement des SC mis à jour en conséquence | Validation finding : SC-4 était composée (compound SC) | Pipeline spec-creation validate gate |
+| 2026-10-03 | Ajout de la phrase canonique d'en-tête de Cost Frame : « Cost is measured in defect-discovery-latency, not tool calls. Correctness is the only metric. » | Advisory de validation (en-tête de Cost Frame) | Pipeline spec-creation validate gate |
+| 2026-10-03 | Ajout de R-11 (la suite pytest complète SHALL passer sans nouveaux échecs) et de la ligne de Traceability R-11 → SC-4b | Validation finding : SC-4b traceability orphan | Pipeline spec-creation validate gate |
+| 2026-10-03 | Méthode de vérification SC-4a rewordée : preuve par exécution (run du test E2E couplé contre le sélecteur aria-label mis à jour, ou vérification AppTest du sélecteur) au lieu de diff ; Item 4a et Cost Frame alignés | Validation finding : SC-4a evidence-type mismatch (diff ≠ preuve behaviorale) | Pipeline spec-creation validate gate |
 
 ## Edge Cases
 
