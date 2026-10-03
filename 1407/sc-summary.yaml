@@ -3,7 +3,7 @@ issue: 1407
 repo: Brothertown-Language/snea-shoebox-editor
 date: 2026-10-03
 
-sc_count: 4
+sc_count: 5
 scs:
   - id: "SC-1"
     description: "Appuyer Entrée dans la boîte de recherche exécute la recherche : callback ré-attaché, lecture de la clé suffixée, commit de search_query et reset de current_page à 1"
@@ -17,7 +17,11 @@ scs:
     description: "Le chemin du bouton 🔍 est inchangé : un clic produit exactement un commit de la requête, sans double comportement"
     evidence_type: "behavioral"
     plan_item: 3
-  - id: "SC-4"
-    description: "Le placeholder est neutre (plus d'instruction Entrée) et la suite de tests ne régresse pas, sélecteur E2E mis à jour dans le même cycle"
+  - id: "SC-4a"
+    description: "Le placeholder est neutre (plus d'instruction Entrée) et le sélecteur E2E couplé à l'aria-label est mis à jour dans le même cycle — une seule unité de livraison (couplage R-9) ; vérification par exécution (test E2E couplé ou vérification AppTest du sélecteur), pas par diff"
     evidence_type: "behavioral"
-    plan_item: 4
+    plan_item: 4a
+  - id: "SC-4b"
+    description: "La suite pytest complète passe sans régression (zéro échec nouveau) — R-11"
+    evidence_type: "behavioral"
+    plan_item: 4b
