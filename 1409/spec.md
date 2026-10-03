@@ -9,7 +9,7 @@
 1. **Problem Statement** — On the Records page sidebar, Streamlit emits the `SessionStateReinitializationWarning` dual-set warning for both `semantic_threshold_slider` and `semantic_threshold_number` whenever a saved `records/semantic_threshold` preference is present: the pre-instantiation block writes the widget keys via the Session State API while the widget calls also pass an explicit `value=` argument.
 2. **Root Cause / Motivation** — The dual-set anti-pattern at `records.py` widget instantiation (pre-instantiation session-state writes to widget-bound keys combined with explicit `value=` arguments on `st.slider` and `st.number_input`) is Streamlit's documented invalid combination. The defect was not caught because the E2E fixture deletes saved preferences, so synthetic sessions never exercise the saved-preference branch and no test asserts warning absence. It must be solved now because the warning surfaces on every real user's Records page load with a saved preference.
 3. **Approach Chosen** — Restructure the widget instantiation block so widget-bound keys are written to session state exactly once (at/before first instantiation only) and the explicit `value=` arguments are removed from both keyed widgets; widget values then flow solely from session state. Backing-value seeding, validation guard, on_change callbacks, and preference persistence are untouched.
-4. **Alternatives Considered & Why Discarded** — (a) Suppress the warning via logging filters — rejected: masks the defect rather than removing it, and Streamlit documents the dual-set combination as incorrect. (b) Drop the pre-instantiation writes and keep `value=` — rejected: `value=` would then override saved preferences on reruns, breaking saved-override behavior (SC-3). (c) Service-layer/preference-store changes — rejected: blast radius analysis shows the persistence layer is correct and unaffected.
+4. **Alternatives Considered & Why Discarded** — (a) Suppress the warning via logging filters — rejected: masks the defect rather than removing it, and Streamlit documents the dual-set combination as incorrect. (b) Drop the pre-instantiation writes and keep `value=` — rejected: `value=` would then override saved preferences on reruns, breaking saved-override round-trip behavior (SC-3a, SC-3b). (c) Service-layer/preference-store changes — rejected: blast radius analysis shows the persistence layer is correct and unaffected.
 5. **Key Design Decisions** — (a) Single-source-of-value: widget keys are seeded by session state only; explicit `value=` is removed — tradeoff: slightly more seeding code in exchange for eliminating the warning class entirely. (b) Backing value (`st.session_state.semantic_threshold`) semantics preserved exactly — tradeoff: none; this isolates the fix to widget-instantiation mechanics. (c) Behavioral Playwright evidence per the repo UI testing standard — tradeoff: slower than AppTest smoke checks, but user-visible-behavior claims require real-browser evidence.
 6. **User Intent / Original Prompt** — Stakeholder-visible Streamlit warning on the Records page semantic threshold slider ("The widget with key 'semantic_threshold_slider' was created with a default value but also had its value set via the Session State API") reported via issue #1409; fix the warning without changing any user-visible threshold behavior.
 
@@ -24,9 +24,11 @@
 
 | ID | Criterion | Evidence Type | Verification Method | Documentation Sources |
 |----|-----------|---------------|---------------------|-----------------------|
-| SC-1 | With a saved `records/semantic_threshold` preference present for the session user, the Records page renders with no Streamlit `SessionStateReinitializationWarning` (dual-set warning) for either `semantic_threshold_slider` or `semantic_threshold_number`. | behavioral | Playwright real-browser test against live app on :8501 (`SNEA_E2E=1`): seed the saved preference before page load, navigate to Records, assert no dual-set warning in captured console/page errors and widget renders the saved value; screenshot artifact under `tmp/<issue>/artifacts/`. | Streamlit session-state docs (docs.streamlit.io); `docs/development/ui_testing_standard.md`; `test/ui/test_sc9_ui_threshold_default_red.py` |
+| SC-1a | With a saved `records/semantic_threshold` preference present for the session user, the rendered Records page contains no Streamlit widget-state warning box (`SessionStateReinitializationWarning`, dual-set) for the semantic threshold widgets (`semantic_threshold_slider` and `semantic_threshold_number`). | behavioral | Playwright real-browser test against live app on :8501 (`SNEA_E2E=1`): seed the saved preference before page load, navigate to Records, assert the rendered page contains no Streamlit widget-state warning box for the semantic threshold widgets in captured console/page errors; screenshot artifact under `tmp/<issue>/artifacts/`. | Streamlit session-state docs (docs.streamlit.io); `docs/development/ui_testing_standard.md`; `test/ui/test_sc9_ui_threshold_default_red.py` |
+| SC-1b | With a saved `records/semantic_threshold` preference present for the session user, the semantic threshold slider renders the saved value. | behavioral | Same Playwright test as SC-1a: assert the slider's rendered value equals the seeded saved preference; screenshot artifact under `tmp/<issue>/artifacts/`. | Streamlit session-state docs (docs.streamlit.io); `docs/development/ui_testing_standard.md`; `test/ui/test_sc9_ui_threshold_default_red.py` |
 | SC-2 | With no saved preference, the semantic threshold slider defaults to the calibrated floor 0.93. | behavioral | Existing SC-9 fresh-default Playwright test in `test/ui/test_sc9_ui_threshold_default_red.py` establishes the no-preference precondition and asserts 0.93 rendering; MUST still pass post-change. | `test/ui/test_sc9_ui_threshold_default_red.py`; `src/frontend/pages/records.py` |
-| SC-3 | Saved user overrides are preserved and honored after the change: an override value round-trips (edit → persist → render) and survives page reruns without resetting to default. | behavioral | Existing SC-2 DOM round-trip Playwright test (edit→persist→render) still passes; add rerun/navigation assertion (saved value survives a page rerun) if not already present. | `test/ui/test_sc9_ui_threshold_default_red.py`; `src/frontend/pages/records.py` |
+| SC-3a | A saved user override round-trips: the user edits the threshold, the edit persists to `records/semantic_threshold`, and the rendered value equals the edited value after persistence. | behavioral | Existing SC-2 DOM round-trip Playwright test (edit → persist → render) still passes post-change. | `test/ui/test_sc9_ui_threshold_default_red.py`; `src/frontend/pages/records.py` |
+| SC-3b | The saved threshold value survives a page rerun/navigation: after a rerun, the rendered value equals the saved value and does not reset to the default. | behavioral | Playwright rerun/navigation assertion (saved value survives a page rerun without resetting to default), added unconditionally to the Playwright suite. | `test/ui/test_sc9_ui_threshold_default_red.py`; `src/frontend/pages/records.py` |
 | SC-4 | Full pytest suite passes with zero new failures relative to pre-change baseline. | behavioral | `uv run pytest test/` baseline comparison before/after change; `SNEA_E2E=1` run for the UI standard-of-record tier when live app is up. | `pyproject.toml`; `test/` suite |
 
 ## Requirements
@@ -40,28 +42,42 @@
 
 ## Items
 
-### Item 1 (SC-1): Remove the dual-set warning under saved-preference load
+### Item 1 (SC-1a): Remove the dual-set warning under saved-preference load
 
-- RED: Playwright real-browser test that seeds a saved `records/semantic_threshold` preference (via a dedicated fixture that survives `_delete_saved_threshold_preferences`), loads Records, and asserts no `SessionStateReinitializationWarning` for either widget key — fails against the current code.
+- RED: Playwright real-browser test that seeds a saved `records/semantic_threshold` preference (via a dedicated fixture that survives `_delete_saved_threshold_preferences`), loads Records, and asserts the rendered page contains no Streamlit widget-state warning box for the semantic threshold widgets — fails against the current code.
 - GREEN: Restructure the widget instantiation block in the Records page (`records.py` widget block): write widget-bound keys to session state exactly once at/before first instantiation and remove the explicit `value=` arguments from `st.slider` and `st.number_input`; remove the redundant unconditional pre-instantiation re-sync writes.
-- verify: The SC-1 Playwright test passes (live app on :8501, `SNEA_E2E=1`); screenshot artifact captured.
+- verify: The SC-1a Playwright test passes (live app on :8501, `SNEA_E2E=1`); screenshot artifact captured.
 - commit: Widget block change + new test in one commit.
 
-### Item 2 (SC-2): Preserve calibrated default rendering
+### Item 2 (SC-1b): Render the saved value under saved-preference load
+
+- RED: Extend the SC-1a Playwright test to assert the slider renders the seeded saved value; this assertion passes against pre-change code (preservation gate) and is recorded as baseline.
+- GREEN: No production change beyond Item 1; fix any regression the restructure introduced to saved-value rendering.
+- verify: Slider renders the saved value with a saved preference present; screenshot artifact captured.
+- commit: Test assertion + any regression fix in one commit.
+
+### Item 3 (SC-2): Preserve calibrated default rendering
 
 - RED: Run the existing SC-9 fresh-default Playwright test against the restructured widget block — must already pass post-change; it is a preservation gate, so the RED step is a baseline run against pre-change code to record the passing state.
 - GREEN: No production change beyond Item 1; fix any regression the restructure introduced to fresh-default seeding.
 - verify: Fresh-default test asserts 0.93 rendering with no-preference precondition.
-- commit: Any regression fix included in the Item 2 commit.
+- commit: Any regression fix included in the Item 3 commit.
 
-### Item 3 (SC-3): Preserve saved-override round-trip and rerun stability
+### Item 4 (SC-3a): Preserve saved-override round-trip
 
-- RED: Baseline run of the existing DOM round-trip Playwright test; add a rerun/navigation assertion (saved value survives page rerun without resetting to default) that fails against pre-change code only if behavior was already broken — otherwise it serves as the post-change preservation gate.
-- GREEN: Ensure on_change callback → backing value → persistence flow is intact after the widget-block restructure.
-- verify: Round-trip test (edit → persist → render) and rerun assertion pass.
+- RED: Baseline run of the existing DOM round-trip Playwright test (edit → persist → render) against pre-change code to record the passing state.
+- GREEN: Ensure the on_change callback → backing value → persistence flow is intact after the widget-block restructure; the rendered value equals the edited value after persistence.
+- verify: Round-trip test (edit → persist → render) passes post-change.
 - commit: Test additions + any needed adjustment in one commit.
 
-### Item 4 (SC-4): Full suite regression gate
+### Item 5 (SC-3b): Preserve rerun survival of the saved value
+
+- RED: Add a rerun/navigation Playwright assertion (after a page rerun, the rendered value equals the saved value and does not reset to the default); unconditionally included in the suite.
+- GREEN: Ensure the widget-block restructure preserves rerun stability — no re-seeding writes; widgets read existing session-state values on rerun.
+- verify: Rerun assertion passes post-change.
+- commit: Test addition + any needed adjustment in one commit.
+
+### Item 6 (SC-4): Full suite regression gate
 
 - RED: Record pre-change baseline of `uv run pytest test/` pass/fail set.
 - GREEN: Post-change, run the full suite; zero new failures.
@@ -70,21 +86,21 @@
 
 ## Dependencies
 
-- **#1385 (`_validate_threshold` guard, SC-3)** — must remain in place; validation semantics this spec preserves. Status: merged.
+- **#1385 (`_validate_threshold` guard, SC-3a/SC-3b)** — must remain in place; validation semantics this spec preserves. Status: merged.
 - **#1400 (calibrated default 0.93 contract)** — must remain in place; backing-value default semantics this spec preserves. Status: merged.
 - **`docs/development/ui_testing_standard.md`** — must be read before writing/running the Playwright evidence. Status: available.
-- **`test/ui/test_sc9_ui_threshold_default_red.py`** — reuse as SC-2/SC-3 gates and fixture reference. Status: available.
+- **`test/ui/test_sc9_ui_threshold_default_red.py`** — reuse as SC-2/SC-3a/SC-3b gates and fixture reference. Status: available.
 
 ## Traceability
 
 | Requirement | SC(s) | Item(s) |
 |-------------|-------|---------|
-| R-1 | SC-1 | Item 1 |
-| R-2 | SC-2, SC-3 | Item 2, Item 3 |
-| R-3 | SC-3 | Item 3 |
-| R-4 | SC-3 | Item 3 |
-| R-5 | SC-2, SC-3 | Item 2, Item 3 |
-| R-6 | SC-1 | Item 1 |
+| R-1 | SC-1a | Item 1 |
+| R-2 | SC-1b, SC-2 | Item 2, Item 3 |
+| R-3 | SC-3a, SC-3b | Item 4, Item 5 |
+| R-4 | SC-3a | Item 4 |
+| R-5 | SC-1b, SC-2, SC-3a, SC-3b | Item 2, Item 3, Item 4, Item 5 |
+| R-6 | SC-1a | Item 1 |
 
 ## Documentation Sources
 
@@ -103,9 +119,9 @@
 
 Cost is measured in defect-discovery-latency, not tool calls. Correctness is the only metric.
 
-- SC-1: Running the saved-preference Playwright warning-absence test costs minutes of live-app execution. Skipping means the dual-set warning ships on every real user's Records page load and surfaces as a support report instead of a CI failure — the rework pipeline (diagnose, fix, redeploy, re-verify) costs orders of magnitude more.
+- SC-1a/SC-1b: Running the saved-preference Playwright warning-absence and saved-value-rendering tests costs minutes of live-app execution. Skipping means the dual-set warning ships on every real user's Records page load and surfaces as a support report instead of a CI failure — the rework pipeline (diagnose, fix, redeploy, re-verify) costs orders of magnitude more.
 - SC-2: Re-running the existing fresh-default Playwright test costs minutes. Skipping means a regression to the 0.93 default ships silently — a wrong calibration default propagates into every query users run, discovered only when search results stop matching expectations.
-- SC-3: Running the round-trip and rerun Playwright assertions costs minutes. Skipping means saved user overrides silently reset to defaults on rerun — user trust damage discovered downstream, unrecoverable without a support cycle.
+- SC-3a/SC-3b: Running the round-trip and rerun Playwright assertions costs minutes. Skipping means saved user overrides silently reset to defaults on rerun — user trust damage discovered downstream, unrecoverable without a support cycle.
 - SC-4: Running the full pytest suite costs minutes of execution. Skipping means any regression in adjacent behavior reaches production before the next scheduled suite run — weeks of discovery latency instead of minutes.
 
 ## Edge Cases
@@ -114,8 +130,14 @@ Cost is measured in defect-discovery-latency, not tool calls. Correctness is the
 - **State transitions:** First load (no preference → 0.93; saved → saved value), user edit (callback propagates + persists), rerun/navigation (no re-seeding writes; widgets read existing session-state values), invalid edit rejected (last accepted value rendered). All covered in state-analysis.
 - **Failure modes:** PreferenceService read failure or missing preference row — falls back to `CALIBRATED_FLOOR` per the existing seeding contract (preserved, unchanged). Preference deletion between page loads — next session re-seeds from default.
 - **Concurrency:** Multiple sessions are independent (per-session `st.session_state`); no shared-state race introduced by the fix.
-- **Recovery:** If the restructure accidentally breaks callback propagation, SC-3's round-trip test catches it at the pre-commit gate (break, not death spiral).
+- **Recovery:** If the restructure accidentally breaks callback propagation, SC-3a's round-trip test catches it at the pre-commit gate (break, not death spiral).
 
 ---
+
+## Change Control
+
+| Date | Change | Reason | Authorized By |
+|------|--------|--------|---------------|
+| 2026-10-03 | Split SC-1 into SC-1a (no Streamlit widget-state warning box for the semantic threshold widgets — single binary assertion covering both widgets) and SC-1b (slider renders the saved value with a saved preference present); split SC-3 into SC-3a (override round-trip: edit → persist → render) and SC-3b (rerun survival — unconditional assertion, no "if not already present" conditional); removed hedging language ("honored", conditional assertions); updated Items to 1:1 SC:ITEM (6 items), Traceability, Cost Frame, Dependencies, and Edge Cases references accordingly. | Validation findings: compound-SC pattern in SC-1 and SC-3; hedging language in SC-3 and sc-summary. | Validation gate revision (spec-creation revise task) |
 
 Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
