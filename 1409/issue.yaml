@@ -2,7 +2,7 @@ title: '[SPEC] Fix Streamlit dual-set widget warning on semantic threshold slide
 status: open
 labels:
 - needs-approval
-- '[SPEC]'
+- spec-draft
 body: '## Problem
 
   On the Records page sidebar, Streamlit shows a warning: "The widget with key ''semantic_threshold_slider''
@@ -51,4 +51,4 @@ body: '## Problem
 
   '
 created_at: '2026-10-03T23:33:50+00:00'
-updated_at: '2026-10-03T23:33:54+00:00'
+updated_at: '2026-10-03T23:35:25+00:00'

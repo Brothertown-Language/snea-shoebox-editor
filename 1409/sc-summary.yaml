@@ -1,0 +1,19 @@
+# sc-summary for issue 1409
+sc_count: 4
+scs:
+  - id: "SC-1"
+    description: "With a saved records/semantic_threshold preference present, the Records page renders with no Streamlit dual-set (SessionStateReinitializationWarning) warning for either semantic_threshold_slider or semantic_threshold_number."
+    evidence_type: "behavioral"
+    plan_item: 1
+  - id: "SC-2"
+    description: "With no saved preference, the semantic threshold slider defaults to the calibrated floor 0.93."
+    evidence_type: "behavioral"
+    plan_item: 2
+  - id: "SC-3"
+    description: "Saved user overrides are preserved and honored: override value round-trips (edit, persist, render) and survives page reruns without resetting to default."
+    evidence_type: "behavioral"
+    plan_item: 3
+  - id: "SC-4"
+    description: "Full pytest suite passes with zero new failures relative to pre-change baseline."
+    evidence_type: "behavioral"
+    plan_item: 4
