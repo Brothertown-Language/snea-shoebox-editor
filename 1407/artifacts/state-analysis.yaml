@@ -1,0 +1,27 @@
+artifact: state-analysis
+issue: 1407
+repo: Brothertown-Language/snea-shoebox-editor
+date: 2026-10-03
+
+state_variables:
+  - name: search_query
+    transitions: unchanged externally — set by Enter callback (new), by 🔍 button (existing), cleared by clear preamble (existing); SC-3 requires no double-commit, satisfied because callback and button write the same value idempotently
+  - name: current_page
+    transitions: reset to 1 by Enter callback (matching all sibling on_change callbacks and the button)
+  - name: _search_input_key
+    transitions: unchanged — incremented ONLY by the clear preamble (records.py:59); Enter path is a pure reader of the current suffix
+  - name: _clear_search
+    transitions: unchanged — set by ❌ button, popped in preamble before widget instantiation
+
+state_machine:
+  states: [idle-no-query, query-active, cleared]
+  transitions:
+    - idle-no-query -> query-active: Enter in text_input (NEW) OR 🔍 click (existing); both commit search_query, reset page, single rerun
+    - query-active -> cleared: ❌ click → preamble empties search_query, increments _search_input_key → fresh empty widget
+    - cleared -> query-active: Enter or button on the new (suffixed) widget — no stale re-search (SC-2)
+  invariants:
+    - preamble runs before widget instantiation (records.py:55-59 precedes records.py:373)
+    - callback never writes its own widget key (Streamlit APIException guard)
+    - suffix read is dynamic at read time in both button and callback
+
+per_phase: single-phase — all transitions above apply atomically to the one change set

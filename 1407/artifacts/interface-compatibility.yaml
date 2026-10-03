@@ -1,0 +1,38 @@
+artifact: interface-compatibility
+issue: 1407
+repo: Brothertown-Language/snea-shoebox-editor
+date: 2026-10-03
+
+interfaces:
+  - name: text_input widget binding
+    type: internal UI
+    status: modified
+    detail: gains on_change callback; key scheme `search_query_input_{_search_input_key}` unchanged; value binding unchanged
+    backward_compatible: true
+  - name: on_search_change callback signature
+    type: internal UI (zero-arg Streamlit callback)
+    status: modified
+    detail: same zero-arg signature; body corrected to dynamic suffixed-key read
+    backward_compatible: true (no external callers)
+  - name: session-state contract (search_query, current_page, _search_input_key)
+    type: internal session state
+    status: unchanged
+    backward_compatible: true
+  - name: search_trigger / search_clear button handlers
+    type: internal UI
+    status: unchanged
+    backward_compatible: true
+  - name: text_input aria-label
+    type: UI contract consumed by test/ui/test_semantic_search_ui_flow_e2e.py:248
+    status: modified (placeholder reword changes aria-label)
+    backward_compatible: false for that one test selector — updated in the same SC-4 cycle
+    breaking: false (test-internal coupling only; no user-facing API)
+
+removed_interfaces: none
+
+dependency_contract:
+  - source: text_input aria-label
+    target: test/ui/test_semantic_search_ui_flow_e2e.py:248
+    type: artifact schema
+    constraint: selector string must equal the new placeholder label; co-change mandatory
+breaking_changes: none (user-facing behavior strictly additive — Enter previously a no-op)

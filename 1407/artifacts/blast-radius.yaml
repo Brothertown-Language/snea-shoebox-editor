@@ -1,0 +1,35 @@
+artifact: blast-radius
+issue: 1407
+repo: Brothertown-Language/snea-shoebox-editor
+date: 2026-10-03
+
+grounding:
+  source: spec scope sections (issue #1407 body) + reads already performed (records.py:40-479, git show 83d7420/907843d, test grep)
+  coverage: complete for the affected surface; no ungrounded assumptions
+  expanded_reads_after_write: none required
+
+affected_components:
+  - component: Records page sidebar search text_input
+    file: src/frontend/pages/records.py:373-379
+    change: add on_change=on_search_change; placeholder rewording (SC-4)
+    ripple: none — page-local widget
+  - component: on_search_change callback
+    file: src/frontend/pages/records.py:170-172
+    change: read suffixed dynamic key instead of stale un-suffixed key
+    ripple: none — dead code today, revived with correct binding
+  - component: 🔍 button handler
+    file: src/frontend/pages/records.py:458-462
+    change: NONE (unchanged; SC-3 guards against drift)
+    ripple: none
+  - component: clear-counter interplay
+    file: src/frontend/pages/records.py:56-59, 373, 459
+    change: NONE (interplay preserved; SC-2 guards)
+    ripple: none
+  - component: E2E test selector
+    file: test/ui/test_semantic_search_ui_flow_e2e.py:248
+    change: aria-label selector must track the new placeholder (SC-4 same cycle)
+    ripple: none outside that test
+
+ripple_effects: none beyond the two files above — on_search_change has no external callers (page-local nested function), no service-layer or state-machine surface is touched
+
+ungrounded_assumptions: none

@@ -1,0 +1,26 @@
+artifact: concern-map
+issue: 1407
+repo: Brothertown-Language/snea-shoebox-editor
+date: 2026-10-03
+
+concerns:
+  - concern: search-commit-trigger (Enter wiring)
+    boundary: on_search_change callback + text_input on_change attachment (records.py:170-172, 374-379)
+    separation: callback owns state commit ONLY (search_query, current_page); rendering and search dispatch (records.py:196-261) remain untouched downstream consumers
+    sc: SC-1
+  - concern: clear-interaction integrity
+    boundary: _search_input_key counter (records.py:59) vs. suffixed-key reads (records.py:373, callback, 459)
+    separation: counter lifecycle belongs to the clear preamble; the callback is a passive reader of the CURRENT suffix — no counter mutation in the Enter path
+    sc: SC-2
+  - concern: button-path preservation
+    boundary: search_trigger handler (records.py:458-462)
+    separation: button handler is an independent commit path; Enter path must not alter it (no shared mutable state introduced)
+    sc: SC-3
+  - concern: UI copy (placeholder)
+    boundary: text_input label string (records.py:375) + the one E2E selector that keys on it
+    separation: pure presentation change; independent of commit wiring except the test selector coupling, handled in the same SC cycle
+    sc: SC-4
+
+cross_concern_interactions:
+  - SC-1 and SC-2 share the suffixed-key read mechanism — resolved as one dynamic read derived once (item 1), guarded by item 2's test
+  - SC-3 and SC-1 write the same backing state (search_query) — idempotent, no conflict

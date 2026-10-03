@@ -1,0 +1,23 @@
+artifact: sc-summary
+issue: 1407
+repo: Brothertown-Language/snea-shoebox-editor
+date: 2026-10-03
+
+sc_count: 4
+scs:
+  - id: "SC-1"
+    description: "Appuyer Entrée dans la boîte de recherche exécute la recherche : callback ré-attaché, lecture de la clé suffixée, commit de search_query et reset de current_page à 1"
+    evidence_type: "behavioral"
+    plan_item: 1
+  - id: "SC-2"
+    description: "Après un effacement (❌), aucune recherche parasite ne se déclenche : la callback lit le suffixe courant et l'état vide persiste"
+    evidence_type: "behavioral"
+    plan_item: 2
+  - id: "SC-3"
+    description: "Le chemin du bouton 🔍 est inchangé : un clic produit exactement un commit de la requête, sans double comportement"
+    evidence_type: "behavioral"
+    plan_item: 3
+  - id: "SC-4"
+    description: "Le placeholder est neutre (plus d'instruction Entrée) et la suite de tests ne régresse pas, sélecteur E2E mis à jour dans le même cycle"
+    evidence_type: "behavioral"
+    plan_item: 4

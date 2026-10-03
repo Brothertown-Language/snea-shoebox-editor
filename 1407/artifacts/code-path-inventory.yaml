@@ -1,0 +1,29 @@
+artifact: code-path-inventory
+issue: 1407
+repo: Brothertown-Language/snea-shoebox-editor
+date: 2026-10-03
+
+paths:
+  - phase: SC-1 Enter wiring
+    paths:
+      - "records.py on_search_change (170-172) — rewritten: reads st.session_state[f'search_query_input_{st.session_state.get(\"_search_input_key\", 0)}'] dynamically; writes search_query + current_page=1"
+      - "records.py st.text_input (374-379) — on_change=on_search_change added"
+    untouched: search dispatch (196-261), pagination (340-354)
+  - phase: SC-2 clear interplay
+    paths:
+      - "records.py clear preamble (56-59) — unchanged, verified ordering before widget creation"
+      - callback read path (same as SC-1) — exercised post-clear with incremented suffix
+    untouched: search_clear button handler (463-466)
+  - phase: SC-3 button path
+    paths:
+      - "records.py search_trigger handler (458-462) — unchanged (guard-only verification)"
+    untouched: everything
+  - phase: SC-4 placeholder
+    paths:
+      - "records.py text_input label (375) — neutral wording"
+      - "test/ui/test_semantic_search_ui_flow_e2e.py:248 — aria-label selector updated to match"
+    untouched: all other labels
+
+shared_infrastructure_read_only:
+  - st.session_state.search_query (records.py:200) — consumed by both exact and semantic dispatch; write-only from the callback's perspective
+  - PreferenceService — NOT touched (search_query is not persisted as a preference in current code)

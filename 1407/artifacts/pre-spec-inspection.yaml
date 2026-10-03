@@ -1,0 +1,36 @@
+artifact: pre-spec-inspection
+issue: 1407
+repo: Brothertown-Language/snea-shoebox-editor
+generated_by: spec-creation/analyze
+date: 2026-10-03
+
+target_surface:
+  primary_file: src/frontend/pages/records.py
+  symbols:
+    - on_search_change (records.py:170-172) — DEAD CODE: reads `st.session_state.search_query_input` (un-suffixed key); no widget with that key exists since commit 907843d introduced the suffixed dynamic key `search_query_input_{_search_input_key}`
+    - search text_input (records.py:373-379) — key is `search_query_input_{_search_input_key}` (suffix from `st.session_state.get('_search_input_key', 0)`); currently has NO `on_change` callback; placeholder label "Enter text..."
+    - search button (records.py:458-462) — key `search_trigger`; reads the suffixed key via `st.session_state.get(input_key, "")`, sets `st.session_state.search_query`, resets `current_page` to 1, `st.rerun()`
+    - clear button (records.py:463-466) — key `search_clear`; sets `_clear_search = True`, resets page, reruns
+    - clear-handling preamble (records.py:56-59) — pops `_clear_search`, empties `search_query`, resets page, increments `_search_input_key` (creates a fresh widget with value='')
+
+history:
+  - commit 83d7420: text_input had `on_change=on_search_change` (key was static `search_query_input`); Enter-search worked
+  - commit 907843d: clear-field fix introduced suffixed dynamic widget key `search_query_input_{_search_input_key}` (counter increments on clear so a fresh widget renders empty); the on_change attachment was lost collaterally; on_search_change survived but now reads the stale un-suffixed key (dead code)
+
+conventions_observed:
+  - All other sidebar filter widgets (search_mode_radio records.py:390-399, source_select, language_select, language_role_radio) use `on_change` callbacks that write to session state and reset `current_page` to 1. Re-attaching on_change to the text_input matches the established page pattern.
+  - Button paths use post-instantiation session_state writes + st.rerun() (sanctioned for button callbacks; the text_input callback must NOT follow the diff+rerun pattern per issue constraint — callbacks must not write to their own widget key).
+  - No URL-param handling exists in current records.py (`st.query_params`/`update_url_params` absent); the 83d7420-era update_url_params was removed in later refactors. "Match button URL-param behavior" therefore resolves to: Enter path must behave exactly like today's 🔍 button path (commit search_query + reset page + rerun), with no URL-param work.
+
+affected_files:
+  - src/frontend/pages/records.py (only file expected to change)
+  - test/ (new/updated tests per testability assessment; Playwright E2E per docs/development/ui_testing_standard.md)
+
+dependencies:
+  - No callers of on_search_change outside records.py (page-local nested function)
+  - No service-layer changes; LinguisticService.search_records / search_semantic consumption unchanged
+
+risks:
+  - Callback writing to its own widget key is forbidden in Streamlit (APIException); on_search_change must write only `search_query` + `current_page`.
+  - After clear (counter increment), a stale suffixed-key read could re-commit the old query; callback must read the CURRENT suffix via st.session_state.get('_search_input_key', 0).
+  - on_change fires on Enter/blur; a blur-without-Enter would also commit — acceptable: identical semantics to button commit, and Streamlit text_input on_change fires when the value differs from session state (no spurious fire when unchanged).

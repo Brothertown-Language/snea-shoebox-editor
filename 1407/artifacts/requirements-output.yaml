@@ -1,0 +1,49 @@
+artifact: requirements-output
+issue: 1407
+repo: Brothertown-Language/snea-shoebox-editor
+date: 2026-10-03
+source: GitHub issue #1407 body (verified via gh issue view) + live codebase reads
+
+explicit_requirements:
+  - id: R-1
+    text: Wire Enter key to execute the search in the Records sidebar text_input
+    verification: records.py:374-379 text_input currently has no on_change (verified by read); commit 83d7420 shows on_change=on_search_change was present pre-regression
+  - id: R-2
+    text: on_search_change must read the suffixed key search_query_input_{_search_input_key}, not the stale un-suffixed search_query_input
+    verification: records.py:373 builds the suffixed key; dead callback at records.py:170-172 reads `st.session_state.search_query_input` (un-suffixed — no such widget key exists since 907843d)
+  - id: R-3
+    text: Enter path resets current_page to 1 and commits the query exactly as the 🔍 button path does
+    verification: button path records.py:458-462 sets search_query from the suffixed key, sets current_page=1, st.rerun(); current code has NO URL-param handling (grep for update_url_params/st.query_params in records.py returned nothing), so "match button URL-param behavior" resolves to matching the button's session-state behavior — no URL work to replicate
+  - id: R-4
+    text: Re-attach on_change=on_search_change to the text_input
+    verification: attachment absent today; every sibling filter widget (records.py:390-399 et al.) uses on_change — established page convention
+  - id: R-5
+    text: Do NOT re-add the old diff+rerun pattern
+    verification: constraint from issue; Streamlit forbids callbacks writing to their own widget key; pattern must be pure callback state commit (callback fires pre-rerun; no explicit rerun needed)
+  - id: R-6
+    text: Change the placeholder from "Enter text..." to neutral wording (no Enter instruction)
+    verification: records.py:375 currently "Enter text..."
+
+implicit_requirements:
+  - id: R-7
+    text: Preserve the clear-counter interplay — after ❌ clear (which increments _search_input_key, records.py:59), the Enter path must read the CURRENT suffixed key so no stale query is committed and no spurious re-search occurs
+    verification: clear preamble records.py:56-59; counter read via st.session_state.get('_search_input_key', 0) in both widget key (records.py:373) and button (records.py:459) — callback must use the same dynamic read
+  - id: R-8
+    text: Search triggering must work in all search modes (Headword/Gloss/Lexeme/FTS/Semantic Gloss/Semantic All) — the commit point is mode-agnostic (search_term at records.py:200 drives both exact and semantic dispatch)
+    verification: records.py:200, 229-261
+
+constraint_requirements:
+  - id: C-1
+    text: No synthetic data; no changes to production data or service layer
+  - id: C-2
+    text: UI user-visible behavior evidence requires Playwright live-browser evidence per docs/development/ui_testing_standard.md; streamlit.testing AppTest sanctioned only for in-process wiring smoke
+    verification: standard doc referenced by AGENTS.md UI Testing mandate
+  - id: C-3
+    text: Zero test-suite regressions (existing test ui/test_semantic_search_ui_flow_e2e.py:248 locates the input via aria-label "Enter text..." — placeholder change requires updating this selector or the test breaks)
+    verification: grep found the selector dependency; this is a real coupling for R-6
+
+non_requirements:
+  - No URL-param/query-param synchronization (none exists today; not in scope)
+  - No debounce/autocomplete/IME handling changes
+  - No changes to search modes, pagination logic, or semantic threshold wiring
+  - No new pages or components
