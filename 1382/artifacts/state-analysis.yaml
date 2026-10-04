@@ -1,6 +1,6 @@
 spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1382
-generated_at: 2026-10-04T04:45:00Z
-grounding: "Verified against live codebase 2026-10-04 (v7 spec SC-1..SC-13, stakeholder-directed DB-maintenance framing)"
+generated_at: 2026-10-04T14:30:00Z
+grounding: "Verified against live codebase 2026-10-04 (v8 spec SC-1..SC-13 — confirm-gate removed, remediation relocated into the Data Reprocessing view per developer feedback on the running app)"
 state_analysis:
   description: "State transitions and state-bearing entities affected by the maintenance remediation."
   state_bearing_entities:
@@ -31,10 +31,13 @@ state_analysis:
     - entity: "Record version/history state (edit_history table, records.current_version)"
       relevant_state: "untouched — no EditHistory rows written, no version bumps (DB maintenance, not an editorial edit; stakeholder-directed)"
       transitions: []
+    - entity: "Table Maintenance sidebar radio (main())"
+      relevant_state: "selected option — exactly the original three options (Sources, Soft Deleted Records, Data Reprocessing); no remediation option (v8 relocation)"
+      transitions: []
   ui_state:
-    - state: "Scan displayed (read-only)"
-      transitions: "→ Rescan refreshes counts (remediable and locked displayed separately) → confirm-gated Apply All (batch write) → outcome report (remediated count; locked records remain unremediated)"
-      invariant: "Displayed scan result is the basis of the applied batch; database error renders error state, never a zero count"
+    - state: "Scan displayed (read-only, inside the Data Reprocessing view's ∞→ꝏ Remediation section)"
+      transitions: "→ Rescan refreshes counts (remediable and locked displayed separately) → plain primary Apply All button (batch write) → outcome report (remediated count; locked records remain unremediated)"
+      invariant: "Displayed scan result is the basis of the applied batch; database error renders error state, never a zero count; zero-state renders informational message with no action buttons"
   batch_state:
     - state: "Apply All batch"
       invariants:

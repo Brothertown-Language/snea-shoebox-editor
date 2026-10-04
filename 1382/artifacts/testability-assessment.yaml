@@ -1,6 +1,6 @@
 spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1382
-generated_at: 2026-10-04T04:45:00Z
-grounding: "Verified against live codebase 2026-10-04 (v7 spec SC-1..SC-13, stakeholder-directed DB-maintenance framing)"
+generated_at: 2026-10-04T14:30:00Z
+grounding: "Verified against live codebase 2026-10-04 (v8 spec SC-1..SC-13 — confirm-gate removed, remediation relocated into the Data Reprocessing view per developer feedback on the running app)"
 testability_assessment:
   description: "Assessment of how each SC is testable, with evidence type and the test seam used."
   summary:
@@ -18,11 +18,11 @@ testability_assessment:
       testability: high
     - sc: SC-3
       evidence_type: behavioral
-      seam: "Streamlit render — set user_role in session_state per role; assert option visibility / guard behavior"
+      seam: "Streamlit render — admin session renders the Data Reprocessing view with the remediation section present; non-admin session is blocked by the main() guard; sidebar radio list asserted to contain exactly the original three options"
       testability: high
     - sc: SC-4
       evidence_type: behavioral
-      seam: "Streamlit render + fixture DB — assert displayed remediable and locked counts match seeded defect counts and no mutation before button click"
+      seam: "Streamlit render + fixture DB — assert displayed remediable and locked counts match seeded defect counts and no mutation before the plain primary Apply All button is clicked; zero-state renders info with no action button; outcome report renders remediated and locked counts"
       testability: high
     - sc: SC-5
       evidence_type: behavioral

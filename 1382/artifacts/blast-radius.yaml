@@ -1,6 +1,6 @@
 spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1382
-generated_at: 2026-10-04T04:45:00Z
-grounding: "Verified against live codebase 2026-10-04 (v7 spec SC-1..SC-13, stakeholder-directed DB-maintenance framing)"
+generated_at: 2026-10-04T14:30:00Z
+grounding: "Verified against live codebase 2026-10-04 (v8 spec SC-1..SC-13 — confirm-gate removed, remediation relocated into the Data Reprocessing view per developer feedback on the running app)"
 blast_radius:
   overview: "Maintenance remediation of ∞ (U+221E) → ꝏ (U+A74F) touches raw data columns, normalized-column regeneration, FTS rebuild, seed fixtures, and one normalization map entry. Normalized-column VALUES are unchanged (both characters map to oozzz); only raw characters change. Record history and version state are untouched — the operation is DB maintenance, not an editorial edit (no EditHistory writes, no current_version bumps)."
   affected_components:
@@ -13,9 +13,10 @@ blast_radius:
         - "No EditHistory rows and no current_version changes are written by the maintenance path (stakeholder-directed DB-maintenance framing)"
     - component: src/frontend/pages/table_maintenance.py
       impact: direct
-      description: "New sidebar radio option and render_infinity_remediation() view inside main(); admin guard inherited, not duplicated; scan counts (remediable and locked) displayed before action; single confirm-gated Apply All; post-remediation outcome report"
+      description: "New '∞→ꝏ Remediation' section inside the existing render_data_reprocessing_maintenance() view (divider, subheader, st.info explanation noting it mutates RAW columns lx/mdf_data, scan-first remediable+locked counts with Rescan, plain primary Apply All button with no confirm gate following the established maintenance-op pattern, progress pattern from the existing section, outcome report, handle_ui_error wrapping); admin guard inherited from main(); the sidebar radio list keeps exactly its original three options"
       ripple_effects:
-        - "Existing Table Maintenance options untouched; sidebar radio gains one option"
+        - "Existing Table Maintenance sidebar radio options unchanged — the list stays at Sources, Soft Deleted Records, Data Reprocessing (v8 removed the fourth option)"
+        - "Embedding Backfill section and Start Full Reprocessing flow untouched"
     - component: "Database tables: records, search_entries, headword_search_entries, gloss_search_entries, fts_entries"
       impact: direct-data
       description: "Raw columns lx, mdf_data, term mutate per remediated record; normalized columns regenerated (values byte-identical); fts_vector re-populated; edit_history and records.current_version untouched"
@@ -34,4 +35,4 @@ blast_radius:
     - "Locked records (is_locked == True) — never altered; counted and reported as remaining unremediated"
     - "edit_history table and records.current_version — untouched by design (DB maintenance framing, not an editorial edit)"
   risk_level: medium
-  rationale: "Data mutation of production linguistic records is gated behind admin-only UI and confirm-gated Apply All; locked records are never altered and are reported post-remediation; normalized values provably unchanged; no record history or version state is written."
+  rationale: "Data mutation of production linguistic records is gated behind admin-only UI (inherited from the main() admin guard) with a scan-first count display; locked records are never altered and are reported post-remediation; normalized values provably unchanged; no record history or version state is written. v8 removed the confirm gate on Apply All to match the established maintenance-op pattern (plain primary button), so the scan-first count display and outcome report are the remaining pre/post-act transparency mechanisms."

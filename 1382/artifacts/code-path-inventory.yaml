@@ -1,12 +1,15 @@
 spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1382
-generated_at: 2026-10-04T04:45:00Z
-grounding: "Verified against live codebase 2026-10-04 (v7 spec SC-1..SC-13); line-anchored observations recorded at verification time, stable anchors are authoritative"
+generated_at: 2026-10-04T14:30:00Z
+grounding: "Verified against live codebase 2026-10-04 (v8 spec SC-1..SC-13 — confirm-gate removed, remediation relocated into the Data Reprocessing view per developer feedback on the running app); line-anchored observations recorded at verification time, stable anchors are authoritative"
 code_path_inventory:
   entry_points:
     - entry_point: "src/frontend/pages/table_maintenance.py main() — admin role guard and sidebar radio"
-      role: "UI entry for the new ∞→ꝏ Remediation option; admin guard (user_role != 'admin' → error + stop) is inherited by the new view"
-      verified: "2026-10-04: role guard and st.radio present in main()"
+      role: "UI entry for Table Maintenance; admin guard (user_role != 'admin' → error + stop) gates the whole page and is inherited by the remediation section; the sidebar radio list keeps exactly its original three options (Sources, Soft Deleted Records, Data Reprocessing) — v8 removes the fourth '∞→ꝏ Remediation' option"
+      verified: "2026-10-04: role guard and st.radio with four options present in main() (v8 removes the fourth)"
   service_paths:
+    - path: "src/frontend/pages/table_maintenance.py render_data_reprocessing_maintenance()"
+      role: "Host view for the new '∞→ꝏ Remediation' section, following the established Embedding Backfill section structure (divider, subheader, st.info box, plain primary action button with no confirm gate, progress pattern, handle_ui_error wrapping)"
+      verified: "2026-10-04: function present with Start Full Reprocessing (plain primary, no confirm) and Embedding Backfill section (st.divider + st.subheader + st.info + plain button + progress + handle_ui_error)"
     - path: "src/services/linguistic_service.py generate_sort_lx()"
       role: "Normalization function whose symbol_map gains the ꝏ → oozzz entry (∞ → oozzz fallback already present)"
       verified: "2026-10-04: symbol_map with '\\u221e': 'oozzz' confirmed"

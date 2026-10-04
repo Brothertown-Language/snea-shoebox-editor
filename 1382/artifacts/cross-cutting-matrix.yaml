@@ -1,6 +1,6 @@
 spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1382
-generated_at: 2026-10-04T04:45:00Z
-grounding: "Verified against live codebase 2026-10-04 (v7 spec SC-1..SC-13, stakeholder-directed DB-maintenance framing)"
+generated_at: 2026-10-04T14:30:00Z
+grounding: "Verified against live codebase 2026-10-04 (v8 spec SC-1..SC-13 — confirm-gate removed, remediation relocated into the Data Reprocessing view per developer feedback on the running app)"
 cross_cutting_matrix:
   description: "Concerns that cut across multiple SCs / approach steps, with the mechanism that resolves each cross-cutting interaction."
   matrix:
@@ -18,7 +18,10 @@ cross_cutting_matrix:
       mechanism: "Per-record rebuild calls the same generate_sort_lx() normalization and mirrors the upload_service.py rebuild block structure (delete-then-recreate search rows, re-populate FTSEntry with 'simple' tsconfig per docs/lessons-learned/2026-06-13-simple-vs-english-tsconfig.md)."
     - concern: "Role gating"
       scs: [SC-3, SC-4]
-      mechanism: "All remediation UI lives inside main() in table_maintenance.py which already enforces admin-only access; no second guard is written (single enforcement point)."
+      mechanism: "All remediation UI lives inside render_data_reprocessing_maintenance() in table_maintenance.py, which only renders when main()'s admin guard passes — the guard gates the whole Table Maintenance page; no second guard is written (single enforcement point); the sidebar radio list keeps exactly its original three options."
+    - concern: "UI-pattern consistency (maintenance ops are plain primary buttons)"
+      scs: [SC-3, SC-4]
+      mechanism: "The remediation section follows the established Embedding Backfill section structure and the same maintenance-op pattern as Start Full Reprocessing: plain primary button with no confirm gate; the scan-first count display and outcome report provide pre/post-act transparency."
     - concern: "Fail-fast on missing/partial data"
       scs: [SC-5, SC-12]
       mechanism: "Batch write failure mid-remediation surfaces immediately; the outcome report reflects records completed before the failure; no silent swallow (data-integrity guideline)."

@@ -1,6 +1,6 @@
 spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1382
-generated_at: 2026-10-04T04:45:00Z
-grounding: "Verified against live codebase 2026-10-04 (v7 spec SC-1..SC-13, stakeholder-directed DB-maintenance framing)"
+generated_at: 2026-10-04T14:30:00Z
+grounding: "Verified against live codebase 2026-10-04 (v8 spec SC-1..SC-13 — confirm-gate removed, remediation relocated into the Data Reprocessing view per developer feedback on the running app)"
 interface_compatibility:
   description: "Compatibility of new code with existing interfaces — no breaking changes to existing callers."
   interfaces:
@@ -11,11 +11,15 @@ interface_compatibility:
     - interface: "LinguisticService public method surface"
       change: "Three new methods added (count_infinity_records, list_infinity_records, remediate_all_records); no existing method modified"
       compatibility: "Additive only — existing callers unaffected"
-      consumers: "src/frontend/pages/table_maintenance.py (new view); no existing consumer touched"
+      consumers: "src/frontend/pages/table_maintenance.py (new remediation section); no existing consumer touched"
     - interface: "table_maintenance.py main() sidebar radio"
-      change: "One new option label added to the radio list; new render view function added"
-      compatibility: "Additive — existing Table Maintenance options and their render paths unchanged; admin guard reused, not duplicated"
+      change: "None — the radio list reverts to (stays at) exactly its original three options (Sources, Soft Deleted Records, Data Reprocessing); the v8 design removes the separate '∞→ꝏ Remediation' option and instead adds a section inside render_data_reprocessing_maintenance()"
+      compatibility: "Non-interfering — existing Table Maintenance options and their render paths unchanged; admin guard reused, not duplicated; the main() elif dispatch for the fourth option is removed"
       consumers: "Streamlit page navigation"
+    - interface: "render_data_reprocessing_maintenance() view structure"
+      change: "Appends an '∞→ꝏ Remediation' section after the Embedding Backfill section, following the established section structure (divider, subheader, st.info box, scan counts, plain primary button, progress pattern, outcome report, handle_ui_error wrapping)"
+      compatibility: "Additive — the Start Full Reprocessing flow and Embedding Backfill section are untouched; the new section follows the identical interaction pattern (plain primary button, no confirm gate)"
+      consumers: "Streamlit page rendering under main()'s admin guard"
     - interface: "Record version/history state (edit_history table, records.current_version)"
       change: "None — the maintenance path writes no EditHistory rows and does not modify current_version (DB maintenance, not an editorial edit; stakeholder-directed)"
       compatibility: "Non-interfering — audit/history views and version-based optimistic locking observe no changes from remediation"

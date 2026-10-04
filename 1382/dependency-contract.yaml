@@ -1,7 +1,10 @@
 # Dependency Contract — Issue #1382
 # Produced by: 🤖 OpenCode (huggingface/zai-org/GLM-5.3-Flash) — 2026-10-04
 # Derived from interface-compatibility.yaml + concern-map.yaml
-# Spec v7 — stakeholder-directed DB-maintenance framing (no EditHistory writes, no version bumps)
+# Spec v8 — confirm-gate removed (plain primary Apply All following the established
+# maintenance-op pattern) and remediation relocated into the Data Reprocessing view
+# (sidebar radio list reverts to its original three options), per developer feedback
+# on the running app
 # Z3 model layer for tools/solve + tools/plan consumption
 
 variables:
@@ -38,7 +41,7 @@ variables:
   normalized_identity_proven: {type: bool}
   fts_equivalence_proven: {type: bool}
   outcome_report_produced: {type: bool}
-  ui_exposed: {type: bool}
+  ui_section_present: {type: bool}
   ui_flow_complete: {type: bool}
   normalized_columns_stable: {type: bool}
   simple_tsconfig_only: {type: bool}
@@ -64,7 +67,7 @@ preconditions:
 postconditions:
   - "sc1_done == z3.If(normalization_extended, sc1_done, False)"
   - "sc2_done == z3.If(scan_ready, sc2_done, False)"
-  - "sc3_done == z3.If(ui_exposed, sc3_done, False)"
+  - "sc3_done == z3.If(ui_section_present, sc3_done, False)"
   - "sc4_done == z3.If(ui_flow_complete, sc4_done, False)"
   - "sc5_done == z3.If(maintenance_ready, sc5_done, False)"
   - "sc6_done == z3.If(normalized_identity_proven, sc6_done, False)"
@@ -90,7 +93,7 @@ phase_mapping:
   phase-1: {scs: [SC-8, SC-1, SC-9], states: [seed_clean, normalization_extended], depends_on: []}
   phase-2: {scs: [SC-2, SC-10], state: scan_ready, depends_on: [phase-1]}
   phase-3: {scs: [SC-5, SC-11, SC-12, SC-13, SC-6, SC-7], states: [maintenance_ready, normalized_identity_proven, fts_equivalence_proven, outcome_report_produced], depends_on: [phase-2]}
-  phase-4: {scs: [SC-3, SC-4], states: [ui_exposed, ui_flow_complete], depends_on: [phase-2, phase-3]}
+  phase-4: {scs: [SC-3, SC-4], states: [ui_section_present, ui_flow_complete], depends_on: [phase-2, phase-3]}
   phase-5: {scs: [all], state: suite_green, depends_on: [phase-1, phase-2, phase-3, phase-4]}
 
 dependency_contract:
@@ -106,10 +109,10 @@ dependency_contract:
     target: records table (current_version) + edit_history table
     type: non-interference (DB maintenance, not an editorial edit)
     constraint: the maintenance path writes NO EditHistory rows and performs NO current_version bumps (stakeholder-directed intent change, spec v7); record history and version state are untouched
-  - source: render_infinity_remediation (table_maintenance.py)
+  - source: "'∞→ꝏ Remediation' section inside render_data_reprocessing_maintenance (table_maintenance.py)"
     target: LinguisticService.count_infinity_records / list_infinity_records / remediate_all_records (plus the scan's separate locked count)
     type: interface-consumption (UI → service)
-    constraint: admin guard inherited from main(); remediable and locked counts displayed before any action; Apply All confirm-gated (the only remediation path); outcome report rendered on completion; handle_ui_error with logger_name snea.pages.table_maintenance
+    constraint: admin-only access inherited from the main() admin guard which gates the whole Table Maintenance page (no second guard); sidebar radio list keeps exactly the original three options; remediable and locked counts displayed before any action; Apply All is a plain primary button following the established maintenance-op pattern (no confirm gate, v8); progress pattern follows the existing section; outcome report rendered on completion; handle_ui_error with logger_name snea.pages.table_maintenance
   - source: generate_sort_lx symbol_map addition
     target: all generate_sort_lx callers (populate_search_entries, search normalization, reprocessing)
     type: additive-extension

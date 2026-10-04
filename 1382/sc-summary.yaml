@@ -1,6 +1,8 @@
 # SC Summary — Issue #1382
 # ∞ (U+221E) → ꝏ (U+A74F) remediation via Table Maintenance tool
-# Spec v7 — stakeholder-directed DB-maintenance framing (no EditHistory writes, no version bumps)
+# Spec v8 — confirm-gate removed (plain primary Apply All following the established
+# maintenance-op pattern); remediation relocated into the Data Reprocessing view
+# (sidebar radio list reverts to its original three options)
 # 13 atomic SCs, 1:1 SC↔item mapping, 5 phases (4 implementation + 1 terminal gate)
 sc_count: 13
 scs:
@@ -13,11 +15,11 @@ scs:
     evidence_type: "behavioral"
     plan_item: 2
   - id: "SC-3"
-    description: "Table Maintenance sidebar exposes the \"∞→ꝏ Remediation\" option; visible to admin, blocked for non-admin by the existing main() guard (StreamlitAppTest)."
+    description: "The Data Reprocessing maintenance view includes the ∞→ꝏ remediation section (admin-gated by the existing main() guard): admin renders the view and sees the section; non-admin is blocked; the sidebar radio list has exactly the original three options."
     evidence_type: "behavioral"
     plan_item: 3
   - id: "SC-4"
-    description: "The remediation view displays the detected record counts — remediable and locked separately — before any action; no changes applied until a button is clicked."
+    description: "The remediation section displays the detected record counts — remediable and locked separately — before any action, with the plain primary Apply All button (no confirm gate), zero-state info with no action button, and the outcome report rendered on completion."
     evidence_type: "behavioral"
     plan_item: 4
   - id: "SC-5"
