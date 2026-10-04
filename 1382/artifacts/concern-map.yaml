@@ -1,32 +1,34 @@
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1382
+generated_at: 2026-10-03T00:00:00Z
+grounding: "Verified against live codebase 2026-10-03 (v5 spec SC-1..SC-17)"
 concern_map:
-  issue: 1382
-  date: '2026-09-29'
   concerns:
-    - id: C1
-      name: Normalization correctness
-      owner_location: src/services/linguistic_service.py generate_sort_lx()
-      note: add "\ua74f": "oozzz" to symbol_map; keep "\u221e" fallback; verified live at lines 152-157
-    - id: C2
-      name: Defect scan service
-      owner_location: src/services/linguistic_service.py (new methods count_infinity_records, list_infinity_records)
-      note: query non-deleted records where lx OR mdf_data contains U+221E; returns count and (id, lx, preview) list
-    - id: C3
-      name: Remediation write path
-      owner_location: src/services/linguistic_service.py remediate_record / remediate_all_records
-      note: prev_data snapshot → replace ∞→ꝏ in lx+mdf_data → EditHistory(version=current+1, session UUID) → update sort_lx → call UploadService.populate_search_entries([rid]) to rebuild term/normalized_term/fts_vector
-    - id: C4
-      name: Admin UI
-      owner_location: src/frontend/pages/table_maintenance.py
-      note: new radio option "∞→ꝏ Remediation" in main() sidebar; render_infinity_remediation() with scan count display, Apply All (confirm-gated), Review One-by-One (per-record Apply/Skip); admin guard already in main()
-    - id: C5
-      name: Seed data cleanup
-      owner_location: src/seed_data/natick_sample_100*.txt
-      note: replace all ∞ with ꝏ (364 occurrences each, verified)
-    - id: C6
-      name: Test fixtures
-      owner_location: test/test_infinity_remediation_red.py (new), test/ui/test_table_maintenance_infinity.py (new)
-      note: pgserver fixture pattern from test_upload_search_entries.py; test/ui pattern from test/ui/ records tests
-  cross_concern_risks:
-    - C3 depends on C1 (sort_lx update must use new normalization before populate_search_entries runs)
-    - C4 depends on C2+C3 (UI calls service methods)
-    - C6 depends on all others (tests target each concern)
+    - concern: "Data integrity — raw column character correctness"
+      scs: [SC-2, SC-5, SC-7, SC-8]
+      sc8_justification: "Review One-by-One Skip is a no-op outcome — zero mutation of raw and normalized columns; covered by this concern's data-integrity boundary (SC-8: record retains ∞, no EditHistory entry)."
+      description: "Raw columns lx, mdf_data, term carry the correct ligature after remediation; scan predicate is exact (OR across lx and mdf_data, non-deleted only)."
+      resolution: "Remediation replaces ∞ with ꝏ in all affected raw columns per record; scan counts only matching non-deleted records."
+    - concern: "Audit trail / provenance"
+      scs: [SC-6, SC-14]
+      description: "Every applied change writes exactly one EditHistory entry with prev_data/current_data snapshots, change_summary, version increment, and batch session UUID."
+      resolution: "Service methods follow the update_record() EditHistory audit-snapshot pattern in src/services/linguistic_service.py."
+    - concern: "Record-lock immutability"
+      scs: [SC-13, SC-14, SC-15, SC-16, SC-17]
+      description: "Locked records (is_locked == True) are strictly immutable — mirroring update_record() strict-immutability rejection."
+      resolution: "Scan reports excluded-locked count separately; Apply All skips locked records and reports them; remediate_record() refuses locked records; locked presence never blocks remediable remediation."
+    - concern: "Normalized-column stability"
+      scs: [SC-1, SC-9, SC-10, SC-12]
+      description: "Both ∞ and ꝏ map to oozzz via generate_sort_lx() symbol_map, so normalized columns are byte-identical before and after remediation and FTS results are unchanged."
+      resolution: "Add ꝏ entry to symbol_map; retain ∞ fallback entry; re-normalize and rebuild FTS following the upload_service.py ingestion pattern."
+    - concern: "Authorization / role gating"
+      scs: [SC-3, SC-4]
+      description: "Remediation is admin-only and the admin sees the blast radius before acting."
+      resolution: "Sidebar option inside main() admin guard; count displayed before any action; confirm gate on Apply All."
+    - concern: "Drift prevention — remediation mirrors ingestion"
+      scs: [SC-10]
+      description: "Per-record search-entry/FTS rebuild must not diverge from ingestion behavior."
+      resolution: "Remediation rebuild follows the existing search-entry/FTS rebuild block in src/services/upload_service.py (SearchEntry/HeadwordSearchEntry/GlossSearchEntry with term + normalized_term via generate_sort_lx(); FTSEntry with to_tsvector('simple', ...))."
+    - concern: "Fixture correctness"
+      scs: [SC-11]
+      description: "Seed files must match real linguistic data (ligature, not mis-encoded infinity)."
+      resolution: "Direct replacement in both seed files (fixtures, not production data)."
