@@ -248,10 +248,16 @@ class TestSemanticThresholdRED(unittest.TestCase):
             "Persistence must go through PreferenceService.set_preference with the str(value) idiom",
         )
         for widget_key in ("semantic_threshold_slider", "semantic_threshold_number"):
-            pattern = rf'key="{widget_key}"[\s\S]{{0,400}}?st\.session_state\.semantic_threshold'
+            # Issue #1409 (Key Design Decision a): the explicit value= parameter
+            # was removed to eliminate the dual-set widget-state warning class;
+            # two-way coupling is now bound via the pre-instantiation sync block
+            # that writes each widget key from the shared backing value on every
+            # rerun. Assert that sync binding per widget key.
+            pattern = rf"st\.session_state\.{widget_key} = st\.session_state\.semantic_threshold"
             self.assertIsNotNone(
                 re.search(pattern, source),
-                f"{widget_key} must be bound to st.session_state.semantic_threshold for two-way coupling",
+                f"{widget_key} must be bound to st.session_state.semantic_threshold for two-way coupling "
+                "(pre-instantiation sync write per #1409 design decision a)",
             )
 
 
