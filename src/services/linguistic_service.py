@@ -11,7 +11,8 @@ import unicodedata
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from sqlalchemy import func
+from sqlalchemy import create_engine, func
+from sqlalchemy.orm import sessionmaker
 
 from src.database.connection import get_session
 from src.database.models.core import Language, Record, RecordLanguage, Source
@@ -162,10 +163,12 @@ class LinguisticService:
         for fancy, straight in quotes_map.items():
             stripped = stripped.replace(fancy, straight)
         # 3b. Symbol substitution — treat linguistic symbols as letters
-        # ∞ (U+221E) is an Algonquian letter for a long rounded vowel; sorts after oo*/before op
+        # ∞ (U+221E) and ꝏ (U+A74F) are Algonquian oo-ligature letter forms for a
+        # long rounded vowel; both map to "oozzz" (sorts after oo*/before op)
         # ✔ (U+2714) is an annotation mark; stripped for sort purposes
         symbol_map = {
             "\u221e": "oozzz",
+            "\ua74f": "oozzz",
             "\u2714": "",
         }
         for symbol, replacement in symbol_map.items():
@@ -882,8 +885,6 @@ class LinguisticService:
         """
         Fetch revision history for a record.
         """
-        from sqlalchemy import func
-
         from src.database.models.workflow import EditHistory
 
         with get_session() as session:
@@ -986,3 +987,186 @@ class LinguisticService:
         return LinguisticService.update_record(
             record_id=record_id, user_email=user_email, change_summary="Restored", is_deleted=False
         )
+
+    # ------------------------------------------------------------------
+    # ∞ (U+221E) defect scan — read-only diagnostics (issue #1382)
+    # ------------------------------------------------------------------
+
+    _INFINITY = "∞"  # U+221E — direct Unicode literal, no ASCII regex
+    _INFINITY_PREVIEW_WINDOW = 40
+
+    @staticmethod
+    def _infinity_defective_query(session):
+        """Query of non-deleted records whose lx or mdf_data contains ∞ (U+221E)."""
+        infinity = LinguisticService._INFINITY
+        return (
+            session.query(Record)
+            .filter(Record.is_deleted == False)  # noqa: E712 — SQL comparison
+            .filter((Record.lx.ilike(f"%{infinity}%")) | (Record.mdf_data.ilike(f"%{infinity}%")))
+        )
+
+    @staticmethod
+    def _readonly_diagnostic_session():
+        """Open a short-lived read-only diagnostic session.
+
+        Builds a fresh engine from get_db_url() instead of the st-cached
+        get_engine(): diagnostic scans are rare, and a throwaway engine
+        avoids polluting the process-global st.cache_resource engine slot
+        with a URL that may only be valid for the current caller.
+        Caller owns the returned session (must close it).
+        """
+        from src.database.connection import get_db_url
+
+        db_url = get_db_url()
+        if not db_url:
+            raise RuntimeError("database URL unavailable — cannot open diagnostic session")
+        engine = create_engine(db_url)
+        return sessionmaker(bind=engine)(), engine
+
+    @staticmethod
+    def count_infinity_records(session=None) -> int:
+        """Count remediable non-deleted records containing ∞ (U+221E).
+
+        Read-only: never commits. Locked defective records are excluded from
+        the remediable count; locked defective records are counted separately
+        and reported via :meth:`list_infinity_records` (``is_locked`` flag).
+        """
+        _provided_session = session is not None
+        engine = None
+        if not _provided_session:
+            session, engine = LinguisticService._readonly_diagnostic_session()
+        try:
+            remediable = (
+                LinguisticService._infinity_defective_query(session).filter(Record.is_locked == False).count()  # noqa: E712
+            )
+            locked = LinguisticService._infinity_defective_query(session).filter(Record.is_locked == True).count()  # noqa: E712
+            logger.info(f"∞ scan: {remediable} remediable, {locked} locked defective records")
+            return remediable
+        finally:
+            if not _provided_session and engine is not None:
+                session.close()
+                engine.dispose()
+
+    @staticmethod
+    def list_infinity_records(session=None) -> list[dict[str, Any]]:
+        """List defective records containing ∞ (U+221E).
+
+        Returns ``{id, lx, preview, is_locked}`` entries for every non-deleted
+        record with ∞ in lx or mdf_data, including locked defective records
+        (``is_locked=True`` — never treated as remediable). ``preview`` is a
+        bounded context window of mdf_data around the first ∞ match.
+
+        Read-only: never commits. Locked defective records are reported with
+        the ``is_locked`` flag and are excluded from the remediable count.
+        """
+        _provided_session = session is not None
+        engine = None
+        if not _provided_session:
+            session, engine = LinguisticService._readonly_diagnostic_session()
+        try:
+            window = LinguisticService._INFINITY_PREVIEW_WINDOW
+            entries: list[dict[str, Any]] = []
+            for record in LinguisticService._infinity_defective_query(session).order_by(Record.id).all():
+                mdf = record.mdf_data or ""
+                first = mdf.find(LinguisticService._INFINITY)
+                if first == -1:
+                    first = len(mdf)  # ∞ in lx only — preview from the start of mdf_data
+                start = max(0, first - window)
+                end = min(len(mdf), first + window + 1)
+                preview = mdf[start:end]
+                entries.append(
+                    {
+                        "id": record.id,
+                        "lx": record.lx,
+                        "preview": preview,
+                        "is_locked": record.is_locked,
+                    }
+                )
+            return entries
+        finally:
+            if not _provided_session and engine is not None:
+                session.close()
+                engine.dispose()
+
+    @staticmethod
+    def remediate_all_records(progress_callback=None, session=None) -> dict:
+        """Remediate ∞ (U+221E) → ꝏ (U+A74F) across all defective records.
+
+        Maintenance batch write path (DB maintenance framing): iterates the
+        scan's remediable set — non-locked, non-deleted records with ∞ in
+        ``lx`` or ``mdf_data`` — and per record:
+
+        1. Replaces every ∞ occurrence with ꝏ in ``lx`` and ``mdf_data``
+           (direct Unicode literals — no ASCII regex, no normalization).
+        2. Recomputes ``sort_lx`` via :meth:`generate_sort_lx`.
+        3. Calls :meth:`UploadService.populate_search_entries` (UNMODIFIED)
+           with the current session to rebuild the search-entry and FTS rows —
+           no new ``to_tsvector`` calls, ``'simple'`` tsconfig preserved.
+        4. Commits.
+
+        Maintenance framing: NO ``EditHistory`` writes and NO
+        ``current_version`` bumps anywhere on this path. Locked defective
+        records are never touched — they are counted and reported as
+        unremediated in the outcome report. Soft-deleted defective records
+        are excluded. Fail-fast: any error aborts the batch (no silent
+        swallow).
+
+        Returns ``{"remediated": N, "locked": M}`` where ``remediated`` is
+        the applied count and ``locked`` is the unremediated locked
+        defective count.
+        """
+        _provided_session = session is not None
+        engine = None
+        if not _provided_session:
+            session, engine = LinguisticService._readonly_diagnostic_session()
+        try:
+            remediable = (
+                LinguisticService._infinity_defective_query(session)
+                .filter(Record.is_locked == False)  # noqa: E712 — SQL comparison
+                .order_by(Record.id)
+                .all()
+            )
+            locked = (
+                LinguisticService._infinity_defective_query(session)
+                .filter(Record.is_locked == True)  # noqa: E712 — SQL comparison
+                .count()
+            )
+
+            infinity = LinguisticService._INFINITY  # ∞ U+221E — direct Unicode literal
+            oo_ligature = "ꝏ"  # U+A74F LATIN SMALL LETTER OO — direct Unicode literal
+            remediated = 0
+            total = len(remediable)
+            for i, record in enumerate(remediable):
+                # Bulk UPDATE bypasses version_id_col — maintenance framing
+                # requires NO current_version bumps anywhere on this path.
+                new_lx = record.lx.replace(infinity, oo_ligature) if record.lx else record.lx
+                new_mdf = record.mdf_data.replace(infinity, oo_ligature) if record.mdf_data else record.mdf_data
+                session.query(Record).filter(Record.id == record.id).update(
+                    {
+                        "lx": new_lx,
+                        "mdf_data": new_mdf,
+                        "sort_lx": LinguisticService.generate_sort_lx(new_lx),
+                    },
+                    synchronize_session=False,
+                )
+                session.commit()
+                # Search-entry/FTS rebuild via the unmodified ingestion pattern
+                # (follows upload_service.py — no new to_tsvector calls).
+                from src.services.upload_service import UploadService
+
+                UploadService.populate_search_entries([record.id], session=session)
+                session.commit()
+                remediated += 1
+                if progress_callback:
+                    progress_callback(i + 1, total)
+
+            logger.info(f"∞ remediation: {remediated} remediated, {locked} locked unremediated")
+            return {"remediated": remediated, "locked": locked}
+        except Exception:
+            if not _provided_session:
+                session.rollback()
+            raise
+        finally:
+            if not _provided_session and engine is not None:
+                session.close()
+                engine.dispose()

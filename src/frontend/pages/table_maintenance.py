@@ -222,6 +222,66 @@ def render_data_reprocessing_maintenance():
         except Exception as e:
             handle_ui_error(e, "Embedding backfill failed.", logger_name="snea.pages.table_maintenance")
 
+    # ── Admin ∞→ꝏ Remediation (SC-3/SC-4/SC-12, spec v8) ────────────
+    from src.services.linguistic_service import LinguisticService
+
+    st.divider()
+    st.subheader("∞→ꝏ Remediation")
+    st.info("""
+        This tool scans the database for records containing the infinity
+        character ∞ (U+221E) in place of the proper SNEA letter ꝏ (U+A74F)
+        and replaces every occurrence with the correct letter.
+
+        Unlike reprocessing — which rebuilds derived columns — this operation
+        **mutates RAW columns** (records.lx, records.mdf_data, and the
+        search-entry term columns).
+
+        **Locked records are never modified** — they are counted and reported
+        separately so an administrator can unlock them manually first.
+    """)
+
+    # Scan on render (read-only; nothing is applied until Apply All is clicked).
+    try:
+        remediable = LinguisticService.count_infinity_records()
+        defective = LinguisticService.list_infinity_records()
+    except Exception as e:
+        handle_ui_error(e, "∞ scan failed.", logger_name="snea.pages.table_maintenance")
+        return
+
+    locked = sum(1 for record in defective if record.get("is_locked"))
+
+    if remediable == 0 and locked == 0:
+        st.info("No defective records found — no ∞ (U+221E) characters remain in the database.")
+        return
+
+    st.markdown(f"**Remediable: {remediable}**")
+    st.markdown(f"**Locked: {locked}**")
+
+    if st.button("Rescan"):
+        st.rerun()
+
+    if st.button("Apply All", type="primary"):
+        status_container = st.empty()
+        progress_bar = st.progress(0)
+
+        def update_remediation_progress(current, total):
+            progress_bar.progress(min(1.0, current / total) if total else 1.0)
+            status_container.text(f"Remediating record {current} of {total}...")
+
+        try:
+            with st.status("Remediating ∞ → ꝏ...", expanded=True) as status:
+                results = LinguisticService.remediate_all_records(
+                    progress_callback=update_remediation_progress
+                )
+                status.update(label="Remediation complete!", state="complete", expanded=False)
+
+            st.success(
+                f"Remediation complete: {results['remediated']} records remediated; "
+                f"{results['locked']} locked."
+            )
+        except Exception as e:
+            handle_ui_error(e, "Remediation failed.", logger_name="snea.pages.table_maintenance")
+
 
 def render_deleted_records_maintenance():
     from src.frontend.ui_utils import handle_ui_error
