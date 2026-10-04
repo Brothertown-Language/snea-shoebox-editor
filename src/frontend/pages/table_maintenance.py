@@ -144,7 +144,7 @@ def main():
         st.markdown("**Maintenance Tables**")
         table_option = st.radio(
             "Select a table to maintain:",
-            ["Sources", "Soft Deleted Records", "Data Reprocessing"],
+            ["Sources", "Soft Deleted Records", "Data Reprocessing", "∞→ꝏ Remediation"],
             index=0,
             label_visibility="collapsed",
         )
@@ -158,6 +158,8 @@ def main():
         render_deleted_records_maintenance()
     elif table_option == "Data Reprocessing":
         render_data_reprocessing_maintenance()
+    elif table_option == "∞→ꝏ Remediation":
+        render_infinity_remediation()
     else:
         st.info(f"Maintenance for {table_option} is not yet implemented.")
 
@@ -221,6 +223,74 @@ def render_data_reprocessing_maintenance():
             st.success(f"Successfully backfilled {results['backfilled']} of {results['total']} entries.")
         except Exception as e:
             handle_ui_error(e, "Embedding backfill failed.", logger_name="snea.pages.table_maintenance")
+
+
+def render_infinity_remediation():
+    from src.frontend.ui_utils import handle_ui_error
+    from src.services.linguistic_service import LinguisticService
+
+    st.header("∞→ꝏ Remediation")
+    st.info("""
+        This tool scans the database for records containing the infinity
+        character ∞ (U+221E) in place of the proper SNEA letter ꝏ (U+A74F)
+        and replaces every occurrence with the correct letter.
+
+        **Locked records are never modified** — they are counted and reported
+        separately so an administrator can unlock them manually first.
+    """)
+
+    # Scan on render (read-only; nothing is applied until Apply All is confirmed).
+    try:
+        remediable = LinguisticService.count_infinity_records()
+        defective = LinguisticService.list_infinity_records()
+    except Exception as e:
+        handle_ui_error(e, "∞ scan failed.", logger_name="snea.pages.table_maintenance")
+        return
+
+    locked = sum(1 for record in defective if record.get("is_locked"))
+
+    if remediable == 0 and locked == 0:
+        st.info("No defective records found — no ∞ (U+221E) characters remain in the database.")
+        return
+
+    st.markdown(f"**Remediable: {remediable}**")
+    st.markdown(f"**Locked: {locked}**")
+
+    if st.button("Rescan"):
+        st.rerun()
+
+    st.warning(
+        f"This will replace every ∞ with ꝏ in {remediable} record(s) and rebuild "
+        "their search entries. Locked defective records are skipped."
+    )
+
+    confirm = st.checkbox("I confirm I want to apply the ∞→ꝏ remediation to all remediable records")
+
+    if st.button("Apply All", type="primary"):
+        if not confirm:
+            st.warning("Check the confirmation box before applying the remediation.")
+            return
+
+        status_container = st.empty()
+        progress_bar = st.progress(0)
+
+        def update_remediation_progress(current, total):
+            progress_bar.progress(min(1.0, current / total) if total else 1.0)
+            status_container.text(f"Remediating record {current} of {total}...")
+
+        try:
+            with st.status("Remediating ∞ → ꝏ...", expanded=True) as status:
+                results = LinguisticService.remediate_all_records(
+                    progress_callback=update_remediation_progress
+                )
+                status.update(label="Remediation complete!", state="complete", expanded=False)
+
+            st.success(
+                f"Remediation complete: {results['remediated']} records remediated; "
+                f"{results['locked']} locked."
+            )
+        except Exception as e:
+            handle_ui_error(e, "Remediation failed.", logger_name="snea.pages.table_maintenance")
 
 
 def render_deleted_records_maintenance():
