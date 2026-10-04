@@ -1,0 +1,67 @@
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1382
+generated_at: 2026-10-04T04:45:00Z
+grounding: "Verified against live codebase 2026-10-04 (v7 spec SC-1..SC-13, stakeholder-directed DB-maintenance framing)"
+testability_assessment:
+  description: "Assessment of how each SC is testable, with evidence type and the test seam used."
+  summary:
+    behavioral_scs: 11
+    string_scs: 2
+    seam_note: "All behavioral SCs test against a fixture database (seeded from the remediated seed files or constructed in-test) or render the Streamlit page; no production data is ever used."
+  assessments:
+    - sc: SC-1
+      evidence_type: behavioral
+      seam: "Pure function — call generate_sort_lx() directly with ∞ and ꝏ inputs"
+      testability: high
+    - sc: SC-2
+      evidence_type: behavioral
+      seam: "Fixture DB — seed known defective + non-defective records; assert exact count/list; non-deleted filter asserted"
+      testability: high
+    - sc: SC-3
+      evidence_type: behavioral
+      seam: "Streamlit render — set user_role in session_state per role; assert option visibility / guard behavior"
+      testability: high
+    - sc: SC-4
+      evidence_type: behavioral
+      seam: "Streamlit render + fixture DB — assert displayed remediable and locked counts match seeded defect counts and no mutation before button click"
+      testability: high
+    - sc: SC-5
+      evidence_type: behavioral
+      seam: "Fixture DB — invoke Apply All path; assert every non-locked defective record's lx and mdf_data contain ꝏ not ∞"
+      testability: high
+    - sc: SC-6
+      evidence_type: behavioral
+      seam: "Fixture DB — capture sort_lx / normalized_term before and after remediation; assert byte-identity"
+      testability: high
+    - sc: SC-7
+      evidence_type: behavioral
+      seam: "Fixture DB — search the ligature form post-remediation and compare result set to pre-remediation infinity-form search"
+      testability: high
+    - sc: SC-8
+      evidence_type: string
+      seam: "grep -c on both seed files returns 0 for ∞"
+      testability: high
+    - sc: SC-9
+      evidence_type: string
+      seam: "string check — '\\u221e': 'oozzz' present in symbol_map"
+      testability: high
+    - sc: SC-10
+      evidence_type: behavioral
+      seam: "Fixture DB with locked defective record — assert remediable count excludes it and a separate locked count ≥ 1 is reported"
+      testability: high
+    - sc: SC-11
+      evidence_type: behavioral
+      seam: "Fixture DB — Apply All; assert locked record retains ∞ with lx/mdf_data/sort_lx/current_version unchanged and no edit_history rows"
+      testability: high
+    - sc: SC-12
+      evidence_type: behavioral
+      seam: "Fixture DB — assert the outcome report states the remediated count and the locked (unremediated) count"
+      testability: high
+    - sc: SC-13
+      evidence_type: behavioral
+      seam: "Fixture DB with mixed locked + unlocked defective records — assert all unlocked records remediated"
+      testability: high
+  risks:
+    - risk: "Streamlit UI behavior tests must follow the Playwright standard of record for user-visible criteria"
+      mitigation: "SC-3/SC-4 render-path criteria verified per the UI testing standard; AppTest acceptable only as in-process smoke checks"
+    - risk: "Fixture DB must exercise the 'simple' tsconfig FTS behavior for SC-7 equivalence"
+      mitigation: "Fixture seeding follows the same ingestion path as upload_service.py rebuild block"

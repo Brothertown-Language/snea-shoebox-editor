@@ -1,6 +1,7 @@
 # Dependency Contract — Issue #1382
-# Produced by: 🤖 OpenCode (ollama-cloud/glm-5.3) — 2026-09-29
-# Derived from interface-compat.yaml + structure.yaml
+# Produced by: 🤖 OpenCode (huggingface/zai-org/GLM-5.3-Flash) — 2026-10-04
+# Derived from interface-compatibility.yaml + concern-map.yaml
+# Spec v7 — stakeholder-directed DB-maintenance framing (no EditHistory writes, no version bumps)
 # Z3 model layer for tools/solve + tools/plan consumption
 
 variables:
@@ -14,8 +15,12 @@ variables:
   sc8_done: {type: bool}
   sc9_done: {type: bool}
   sc10_done: {type: bool}
+  sc11_done: {type: bool}
+  sc12_done: {type: bool}
+  sc13_done: {type: bool}
   item1_committed: {type: bool}
   item2_committed: {type: bool}
+  item3_committed: {type: bool}
   item4_committed: {type: bool}
   item5_committed: {type: bool}
   item6_committed: {type: bool}
@@ -23,22 +28,28 @@ variables:
   item8_committed: {type: bool}
   item9_committed: {type: bool}
   item10_committed: {type: bool}
+  item11_committed: {type: bool}
+  item12_committed: {type: bool}
+  item13_committed: {type: bool}
   seed_clean: {type: bool}
   normalization_extended: {type: bool}
   scan_ready: {type: bool}
-  remediation_ready: {type: bool}
-  review_semantics_proven: {type: bool}
+  maintenance_ready: {type: bool}
   normalized_identity_proven: {type: bool}
   fts_equivalence_proven: {type: bool}
+  outcome_report_produced: {type: bool}
   ui_exposed: {type: bool}
   ui_flow_complete: {type: bool}
   normalized_columns_stable: {type: bool}
   simple_tsconfig_only: {type: bool}
   no_auto_migration: {type: bool}
+  locked_records_untouched: {type: bool}
+  no_edit_history_writes: {type: bool}
 
 preconditions:
   - "z3.Or(z3.Not(item1_committed), item1_committed == True)"
   - "z3.Or(z3.Not(item2_committed), item2_committed == True)"
+  - "z3.Or(z3.Not(item3_committed), item3_committed == True)"
   - "z3.Or(z3.Not(item4_committed), item4_committed == True)"
   - "z3.Or(z3.Not(item5_committed), item5_committed == True)"
   - "z3.Or(z3.Not(item6_committed), item6_committed == True)"
@@ -46,51 +57,64 @@ preconditions:
   - "z3.Or(z3.Not(item8_committed), item8_committed == True)"
   - "z3.Or(z3.Not(item9_committed), item9_committed == True)"
   - "z3.Or(z3.Not(item10_committed), item10_committed == True)"
+  - "z3.Or(z3.Not(item11_committed), item11_committed == True)"
+  - "z3.Or(z3.Not(item12_committed), item12_committed == True)"
+  - "z3.Or(z3.Not(item13_committed), item13_committed == True)"
 
 postconditions:
-  - "sc9_done == z3.If(seed_clean, sc9_done, False)"
   - "sc1_done == z3.If(normalization_extended, sc1_done, False)"
-  - "sc10_done == z3.If(normalization_extended, sc10_done, False)"
   - "sc2_done == z3.If(scan_ready, sc2_done, False)"
-  - "sc5_done == z3.If(remediation_ready, sc5_done, False)"
-  - "sc6_done == z3.If(review_semantics_proven, sc6_done, False)"
-  - "sc7_done == z3.If(normalized_identity_proven, sc7_done, False)"
-  - "sc8_done == z3.If(fts_equivalence_proven, sc8_done, False)"
   - "sc3_done == z3.If(ui_exposed, sc3_done, False)"
   - "sc4_done == z3.If(ui_flow_complete, sc4_done, False)"
+  - "sc5_done == z3.If(maintenance_ready, sc5_done, False)"
+  - "sc6_done == z3.If(normalized_identity_proven, sc6_done, False)"
+  - "sc7_done == z3.If(fts_equivalence_proven, sc7_done, False)"
+  - "sc8_done == z3.If(seed_clean, sc8_done, False)"
+  - "sc9_done == z3.If(normalization_extended, sc9_done, False)"
+  - "sc10_done == z3.If(scan_ready, sc10_done, False)"
+  - "sc11_done == z3.If(maintenance_ready, sc11_done, False)"
+  - "sc12_done == z3.If(outcome_report_produced, sc12_done, False)"
+  - "sc13_done == z3.If(maintenance_ready, sc13_done, False)"
 
 invariants:
   - "normalized_columns_stable == True"
   - "simple_tsconfig_only == True"
   - "no_auto_migration == True"
-  - "z3.If(sc5_done, z3.And(remediation_ready, normalized_columns_stable), z3.BoolVal(True))"
-  - "z3.If(sc8_done, z3.And(fts_equivalence_proven, simple_tsconfig_only), z3.BoolVal(True))"
+  - "locked_records_untouched == True"
+  - "no_edit_history_writes == True"
+  - "z3.If(sc5_done, z3.And(maintenance_ready, normalized_columns_stable), z3.BoolVal(True))"
+  - "z3.If(sc7_done, z3.And(fts_equivalence_proven, simple_tsconfig_only), z3.BoolVal(True))"
+  - "z3.If(sc11_done, z3.And(locked_records_untouched, no_edit_history_writes), z3.BoolVal(True))"
 
 phase_mapping:
-  phase-1: {scs: [SC-9, SC-1, SC-10], states: [seed_clean, normalization_extended], depends_on: []}
-  phase-2: {sc: SC-2, state: scan_ready, depends_on: [phase-1]}
-  phase-3: {scs: [SC-5, SC-6, SC-7, SC-8], states: [remediation_ready, review_semantics_proven, normalized_identity_proven, fts_equivalence_proven], depends_on: [phase-2]}
+  phase-1: {scs: [SC-8, SC-1, SC-9], states: [seed_clean, normalization_extended], depends_on: []}
+  phase-2: {scs: [SC-2, SC-10], state: scan_ready, depends_on: [phase-1]}
+  phase-3: {scs: [SC-5, SC-11, SC-12, SC-13, SC-6, SC-7], states: [maintenance_ready, normalized_identity_proven, fts_equivalence_proven, outcome_report_produced], depends_on: [phase-2]}
   phase-4: {scs: [SC-3, SC-4], states: [ui_exposed, ui_flow_complete], depends_on: [phase-2, phase-3]}
   phase-5: {scs: [all], state: suite_green, depends_on: [phase-1, phase-2, phase-3, phase-4]}
 
 dependency_contract:
   - source: LinguisticService.count_infinity_records / list_infinity_records
-    target: records table (lx, mdf_data, is_deleted columns)
+    target: records table (lx, mdf_data, is_deleted, is_locked columns)
     type: artifact-schema (query contract)
-    constraint: filter is_deleted == False; direct Unicode U+221E literal in LIKE/position query — no ASCII regex per docs/lessons-learned/2026-06-13-regex-linguistic-characters.md
-  - source: LinguisticService.remediate_record / remediate_all_records
+    constraint: filter is_deleted == False; locked defective records (is_locked == True) excluded from the remediable count and reported separately (SC-10); direct Unicode U+221E literal in LIKE/position query — no ASCII regex per docs/lessons-learned/2026-06-13-regex-linguistic-characters.md
+  - source: LinguisticService.remediate_all_records
     target: UploadService.populate_search_entries(record_ids, session)
     type: interface-reuse (search-entry + FTS rebuild)
     constraint: consumed unmodified; session passed through; no new to_tsvector calls — 'simple' tsconfig only per docs/lessons-learned/2026-06-13-postgres-fts-algonquian.md
-  - source: LinguisticService.remediate_record / remediate_all_records
-    target: EditHistory model (workflow.py)
-    type: artifact-schema (audit snapshot)
-    constraint: prev_data snapshot before mutation; current_data after; version = record.current_version + 1; session_id = batch uuid4; change_summary fixed string
+  - source: LinguisticService.remediate_all_records
+    target: records table (current_version) + edit_history table
+    type: non-interference (DB maintenance, not an editorial edit)
+    constraint: the maintenance path writes NO EditHistory rows and performs NO current_version bumps (stakeholder-directed intent change, spec v7); record history and version state are untouched
   - source: render_infinity_remediation (table_maintenance.py)
-    target: LinguisticService.count/list/remediate_record/remediate_all_records
+    target: LinguisticService.count_infinity_records / list_infinity_records / remediate_all_records (plus the scan's separate locked count)
     type: interface-consumption (UI → service)
-    constraint: admin guard inherited from main(); user_email from st.session_state; handle_ui_error with logger_name snea.pages.table_maintenance
+    constraint: admin guard inherited from main(); remediable and locked counts displayed before any action; Apply All confirm-gated (the only remediation path); outcome report rendered on completion; handle_ui_error with logger_name snea.pages.table_maintenance
   - source: generate_sort_lx symbol_map addition
     target: all generate_sort_lx callers (populate_search_entries, search normalization, reprocessing)
     type: additive-extension
-    constraint: existing "U+221E maps to oozzz" mapping preserved (SC-10); ꝏ input now normalizes to oozzz
+    constraint: existing "U+221E maps to oozzz" mapping preserved (SC-9); ꝏ input now normalizes to oozzz
+  - source: LinguisticService.remediate_all_records
+    target: Record.is_locked field + strict-immutability enforcement in `update_record()` in `src/services/linguistic_service.py` (provenance of the lock invariant)
+    type: policy-conformance (locked-record non-interference)
+    constraint: locked defective records are NEVER altered — excluded from the remediable scan count and reported separately (SC-10); Apply All never touches them (SC-11); the outcome report states remediated and locked unremediated counts (SC-12); locked presence does not block remediable remediation (SC-13); no lock override or forced unlocking

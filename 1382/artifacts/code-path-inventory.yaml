@@ -1,24 +1,36 @@
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1382
+generated_at: 2026-10-04T04:45:00Z
+grounding: "Verified against live codebase 2026-10-04 (v7 spec SC-1..SC-13); line-anchored observations recorded at verification time, stable anchors are authoritative"
 code_path_inventory:
-  issue: 1382
-  date: '2026-09-29'
-  paths:
-    - file: src/services/linguistic_service.py
-      relevant_existing: [generate_sort_lx (lines 117-170, symbol_map 152-157), update_record (lines ~650-700, EditHistory pattern), LinguisticService class]
-      change: add "\ua74f": "oozzz" to symbol_map; add 4 new static/class methods (count_infinity_records, list_infinity_records, remediate_record, remediate_all_records)
-    - file: src/frontend/pages/table_maintenance.py
-      relevant_existing: [main (line 124, admin guard, sidebar radio lines 145-152, dispatch chain 155-162), render_data_reprocessing_maintenance (line 165, progress-bar pattern), handle_ui_error usage]
-      change: add radio option "∞→ꝏ Remediation"; add elif dispatch; add render_infinity_remediation()
-    - file: src/services/upload_service.py
-      relevant_existing: [populate_search_entries (line 1758) — reuse as-is for search-entry/FTS rebuild; reprocess_all_records (line 1847)]
-      change: NONE — consumed by remediation, not modified
-    - file: src/database/models/workflow.py
-      relevant_existing: [EditHistory model (line 48)]
-      change: NONE
-    - file: src/database/models/search.py
-      relevant_existing: [FTSEntry, SearchEntry, HeadwordSearchEntry, GlossSearchEntry]
-      change: NONE
-    - file: src/seed_data/natick_sample_100.txt
-      change: replace ∞ → ꝏ (364 occurrences)
-    - file: src/seed_data/natick_sample_100_no_diacritics.txt
-      change: replace ∞ → ꝏ (364 occurrences)
-  tests_location: test/ (pgserver unittest pattern), test/ui/ (StreamlitAppTest pattern)
+  entry_points:
+    - entry_point: "src/frontend/pages/table_maintenance.py main() — admin role guard and sidebar radio"
+      role: "UI entry for the new ∞→ꝏ Remediation option; admin guard (user_role != 'admin' → error + stop) is inherited by the new view"
+      verified: "2026-10-04: role guard and st.radio present in main()"
+  service_paths:
+    - path: "src/services/linguistic_service.py generate_sort_lx()"
+      role: "Normalization function whose symbol_map gains the ꝏ → oozzz entry (∞ → oozzz fallback already present)"
+      verified: "2026-10-04: symbol_map with '\\u221e': 'oozzz' confirmed"
+    - path: "src/services/linguistic_service.py update_record()"
+      role: "Provenance of the record-lock immutability invariant (strict-immutability rejection of locked records) that the maintenance operation preserves; NOT a template for maintenance writes — the maintenance path writes no EditHistory entries"
+      verified: "2026-10-04: update_record() present with strict immutability guard"
+    - path: "src/services/linguistic_service.py — NEW maintenance methods (count_infinity_records, list_infinity_records, remediate_all_records)"
+      role: "New code: defect scan (count + list, locked defective records counted separately) and batch maintenance remediation (no EditHistory writes, no current_version bumps; outcome report states remediated and locked unremediated counts)"
+      verified: "2026-10-04: methods absent (to be added by this spec)"
+    - path: "src/services/upload_service.py search-entry/FTS rebuild block"
+      role: "Pattern to follow for per-record rebuild: delete-and-recreate SearchEntry/HeadwordSearchEntry/GlossSearchEntry rows (term + normalized_term = generate_sort_lx(term)) and FTSEntry (fts_vector = func.to_tsvector('simple', norm_mdf))"
+      verified: "2026-10-04: rebuild block confirmed (record-scoped delete then re-add sequence)"
+  data_paths:
+    - path: "records.lx, records.mdf_data, records.sort_lx, records.is_locked, records.is_deleted, records.current_version"
+      role: "Primary record columns scanned, remediated, and re-normalized; is_locked/is_deleted drive exclusion; current_version untouched by the maintenance path"
+      verified: "2026-10-04: columns present in src/database/models/core.py (is_deleted, current_version) and lock field on Record"
+    - path: "search_entries.term / normalized_term; headword_search_entries.term / normalized_term; gloss_search_entries.term / normalized_term"
+      role: "Dependent search rows re-normalized per remediated record"
+      verified: "2026-10-04: models confirmed in src/database/models/search.py"
+    - path: "fts_entries.fts_vector"
+      role: "FTS vector re-populated per remediated record"
+      verified: "2026-10-04: FTSEntry confirmed"
+  fixture_paths:
+    - path: "src/seed_data/natick_sample_100.txt"
+      verified: "2026-10-04: contains 364 ∞ occurrences (count verified 2026-10-03, files unchanged since)"
+    - path: "src/seed_data/natick_sample_100_no_diacritics.txt"
+      verified: "2026-10-04: contains 364 ∞ occurrences (count verified 2026-10-03, files unchanged since)"

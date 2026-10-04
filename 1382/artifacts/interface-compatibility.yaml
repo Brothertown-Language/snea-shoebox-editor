@@ -1,0 +1,27 @@
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1382
+generated_at: 2026-10-04T04:45:00Z
+grounding: "Verified against live codebase 2026-10-04 (v7 spec SC-1..SC-13, stakeholder-directed DB-maintenance framing)"
+interface_compatibility:
+  description: "Compatibility of new code with existing interfaces — no breaking changes to existing callers."
+  interfaces:
+    - interface: "generate_sort_lx(lx: str) -> str"
+      change: "symbol_map gains one entry ('\\ua74f': 'oozzz'); function signature and return semantics unchanged"
+      compatibility: "Fully backward compatible — existing callers (sort_lx generation, search-entry normalization, FTS query path) behave identically for all inputs except strings containing ꝏ, which previously fell through generic handling and now map to oozzz"
+      consumers: "src/services/linguistic_service.py (update_record, ingestion callers), src/services/upload_service.py (rebuild block), FTS query normalization"
+    - interface: "LinguisticService public method surface"
+      change: "Three new methods added (count_infinity_records, list_infinity_records, remediate_all_records); no existing method modified"
+      compatibility: "Additive only — existing callers unaffected"
+      consumers: "src/frontend/pages/table_maintenance.py (new view); no existing consumer touched"
+    - interface: "table_maintenance.py main() sidebar radio"
+      change: "One new option label added to the radio list; new render view function added"
+      compatibility: "Additive — existing Table Maintenance options and their render paths unchanged; admin guard reused, not duplicated"
+      consumers: "Streamlit page navigation"
+    - interface: "Record version/history state (edit_history table, records.current_version)"
+      change: "None — the maintenance path writes no EditHistory rows and does not modify current_version (DB maintenance, not an editorial edit; stakeholder-directed)"
+      compatibility: "Non-interfering — audit/history views and version-based optimistic locking observe no changes from remediation"
+      consumers: "audit/history views reading edit_history; optimistic-locking consumers of records.current_version"
+    - interface: "Seed data file format"
+      change: "Character substitution only (∞ → ꝏ), 364 occurrences per file; structure, ordering, and field layout unchanged"
+      compatibility: "Format-compatible — parsers and ingestion read identical structure; only glyph content changes"
+      consumers: "Seeding pipeline, fixture DB tests"
+  breaking_changes: none

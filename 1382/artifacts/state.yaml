@@ -1,5 +1,0 @@
-timestamp: '2026-09-29T22:30:00+00:00'
-variables:
-  normalized_columns_stable: true
-  simple_tsconfig_only: true
-  no_auto_migration: true

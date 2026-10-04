@@ -1,30 +1,43 @@
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1382
+generated_at: 2026-10-04T04:45:00Z
+grounding: "Verified against live codebase 2026-10-04 (v7 spec SC-1..SC-13, stakeholder-directed DB-maintenance framing)"
 state_analysis:
-  issue: 1382
-  date: '2026-09-29'
-  record_states:
-    - state: clean (no ∞ in lx/mdf_data)
-      scan_behavior: excluded from count and list
-      remediation_behavior: no-op, returns False
-    - state: defective (has ∞ in lx or mdf_data, is_deleted=False)
-      scan_behavior: counted and listed with preview
-      remediation_behavior: prev_data snapshot → ∞→ꝏ replacement → EditHistory → sort_lx recompute → search entries rebuild
-    - state: defective + is_deleted=True
-      scan_behavior: excluded (soft-deleted)
-      remediation_behavior: excluded
-    - state: defective + locked (record.locked flag, per update_record guard)
-      remediation_behavior: reject with log warning, return False, skip in apply-all (counted in skipped)
-    - state: already remediated (ꝏ present, no ∞)
-      scan_behavior: excluded (post-condition state)
-  ui_states:
-    - state: no defective records
-      display: informational message; no action buttons
-    - state: N defective records
-      display: "N records detected" + Apply All (confirm-gated) + Review One-by-One
-    - state: review session active
-      display: current record (id, lx, before/after preview), Apply / Skip / done counter
-    - state: apply-all in progress
-      display: progress bar via progress_callback (pattern from render_data_reprocessing_maintenance)
-  state_invariants:
-    - normalized columns (sort_lx, normalized_term, fts_vector) byte-identical before/after remediation of the same record
-    - every successful remediation leaves exactly one new EditHistory row
-    - remediation never changes record status/reviewed_* fields (data-only fix, unlike update_record)
+  description: "State transitions and state-bearing entities affected by the maintenance remediation."
+  state_bearing_entities:
+    - entity: "Record (records table)"
+      relevant_state: "lx, mdf_data (raw text), sort_lx (normalized), is_locked, is_deleted, current_version"
+      transitions:
+        - from: "raw contains ∞, unlocked, not deleted"
+          to: "raw contains ꝏ, sort_lx re-normalized (same value), current_version unchanged"
+          trigger: "remediate_all_records() batch pass (non-locked, non-deleted defective records only)"
+        - from: "raw contains ∞, is_locked == True"
+          to: "unchanged (raw retains ∞, no data change, no version bump, no history entry)"
+          trigger: "none — excluded from remediation by the maintenance batch; counted and reported post-remediation"
+        - from: "raw contains ∞, is_deleted == True"
+          to: "unchanged and invisible to scan"
+          trigger: "none — excluded by scan predicate"
+    - entity: "Search rows (search_entries, headword_search_entries, gloss_search_entries)"
+      relevant_state: "term (raw), normalized_term (generated)"
+      transitions:
+        - from: "term contains ∞, normalized_term = oozzz-form"
+          to: "term contains ꝏ, normalized_term regenerated = identical value"
+          trigger: "per-record rebuild following upload_service.py pattern"
+    - entity: "FTS index (fts_entries)"
+      relevant_state: "fts_vector (to_tsvector('simple', ...))"
+      transitions:
+        - from: "vector built from ∞-form mdf_data"
+          to: "vector rebuilt from ꝏ-form mdf_data (tsconfig 'simple' preserved)"
+          trigger: "per-record rebuild following upload_service.py pattern"
+    - entity: "Record version/history state (edit_history table, records.current_version)"
+      relevant_state: "untouched — no EditHistory rows written, no version bumps (DB maintenance, not an editorial edit; stakeholder-directed)"
+      transitions: []
+  ui_state:
+    - state: "Scan displayed (read-only)"
+      transitions: "→ Rescan refreshes counts (remediable and locked displayed separately) → confirm-gated Apply All (batch write) → outcome report (remediated count; locked records remain unremediated)"
+      invariant: "Displayed scan result is the basis of the applied batch; database error renders error state, never a zero count"
+  batch_state:
+    - state: "Apply All batch"
+      invariants:
+        - "No EditHistory rows written and no current_version changes — maintenance operation, not an editorial edit"
+        - "Per-record writes transactional; failure surfaces immediately (fail-fast)"
+        - "Re-run after partial failure remediates only remaining defective records (already-remediated no longer match scan) — remediation is idempotent"

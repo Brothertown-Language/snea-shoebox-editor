@@ -1,45 +1,58 @@
 # SC Summary — Issue #1382
 # ∞ (U+221E) → ꝏ (U+A74F) remediation via Table Maintenance tool
-# 10 atomic SCs, 1:1 SC↔item mapping, 4 phases + post-implementation gate
-sc_count: 10
+# Spec v7 — stakeholder-directed DB-maintenance framing (no EditHistory writes, no version bumps)
+# 13 atomic SCs, 1:1 SC↔item mapping, 5 phases (4 implementation + 1 terminal gate)
+sc_count: 13
 scs:
   - id: "SC-1"
-    description: "generate_sort_lx() maps ꝏ (U+A74F) to oozzz — unit assertion generate_sort_lx(\"kꝏ\") == \"koozzz\"."
+    description: "generate_sort_lx() maps both ∞ (U+221E) and ꝏ (U+A74F) to oozzz — unit assertions generate_sort_lx(\"k∞\") == \"koozzz\" and generate_sort_lx(\"kꝏ\") == \"koozzz\"."
     evidence_type: "behavioral"
-    plan_item: 3
+    plan_item: 1
   - id: "SC-2"
-    description: "count_infinity_records()/list_infinity_records() return exactly the non-deleted records with ∞ in lx or mdf_data (fixture DB: 2 of 4 seeded, soft-deleted defective record excluded, preview non-empty)."
+    description: "Maintenance scan counts and lists exactly the non-deleted records with ∞ in lx or mdf_data (fixture DB: seeded count matches count_infinity_records(); non-defective records excluded)."
     evidence_type: "behavioral"
-    plan_item: 4
+    plan_item: 2
   - id: "SC-3"
     description: "Table Maintenance sidebar exposes the \"∞→ꝏ Remediation\" option; visible to admin, blocked for non-admin by the existing main() guard (StreamlitAppTest)."
     evidence_type: "behavioral"
-    plan_item: 9
+    plan_item: 3
   - id: "SC-4"
-    description: "The remediation view displays the detected record count before any action; zero-state shows informational message with no action buttons; no mutation occurs until a button is clicked."
+    description: "The remediation view displays the detected record counts — remediable and locked separately — before any action; no changes applied until a button is clicked."
     evidence_type: "behavioral"
-    plan_item: 10
+    plan_item: 4
   - id: "SC-5"
-    description: "remediate_all_records() remediates every detected record: raw columns contain ꝏ not ∞; exactly one EditHistory row per record with correct prev_data/current_data snapshots and version = current+1; search-entry terms remediated."
+    description: "Apply All remediates every non-locked, non-deleted defective record: all remediable records' raw columns (lx, mdf_data) contain ꝏ not ∞ after Apply All."
     evidence_type: "behavioral"
     plan_item: 5
   - id: "SC-6"
-    description: "Review one-by-one semantics: remediating record A (calling remediate_record) and skipping B leaves A clean with history row, B unchanged with ∞ and no history row."
+    description: "After remediation, normalized columns (sort_lx, normalized_term) are byte-identical to pre-remediation values."
     evidence_type: "behavioral"
     plan_item: 6
   - id: "SC-7"
-    description: "Normalized-identity: after remediation, sort_lx and all normalized_term values for the remediated record are byte-identical to pre-remediation values."
+    description: "FTS search for terms with ꝏ returns the same results as pre-remediation search for the ∞ form."
     evidence_type: "behavioral"
     plan_item: 7
   - id: "SC-8"
-    description: "FTS equivalence: post-remediation query to_tsvector('simple', generate_sort_lx(\"kꝏ\")) returns the same result set as the pre-remediation query for \"k∞\" against fts_entries."
-    evidence_type: "behavioral"
+    description: "Seed data files (natick_sample_100.txt, natick_sample_100_no_diacritics.txt) contain ꝏ and no ∞ (grep -c U+221E returns 0 on both)."
+    evidence_type: "string"
     plan_item: 8
   - id: "SC-9"
-    description: "Both seed files (natick_sample_100.txt, natick_sample_100_no_diacritics.txt) contain zero U+221E occurrences and 364 U+A74F occurrences each."
+    description: "Existing ∞ → oozzz fallback preserved in generate_sort_lx() symbol_map (regression guard against accidental fallback removal)."
     evidence_type: "string"
-    plan_item: 1
+    plan_item: 9
   - id: "SC-10"
-    description: "Existing ∞ → oozzz fallback preserved: \"\\u221e\": \"oozzz\" remains in symbol_map and generate_sort_lx(\"k∞\") == \"koozzz\" still passes after the ꝏ addition."
-    evidence_type: "string"
-    plan_item: 2
+    description: "Maintenance scan reports the remediable count and the locked defective-record count separately (locked record not in the remediable set)."
+    evidence_type: "behavioral"
+    plan_item: 10
+  - id: "SC-11"
+    description: "Locked defective records are never altered by Apply All: each retains ∞ and remains otherwise unchanged (no data change, no version bump, no history entry)."
+    evidence_type: "behavioral"
+    plan_item: 11
+  - id: "SC-12"
+    description: "Apply All produces an outcome report stating the remediated count and the locked (unremediated) count (e.g., \"N records remediated; M locked records remain unremediated\")."
+    evidence_type: "behavioral"
+    plan_item: 12
+  - id: "SC-13"
+    description: "Locked presence does not block remediable remediation: mixed fixture — after Apply All every unlocked defective record is remediated."
+    evidence_type: "behavioral"
+    plan_item: 13

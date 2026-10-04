@@ -1,23 +1,37 @@
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1382
+generated_at: 2026-10-04T04:45:00Z
+grounding: "Verified against live codebase 2026-10-04 (v7 spec SC-1..SC-13, stakeholder-directed DB-maintenance framing)"
 blast_radius:
-  issue: 1382
-  date: '2026-09-29'
-  direct_targets:
-    - file: src/services/linguistic_service.py
-      symbols: [generate_sort_lx, count_infinity_records (new), list_infinity_records (new), remediate_record (new), remediate_all_records (new)]
-      risk: LOW for generate_sort_lx (additive dict entry); MEDIUM for new methods (new code, no existing callers break)
-    - file: src/frontend/pages/table_maintenance.py
-      symbols: [main, render_infinity_remediation (new)]
-      risk: LOW — additive radio option + new render function; existing options untouched
-    - file: src/seed_data/natick_sample_100.txt
-      risk: LOW — fixture data only
-    - file: src/seed_data/natick_sample_100_no_diacritics.txt
-      risk: LOW — fixture data only
-  indirect_dependents:
-    - generate_sort_lx is called by upload_service.populate_search_entries (line 1777+), search normalization, reprocessing — adding "\ua74f" key is additive; existing ∞ inputs still map to oozzz
-    - EditHistory table grows; batch_rollback consumers unaffected (additive rows only)
-  protected_invariants:
-    - normalized columns must be byte-identical pre/post remediation (∞ and ꝏ both normalize to oozzz)
-    - FTS tsconfig must remain 'simple' — never 'english' (docs/lessons-learned/2026-06-13-postgres-fts-algonquian.md)
-    - soft-deleted records excluded from scan and remediation
-    - no automatic migration at startup — explicit admin action only
-  rollback_path: EditHistory prev_data snapshots allow per-record rollback; seed files revert via git
+  overview: "Maintenance remediation of ∞ (U+221E) → ꝏ (U+A74F) touches raw data columns, normalized-column regeneration, FTS rebuild, seed fixtures, and one normalization map entry. Normalized-column VALUES are unchanged (both characters map to oozzz); only raw characters change. Record history and version state are untouched — the operation is DB maintenance, not an editorial edit (no EditHistory writes, no current_version bumps)."
+  affected_components:
+    - component: src/services/linguistic_service.py
+      impact: direct
+      description: "symbol_map in generate_sort_lx() gains '\\ua74f': 'oozzz' entry; new maintenance service methods added alongside existing LinguisticService methods (scan count/list, apply-all batch remediation)"
+      ripple_effects:
+        - "generate_sort_lx() consumers (sort_lx, normalized_term generation, FTS query normalization) see no behavior change — both characters converge on oozzz"
+        - "Record lock invariant preserved: locked records (is_locked == True) are never altered by the maintenance batch (provenance: strict-immutability enforcement in update_record())"
+        - "No EditHistory rows and no current_version changes are written by the maintenance path (stakeholder-directed DB-maintenance framing)"
+    - component: src/frontend/pages/table_maintenance.py
+      impact: direct
+      description: "New sidebar radio option and render_infinity_remediation() view inside main(); admin guard inherited, not duplicated; scan counts (remediable and locked) displayed before action; single confirm-gated Apply All; post-remediation outcome report"
+      ripple_effects:
+        - "Existing Table Maintenance options untouched; sidebar radio gains one option"
+    - component: "Database tables: records, search_entries, headword_search_entries, gloss_search_entries, fts_entries"
+      impact: direct-data
+      description: "Raw columns lx, mdf_data, term mutate per remediated record; normalized columns regenerated (values byte-identical); fts_vector re-populated; edit_history and records.current_version untouched"
+      ripple_effects:
+        - "FTS search results unchanged (SC-7); sort order unchanged (SC-6)"
+        - "Audit/history views and optimistic-locking consumers observe no changes from remediation"
+    - component: "src/seed_data/natick_sample_100.txt, src/seed_data/natick_sample_100_no_diacritics.txt"
+      impact: direct-fixture
+      description: "All 364 ∞ occurrences per file replaced with ꝏ (verified count 2026-10-03)"
+      ripple_effects:
+        - "Fresh fixture databases re-seeded from these files carry ꝏ; tests depending on ∞ fixtures updated with the remediation"
+  excluded_components:
+    - "docs/lessons-learned/ — documents current state accurately; no changes"
+    - "FTS query normalization path — already routes through generate_sort_lx(); no changes"
+    - "Soft-deleted records — excluded from scan and remediation"
+    - "Locked records (is_locked == True) — never altered; counted and reported as remaining unremediated"
+    - "edit_history table and records.current_version — untouched by design (DB maintenance framing, not an editorial edit)"
+  risk_level: medium
+  rationale: "Data mutation of production linguistic records is gated behind admin-only UI and confirm-gated Apply All; locked records are never altered and are reported post-remediation; normalized values provably unchanged; no record history or version state is written."

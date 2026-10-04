@@ -1,34 +1,37 @@
 spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1382
-generated_at: 2026-10-03T00:00:00Z
-grounding: "Verified against live codebase 2026-10-03 (v5 spec SC-1..SC-17)"
+generated_at: 2026-10-04T04:45:00Z
+grounding: "Verified against live codebase 2026-10-04 (v7 spec SC-1..SC-13, stakeholder-directed DB-maintenance framing)"
 concern_map:
   concerns:
     - concern: "Data integrity — raw column character correctness"
-      scs: [SC-2, SC-5, SC-7, SC-8]
-      sc8_justification: "Review One-by-One Skip is a no-op outcome — zero mutation of raw and normalized columns; covered by this concern's data-integrity boundary (SC-8: record retains ∞, no EditHistory entry)."
+      scs: [SC-2, SC-5]
       description: "Raw columns lx, mdf_data, term carry the correct ligature after remediation; scan predicate is exact (OR across lx and mdf_data, non-deleted only)."
-      resolution: "Remediation replaces ∞ with ꝏ in all affected raw columns per record; scan counts only matching non-deleted records."
-    - concern: "Audit trail / provenance"
-      scs: [SC-6, SC-14]
-      description: "Every applied change writes exactly one EditHistory entry with prev_data/current_data snapshots, change_summary, version increment, and batch session UUID."
-      resolution: "Service methods follow the update_record() EditHistory audit-snapshot pattern in src/services/linguistic_service.py."
+      resolution: "Apply All replaces ∞ with ꝏ in all affected raw columns of every non-locked, non-deleted defective record; scan counts only matching non-deleted records."
+    - concern: "Maintenance non-interference — DB maintenance, not an editorial edit"
+      scs: [SC-11]
+      description: "The maintenance operation writes no EditHistory entries and performs no current_version bumps; locked defective records in particular are never altered."
+      resolution: "The batch applies raw-column replacement and dependent-column rebuild only; record history and version state are untouched by design (stakeholder-directed maintenance framing)."
     - concern: "Record-lock immutability"
-      scs: [SC-13, SC-14, SC-15, SC-16, SC-17]
-      description: "Locked records (is_locked == True) are strictly immutable — mirroring update_record() strict-immutability rejection."
-      resolution: "Scan reports excluded-locked count separately; Apply All skips locked records and reports them; remediate_record() refuses locked records; locked presence never blocks remediable remediation."
+      scs: [SC-10, SC-11, SC-13]
+      description: "Locked records (is_locked == True) are strictly immutable — never altered by the maintenance operation."
+      resolution: "Scan reports the locked defective-record count separately from the remediable count (SC-10); Apply All never touches locked records (SC-11); locked presence never blocks remediable remediation (SC-13); no lock override, no forced unlocking."
+    - concern: "Maintenance outcome transparency"
+      scs: [SC-12]
+      description: "The admin learns exactly what the batch did — the remediated count and the locked (unremediated) count (e.g., 'N records remediated; M locked records remain unremediated')."
+      resolution: "remediate_all_records() produces the outcome report; the UI renders it on completion."
     - concern: "Normalized-column stability"
-      scs: [SC-1, SC-9, SC-10, SC-12]
-      description: "Both ∞ and ꝏ map to oozzz via generate_sort_lx() symbol_map, so normalized columns are byte-identical before and after remediation and FTS results are unchanged."
+      scs: [SC-1, SC-6, SC-7, SC-9]
+      description: "Both ∞ and ꝏ map to oozzz via generate_sort_lx() symbol_map, so normalized columns are byte-identical before and after remediation and FTS results are unchanged; the ∞ fallback entry is preserved as a regression guard."
       resolution: "Add ꝏ entry to symbol_map; retain ∞ fallback entry; re-normalize and rebuild FTS following the upload_service.py ingestion pattern."
     - concern: "Authorization / role gating"
       scs: [SC-3, SC-4]
       description: "Remediation is admin-only and the admin sees the blast radius before acting."
-      resolution: "Sidebar option inside main() admin guard; count displayed before any action; confirm gate on Apply All."
+      resolution: "Sidebar option inside main() admin guard; remediable and locked counts displayed before any action; confirm gate on Apply All."
     - concern: "Drift prevention — remediation mirrors ingestion"
-      scs: [SC-10]
+      scs: [SC-6, SC-7]
       description: "Per-record search-entry/FTS rebuild must not diverge from ingestion behavior."
       resolution: "Remediation rebuild follows the existing search-entry/FTS rebuild block in src/services/upload_service.py (SearchEntry/HeadwordSearchEntry/GlossSearchEntry with term + normalized_term via generate_sort_lx(); FTSEntry with to_tsvector('simple', ...))."
     - concern: "Fixture correctness"
-      scs: [SC-11]
+      scs: [SC-8]
       description: "Seed files must match real linguistic data (ligature, not mis-encoded infinity)."
       resolution: "Direct replacement in both seed files (fixtures, not production data)."
