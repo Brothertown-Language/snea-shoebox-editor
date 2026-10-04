@@ -1,7 +1,7 @@
 title: '[SPEC-FIX] Remediate ∞ (U+221E) → ꝏ (U+A74F) via Table Maintenance tool'
 status: open
 labels:
-- approved-for-for_pr
+- approved-for-pr
 body: .issues/1382/spec.md
 created_at: '2026-07-18T00:00:00+00:00'
-updated_at: '2026-10-04T04:45:38+00:00'
+updated_at: '2026-10-04T04:45:49+00:00'
