@@ -10,6 +10,22 @@ and this project adheres to
 For AI agent infrastructure changes (`.opencode/` directory), see
 [`.opencode/CHANGELOG.md`](.opencode/CHANGELOG.md).
 
+### feature/1382-infinity-to-ayth-remediation
+
+- **∞→ꝏ Orthography Remediation Tool** (#1411) — New admin-only DB-maintenance action in the Data Reprocessing view converts the legacy ∞ character (U+221E) to the proper ꝏ (U+A74F) across all records, per stakeholder direction (Dr. Keith Cunningham). A pre-scan reports separately how many records are remediable and how many are locked; Apply All batches the conversion while leaving locked records untouched, excludes soft-deleted records, skips EditHistory writes, and reports per-record outcomes. ꝏ now sorts correctly via `generate_sort_lx` mapping, FTS treats the two characters as equivalent, and normalized identity regression tests pin the behavior.
+
+### feature/1407-enter-search-trigger
+
+- **Enter-Key Search Triggering Restored** (#1407) — Pressing Enter in the Records search box once again runs the search, alongside the existing Search button. The misleading "Enter text..." placeholder is reworded to the neutral "Search terms...".
+
+### feature/1404-semantic-dispatch-fix
+
+- **Semantic Search Mode Dispatch Fixed** (#1404) — Fixed semantic search so the selected mode (Semantic Gloss vs. Semantic All) is actually applied to the query, with search-result shapes normalized so results, matched terms, and scores render correctly in both semantic modes. Regression tests now run against the real search contract with a no-stubs guard.
+
+### feature/1409-slider-dual-set-fix
+
+- **Semantic Threshold Slider Warning Eliminated** (#1409) — Removed the dual-set widget warning that fired on the semantic similarity-threshold slider while keeping the slider and its paired display synchronized across reruns, saved-value rendering, and the 0.93 fresh default.
+
 ### feature/1401-search-match-highlighting
 
 - **Search-Match Highlighting in Records View** (#1401) — Search matches are now highlighted in the Records view rendered MDF block for search results in all modes (lexical Lexeme/Headword/Gloss/FTS and semantic Semantic Gloss/Semantic All): matched terms wrap in `mark.search-token` elements with a teal/cyan tint plus bold in both light and dark theme variants, meeting WCAG 2.1 AA contrast and visually distinct from diff-token spans and status tints. A pure span-computation module finds stored-term matches verbatim for ILIKE modes and reuses the single normalizer for FTS query-token scans; diff-token spans take precedence and malformed spans are ignored (never clamped). Highlighting activates automatically in view mode when a search query is present — for lexical modes the spans come from stored-term verbatim matches and FTS query-token scans, and for semantic modes from the seam's matched source-field terms — no new session-state keys, and the renderer parameters are default-off.
