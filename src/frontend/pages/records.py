@@ -404,11 +404,14 @@ def records():
 
         threshold_help = None if is_semantic_mode else "Applies only in Semantic modes."
 
-        # Two-way coupled threshold widgets: both keys are bound to the shared
-        # backing value st.session_state.semantic_threshold. Sync happens
-        # pre-instantiation (never after widget instantiation) and edits are
-        # propagated through on_change callbacks — no post-instantiation
-        # session_state writes to widget keys, no st.rerun().
+        # Two-way coupled threshold widgets (spec #1409 Key Design Decision a):
+        # widget keys are seeded by session state ONLY — the explicit value=
+        # parameter is removed, so the dual-set widget-state warning class is
+        # eliminated while the keys still track the shared backing value
+        # st.session_state.semantic_threshold on every rerun pre-instantiation.
+        # Edits are propagated through the on_change callbacks into the
+        # backing value; the pre-instantiation sync then re-renders both
+        # coupled widgets from the corrected backing value.
         if "semantic_threshold_slider" not in st.session_state:
             st.session_state.semantic_threshold_slider = st.session_state.semantic_threshold
         if "semantic_threshold_number" not in st.session_state:
@@ -437,7 +440,6 @@ def records():
             max_value=1.0,
             step=0.01,
             key="semantic_threshold_slider",
-            value=st.session_state.semantic_threshold,
             on_change=on_threshold_slider_change,
             label_visibility="collapsed",
             disabled=not is_semantic_mode,
@@ -450,7 +452,6 @@ def records():
             max_value=1.0,
             step=0.01,
             key="semantic_threshold_number",
-            value=st.session_state.semantic_threshold,
             on_change=on_threshold_number_change,
             label_visibility="collapsed",
             disabled=not is_semantic_mode,
