@@ -1,5 +1,7 @@
-"""SC-3: Playwright real-browser verification for the "∞→ꝏ Remediation"
-option in the Table Maintenance sidebar (issue #1382, plan step 38).
+"""SC-3: Playwright real-browser verification for the v8 design — the
+"∞→ꝏ Remediation" section lives INSIDE the Data Reprocessing view and the
+Table Maintenance sidebar has NO fourth radio option (issue #1382, spec v8,
+plan step 38).
 
 Auth model: with SNEA_E2E=1 the app-side TEST-ONLY auth bypass hook
 (src/services/security_manager.py) authenticates a FRESH browser context —
@@ -28,7 +30,7 @@ ARTIFACTS_DIR = os.path.join("tmp", "issue-1382", "artifacts")
 SIM_ENV_VAR = "SNEA_SIMULATE_AUTH"
 HEALTH_URL = f"{APP_URL}/_stcore/health"
 
-NEW_OPTION = "∞→ꝏ Remediation"
+SECTION_TITLE = "∞→ꝏ Remediation"
 EXISTING_OPTIONS = ["Sources", "Soft Deleted Records", "Data Reprocessing"]
 
 pytest.importorskip("playwright.sync_api")
@@ -116,8 +118,9 @@ def _run_in_worker_thread(fn):
 
 def _admin_flow():
     """Admin: open /maintenance via the SNEA_E2E bypass, verify the sidebar
-    radio includes the "∞→ꝏ Remediation" option alongside the three existing
-    options."""
+    radio has NO fourth "∞→ꝏ Remediation" option, then select "Data
+    Reprocessing" and verify the ∞→ꝏ Remediation section renders inside that
+    view."""
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
         try:
@@ -126,22 +129,26 @@ def _admin_flow():
             page.wait_for_selector("text=Maintenance Tables", timeout=60_000)
             page.screenshot(path=os.path.join(ARTIFACTS_DIR, "sc3-admin-sidebar-loaded.png"))
 
-            # The sidebar radio (page nav) must contain the new option.
+            # The sidebar radio must NOT contain the fourth option.
             body = page.inner_text("body")
-            assert NEW_OPTION in body, (
-                f'"∞→ꝏ Remediation" option not visible to admin; body tail: {body[-800:]}'
+            assert SECTION_TITLE not in body, (
+                f'"∞→ꝏ Remediation" must NOT be a sidebar option in the v8 '
+                f"design; body tail: {body[-800:]}"
             )
-            page.screenshot(path=os.path.join(ARTIFACTS_DIR, "sc3-admin-option-visible.png"))
-
             for option in EXISTING_OPTIONS:
                 assert option in body, f"Existing option {option!r} missing from sidebar"
+            page.screenshot(path=os.path.join(ARTIFACTS_DIR, "sc3-admin-three-options.png"))
 
-            # Click the new option and verify the remediation view renders
-            # (the admin-guarded page body, not a permission error).
-            page.get_by_text(NEW_OPTION, exact=True).click()
+            # Click "Data Reprocessing" and verify the ∞→ꝏ Remediation
+            # section renders inside this view (section title visible).
+            page.get_by_text("Data Reprocessing", exact=True).click()
             page.wait_for_timeout(3000)
             body2 = page.inner_text("body")
-            page.screenshot(path=os.path.join(ARTIFACTS_DIR, "sc3-admin-view-rendered.png"))
+            page.screenshot(path=os.path.join(ARTIFACTS_DIR, "sc3-admin-data-reprocessing-view.png"))
+            assert SECTION_TITLE in body2, (
+                f'"∞→ꝏ Remediation" section absent from the Data Reprocessing '
+                f"view; body tail: {body2[-800:]}"
+            )
             assert "permission" not in body2.lower() or "admin role required" not in body2.lower(), (
                 f"Admin was blocked by the permission guard; body: {body2[-800:]}"
             )
@@ -149,9 +156,10 @@ def _admin_flow():
             browser.close()
 
 
-def test_admin_sees_infinity_remediation_option():
-    """Admin session: sidebar includes "∞→ꝏ Remediation" + the three existing
-    options; selecting it renders the view without a permission error."""
+def test_admin_data_reprocessing_view_shows_remediation_section_without_fourth_option():
+    """Admin session: sidebar has exactly the three original options (no
+    fourth "∞→ꝏ Remediation" radio option) and the Data Reprocessing view
+    renders the ∞→ꝏ Remediation section."""
     _restart_app(None)
     _run_in_worker_thread(_admin_flow)
 
@@ -169,7 +177,7 @@ def _non_admin_flow():
             page.wait_for_url("**/login", timeout=30_000)
             page.screenshot(path=os.path.join(ARTIFACTS_DIR, "sc3-nonadmin-redirect-login.png"))
             body = page.inner_text("body")
-            assert NEW_OPTION not in body, "Remediation option visible without admin role"
+            assert SECTION_TITLE not in body, "Remediation section visible without admin role"
             for option in EXISTING_OPTIONS:
                 assert option not in body, f"Option {option!r} visible without admin role"
             assert "Login" in page.title() or page.url.rstrip("/").endswith("/login"), (
