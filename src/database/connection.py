@@ -679,6 +679,7 @@ def init_db():
     """Initialize the database schema."""
     from .base import Base  # lazy import — avoids circular init
     from .models.core import Language, Record, RecordLanguage, Source  # noqa: F401 — register models with Base.metadata
+    from .models.event_log import SystemEventLog  # noqa
     from .models.identity import Permission, User, UserActivityLog, UserPreference  # noqa
     from .models.iso639 import ISO639_3  # noqa
     from .models.meta import SchemaVersion  # noqa
