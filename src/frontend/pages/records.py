@@ -354,6 +354,61 @@ def records():
 
     has_next = st.session_state.current_page < total_pages
 
+    # Issue #1413 (SC-9): shared, key-namespaced pagination-row helper. The
+    # full-form navigation row — [Prev] "Page N of M" / "Showing X-Y of Z"
+    # [Next] — is rendered by this single helper so the page-change and
+    # auto-save-on-page-change logic exists exactly once (R-9). Widget keys
+    # are position-namespaced (R-10) so the top and bottom rows are distinct
+    # widget instances with no duplicate-key conflict.
+    def _render_pagination_row(position: str) -> None:
+        if position not in ("top", "bottom"):
+            raise ValueError(f"Invalid pagination row position: {position!r} (expected 'top' or 'bottom')")
+
+        def _auto_save_pending() -> None:
+            # Issue #1413 (R-8): auto-save-on-page-change with unchanged
+            # semantics — persists each pending edit exactly once through the
+            # existing record-update path with the same change summary, then
+            # clears the pending-edit state.
+            if st.session_state.global_edit_mode and st.session_state.pending_edits:
+                for rid, mdf in st.session_state.pending_edits.items():
+                    LinguisticService.update_record(
+                        record_id=rid, user_email=user_email, mdf_data=mdf, change_summary="Auto-save via pagination"
+                    )
+                st.session_state.pending_edits = {}
+
+        col_prev, col_page, col_showing, col_next = st.columns([1, 2, 2, 1])
+        if col_prev.button(
+            "Prev",
+            icon="◀️",
+            disabled=(st.session_state.current_page <= 1),
+            use_container_width=True,
+            key=f"pagination_{position}_prev",
+        ):
+            _auto_save_pending()
+            st.session_state.current_page -= 1
+            st.rerun()
+        col_page.markdown(
+            f"<p style='text-align: center; margin-bottom: 0;'>"
+            f"Page {st.session_state.current_page} of {total_pages}</p>",
+            unsafe_allow_html=True,
+        )
+        col_showing.markdown(
+            f"<p style='text-align: center; font-size: 0.8em; color: gray;'>"
+            f"Showing {offset + 1}-{min(offset + len(records_batch), total_count)}"
+            f" of {total_count}</p>",
+            unsafe_allow_html=True,
+        )
+        if col_next.button(
+            "Next",
+            icon="▶️",
+            disabled=not has_next,
+            use_container_width=True,
+            key=f"pagination_{position}_next",
+        ):
+            _auto_save_pending()
+            st.session_state.current_page += 1
+            st.rerun()
+
     # --- 3. Sidebar: Filters & Navigation ---
     with st.sidebar:
         # Compact Search Controls
@@ -535,37 +590,9 @@ def records():
             label_visibility="collapsed",
         )
 
-        c1, c2 = st.columns(2)
-        if c1.button("Prev", icon="◀️", disabled=(st.session_state.current_page <= 1), use_container_width=True):
-            if st.session_state.global_edit_mode and st.session_state.pending_edits:
-                for rid, mdf in st.session_state.pending_edits.items():
-                    LinguisticService.update_record(
-                        record_id=rid, user_email=user_email, mdf_data=mdf, change_summary="Auto-save via pagination"
-                    )
-                st.session_state.pending_edits = {}
-            st.session_state.current_page -= 1
-            st.rerun()
-        if c2.button("Next", icon="▶️", disabled=not has_next, use_container_width=True):
-            if st.session_state.global_edit_mode and st.session_state.pending_edits:
-                for rid, mdf in st.session_state.pending_edits.items():
-                    LinguisticService.update_record(
-                        record_id=rid, user_email=user_email, mdf_data=mdf, change_summary="Auto-save via pagination"
-                    )
-                st.session_state.pending_edits = {}
-            st.session_state.current_page += 1
-            st.rerun()
-
-        st.markdown(
-            f"<p style='text-align: center; margin-bottom: 0;'>"
-            f"Page {st.session_state.current_page} of {total_pages}</p>",
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            f"<p style='text-align: center; font-size: 0.8em; color: gray;'>"
-            f"Showing {offset + 1}-{min(offset + len(records_batch), total_count)}"
-            f" of {total_count}</p>",
-            unsafe_allow_html=True,
-        )
+        # Issue #1413 (R-1): the sidebar page-level pager (Prev/Next buttons
+        # and the Page/Showing captions) was removed — pagination now lives
+        # in the main panel's twin navigation rows.
 
         new_page_size = st.selectbox(
             "Results per page", [1, 5, 10, 25, 50, 100], index=[1, 5, 10, 25, 50, 100].index(st.session_state.page_size)
@@ -842,6 +869,9 @@ def records():
         else:
             st.info("No records found matching your criteria.")
     else:
+        # Issue #1413 (R-4): top navigation row immediately before the first
+        # record card, inside the main panel's scroll container.
+        _render_pagination_row("top")
         for record in records_batch:
             record_id = record["id"]
             mdf_data = format_mdf_record(record["mdf_data"])
@@ -1071,6 +1101,11 @@ def records():
                                     st.rerun()
                             if entry != history[-1]:
                                 st.divider()
+
+        # Issue #1413 (R-5): bottom navigation row immediately after the last
+        # record card (after all per-record revision-history content), still
+        # inside the non-empty records branch.
+        _render_pagination_row("bottom")
 
 
 if __name__ == "__main__":
