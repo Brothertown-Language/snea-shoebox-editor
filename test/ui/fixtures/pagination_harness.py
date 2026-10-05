@@ -111,9 +111,15 @@ def sidebar_text(page: Page) -> str:
 def main_buttons(page: Page, label: str):
     """Buttons whose text contains the label OUTSIDE the sidebar (main panel).
     contains() tolerates icon glyphs rendered alongside the label text."""
-    return page.locator(f'//button[contains(normalize-space(), "{label}") and not(ancestor::div[@data-testid="stSidebar"])]')
+    return page.locator(
+        f'//button[contains(normalize-space(), "{label}")'
+        f' and not(ancestor::div[@data-testid="stSidebar"])]'
+    )
 
 
 def sidebar_buttons(page: Page, label: str):
     """Buttons whose text contains the label INSIDE the sidebar."""
-    return page.locator(f'//button[contains(normalize-space(), "{label}") and ancestor::div[@data-testid="stSidebar"]]')
+    return page.locator(
+        f'//button[contains(normalize-space(), "{label}")'
+        f' and ancestor::div[@data-testid="stSidebar"]]'
+    )

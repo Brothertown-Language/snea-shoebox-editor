@@ -57,7 +57,9 @@ def test_sc2_results_per_page_selectbox_retained_with_values(session):
         box.click()
         page.wait_for_timeout(600)
         # Assert the value list via the combobox listbox when rendered.
-        option_text = page.evaluate("() => { const l = document.querySelector('ul[role=listbox]'); return l ? l.innerText : ''; }")
+        option_text = page.evaluate(
+            "() => { const l = document.querySelector('ul[role=listbox]'); return l ? l.innerText : ''; }"
+        )
         if option_text:
             for value in ["1", "5", "10", "25", "50", "100"]:
                 assert value in option_text, f"selectbox value {value} missing from the value list"
@@ -93,12 +95,18 @@ def test_sc3_edit_mode_controls_retained(session):
         sb.locator('button:has-text("Enter Edit Mode")').click()
         page.wait_for_timeout(2500)
         sb = page.locator('[data-testid="stSidebar"]')
-        assert sb.locator('button:has-text("Cancel All")').count() == 1, "Cancel All control missing after entering edit mode"
-        assert sb.locator('button:has-text("Save All")').count() == 1, "Save All control missing after entering edit mode"
+        assert sb.locator('button:has-text("Cancel All")').count() == 1, (
+            "Cancel All control missing after entering edit mode"
+        )
+        assert sb.locator('button:has-text("Save All")').count() == 1, (
+            "Save All control missing after entering edit mode"
+        )
         # Unchanged semantics: Cancel All exits edit mode.
         sb.locator('button:has-text("Cancel All")').click()
         page.wait_for_timeout(2500)
         sb = page.locator('[data-testid="stSidebar"]')
-        assert sb.locator('button:has-text("Enter Edit Mode")').count() == 1, "Cancel All did not restore Enter Edit Mode"
+        assert sb.locator('button:has-text("Enter Edit Mode")').count() == 1, (
+            "Cancel All did not restore Enter Edit Mode"
+        )
 
     session.run(body)

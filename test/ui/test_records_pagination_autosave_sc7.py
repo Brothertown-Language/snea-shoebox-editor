@@ -15,7 +15,6 @@ Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
 
 import importlib.util
 import os
-import re
 from pathlib import Path
 
 import pytest
@@ -84,12 +83,11 @@ def _pending_marker_counts(page: Page) -> int:
 def test_autosave_once_and_pending_cleared(session):
     def body(page: Page):
         _ph.goto_records(page)
-        # Baseline: any pre-existing auto-save entries on page 1's expanders
-        # are counted and excluded from the delta below.
-        baseline = 0
-        _open_first_revision_history(page)
-        baseline = _pending_marker_counts(page)
         _enter_edit_mode(page)
+        # Baseline: pre-existing auto-save entries across ALL page-1 expanders
+        # are counted and excluded from the delta below (idempotency across
+        # repeated runs against the same local DB).
+        baseline = _open_all_expanders_and_count(page)
         # Edit the first unlocked record's MDF textarea.
         textarea = page.locator('[data-testid="stTextArea"] textarea').first
         original = textarea.input_value()
@@ -112,7 +110,8 @@ def test_autosave_once_and_pending_cleared(session):
         # Pending-edit state cleared: the textarea now shows the saved value
         # (pending_edits empty → initial value is the persisted mdf_data).
         textarea = page.locator('[data-testid="stTextArea"] textarea').first
-        assert textarea.input_value().endswith("% SC-7 e2e pending edit\n") or "% SC-7 e2e pending edit" in textarea.input_value(), (
+        saved_value = textarea.input_value()
+        assert "% SC-7 e2e pending edit" in saved_value, (
             "pending edit was not cleared/persisted into the record after page change"
         )
 

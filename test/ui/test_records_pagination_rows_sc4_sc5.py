@@ -76,7 +76,10 @@ def test_sc5_bottom_row_renders_with_value_parity(session):
         _ph.goto_records(page)
         top = _row_values(page, 0)
         # Scroll to the bottom of the main panel so the bottom row renders.
-        page.evaluate("() => { const m = document.querySelector('[data-testid=\"stMain\"]'); m.scrollTop = m.scrollHeight; }")
+        page.evaluate(
+            "() => { const m = document.querySelector('[data-testid=\"stMain\"]');"
+            " m.scrollTop = m.scrollHeight; }"
+        )
         page.wait_for_timeout(1500)
         bottom = _row_values(page, 1)
         assert bottom is not None, "no bottom navigation row found after the last record card"
