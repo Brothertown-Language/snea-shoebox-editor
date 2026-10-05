@@ -144,6 +144,11 @@ class MigrationManager:
             "_migrate_add_gloss_search_entries_embedding",
             "Add embedding, entry_type, embedding_model columns to gloss_search_entries",
         ),
+        (
+            20261005131326,
+            "_migrate_create_system_event_log",
+            "Create system_event_log table for persistent system event logging",
+        ),
     ]
 
     def __init__(self, engine):
@@ -1173,6 +1178,59 @@ class MigrationManager:
                 text(
                     "CREATE INDEX IF NOT EXISTS idx_gloss_search_entries_entry_type "
                     "ON gloss_search_entries (entry_type);"
+                )
+            )
+            conn.commit()
+
+    def _migrate_create_system_event_log(self):
+        """Migration 20261005131326: Create system_event_log table mirroring the ORM.
+
+        Column layout matches SystemEventLog in src/database/models/event_log.py:
+        id autoincrement, event_type VARCHAR NOT NULL, severity VARCHAR NOT NULL,
+        message TEXT NOT NULL, source VARCHAR, details JSONB,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT now().
+
+        Reversible with:
+            DROP TABLE IF EXISTS system_event_log;
+        """
+        with self._engine.connect() as conn:
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS system_event_log (
+                    id SERIAL PRIMARY KEY,
+                    event_type VARCHAR NOT NULL,
+                    severity VARCHAR NOT NULL,
+                    message TEXT NOT NULL,
+                    source VARCHAR,
+                    details JSONB,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+                );
+            """)
+            )
+            # Idempotent column guards for prod-sync-drifted replicas: a synced
+            # replica can carry a pre-existing system_event_log table missing
+            # columns added later (the sync script only drops tables that exist
+            # in production, so CREATE TABLE IF NOT EXISTS silently skips
+            # re-adding them on drifted tables).
+            conn.execute(
+                text("ALTER TABLE system_event_log ADD COLUMN IF NOT EXISTS event_type VARCHAR;")
+            )
+            conn.execute(
+                text("ALTER TABLE system_event_log ADD COLUMN IF NOT EXISTS severity VARCHAR;")
+            )
+            conn.execute(
+                text("ALTER TABLE system_event_log ADD COLUMN IF NOT EXISTS message TEXT;")
+            )
+            conn.execute(
+                text("ALTER TABLE system_event_log ADD COLUMN IF NOT EXISTS source VARCHAR;")
+            )
+            conn.execute(
+                text("ALTER TABLE system_event_log ADD COLUMN IF NOT EXISTS details JSONB;")
+            )
+            conn.execute(
+                text(
+                    "ALTER TABLE system_event_log ADD COLUMN IF NOT EXISTS "
+                    "created_at TIMESTAMP WITH TIME ZONE DEFAULT now();"
                 )
             )
             conn.commit()
