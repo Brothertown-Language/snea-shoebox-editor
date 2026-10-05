@@ -9,7 +9,7 @@ lifecycle, application lifecycle, infrastructure notifications) with an
 separate from ``user_activity_log`` (different retention and query patterns).
 """
 
-from sqlalchemy import Column, Integer, String, Text, TIMESTAMP
+from sqlalchemy import TIMESTAMP, Column, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
 
