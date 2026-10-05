@@ -1,29 +1,41 @@
-# SC summary — Issue #1413 (spec-creation create task)
+# SC summary — Issue #1413 (spec-creation create task; renumbered by revise task 2026-10-05)
 schema_version: 1
 issue_number: 1413
-sc_count: 6
+sc_count: 9
 scs:
   - id: "SC-1"
-    description: "The Records page sidebar SHALL NOT render page-level Prev/Next navigation buttons or the 'Page N of M' / 'Showing X-Y of Z' captions; the Results-per-page selectbox and edit-mode controls SHALL remain in the sidebar."
+    description: "The Records page sidebar SHALL NOT render page-level Prev/Next navigation buttons or the 'Page N of M' / 'Showing X-Y of Z' captions."
     evidence_type: "behavioral"
     plan_item: 4
   - id: "SC-2"
+    description: "The Records page sidebar SHALL retain the Results-per-page selectbox with its current values and preference persistence."
+    evidence_type: "behavioral"
+    plan_item: 5
+  - id: "SC-3"
+    description: "The Records page sidebar SHALL retain the edit-mode controls (Enter Edit Mode / Cancel All / Save All) with their current semantics."
+    evidence_type: "behavioral"
+    plan_item: 6
+  - id: "SC-4"
     description: "The main panel SHALL render a full-form navigation row ([Prev] Page N of M / Showing X-Y of Z [Next]) immediately before the first record card, showing live pagination values."
     evidence_type: "behavioral"
     plan_item: 2
-  - id: "SC-3"
+  - id: "SC-5"
     description: "The main panel SHALL render an identical full-form navigation row immediately after the last record card, showing the same live pagination values as the top row."
     evidence_type: "behavioral"
     plan_item: 3
-  - id: "SC-4"
-    description: "Page change triggered from either navigation row SHALL behave identically to the removed sidebar pager: current_page +/- 1 with auto-save of pending edits in global edit mode (single save pass, pending edits cleared) and boundary disabling (Prev disabled at page 1, Next disabled at last page) in both rows."
+  - id: "SC-6"
+    description: "A page change triggered from either navigation row SHALL behave identically to the removed sidebar pager: current_page +/- 1 with bounds clamping, captions updating in both rows, and boundary disabling (Prev disabled at page 1, Next disabled at last page) in both rows."
     evidence_type: "behavioral"
-    plan_item: 5
-  - id: "SC-5"
+    plan_item: 7
+  - id: "SC-7"
+    description: "On a page change from either row with global edit mode active and pending edits present, the system SHALL persist each pending edit exactly once through the existing record-update path with the same change summary and SHALL clear the pending-edit state after the save pass."
+    evidence_type: "behavioral"
+    plan_item: 8
+  - id: "SC-8"
     description: "On the empty-results path, the main panel SHALL render no navigation rows and no pagination artifacts (no 'Page 1 of 1', no 'Showing 1-0 of 0')."
     evidence_type: "behavioral"
-    plan_item: 6
-  - id: "SC-6"
+    plan_item: 9
+  - id: "SC-9"
     description: "The page-change/auto-save-on-page-change logic SHALL exist exactly once in the source (a shared key-namespaced pagination-row helper) referenced by both the top and bottom row call sites."
     evidence_type: "structural"
     plan_item: 1

@@ -24,12 +24,15 @@
 
 | ID | Criterion | Evidence Type | Verification Method | Documentation Sources |
 |----|-----------|---------------|---------------------|----------------------|
-| SC-1 | On the Records page, the sidebar renders no page-level Prev/Next navigation buttons and no "Page N of M" / "Showing X-Y of Z" captions, while the Results-per-page selectbox and the edit-mode controls (Enter Edit Mode / Cancel All / Save All) still render in the sidebar. | behavioral | Playwright real-browser check of the sidebar region (no pager buttons, no captions, selectbox and edit controls present), accompanied by a source-absence assertion on the removed block in `src/frontend/pages/records.py` as supplementary evidence. | `docs/development/ui_testing_standard.md`; `src/frontend/pages/records.py`; `test/ui/` existing e2e modules |
-| SC-2 | In the main panel, a full-form navigation row — [Prev] with the "Page N of M" caption and the "Showing X-Y of Z" caption, then [Next] — renders immediately before the first bordered record container, displaying the live page, showing-range, and total values. | behavioral | Playwright capture of the top of the record list asserting the row's presence, order, and live caption values, with vision review of the capture for layout fit (decision D7). | `docs/development/ui_testing_standard.md`; `src/frontend/pages/records.py`; baseline captures under `tmp/discussion-records-nav/artifacts/` |
-| SC-3 | In the main panel, an identical full-form navigation row renders immediately after the last record card (after all per-record content including revision-history expanders), displaying the same live values as the top row for the same page. | behavioral | Playwright capture of the bottom of the record list asserting the row's presence, order, and value parity with the top row, with vision review for layout fit. | `docs/development/ui_testing_standard.md`; `src/frontend/pages/records.py` |
-| SC-4 | Clicking Next in the top row advances the page and clicking Prev in the bottom row returns to the previous page, with captions updating in both rows; with global edit mode active and pending edits present, a page change from either row persists each pending edit exactly once through the existing record-update path (same change summary as today) and clears the pending-edit state; at page 1 Prev is disabled in both rows and at the last page Next is disabled in both rows. | behavioral | Playwright end-to-end click-through module in `test/ui/` (playwright_e2e marker with SNEA_E2E gating) asserting navigation, caption parity, observable auto-save effect (revision-history entry / cleared pending state, not mocked), and boundary disabling in both rows. | `docs/development/ui_testing_standard.md`; `src/frontend/pages/records.py`; `test/ui/` conventions |
-| SC-5 | On the empty-results path (no records batch, including all semantic-status empty states), the main panel renders only the empty-state message — no navigation rows, no "Page 1 of 1", and no "Showing 1-0 of 0" artifacts anywhere. | behavioral | Playwright empty-results capture asserting zero pagination artifacts, with a supplementary source assertion that both row call sites sit inside the non-empty records branch (supplementary only, never a substitute for the behavioral verdict). | `docs/development/ui_testing_standard.md`; `src/frontend/pages/records.py` |
-| SC-6 | The page-change and auto-save-on-page-change logic exists exactly once in the source, inside a shared pagination-row helper that is referenced by exactly two call sites (top and bottom) using position-distinct widget keys. | structural | Source inspection of `src/frontend/pages/records.py`: occurrence count of the auto-save-on-page-change block (exactly one), helper definition present, and exactly two call sites with namespaced keys. | `src/frontend/pages/records.py` |
+| SC-1 | On the Records page, the sidebar renders no page-level Prev/Next navigation buttons and no "Page N of M" / "Showing X-Y of Z" captions. | behavioral | Playwright real-browser check of the sidebar region asserting zero page-level navigation buttons and zero pagination captions, accompanied by a source-absence assertion on the removed block in `src/frontend/pages/records.py` as supplementary evidence. | `docs/development/ui_testing_standard.md`; `src/frontend/pages/records.py`; `test/ui/` existing e2e modules |
+| SC-2 | On the Records page, the sidebar still renders the Results-per-page selectbox with its current values, and page-size preference persistence is unaffected. | behavioral | Playwright real-browser check of the sidebar region asserting the Results-per-page selectbox renders with its unchanged value list and page-size preference persistence behaves as today (decision D5). | `docs/development/ui_testing_standard.md`; `src/frontend/pages/records.py`; `test/ui/` existing e2e modules |
+| SC-3 | On the Records page, the sidebar still renders the edit-mode controls (Enter Edit Mode / Cancel All / Save All), which function with their current semantics. | behavioral | Playwright real-browser check of the sidebar region asserting all three edit-mode controls render and function with unchanged semantics (decision D5). | `docs/development/ui_testing_standard.md`; `src/frontend/pages/records.py`; `test/ui/` existing e2e modules |
+| SC-4 | In the main panel, a full-form navigation row — [Prev] with the "Page N of M" caption and the "Showing X-Y of Z" caption, then [Next] — renders immediately before the first bordered record container, displaying the live page, showing-range, and total values. | behavioral | Playwright capture of the top of the record list asserting the row's presence, order, and live caption values, with vision review of the capture for layout fit (decision D7). | `docs/development/ui_testing_standard.md`; `src/frontend/pages/records.py`; baseline captures under `tmp/discussion-records-nav/artifacts/` |
+| SC-5 | In the main panel, an identical full-form navigation row renders immediately after the last record card (after all per-record content including revision-history expanders), displaying the same live values as the top row for the same page. | behavioral | Playwright capture of the bottom of the record list asserting the row's presence, order, and value parity with the top row, with vision review for layout fit. | `docs/development/ui_testing_standard.md`; `src/frontend/pages/records.py` |
+| SC-6 | Clicking Next in the top row advances the page and clicking Prev in the bottom row returns to the previous page, with captions updating in both rows and parity between the rows for the same page; at page 1 Prev is disabled in both rows and at the last page Next is disabled in both rows. | behavioral | Playwright end-to-end click-through module in `test/ui/` (playwright_e2e marker with SNEA_E2E gating) asserting top-row Next advance, bottom-row Prev return, caption updates with row parity, and boundary disabling (Prev at page 1, Next at the last page) in both rows. | `docs/development/ui_testing_standard.md`; `src/frontend/pages/records.py`; `test/ui/` conventions |
+| SC-7 | With global edit mode active and pending edits present, a page change from either row persists each pending edit exactly once through the existing record-update path (same change summary as today) and clears the pending-edit state after the save pass. | behavioral | Playwright end-to-end module in `test/ui/` (playwright_e2e marker with SNEA_E2E gating) asserting the observable auto-save effect — revision-history entry and cleared pending state, not mocked — triggered from either row, with exactly one save pass per page change. | `docs/development/ui_testing_standard.md`; `src/frontend/pages/records.py`; `test/ui/` conventions |
+| SC-8 | On the empty-results path (no records batch, including all semantic-status empty states), the main panel renders only the empty-state message — no navigation rows, no "Page 1 of 1", and no "Showing 1-0 of 0" artifacts anywhere. | behavioral | Playwright empty-results capture asserting zero pagination artifacts, with a supplementary source assertion that both row call sites sit inside the non-empty records branch (supplementary only, never a substitute for the behavioral verdict). | `docs/development/ui_testing_standard.md`; `src/frontend/pages/records.py` |
+| SC-9 | The page-change and auto-save-on-page-change logic exists exactly once in the source, inside a shared pagination-row helper that is referenced by exactly two call sites (top and bottom) using position-distinct widget keys. | structural | Source inspection of `src/frontend/pages/records.py`: occurrence count of the auto-save-on-page-change block (exactly one), helper definition present, and exactly two call sites with namespaced keys. | `src/frontend/pages/records.py` |
 
 ## 4. Requirements
 
@@ -55,47 +58,68 @@
 
 ## 5. Items
 
-### Item 1 (SC-6): Shared key-namespaced pagination-row helper with single page-change/auto-save logic
+### Item 1 (SC-9): Shared key-namespaced pagination-row helper with single page-change/auto-save logic
 
 - RED: Source inspection fails — the shared helper is absent and the auto-save-on-page-change block occurs more than once in `src/frontend/pages/records.py`.
 - GREEN: The helper exists and renders a full-form row for a position parameter ("top"/"bottom") with namespaced widget keys and boundary disabling; the auto-save-on-page-change block occurs exactly once, inside the helper; an invalid position value fails fast rather than silently defaulting.
 - verify: Source-inspection occurrence count of the auto-save block equals one; helper is referenced by zero call sites at this item (no user-visible change yet).
 - commit: Refactor commit adding the helper with no call sites.
 
-### Item 2 (SC-2): Wire the top navigation row immediately before the first record card
+### Item 2 (SC-4): Wire the top navigation row immediately before the first record card
 
 - RED: Playwright capture plus source assertion show no navigation row above the first bordered record container in the main panel.
 - GREEN: The full-form row renders immediately above the first bordered record container, with live captions, invoked inside the non-empty records branch just before the record loop.
 - verify: Playwright capture with vision review (D7) confirming the whitespace gap above the first card absorbs the row; source assertion confirms the call site is inside the non-empty branch.
 - commit: Feature commit wiring the top row.
 
-### Item 3 (SC-3): Wire the bottom navigation row immediately after the last record card
+### Item 3 (SC-5): Wire the bottom navigation row immediately after the last record card
 
 - RED: Playwright capture plus source assertion show no navigation row after the last record card.
 - GREEN: An identical row renders immediately after the record loop completes (after all per-record content including revision-history expanders), still inside the non-empty records branch, with the same live values as the top row.
 - verify: Playwright capture with vision review (D7) confirming the dead space after the last card absorbs the row; caption parity with the top row for the same page.
 - commit: Feature commit wiring the bottom row.
 
-### Item 4 (SC-1): Remove the sidebar pager block; selectbox and edit-mode controls remain
+### Item 4 (SC-1): Remove the sidebar pager block
 
 - RED: Playwright check shows the sidebar still rendering Prev/Next page buttons and the Page/Showing captions.
-- GREEN: The sidebar pager block is deleted; the Results-per-page selectbox and the edit-mode controls still render and function; no orphan references to the removed widgets remain; all other current-page/page-size state management is untouched.
-- verify: Playwright sidebar check plus source-absence assertion of the removed block; preserved-control assertions pass.
+- GREEN: The sidebar pager block — page-level Prev/Next buttons and the "Page N of M" / "Showing X-Y of Z" captions — is deleted; no orphan references to the removed widgets remain; all other current-page/page-size state management is untouched.
+- verify: Playwright sidebar check (no pager buttons, no captions) plus source-absence assertion of the removed block.
 - commit: Feature commit removing the sidebar pager (pagination now lives in the main-panel twin rows). Depends on Items 2 and 3 (constraint C-4).
 
-### Item 5 (SC-4): End-to-end behavioral test module — click-through, auto-save, boundaries from either row
+### Item 5 (SC-2): Results-per-page selectbox retention guard
 
-- RED: Enforcement-test gap — no behavioral test exists for the twin-row click-through contract (the target test module is absent), following the repository's red-test convention.
-- GREEN: The Playwright e2e module in `test/ui/` (playwright_e2e marker with SNEA_E2E gating) passes against the implemented twin rows: top-row Next advances, bottom-row Prev returns, captions update in both rows, auto-save-on-page-change persists pending edits exactly once with the observable persisted effect verified (not mocked) and pending state cleared, and boundary disabling holds in both rows.
-- verify: Test module runs gated (skips without the E2E environment variable, and a skip is never reported as a pass); all four assertion groups pass when gated on.
-- commit: Test commit adding the SC-4 e2e module. Depends on Item 4.
+- RED: Enforcement-test gap — no behavioral test asserts the Results-per-page selectbox survives the sidebar pager removal (the target test module is absent), following the repository's red-test convention.
+- GREEN: The Playwright sidebar check passes — the Results-per-page selectbox renders with its current values and page-size preference persistence is unaffected (decision D5) — proving the removal did not over-delete into the selectbox.
+- verify: Selectbox present with its unchanged value list; preference persistence unchanged; behavioral verdict primary (constraint C-3).
+- commit: Test commit adding the SC-2 retention guard. Depends on Item 4 (guards the removal commit against over-deletion).
 
-### Item 6 (SC-5): Empty-results suppression — behavioral empty-state check with supplementary source placement assertion
+### Item 6 (SC-3): Edit-mode controls retention guard
+
+- RED: Enforcement-test gap — no behavioral test asserts the edit-mode controls survive the sidebar pager removal (the target test module is absent), following the repository's red-test convention.
+- GREEN: The Playwright sidebar check passes — Enter Edit Mode / Cancel All / Save All render and function with unchanged semantics (decision D5) — proving the removal did not over-delete into the edit controls.
+- verify: All three edit-mode controls present and functional with unchanged semantics; behavioral verdict primary (constraint C-3).
+- commit: Test commit adding the SC-3 retention guard. Depends on Item 4.
+
+### Item 7 (SC-6): End-to-end navigation module — click-through, captions, boundaries from either row
+
+- RED: Enforcement-test gap — no behavioral test exists for the twin-row navigation contract (the target test module is absent), following the repository's red-test convention.
+- GREEN: The Playwright e2e module in `test/ui/` (playwright_e2e marker with SNEA_E2E gating) passes against the implemented twin rows: top-row Next advances the page, bottom-row Prev returns to the previous page, captions update in both rows with parity for the same page, and boundary disabling holds in both rows (Prev at page 1, Next at the last page).
+- verify: Test module runs gated (skips without the E2E environment variable, and a skip is never reported as a pass); all navigation assertion groups pass when gated on.
+- commit: Test commit adding the SC-6 navigation e2e module. Depends on Item 4.
+
+### Item 8 (SC-7): End-to-end auto-save module — persist-once and pending-state clearing on page change
+
+- RED: Enforcement-test gap — no behavioral test exists for the auto-save-on-page-change contract (the target test module is absent), following the repository's red-test convention.
+- GREEN: The Playwright e2e module in `test/ui/` (playwright_e2e marker with SNEA_E2E gating) passes: with global edit mode active and pending edits present, a page change from either row persists each pending edit exactly once through the existing record-update path with the same change summary as today — the observable persisted effect (revision-history entry) is verified, not mocked — and the pending-edit state is cleared after the save pass.
+- verify: Test module runs gated (skips without the E2E environment variable, and a skip is never reported as a pass); the double-save failure-mode check confirms exactly one save pass per page change (constraint C-3).
+- commit: Test commit adding the SC-7 auto-save e2e module. Depends on Item 4.
+
+### Item 9 (SC-8): Empty-results suppression — behavioral empty-state check with supplementary source placement assertion
 
 - RED: Enforcement-test gap — no test asserts empty-path suppression (the target test module is absent).
 - GREEN: The behavioral check passes — on the empty-results path the main panel renders only the empty-state message with zero pagination artifacts — and a supplementary source assertion confirms both row call sites sit inside the non-empty records branch.
 - verify: Empty-path Playwright capture shows no nav rows, no "Page 1 of 1", no "Showing 1-0 of 0"; suppression holds across all empty-state branches; the structural check remains supplementary to the behavioral verdict (constraint C-3).
-- commit: Test commit adding the SC-5 suppression guard. Depends on Items 2 and 3.
+- commit: Test commit adding the SC-8 suppression guard. Depends on Items 2 and 3.
 
 ## 6. Dependencies
 
@@ -104,7 +128,7 @@
 | Brainstorm handoff decisions D1-D7 (`tmp/discussion-records-nav/artifacts/preliminary/handoff.yaml`) | Binding requirements source — consumed during requirements extraction | Satisfied |
 | GitHub Issue #1413 (stakeholder request and draft discussion) | Source of intent this spec formalizes | Satisfied |
 | `docs/development/ui_testing_standard.md` | MUST be read before writing or running any UI test — Playwright real-browser tests are the standard of record | Satisfied (exists) |
-| `test/ui/` Playwright conventions (playwright_e2e marker + SNEA_E2E skip guards) | Implementation of Items 5 and 6 MUST follow these conventions | Satisfied (exists) |
+| `test/ui/` Playwright conventions (playwright_e2e marker + SNEA_E2E skip guards) | Implementation of Items 7, 8, and 9 MUST follow these conventions | Satisfied (exists) |
 | Current `src/frontend/pages/records.py` implementation (sidebar pager block, record render loop, empty-state branches) | Removal and wiring targets; anchors verified by direct reads during pre-spec inspection | Satisfied |
 | Baseline captures (6 PNGs under `tmp/discussion-records-nav/artifacts/`) | Pre-change evidence baseline for layout-fit vision review (D7) | Satisfied |
 
@@ -113,21 +137,21 @@
 | Requirement | SC(s) | Item(s) |
 |-------------|-------|---------|
 | R-1 | SC-1 | Item 4 |
-| R-2 | SC-1 | Item 4 |
-| R-3 | SC-1 | Item 4 |
-| R-4 | SC-2 | Item 2 |
-| R-5 | SC-3 | Item 3 |
-| R-6 | SC-2, SC-3 | Items 2, 3 |
-| R-7 | SC-4 | Items 1, 5 |
-| R-8 | SC-4 | Items 1, 5 |
-| R-9 | SC-6 | Item 1 |
-| R-10 | SC-6 | Item 1 |
-| R-11 | SC-5 | Item 6 |
-| R-12 | SC-2, SC-3 | Items 2, 3 |
-| C-1 | SC-1 through SC-6 (all) | All items |
-| C-2 | SC-1 through SC-6 (all) | All items |
-| C-3 | SC-1, SC-2, SC-3, SC-4, SC-5 | Items 2-6 |
-| C-4 | SC-1, SC-2, SC-3 | Items 2, 3, 4 |
+| R-2 | SC-2 | Item 5 |
+| R-3 | SC-3 | Item 6 |
+| R-4 | SC-4 | Item 2 |
+| R-5 | SC-5 | Item 3 |
+| R-6 | SC-4, SC-5 | Items 2, 3 |
+| R-7 | SC-6 | Items 1, 7 |
+| R-8 | SC-7 | Items 1, 8 |
+| R-9 | SC-9 | Item 1 |
+| R-10 | SC-9 | Item 1 |
+| R-11 | SC-8 | Item 9 |
+| R-12 | SC-4, SC-5 | Items 2, 3 |
+| C-1 | SC-1 through SC-9 (all) | All items |
+| C-2 | SC-1 through SC-9 (all) | All items |
+| C-3 | SC-1, SC-2, SC-3, SC-4, SC-5, SC-6, SC-7, SC-8 | Items 2-9 |
+| C-4 | SC-1, SC-4, SC-5 | Items 2, 3, 4 |
 
 ## 8. Documentation Sources
 
@@ -150,22 +174,31 @@
 
 Cost is measured in defect-discovery-latency, not tool calls. Correctness is the only metric.
 
-- **SC-1:** Running the Playwright sidebar-absence check costs minutes of execution time — the defect (pager removed without relocation, or over-deletion into the selectbox or edit controls) is caught at the gate. Skipping costs a full post-merge regression cycle — a destroyed selectbox or lost pagination surfaces on the live Records page and costs a diagnose-fix-re-review-redeploy round trip.
-- **SC-2:** Capturing the top-row render costs minutes of execution time. Skipping costs a broken pagination surface discovered by stakeholders — the row may be absent, misplaced, or show stale captions, and the fix arrives after review cycles instead of before the commit.
-- **SC-3:** Capturing the bottom-row render costs minutes of execution time. Skipping costs the same discovery latency as SC-2 — the bottom row is the one users reach after scrolling a full page of records, so its absence is the most visible failure of the relocation.
-- **SC-4:** Running the click-through e2e (navigation, auto-save, boundaries) costs minutes of execution time. Skipping costs a data-integrity defect shipping to production — a silently dropped user edit or a divergent page-change path is discovered by the stakeholder's own edits, and data loss costs more than every test in this spec combined.
-- **SC-5:** Running the empty-path capture costs minutes of execution time. Skipping costs a "Page 1 of 1" / "Showing 1-0 of 0" artifact rendering on every empty search — a defect visible on the page's most frequent degenerate state, caught only after stakeholder reports.
-- **SC-6:** Counting the auto-save block occurrences costs one source-inspection run of seconds. Skipping costs silent divergence — duplicated save logic drifts apart on the first future edit to either copy, and the desynchronization ships undetected until a save behaves differently depending on which row triggered it.
+- **SC-1:** Running the Playwright sidebar-absence check costs minutes of execution time — the defect (the sidebar pager left behind alongside the new twin rows, producing two competing pager surfaces contrary to decision D1) is caught at the gate. Skipping costs a full post-merge regression cycle — a duplicated pager surfaces on the live Records page and costs a diagnose-fix-re-review-redeploy round trip.
+- **SC-2:** Running the selectbox retention check costs minutes of execution time. Skipping costs over-deletion reaching production — a destroyed Results-per-page selectbox silently removes page-size control from every user, discovered only by stakeholder report after the merge.
+- **SC-3:** Running the edit-controls retention check costs minutes of execution time. Skipping costs the same over-deletion latency as SC-2 — losing Enter Edit Mode / Cancel All / Save All breaks the entire editing workflow, and the fix arrives only after stakeholder reports.
+- **SC-4:** Capturing the top-row render costs minutes of execution time. Skipping costs a broken pagination surface discovered by stakeholders — the row may be absent, misplaced, or show stale captions, and the fix arrives after review cycles instead of before the commit.
+- **SC-5:** Capturing the bottom-row render costs minutes of execution time. Skipping costs the same discovery latency as SC-4 — the bottom row is the one users reach after scrolling a full page of records, so its absence is the most visible failure of the relocation.
+- **SC-6:** Running the navigation click-through e2e costs minutes of execution time. Skipping costs broken navigation discovered by stakeholders — a row whose buttons do not change the page, captions that go stale, or a boundary button left enabled — the relocation's core promise failing on the live page.
+- **SC-7:** Running the auto-save e2e costs minutes of execution time. Skipping costs a data-integrity defect shipping to production — a silently dropped user edit or a divergent page-change path is discovered by the stakeholder's own edits, and data loss costs more than every test in this spec combined.
+- **SC-8:** Running the empty-path capture costs minutes of execution time. Skipping costs a "Page 1 of 1" / "Showing 1-0 of 0" artifact rendering on every empty search — a defect visible on the page's most frequent degenerate state, caught only after stakeholder reports.
+- **SC-9:** Counting the auto-save block occurrences costs one source-inspection run of seconds. Skipping costs silent divergence — duplicated save logic drifts apart on the first future edit to either copy, and the desynchronization ships undetected until a save behaves differently depending on which row triggered it.
 
 ## 11. Edge Cases
 
-- **Condition:** Single-record view (page size 1) — the motivating case. **Expected behavior:** The twin rows flank the single record card; both rows show identical live captions; boundary disabling applies at page 1 and the last page in both rows. **Resolution:** Covered by SC-2/SC-3/SC-4 verification at page size 1.
+- **Condition:** Single-record view (page size 1) — the motivating case. **Expected behavior:** The twin rows flank the single record card; both rows show identical live captions; boundary disabling applies at page 1 and the last page in both rows. **Resolution:** Covered by SC-4/SC-5/SC-6 verification at page size 1.
 - **Condition:** Partial last page — the record batch is shorter than the page size (e.g., page size 25 with 7 remaining records). **Expected behavior:** The showing range clamps to the records actually returned, against the total count; Next is disabled at the last page in both rows. **Resolution:** Live-caption derivation reuses the existing clamped computation (R-6).
-- **Condition:** Zero total records — the empty-results path, including every semantic-status empty state. **Expected behavior:** No navigation rows and no pagination artifacts render in the main panel; the sidebar selectbox remains functional. **Resolution:** Suppression by construction — both call sites sit inside the non-empty records branch (SC-5).
+- **Condition:** Zero total records — the empty-results path, including every semantic-status empty state. **Expected behavior:** No navigation rows and no pagination artifacts render in the main panel; the sidebar selectbox remains functional. **Resolution:** Suppression by construction — both call sites sit inside the non-empty records branch (SC-8).
 - **Condition:** Page change while global edit mode is active with no pending edits. **Expected behavior:** The auto-save guard short-circuits and the page changes without any save. **Resolution:** Guard parity with the removed sidebar logic (R-8).
-- **Condition:** Page change while global edit mode is active with pending edits present. **Expected behavior:** Each pending edit is persisted exactly once through the existing update path with the same change summary, pending state is cleared, then the page changes. **Resolution:** Auto-save semantics preserved verbatim (R-8, SC-4).
+- **Condition:** Page change while global edit mode is active with pending edits present. **Expected behavior:** Each pending edit is persisted exactly once through the existing update path with the same change summary, pending state is cleared, then the page changes. **Resolution:** Auto-save semantics preserved verbatim (R-8, SC-7).
 - **Condition:** Invalid position value passed to the shared helper. **Expected behavior:** Immediate fail-fast error rather than silent default rendering. **Resolution:** Explicit position validation in the helper (fail-fast per data-integrity rules).
-- **Condition:** Duplicate widget keys across the two rows. **Expected behavior:** The framework raises a duplicate-widget error on render. **Resolution:** Position-namespaced keys prevent the collision by construction (R-10); SC-6 verifies the namespacing exists.
+- **Condition:** Duplicate widget keys across the two rows. **Expected behavior:** The framework raises a duplicate-widget error on render. **Resolution:** Position-namespaced keys prevent the collision by construction (R-10); SC-9 verifies the namespacing exists.
 - **Condition:** Record-update failure during the auto-save pass. **Expected behavior:** The existing error behavior of the update path applies unchanged — no new swallowing, no new suppression. **Resolution:** Out of scope to change; semantics preserved (constraint C-2, requirement R-8).
-- **Condition:** Both rows' buttons clicked within one interaction cycle. **Expected behavior:** The framework executes exactly one interaction per rerun, so both handlers cannot fire in a single pass; a single page change results. **Resolution:** Framework rerun model; asserted in the SC-4 e2e module's double-save failure-mode check.
+- **Condition:** Both rows' buttons clicked within one interaction cycle. **Expected behavior:** The framework executes exactly one interaction per rerun, so both handlers cannot fire in a single pass; a single page change results. **Resolution:** Framework rerun model; asserted in the SC-7 e2e module's double-save failure-mode check.
 - **Condition:** Filter, search-term, or page-size change while viewing a non-first page. **Expected behavior:** The current page resets to 1 exactly as today. **Resolution:** Untouched state management — the relocation changes where page-change buttons live, not the reset points.
+
+## 12. Change Control
+
+| Date | Change | Trigger | Authorization |
+|------|--------|---------|---------------|
+| 2026-10-05 | Decomposed compound SC-1 (three verification targets) into SC-1 (R-1 sidebar pager absence), SC-2 (R-2 selectbox retention), SC-3 (R-3 edit-controls retention). Decomposed compound SC-4 (four-plus verification targets) into SC-6 (R-7 navigation click-through, caption updates/parity, boundary disabling) and SC-7 (R-8 auto-save persistence and pending-state clearing). Renumbered remaining SCs (old SC-2→SC-4, SC-3→SC-5, SC-5→SC-8, SC-6→SC-9) with matching item renumbering — Items 1-9, adding retention-guard Items 5-6 and splitting the former e2e item into the navigation module (Item 7) and auto-save module (Item 8). Updated traceability table, cost frame, edge-case cross-references, and the Dependencies row for test-convention items; appended this section; regenerated the remote exec-summary body; refreshed `sc-summary.yaml` to the 9-SC set. No requirements (R-1 through R-12), constraints (C-1 through C-4), scope, or design decisions (D1-D7) were changed. | Validate-step aggregate verdict FAIL: compound-SC detection (Step 3.3) and atomicity decomposition criterion (Step 3.7) on SC-1 and SC-4, with the remediation path prescribing decomposition along the existing R-1/R-2/R-3 and R-7/R-8 seams. Non-blocking warning: the interface-compatibility artifact cited "C5 sequencing" while the spec labels that constraint C-4 — resolved by deleting the stale artifacts directory (Step 7); artifacts regenerated downstream will derive their constraint numbering from this revised spec's C-4 label. | Revision request dispatched by the spec-creation orchestrator carrying the validate-step findings, 2026-10-05 |

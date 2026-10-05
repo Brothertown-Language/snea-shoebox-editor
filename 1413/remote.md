@@ -1,41 +1,36 @@
 ---
 remote_issue: 1413
 remote_url: "https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1413"
-last_sync: 2026-10-05T04:58:08Z
+last_sync: 2026-10-05T05:14:29Z
 source: github.com
 ---
 
-## Problem Statement
+> Full spec and plan artifacts: https://github.com/Brothertown-Language/snea-shoebox-editor/tree/issues-data/1413/
 
-The Records page (`src/frontend/pages/records.py`) renders page-level navigation (Prev/Next buttons, "Page N of M" and "Showing X–Y of Z" captions) only in the sidebar. The main content area has no navigation controls above the first record or after the last record, making pagination awkward — the pager is visually distant from the records it controls, especially in single-record view (page_size=1).
+## Problem
+
+The Records page (`src/frontend/pages/records.py`) renders page-level navigation — Prev/Next buttons and the "Page N of M" / "Showing X–Y of Z" captions — only in the sidebar, visually distant from the records it controls and most awkward in single-record view; its page-change/auto-save logic is also duplicated once per button. A stakeholder discussion produced binding layout decisions (D1–D7), so the relocation is now ready to be specified and built.
+
+## Scope
+
+- Remove the sidebar pager block (Prev/Next buttons and Page/Showing captions) from the Records page.
+- Add twin full-form navigation rows in the main panel — one immediately before the first record card, one immediately after the last card — inside the main panel's scroll container.
+- Introduce one shared, key-namespaced helper that renders both rows so the page-change and auto-save-on-page-change logic exists exactly once.
+- Preserve boundary behavior: Prev disabled at page 1 and Next disabled at the last page, applied in both rows.
+- Suppress the navigation rows entirely on the empty-results path.
+
+**Out of scope:** search/filter logic and modes; Results-per-page selectbox placement and behavior (stays in the sidebar); edit-mode control placement and Save All / Cancel All semantics (stay in the sidebar); new pagination features (jump-to-page, page-size control in the main panel, infinite scroll); backend, service, schema, or API changes; record-card rendering internals.
 
 ## Approach
 
-Relocate page-level pagination from the sidebar to the main panel as twin navigation rows:
+Remove the sidebar pager block from `src/frontend/pages/records.py` and replace it with a shared helper that renders one full-form navigation row parameterized by position (top/bottom) with position-namespaced widget keys. Invoke the helper twice inside the non-empty records branch of the main panel — once before the record loop and once after it — which suppresses the rows by construction on empty results. The helper owns the single copy of the page-change logic, including auto-save-on-page-change that persists pending edits in global edit mode with unchanged semantics. The change is UI-layout-only: no backend, service, schema, or API surface is touched. Verification follows the repository's Playwright standard of record with SNEA_E2E gating, plus one structural source-inspection criterion for the exactly-once logic guarantee.
 
-- **Remove from sidebar:** Prev/Next page buttons and the Page N of M / Showing X–Y of Z captions (sidebar pager block, `records.py` lines ~538-568).
-- **Twin rows in main panel:** full-form rows `[◀️ Prev] Page N of M / Showing X–Y of Z [▶️ Next]` — one row immediately before the first record, one immediately after the last record, inside the main panel's scroll container.
-- **Shared helper:** one helper renders both rows with key-namespacing (top/bottom) so the page-change logic — including auto-save-on-page-change of pending edits in edit mode — exists exactly once (currently duplicated at `records.py` ~540-545 and ~549-554).
-- **Boundary behavior:** Prev disabled at page 1, Next disabled at last page (matches current sidebar behavior).
-- **Stays in sidebar:** Results-per-page selectbox; Enter/Cancel/Save edit-mode controls.
-- **Layout fit verified:** Playwright captures under `tmp/discussion-records-nav/artifacts/` (vision-reviewed) show a whitespace gap above the first record card and dead space after the last card absorb the rows without crowding.
+## Impact
 
-## Success Criteria (draft)
+- **Risk: sidebar over-deletion damages the Results-per-page selectbox or edit-mode controls** — mitigated by line-bounded removal targets plus dedicated retention checks (SC-2 selectbox, SC-3 edit-mode controls).
+- **Risk: auto-save semantics drift while consolidating the duplicated logic** — mitigated by requiring verbatim guard/change-summary/clearing parity, asserted behaviorally in SC-7.
+- **Risk: pagination lost mid-branch during relocation** — mitigated by dependency ordering: the twin rows are wired before the sidebar block is removed, so pagination is never absent.
+- **Dependencies:** brainstorm decisions D1–D7 (consumed); Playwright e2e conventions in `test/ui/` and the UI testing standard of record; baseline layout captures for layout-fit vision review.
+- **Call to action:** review the full spec and its nine success criteria in the issues-data branch linked above.
 
-- SC-1 (behavioral): Sidebar no longer renders page-level Prev/Next buttons or the Page N of M / Showing captions on the Records page; Results-per-page selectbox and edit-mode controls remain.
-- SC-2 (behavioral): A full-form navigation row (Prev | Page N of M / Showing X–Y of Z | Next) renders immediately above the first record card in the main panel.
-- SC-3 (behavioral): An identical navigation row renders immediately after the last record card in the main panel.
-- SC-4 (behavioral): Clicking Prev/Next in either row performs the same page change as the removed sidebar pager, including auto-save of pending edits in global edit mode; boundary pages disable the corresponding button in both rows.
-- SC-5 (behavioral): On the empty-results path, the twin navigation rows are suppressed entirely (no "Page 1 of 1" / "Showing 1-0 of 0" artifacts in the main panel).
-- SC-6 (structural): The page-change/auto-save logic exists exactly once in the code (shared helper), referenced by both rows.
-
-## Affected Files
-
-- `src/frontend/pages/records.py` (sidebar pager removal; main-panel twin rows; shared pager helper)
-
-## Notes
-
-- Streamlit reruns the script per interaction; top/bottom row widgets need unique keys sharing one code path.
-- Evidence baseline: Playwright full-page and viewport captures at 1280px confirm no main-panel navigation exists today and sidebar-only pagination is the current state.
-
-🤖 Co-authored with AI: OpenCode (zai-org/GLM-5.3-Flash)
+🤖 OpenCode (zai-org/GLM-5.3-Flash) created
