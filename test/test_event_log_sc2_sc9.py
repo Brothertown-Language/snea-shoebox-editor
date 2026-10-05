@@ -293,11 +293,11 @@ class TestMigrationLifecycleSc4(unittest.TestCase):
         # Register models (including SystemEventLog) and create the schema,
         # then backdate the applied-version row so one migration is pending.
         from src.database.base import Base
-        from src.database.models.event_log import SystemEventLog  # noqa: F401
-        from src.database.models.meta import SchemaVersion  # noqa: F401
-        from src.database.models.identity import User  # noqa: F401
-        from src.database.models.workflow import EditHistory  # noqa: F401
         from src.database.models.core import Record, Source  # noqa: F401
+        from src.database.models.event_log import SystemEventLog  # noqa: F401
+        from src.database.models.identity import User  # noqa: F401
+        from src.database.models.meta import SchemaVersion  # noqa: F401
+        from src.database.models.workflow import EditHistory  # noqa: F401
 
         Base.metadata.create_all(cls.engine)
         with cls.engine.connect() as conn:
@@ -348,12 +348,12 @@ class TestMigrationLifecycleSc4(unittest.TestCase):
             side_effect=RuntimeError("SC-4 induced migration failure"),
         ):
             manager = MigrationManager(self.engine)
-            with self.assertRaises(Exception):
+            with self.assertRaisesRegex(Exception, "SC-4 induced migration failure"):
                 manager._run_migrations()
 
         from src.services.event_log_service import EventLogService
 
-        error_events = [e for e in EventLogService.get_events(event_type="migration_error")]
+        error_events = EventLogService.get_events(event_type="migration_error")
         self.assertTrue(error_events, "expected a migration_error event from the induced failure")
         self.assertIn("SC-4 induced migration failure", error_events[0].details["error_message"])
 
