@@ -1,0 +1,150 @@
+# Decomposition output — Issue #1413
+schema_version: 1
+issue_number: 1413
+decomposed_at: "2026-10-05T01:12:00-04:00"
+principle: "One SC = one RED/GREEN/verify/commit cycle (091 per-SC decomposition)"
+
+items:
+  - id: ITEM-1
+    sc_id: SC-6
+    title: "Create shared key-namespaced pagination-row helper with single page-change/auto-save logic"
+    type: structural
+    file_category: src/frontend/pages/records.py
+    verification_domain: source-inspection (AST/text occurrence count)
+    interface:
+      signature: "_render_pagination_nav_row(position: str, current_page: int, total_pages: int, offset: int, batch_size: int, total_count: int, has_next: bool, user_email: str | None)"
+      behavior: "Renders full-form row [◀️ Prev] Page N of M / Showing X-Y of Z [▶️ Next]; widget keys namespaced f'nav_prev_{position}' / f'nav_next_{position}' (I1); boundary disabled: Prev disabled when current_page <= 1, Next disabled when not has_next (D4/R4); page-change handler contains the SINGLE auto-save block: if global_edit_mode and pending_edits: update_record(rid, user_email, mdf_data, change_summary='Auto-save via pagination') for each, clear pending_edits; then current_page +/- 1; st.rerun() (R3/I3)"
+      position_values: ["top", "bottom"]
+    red: "Source inspection: helper absent; auto-save-on-page-change block occurs twice (records.py:540-545, 549-554) — count > 1 fails"
+    green: "Helper exists in records.py; auto-save block occurs exactly once (inside helper); helper contains key-namespacing and boundary-disabled logic"
+    invariants:
+      - "Auto-save semantics identical to removed sidebar logic (same guard, same change_summary, same clearing)"
+      - "No user-visible change at this item (helper not yet called)"
+      - "No duplicate widget keys when called for both positions"
+    failure_modes:
+      - "Helper called with invalid position -> fail fast (ValueError), never default silently (090)"
+      - "Key collision if namespacing omitted -> Streamlit DuplicateWidgetID"
+    commit: "refactor: add shared pagination-row helper (SC-6) — no call sites yet"
+
+  - id: ITEM-2
+    sc_id: SC-2
+    title: "Wire top navigation row immediately before the first record card in the main panel"
+    type: behavioral
+    file_category: src/frontend/pages/records.py
+    verification_domain: behavioral (Playwright real-browser, standard of record) + source placement assertion
+    depends_on: [ITEM-1]
+    interface:
+      call_site: "inside the non-empty else: branch (records.py:844), before 'for record in records_batch:' (845) — suppression-by-construction for SC-5"
+      arguments: "position='top' with live pagination values (current_page, total_pages, offset, len(records_batch), total_count, has_next)"
+    red: "Playwright capture + source assertion: no navigation row renders above the first record card in the main panel"
+    green: "Full-form row renders immediately above the first bordered record container (records.py:850); captions show live N of M and X-Y of Z"
+    invariants:
+      - "Row is inside the main panel's scroll container, not the sidebar"
+      - "Empty-results path renders NO row at this call site (inside else branch)"
+    failure_modes:
+      - "Call site outside else branch -> rows appear on empty path (SC-5 violation, caught by ITEM-6)"
+      - "Caption math wrong when batch shorter than page size (last page) -> showing range must clamp to min(offset+batch, total_count)"
+    commit: "feat: wire top pagination row in main panel (SC-2)"
+
+  - id: ITEM-3
+    sc_id: SC-3
+    title: "Wire bottom navigation row immediately after the last record card in the main panel"
+    type: behavioral
+    file_category: src/frontend/pages/records.py
+    verification_domain: behavioral (Playwright) + source placement assertion
+    depends_on: [ITEM-1]
+    interface:
+      call_site: "after the per-record for loop completes (~records.py:1074), still inside the non-empty else: branch"
+      arguments: "position='bottom', identical live values as top row"
+    red: "Playwright capture + source assertion: no navigation row renders after the last record card"
+    green: "Identical full-form row renders immediately after the last record card"
+    invariants:
+      - "Row renders after ALL record containers including per-record Revision History expanders (1052-1073)"
+      - "Same captions and boundary states as top row for the same page"
+    failure_modes:
+      - "Row placed inside the loop -> N rows instead of one"
+      - "Row placed outside else branch -> renders on empty path (SC-5 violation)"
+    commit: "feat: wire bottom pagination row in main panel (SC-3)"
+
+  - id: ITEM-4
+    sc_id: SC-1
+    title: "Remove the sidebar pager block; selectbox and edit-mode controls remain"
+    type: behavioral
+    file_category: src/frontend/pages/records.py
+    verification_domain: behavioral (Playwright) + source absence assertion
+    depends_on: [ITEM-2, ITEM-3]   # C5: pagination never lost mid-branch
+    interface:
+      removal_target: "records.py:538-556 (Prev/Next buttons + duplicated auto-save) and 558-568 (Page/Showing captions)"
+      preserved: "records.py:570-578 results-per-page selectbox (R5); records.py:580-627 edit-mode controls (R6)"
+    red: "Sidebar still renders Prev/Next buttons and Page/Showing captions on the Records page"
+    green: "Sidebar pager absent; selectbox and edit controls still present and functional"
+    invariants:
+      - "No orphan references to removed widgets"
+      - "current_page/page_size state management elsewhere (init, clamps, selectbox handler) untouched"
+    failure_modes:
+      - "Over-deletion into selectbox/edit-controls block -> regressions caught by preserved-control assertions"
+    commit: "feat: remove sidebar pager; pagination now main-panel twin rows (SC-1)"
+
+  - id: ITEM-5
+    sc_id: SC-4
+    title: "E2E behavioral test module — click-through page change, auto-save-on-page-change, boundary disables from either row"
+    type: behavioral
+    file_category: test/ui/test_records_pagination_twin_rows_sc4.py
+    verification_domain: behavioral (Playwright real-browser, playwright_e2e + SNEA_E2E=1 gated, live app :8501)
+    depends_on: [ITEM-4]
+    interface:
+      test_module: "Playwright e2e following test/ui/ conventions (marker + skip guard per existing modules)"
+      assertions:
+        - "Clicking Next in the TOP row advances page; captions update in both rows"
+        - "Clicking Prev in the BOTTOM row returns to previous page"
+        - "With global edit mode on and pending edits, page change via either row persists edits exactly once (change_summary 'Auto-save via pagination') and clears pending state"
+        - "At page 1 Prev is disabled in BOTH rows; at last page Next is disabled in BOTH rows"
+    red: "Enforcement-test gap: no behavioral test exists for SC-4's click-through contract (test module absent — running the target path yields no tests); RED is the absence of the enforcement test itself, per the repo's test_*_red.py convention"
+    green: "Test module exists and passes against the implemented twin-row behavior (all four assertion groups)"
+    invariants:
+      - "Test gated correctly (skips without SNEA_E2E=1; skip is never reported as PASS)"
+      - "Auto-save asserted via observable effect (revision history entry / pending state cleared), not mocked"
+    failure_modes:
+      - "Double auto-save if both rows' handlers fire in one rerun (impossible in Streamlit: one interaction per rerun — asserted)"
+      - "Boundary state computed per-row inconsistently"
+    commit: "test: SC-4 e2e twin-row click-through, auto-save, boundary (RED artifact + GREEN verification)"
+
+  - id: ITEM-6
+    sc_id: SC-5
+    title: "Empty-results suppression — behavioral empty-state check with supplementary source placement assertion"
+    type: behavioral
+    file_category: test/ui/test_records_pagination_empty_path_sc5.py (+ supplementary source assertion)
+    verification_domain: behavioral (Playwright empty-path capture; source placement assertion is supplementary only — BEH-EV uplift applied 2026-10-05)
+    depends_on: [ITEM-2, ITEM-3]
+    interface:
+      assertions:
+        - "Source: both _render_pagination_nav_row call sites are inside the non-empty else: branch (placement assertion)"
+        - "Behavioral: on empty-results path, main panel renders only the st.info empty state — no nav rows, no 'Page 1 of 1', no 'Showing 1-0 of 0' artifacts anywhere"
+    red: "Enforcement-test gap: no test asserts empty-path suppression (test module absent)"
+    green: "Tests pass: suppression holds by construction (call sites inside else branch) and empty-path capture shows no pagination artifacts"
+    invariants:
+      - "Suppression holds for ALL empty-state branches (semantic status branches 815-831 AND generic 832-843)"
+    failure_modes:
+      - "Future refactor moves call sites outside else branch -> placement assertion fails (regression guard purpose)"
+    commit: "test: SC-5 empty-results twin-row suppression guard (RED artifact + GREEN verification)"
+
+dependency_dag:
+  edges:
+    - [ITEM-1, ITEM-2]
+    - [ITEM-1, ITEM-3]
+    - [ITEM-2, ITEM-4]
+    - [ITEM-3, ITEM-4]
+    - [ITEM-4, ITEM-5]
+    - [ITEM-2, ITEM-6]
+    - [ITEM-3, ITEM-6]
+  acyclic: true
+  topological_order: [ITEM-1, ITEM-2, ITEM-3, ITEM-4, ITEM-5, ITEM-6]   # ITEM-5/6 order interchangeable; ITEM-6 also valid earlier
+
+sc_item_mapping:
+  SC-1: ITEM-4
+  SC-2: ITEM-2
+  SC-3: ITEM-3
+  SC-4: ITEM-5
+  SC-5: ITEM-6
+  SC-6: ITEM-1
+atomicity: "every SC maps to exactly one item/cycle — verified"

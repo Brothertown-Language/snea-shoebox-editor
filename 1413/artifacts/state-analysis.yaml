@@ -1,0 +1,41 @@
+# Analytical artifact 6/7: State analysis — Issue #1413
+schema_version: 1
+issue_number: 1413
+generated_at: "2026-10-05T01:20:00-04:00"
+handoff_status_refined: "partial (handoff) -> formalized state machine"
+
+state_keys:
+  - key: st.session_state.current_page
+    init: "58/124 (default 1); reset to 1 on filter/mode/search changes (173-195, 464-468, 657); bounds-clamped at 351-353"
+    transitions_in_this_change: "unchanged semantics; +/- 1 now triggered from main-panel rows instead of sidebar buttons"
+    invariants: "1 <= current_page <= total_pages (clamp at 351-353 preserved)"
+  - key: st.session_state.page_size
+    init: "63-65 (preference-backed), 72-73 (fallback 25)"
+    transitions_in_this_change: none
+    invariants: "selectbox change resets current_page=1 and persists preference (570-578) — untouched"
+  - key: st.session_state.pending_edits
+    init: "140-141 ({})"
+    transitions_in_this_change: "cleared by helper's auto-save block exactly as sidebar did (540-545 pattern); populated by edit text-areas (873-881) and rollback (1069) — untouched"
+    invariants: "auto-save guard: global_edit_mode AND pending_edits non-empty; cleared after successful loop"
+  - key: st.session_state.global_edit_mode
+    init: "132-133 (False)"
+    transitions_in_this_change: none
+    note: "toggled only by sidebar edit controls (582-590) — untouched"
+
+state_machine:
+  idle_view:
+    on_next_any_row: "current_page += 1 -> rerun -> records re-query (204-205 offset recomputed)"
+    on_prev_any_row: "current_page -= 1 -> rerun"
+    boundary_page1: "Prev disabled in BOTH rows"
+    boundary_last: "Next disabled in BOTH rows"
+  edit_mode_active_with_pending_edits:
+    on_page_change_any_row: "auto-save loop (update_record per pending edit, change_summary='Auto-save via pagination') -> pending_edits={} -> page +/- 1 -> rerun"
+    on_page_change_no_pending: "guard short-circuits -> page +/- 1 -> rerun"
+  empty_results:
+    state_entry: "records_batch empty (or semantic empty states)"
+    transitions: "NO twin rows rendered — suppression (D6); sidebar has no pager (SC-1); selectbox still functional (570-578)"
+
+widget_state_mechanics:
+  rerun_model: "Streamlit reruns full script per interaction — exactly one button click per rerun; both rows' handlers cannot fire in the same run"
+  key_namespacing: "nav_prev_top/nav_next_top vs nav_prev_bottom/nav_next_bottom — prevents DuplicateWidgetID; enables one shared code path (D3)"
+  has_next_derivation: "computed once at 355 before sidebar/main rendering — passed to helper as input (no double derivation)"

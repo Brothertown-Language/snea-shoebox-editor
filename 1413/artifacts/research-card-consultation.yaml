@@ -1,0 +1,12 @@
+# Research card consultation — Issue #1413
+schema_version: 1
+issue_number: 1413
+consulted_at: "2026-10-05T01:06:00-04:00"
+search_method: "glob .issues/research-cards/*.md (path-parameter form) + frontmatter topic review"
+cards_found: 24
+cards_by_topic: "All cards are Algonquian linguistic-source catalogs (Narragansett, Wampanoag, Massachusett dictionaries/vocabularies, source comparisons)"
+matching_cards: []
+confidence_threshold_used: 0.7
+finding: "No research card addresses UI pagination, Streamlit widget layout, or navigation UX. No card findings incorporated."
+research_gaps: []
+note: "Spec topic (records-page pagination relocation) is application-UI work; existing research deck covers linguistic data sources only."
