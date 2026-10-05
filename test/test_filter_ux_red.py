@@ -107,14 +107,18 @@ class TestFilterUXRED(unittest.TestCase):
 
     # --- Phase 3: Buttons Side-by-Side (SC-4) ---
     def test_search_clear_buttons_in_columns(self):
-        """SC-4: RED — 7 column groups (2 for side-by-side search/clear),
-        currently 5 (pagination + selection)."""
+        """SC-4: search and clear buttons appear side-by-side in columns.
+
+        Updated for Issue #1413: the sidebar page-level pager (its own two
+        button columns) was relocated to twin main-panel navigation rows, so
+        the sidebar now renders 5 column groups (search-clear + selection)
+        instead of the previous 7 that included the pagination columns."""
         self.at.run()
         self.assertEqual(
             len(self.at.columns),
-            7,
-            "Should be 7 column groups (pagination + search-clear + selection). "
-            "RED: currently 5 (search-buttons not in columns)",
+            5,
+            "Should be 5 column groups (search-clear + selection) after the "
+            "#1413 pagination relocation removed the sidebar pager columns",
         )
 
     # --- Phase 4: Clear Behavior (SC-5) ---
