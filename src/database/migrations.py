@@ -22,6 +22,7 @@ def log_migration_start(version: int, description: str) -> None:
     logger.info("=" * 60)
     logger.info("MIGRATION START: v%s - %s", version, description)
     logger.info("=" * 60)
+    _log_migration_event("migration_start", "info", version, description)
 
 
 def log_migration_skip(version: int, description: str, reason: str) -> None:
@@ -30,6 +31,7 @@ def log_migration_skip(version: int, description: str, reason: str) -> None:
     logger.info("MIGRATION SKIP: v%s - %s", version, description)
     logger.info("  Reason: %s", reason)
     logger.info("-" * 60)
+    _log_migration_event("migration_skip", "info", version, description, details={"reason": reason})
 
 
 def log_migration_complete(version: int, description: str, duration_seconds: float | None = None) -> None:
@@ -45,6 +47,13 @@ def log_migration_complete(version: int, description: str, duration_seconds: flo
     else:
         logger.info("MIGRATION COMPLETE: v%s - %s", version, description)
     logger.info("=" * 60)
+    _log_migration_event(
+        "migration_complete",
+        "info",
+        version,
+        description,
+        details={"duration_seconds": duration_seconds} if duration_seconds is not None else None,
+    )
 
 
 def log_migration_error(version: int, description: str, error: Exception) -> None:
@@ -53,6 +62,39 @@ def log_migration_error(version: int, description: str, error: Exception) -> Non
     logger.error("MIGRATION FAILED: v%s - %s", version, description)
     logger.error("  Error: %s: %s", type(error).__name__, str(error))
     logger.error("=" * 60)
+    _log_migration_event(
+        "migration_error",
+        "error",
+        version,
+        description,
+        details={"error_type": type(error).__name__, "error_message": str(error)},
+    )
+
+
+def _log_migration_event(
+    event_type: str,
+    severity: str,
+    version: int,
+    description: str,
+    details: dict | None = None,
+) -> None:
+    """Persist a migration lifecycle event to system_event_log (issue #1332).
+
+    DB logging is additive: stderr logging above is unaffected, and a failed
+    event write never interrupts the migration itself (REQ-8).
+    """
+    try:
+        from src.services.event_log_service import EventLogService
+
+        EventLogService.log_event(
+            event_type=event_type,
+            severity=severity,
+            message=f"Migration v{version}: {description}",
+            source="src.database.migrations",
+            details={"version": version, "description": description, **(details or {})},
+        )
+    except Exception as e:
+        logger.error("Failed to persist migration event '%s': %s", event_type, e)
 
 
 class MigrationManager:

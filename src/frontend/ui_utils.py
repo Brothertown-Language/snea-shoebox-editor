@@ -31,6 +31,15 @@ def handle_ui_error(e: Exception, user_message: str = "An unexpected error occur
     log = get_logger(logger_name or "ui_error_handler")
     log.error(f"{user_message} Detail: {str(e)}", exc_info=True)
 
+    # 1b. Persistent system event (issue #1332). Additive: stderr logging above
+    # is unaffected, and a failed event write never suppresses the exception (REQ-8).
+    try:
+        from src.services.event_log_service import EventLogService
+
+        EventLogService.log_exception(e, message=user_message, source=logger_name or "ui_error_handler")
+    except Exception as log_error:
+        log.error("Failed to persist exception event to system_event_log: %s", log_error)
+
     # 2. UI Display (Sanitized)
     st.error(user_message)
     if str(e):
