@@ -597,6 +597,24 @@ def apply_standard_layout_css() -> None:
             transition: opacity 0.2s ease;
             right: 14px !important;
         }
+
+        /* Issue: the fixed 60px header overlays the top of the main panel's
+           scrollbar track (z-index 999990), so the thumb is ungrabbable and
+           hover never fires when the page is near the top. Make the header
+           transparent to pointers except its own interactive controls, so
+           the scrollbar region is reachable end-to-end. */
+        header[data-testid="stHeader"],
+        header[data-testid="stHeader"] * {
+            pointer-events: none !important;
+        }
+        header[data-testid="stHeader"] button,
+        header[data-testid="stHeader"] a,
+        header[data-testid="stHeader"] input,
+        header[data-testid="stHeader"] select,
+        header[data-testid="stHeader"] [data-testid="stStatusWidget"] {
+            pointer-events: auto !important;
+        }
+
         header[data-testid="stHeader"]:hover {
             opacity: 1 !important;
         }
