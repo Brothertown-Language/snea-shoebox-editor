@@ -4,13 +4,13 @@
 Convert the MDF 1.9a field reference (`docs/mdf/MDFields19a_UTF8.txt`) from Toolbox/Shoebox help format into two professionally publishable formats: a XeLaTeX-compiled PDF reference document and a multi-page browsable HTML site. Both outputs derive from a single parsed intermediate representation, ensuring consistency. The HTML output deploys to GitHub Pages; the PDF attaches to release assets.
 
 ## Intent / Executive Summary
-Convert the MDF 1.9a field reference (`docs/mdf/MDFields19a_UTF8.txt`, 133KB, 108 `\key` entries, 315 `\cf` cross-refs, 444 formatting/printing examples (`\ftx`/`\fxv`)) from Toolbox/Shoebox help format into professionally publishable formats — a XeLaTeX-compiled PDF reference document and a multi-page browsable HTML site — both derived from a single parsed intermediate representation, ensuring consistency. Per the 2026-10-05 redesign direction, the outputs integrate into the main Streamlit app as a **self-contained user reference**: an "MDF Reference" page renders all 108 keyed topics natively from the committed intermediate JSON, mirroring the source's own chapter/section hierarchy, with in-context help hooks on the app's MDF-touching surfaces and a PDF download inside the MDF view. The GitHub Pages deployment is dropped; the PDF (correctly named to match its contents) is committed to the repository, attached to release assets, and downloadable from within the MDF Reference view.
+Convert the MDF 1.9a field reference (`docs/mdf/MDFields19a_UTF8.txt`, 130KB, 108 `\key` entries, 297 `\cf` cross-reference fields, 444 formatting/printing examples (`\ftx`/`\fxv`)) from Toolbox/Shoebox help format into professionally publishable formats — a XeLaTeX-compiled PDF reference document and a multi-page browsable HTML site — both derived from a single parsed intermediate representation, ensuring consistency. Per the 2026-10-05 redesign direction, the outputs integrate into the main Streamlit app as a **self-contained user reference**: an "MDF Reference" page renders all 108 keyed topics natively from the committed intermediate JSON, mirroring the source's own chapter/section hierarchy, with in-context help hooks on the app's MDF-touching surfaces and a PDF download inside the MDF view. The GitHub Pages deployment is dropped; the PDF (correctly named to match its contents) is committed to the repository, attached to release assets, and downloadable from within the MDF Reference view.
 
 ## Root Cause
-The source file is in Toolbox/Shoebox help format — a plain-text marker-based format (`\key`, `\shd`, `\txt`, `\ftx`, `\fxv`, `\cf`, `\nt`, `\typ`) that is not web-renderable, not printable as a professional document, and not navigable by modern readers. No automated conversion pipeline exists. Manual conversion is infeasible at 3353 lines with 315 cross-references. Additionally, the app's users work with MDF markers daily (Direct Entry, Records, Upload MDF) with no in-app field reference available at the point of need.
+The source file is in Toolbox/Shoebox help format — a plain-text marker-based format (`\key`, `\shd`, `\txt`, `\ftx`, `\fxv`, `\cf`, `\nt`, `\typ`) that is not web-renderable, not printable as a professional document, and not navigable by modern readers. No automated conversion pipeline exists. Manual conversion is infeasible at 3353 lines with 297 cross-reference fields. Additionally, the app's users work with MDF markers daily (Direct Entry, Records, Upload MDF) with no in-app field reference available at the point of need.
 
 ## Approach
-1. Write a Python converter (`scripts/convert_mdf_master.py`) that parses the Toolbox marker structure into an intermediate JSON representation
+1. Write a Python converter (`scripts/convert_mdf_master.py`) that parses the Toolbox marker structure into an intermediate JSON representation. The parser MUST recognize all line-initial markers present in the source — `\key`, `\shd`, `\shd2`, `\shd3`, `\shd4`, `\txt`, `\ftx`, `\fxv`, `\cf`, `\nt`, `\typ`, `\bib`, `\nwt`, `\_sh` (verified census 2026-10-05) — with `\shd2` required for the subsection hierarchy and the remainder parsed as content/metadata, never treated as malformed
 2. From the intermediate representation, render two outputs:
    - **LaTeX file** (`docs/mdf/build/master.tex`) — XeLaTeX with Noto Serif / Gentium for Unicode IPA support
    - **HTML site** (`docs/mdf/build/site/`) — multi-page static site with sidebar navigation and search (committed archival artifact, not deployed)
@@ -22,10 +22,10 @@ The source file is in Toolbox/Shoebox help format — a plain-text marker-based 
 ## Alternatives Considered
 | Alternative | Rejected Because |
 |---|---|
-| Manual conversion in Word/LaTeX | 3353 lines, 315 cross-refs — error-prone, unrepeatable |
+| Manual conversion in Word/LaTeX | 3353 lines, 297 cross-reference fields — error-prone, unrepeatable |
 | Sphinx + custom directive | Overkill for single-source conversion; adds Python build dependency |
 | Pandoc with custom writer | Pandoc's Toolbox reader does not exist; would need a custom writer anyway |
-| Single HTML page | 133KB source → ~500KB HTML; multi-page with sidebar is more navigable |
+| Single HTML page | 130KB source → ~500KB HTML; multi-page with sidebar is more navigable |
 | Iframe-embedding the static HTML site in the app | Fights the app's own sidebar patterns (`hide_sidebar_nav` on task pages); double navigation; theming mismatch |
 | GitHub Pages as the primary reference surface | External hosting contradicts the self-contained goal; takes users out of the app |
 | Flat A–Z marker list in-app | Discards the source's own chapter/section hierarchy; worse for readers who don't know the marker |
@@ -72,23 +72,23 @@ The source file is in Toolbox/Shoebox help format — a plain-text marker-based 
 ## Source Document
 `docs/mdf/MDFields19a_UTF8.txt` — Official MDF 1.9a field reference (Buseman, 2006). Contains:
 - 108 keyed topics, all unique: ~91 field-marker definitions (`\lx`, `\ge`, `\ps`, `\se`, `\cf`, etc.) + 17 conceptual chapters (e.g. `Introduction`, `Character_Style_Codes`, `Range_Sets`, `Order_of_Fields`, `Summary_of_Fields`, `Sections_in_a_Lexical_Entry`) — verified live 2026-10-05
-- 21 `\shd2` subsections nested within chapters — verified live 2026-10-05
+- 21 `\shd2` subsections, plus `\shd3` ×2, `\shd4` ×9, `\bib` ×4, `\nwt` ×2, `\_sh` ×1 header — verified live 2026-10-05
 - A built-in home/TOC entry (`\key aa` → "Helps Database for MDF Marker Set") whose `\cf` links index every chapter — the source's own navigation model
 - Hierarchy discussions (standard vs. alternate)
-- 315 cross-references between topics (`\cf`)
-- 444 formatting/printing examples (`\ftx`/`\fxv`)
+- 297 cross-reference fields (`\cf`), some naming multiple targets — verified live 2026-10-05
+- 444 formatting/printing examples (`\ftx`/`\fxv`; 425 `\ftx` markers total, 11 empty)
 - Character style codes, range sets, punctuation codes, printed field labels
 - Old/changed markers
-- Non-ASCII census (verified live 2026-10-05): 30 characters across 26 lines — á ×26, ñ ×3, é ×1; no IPA symbols; zero ∞
+- Non-ASCII census (verified live 2026-10-05): 32 characters across 26 lines — á ×26, ñ ×3, • ×2 (U+2022, inside `\nwt` content), é ×1; no IPA symbols; zero ∞
 
 ## Recency Check
-The source document `docs/mdf/MDFields19a_UTF8.txt` is an **untracked working-tree file** — it is NOT committed to the repository (verified live: `git status --porcelain -- docs/mdf/MDFields19a_UTF8.txt` reports `??`, and `git ls-files docs/mdf/MDFields19a_UTF8.txt` returns no tracked entries). Before implementation, confirm the working-tree copy is the current authoritative version and has not been superseded by a newer MDF release or a later revision. If the file has been modified or a newer MDF version exists, revise this spec before proceeding.
+The source document `docs/mdf/MDFields19a_UTF8.txt` is now **committed and tracked** in the repository (verified live 2026-10-05: `git ls-files docs/mdf/MDFields19a_UTF8.txt` lists it and `git status --porcelain` is empty — it was untracked when earlier revisions were written and has since been committed). Before implementation, confirm the tracked copy is the current authoritative version and has not been superseded by a newer MDF release or a later revision. If the file has been modified or a newer MDF version exists, revise this spec before proceeding.
 
 ## Requirements
 
 ### SHALL Requirements
-- **R-1.** The converter `scripts/convert_mdf_master.py` SHALL parse the 8 marker types enumerated in the Conversion Approach section (`\key`, `\shd`, `\txt`, `\ftx`, `\fxv`, `\cf`, `\nt`, `\typ`) from `docs/mdf/MDFields19a_UTF8.txt` into an intermediate JSON representation at `docs/mdf/build/master.json`.
-- **R-2.** The converter SHALL preserve all 108 `\key` definitions, all 315 `\cf` cross-references, and all 444 formatting/printing examples (`\ftx`/`\fxv`) through the parse → JSON → render pipeline.
+- **R-1.** The converter `scripts/convert_mdf_master.py` SHALL parse the marker types enumerated in the Approach section — `\key`, `\shd`, `\shd2`, `\shd3`, `\shd4`, `\txt`, `\ftx`, `\fxv`, `\cf`, `\nt`, `\typ`, `\bib`, `\nwt`, `\_sh` — from `docs/mdf/MDFields19a_UTF8.txt` into an intermediate JSON representation at `docs/mdf/build/master.json`.
+- **R-2.** The converter SHALL preserve all 108 `\key` definitions, every cross-reference target named by the 297 `\cf` fields, and all 444 formatting/printing examples (`\ftx`/`\fxv`) through the parse → JSON → render pipeline.
 - **R-3.** The LaTeX renderer SHALL emit `docs/mdf/build/master.tex` that compiles under XeLaTeX (`% !TEX program = xelatex`) with Unicode support via `fontspec`.
 - **R-4.** The HTML renderer SHALL emit a multi-page static site under `docs/mdf/build/site/` with sidebar navigation, a client-side search index, deep-linking anchors, and hyperlinked cross-references.
 - **R-5.** The build script `scripts/build_mdf_docs.sh` SHALL, when run with no arguments, invoke the converter and both renderers and produce `docs/mdf/build/mdf-lexical-fields-1.9a.pdf` and `docs/mdf/build/site/index.html` in a single invocation.
@@ -101,6 +101,7 @@ The source document `docs/mdf/MDFields19a_UTF8.txt` is an **untracked working-tr
 - **R-12.** The MDF Reference page SHALL be readable by any authenticated user (viewer, editor, admin).
 - **R-13.** The MDF Reference view SHALL offer the committed PDF as a download via a control placed in the page's left browser column, serving the filename required by R-14.
 - **R-14.** The PDF deliverable SHALL be named `mdf-lexical-fields-1.9a.pdf` — matching the document's self-identification ("MDF Lexical Fields", draft v1.9a) and the repository's lowercase-hyphen file convention. The committed file, the release asset, and the in-app download SHALL all carry this name.
+- **R-15.** The `SNEA_E2E=1` test-only authentication bypass SHALL support role selection (viewer, editor, admin) via a test-only mechanism honored exclusively when `SNEA_E2E=1` is set, so SC-10's per-role verification can produce real Playwright evidence. With `SNEA_E2E` unset, the production auth path SHALL remain byte-identical (same invariant as the established #1400 SC-11a bypass inertness).
 
 ### Output Formats
 - **PDF**: Professional typeset reference via XeLaTeX (fonts: Noto Serif / Gentium), named `mdf-lexical-fields-1.9a.pdf`
@@ -108,9 +109,9 @@ The source document `docs/mdf/MDFields19a_UTF8.txt` is an **untracked working-tr
 - **In-app page**: Native Streamlit rendering from `master.json` (see R-9)
 
 ### Conversion Approach
-- Parse Toolbox markers (`\key`, `\shd`, `\txt`, `\ftx`, `\fxv`, `\cf`, `\nt`, `\typ`)
-- Map to semantic structure: sections, subsections, definitions, examples, cross-refs, notes
-- Preserve all cross-references (`\cf` → hyperlinks/links in all three surfaces)
+- Parse Toolbox markers — `\key`, `\shd`, `\shd2`, `\shd3`, `\shd4`, `\txt`, `\ftx`, `\fxv`, `\cf`, `\nt`, `\typ`, `\bib`, `\nwt`, `\_sh` — all line-initial markers present in the source
+- Map to semantic structure: chapters (`\shd` + chapter-topic keys), subsections (`\shd2`–`\shd4`), definitions, examples, cross-refs, notes, bibliographic refs (`\bib`), non-word-table content (`\nwt`)
+- Preserve all cross-reference targets (`\cf` → hyperlinks/links in all three surfaces)
 - Preserve formatting examples (`\ftx`/`\fxv` → code blocks in HTML and in-app, `\texttt`/`verbatim` in LaTeX)
 
 ### HTML Structure (archival, in-repo)
@@ -127,11 +128,12 @@ The source document `docs/mdf/MDFields19a_UTF8.txt` is an **untracked working-tr
 - Deliverable filename per R-14
 
 ## Preconditions
-- The source file `docs/mdf/MDFields19a_UTF8.txt` exists in the working tree at `docs/mdf/` (currently untracked by git; it must be present at build time for the converter to read it)
+- The source file `docs/mdf/MDFields19a_UTF8.txt` is committed and tracked at `docs/mdf/` (verified live 2026-10-05)
 - XeLaTeX and the required fonts are available in the build environment (CI runner or local)
 - Python 3.12+ and the project's `uv` environment are available
 - GitHub Actions is enabled for the repository (for SC-5)
 - `docs/mdf/build/master.json` is committed and readable by the app runtime (for R-9)
+- The `SNEA_E2E=1` bypass supports the role selection required by SC-10 (per R-15)
 
 ## Success Criteria
 
@@ -144,16 +146,18 @@ The source document `docs/mdf/MDFields19a_UTF8.txt` is an **untracked working-tr
 | SC-5 | On push to `main`, a GitHub Actions workflow builds both outputs and attaches `mdf-lexical-fields-1.9a.pdf` to the release assets of the latest tag; no Pages deployment occurs | `behavioral` | Trigger a push to `main` on a test branch; verify the release tag has the correctly-named PDF asset attached; verify no Pages deployment is configured or triggered | Running the full CI + release cycle costs minutes of execution time — a bounded delay that surfaces a deploy or asset-attachment defect before it reaches readers. Skipping this verification means a workflow that fails to attach the PDF (or unexpectedly deploys Pages) ships to production and costs 1000× more to fix. Correctness is the only metric. |
 | SC-6 | All generated output files (`master.tex`, `mdf-lexical-fields-1.9a.pdf`, `master.json`, HTML site) are written to `docs/mdf/build/` and tracked in the repository for use as artifacts by downstream specs and the in-app page | `behavioral` | Run the build; verify `docs/mdf/build/master.tex`, `docs/mdf/build/mdf-lexical-fields-1.9a.pdf`, `docs/mdf/build/master.json`, and `docs/mdf/build/site/index.html` exist and are non-empty; verify each is tracked by `git ls-files docs/mdf/build/` | Running the build and git-tracking check costs minutes of execution time — a bounded delay that surfaces an artifact-tracking defect before it reaches downstream consumers. Skipping this verification means build artifacts that are not written to `docs/mdf/build/` or not tracked ship to production and cost 1000× more to fix. Correctness is the only metric. |
 | SC-7 | The MDF Reference page renders all 108 keyed topics from `master.json`, grouped under the source's 17 chapter topics with `\shd2` subsections nested, and lands on the home/TOC entry (`\key aa`) by default | `behavioral` | Playwright against the live app: navigate to the page; assert all 108 topics are rendered; assert the 17 chapter groups are present; assert the landing entry is `aa` | Running the live-app page verification costs minutes of test execution time — a bounded delay that surfaces a missing-topic or broken-hierarchy defect before it reaches users. Skipping this verification means a reference page missing topics or mangling the source hierarchy ships to production and costs 1000× more to fix. Correctness is the only metric. |
-| SC-8 | Every `\cf` cross-reference rendered in the in-app page resolves to a rendered topic; cross-references to missing targets show a visible placeholder, not a dead link | `behavioral` | Script-enumerate all 315 `\cf` targets from `master.json` and confirm each exists among the rendered topic keys; Playwright spot-checks in-app navigation for a sample of targets | Running the cross-reference resolution check costs minutes of execution time — a bounded delay that surfaces a dead-link defect before it reaches users. Skipping this verification means a `\cf` link that goes nowhere ships to production and costs 1000× more to fix. Correctness is the only metric. |
+| SC-8 | Every cross-reference target named by the source's 297 `\cf` fields resolves to a rendered topic in the in-app page; cross-references to missing targets show a visible placeholder, not a dead link | `behavioral` | Script-enumerate every cross-reference target parsed from the 297 `\cf` fields in `master.json` and confirm each exists among the rendered topic keys; Playwright spot-checks in-app navigation for a sample of targets | Running the cross-reference resolution check costs minutes of execution time — a bounded delay that surfaces a dead-link defect before it reaches users. Skipping this verification means a `\cf` link that goes nowhere ships to production and costs 1000× more to fix. Correctness is the only metric. |
 | SC-9 | The filter matches topic keys and definition text case-insensitively and returns the expected subset; accented content present in the source (á, ñ, é) matches without normalization loss | `behavioral` | Playwright: enter known queries; assert expected result sets; include a query term containing an accented character from the source | Running the filter verification costs minutes of test execution time — a bounded delay that surfaces a broken-filter or normalization defect before it reaches users. Skipping this verification means a filter that silently drops accented content ships to production and costs 1000× more to fix. Correctness is the only metric. |
-| SC-10 | The MDF Reference page is reachable and readable by any authenticated user role (viewer, editor, admin) | `behavioral` | Playwright with role-variant authenticated sessions; assert the page renders for each role | Running the per-role verification costs minutes of test execution time — a bounded delay that surfaces a role-gating defect before it reaches users. Skipping this verification means a role wrongly excluded from reference material ships to production and costs 1000× more to fix. Correctness is the only metric. |
+| SC-10 | The MDF Reference page is reachable and readable by any authenticated user role (viewer, editor, admin) | `behavioral` | Playwright with role-variant authenticated sessions produced by the R-15 test-only role selection under `SNEA_E2E=1`; assert the page renders for each role; verify the bypass remains inert (production path byte-identical) with `SNEA_E2E` unset | Running the per-role verification costs minutes of test execution time — a bounded delay that surfaces a role-gating defect before it reaches users. Skipping this verification means a role wrongly excluded from reference material ships to production and costs 1000× more to fix. Correctness is the only metric. |
 | SC-11 | The PDF download control in the MDF view serves a file named `mdf-lexical-fields-1.9a.pdf` whose bytes are identical to the committed file | `string + behavioral` | Playwright: trigger the download; assert the served filename; checksum-compare against the committed `docs/mdf/build/mdf-lexical-fields-1.9a.pdf` | Running the download verification costs minutes of test execution time — a bounded delay that surfaces a wrong-file or corrupted-download defect before it reaches users. Skipping this verification means a download serving stale or wrongly-named content ships to production and costs 1000× more to fix. Correctness is the only metric. |
 | SC-12 | In-context hooks render on all three surfaces — Direct Entry (per-field help + reference expander), Records (marker-token definition on interaction), Upload MDF review (warning links) — each linking to the correct marker's entry | `behavioral` | Playwright: assert hook presence and correct link targets on each of the three surfaces | Running the three-surface hook verification costs minutes of test execution time — a bounded delay that surfaces a broken or misdirected help link before it reaches users. Skipping this verification means help affordances that link to the wrong marker (or don't render) ship to production and cost 1000× more to fix. Correctness is the only metric. |
+| SC-13 | The converter exits non-zero with a clear error on a zero-`\key` source, and emits a warning while continuing on a malformed-marker fixture without crashing | `behavioral` | Run the converter against an empty/marker-less fixture (assert non-zero exit + clear error) and against a fixture containing a malformed marker line (assert warning emitted, exit 0, valid entries still parsed) | Running the two fixture conversions costs seconds of execution time — a bounded delay that surfaces a fail-fast or crash defect before it reaches consumers. Skipping this verification means a converter that silently emits empty output or crashes on malformed input ships to production and costs 1000× more to fix. Correctness is the only metric. |
+| SC-14 | All 444 formatting/printing examples (414 non-empty `\ftx` + 30 `\fxv`) are preserved through the pipeline — present in the PDF, the HTML site, and the in-app page | `behavioral` | Count example blocks in each rendered surface (pdftotext for the PDF; HTML parse for the site; rendered-page check for in-app) and verify 1:1 against the source's 444 | Running the example-count comparison costs minutes of execution time — a bounded delay that surfaces a dropped-content defect before it reaches consumers. Skipping this verification means a renderer silently dropping example content ships to production and costs 1000× more to fix. Correctness is the only metric. |
 
 ## Edge Cases
 - **Empty or malformed marker**: A `\key` entry with no definition body, or a malformed marker line, must not crash the parser; the converter MUST emit a warning and continue the build without aborting
 - **Cross-reference to a missing target**: A `\cf` pointing to a topic not present in the source must not produce a broken hyperlink; the renderer MUST emit a visible placeholder anchor and log a warning (both in HTML and in-app)
-- **Unicode preservation**: Accented characters present in the source (á, ñ, é) and any IPA/combining diacritics must survive the parse → JSON → render pipeline byte-for-byte (no normalization or stripping)
+- **Unicode preservation**: Accented characters present in the source (á, ñ, é), the • bullets inside `\nwt` content, and any IPA/combining diacritics must survive the parse → JSON → render pipeline byte-for-byte (no normalization or stripping)
 - **Empty source / zero markers**: If the source contains no `\key` entries, the build must fail fast with a clear error rather than emit empty output
 - **Duplicate marker names**: A `\key` appearing more than once must not produce duplicate anchors that break deep-linking
 - **Very long lines / large examples**: 444 formatting examples include long lines; the parser must handle them without truncation
@@ -163,12 +167,13 @@ The source document `docs/mdf/MDFields19a_UTF8.txt` is an **untracked working-tr
 
 ## Boundary Testing
 - **All 108 keys present**: Verify the exact 1:1 count of `\key` entries between source, PDF, HTML, and in-app page (SC-3, SC-7)
-- **All 315 cross-refs resolved**: Verify every `\cf` target resolves on both the HTML site and the in-app page (SC-2, SC-8)
-- **All 444 examples preserved**: Verify the formatting/printing example count is preserved through the pipeline
+- **All cross-reference targets resolved**: Verify every target parsed from the 297 `\cf` fields resolves on both the HTML site and the in-app page (SC-2, SC-8)
+- **All 444 examples preserved**: Verify the formatting/printing example count is preserved through the pipeline (SC-14)
 - **Hierarchy fidelity**: Verify 17 chapter topics and 21 `\shd2` subsections render as groups/subgroups (SC-7)
 - **Landing entry**: Verify the default view is the home/TOC entry (`\key aa`) (SC-7)
 - **Download identity**: Verify served filename and byte-identity of the PDF download (SC-11)
-- **Empty-input boundary**: Confirm the converter fails fast on an empty or marker-less source
+- **Empty-input boundary**: Confirm the converter fails fast on an empty or marker-less source (SC-13)
+- **Malformed-marker boundary**: Confirm the converter warns and continues on a malformed-marker fixture (SC-13)
 - **Single-marker boundary**: Confirm the pipeline works with a minimal one-marker source
 
 ## Enforcement Gate
@@ -250,12 +255,24 @@ This spec is enforced by the project's approval gate and verification-before-com
 - verify: Playwright: assert hook presence and link targets per surface.
 - commit: `src/frontend/pages/direct_entry.py`, `src/frontend/pages/records.py`, `src/frontend/pages/upload_mdf.py`.
 
+### Item 13 (SC-13): Converter fail-fast and warn-continue behavior
+- RED: The converter exits 0 with empty output on a marker-less source, or crashes on a malformed-marker fixture.
+- GREEN: Non-zero exit with a clear error on zero-`\key` source; warning + continued parse on malformed markers.
+- verify: Run the converter against both fixtures; assert exit codes and warning emission.
+- commit: `scripts/convert_mdf_master.py`.
+
+### Item 14 (SC-14): 444 examples preserved across all surfaces
+- RED: Any rendered surface (PDF, HTML, in-app) contains fewer than the source's 444 example blocks.
+- GREEN: Example blocks render 1:1 in all three surfaces.
+- verify: Count example blocks per surface and compare against the source's 444 (414 non-empty `\ftx` + 30 `\fxv`).
+- commit: `docs/mdf/build/` artifacts, `src/frontend/pages/mdf_reference.py`.
+
 ## Implementation Phases
 
 ### Phase 1: Parser — Toolbox-to-JSON converter
-- Implement `scripts/convert_mdf_master.py` with a parser for the 8 marker types enumerated in the Conversion Approach section (`\key`, `\shd`, `\txt`, `\ftx`, `\fxv`, `\cf`, `\nt`, `\typ`)
+- Implement `scripts/convert_mdf_master.py` with a parser for all line-initial markers present in the source: `\key`, `\shd`, `\shd2`, `\shd3`, `\shd4`, `\txt`, `\ftx`, `\fxv`, `\cf`, `\nt`, `\typ`, `\bib`, `\nwt`, `\_sh`
 - Output: `docs/mdf/build/master.json` (intermediate representation)
-- Verify: JSON contains all 108 keys (91 marker + 17 chapter topics), 315 cross-refs, 444 examples
+- Verify: JSON contains all 108 keys (91 marker + 17 chapter topics), every target parsed from the 297 `\cf` fields, 444 examples, and the `\shd2`–`\shd4` hierarchy; SC-13 fixtures pass
 
 ### Phase 2: LaTeX renderer
 - Implement LaTeX template rendering from the JSON intermediate representation
@@ -265,7 +282,7 @@ This spec is enforced by the project's approval gate and verification-before-com
 ### Phase 3: HTML renderer
 - Implement multi-page HTML site generation from the JSON intermediate representation
 - Output: `docs/mdf/build/site/` (directory of HTML pages)
-- Verify: all 108 keys have individual pages; all 315 cross-refs are hyperlinks
+- Verify: all 108 keys have individual pages; all cross-reference targets are hyperlinks
 
 ### Phase 4: Build script and CI/CD
 - Write `scripts/build_mdf_docs.sh` that chains parser → LaTeX → HTML, writing all outputs to `docs/mdf/build/`, emitting the PDF deliverable as `mdf-lexical-fields-1.9a.pdf`
@@ -277,6 +294,7 @@ This spec is enforced by the project's approval gate and verification-before-com
 - Implement `src/frontend/pages/mdf_reference.py` rendering all 108 keyed topics from `master.json`: chapter-grouped browser, entry detail pane, landing on `aa`, query-parameter deep-linking
 - Add the navigation entry in `src/services/navigation_service.py` (Main section, visible to any authenticated user)
 - Implement the Unicode-preserving filter and the PDF download control
+- Extend the `SNEA_E2E=1` test-only bypass with role selection per R-15 (viewer/editor/admin), verifying production-path inertness with `SNEA_E2E` unset
 - Verify: SC-7, SC-8, SC-9, SC-10, SC-11
 
 ### Phase 6: In-context hooks
@@ -289,20 +307,21 @@ This spec is enforced by the project's approval gate and verification-before-com
 
 | Requirement | SCs | Phases |
 |---|---|---|
-| R-1 (parse markers to JSON) | SC-1, SC-2, SC-3 | Phase 1 |
-| R-2 (preserve keys/cross-refs/examples) | SC-1, SC-2, SC-3 | Phase 1, Phase 2, Phase 3 |
+| R-1 (parse markers to JSON) | SC-1, SC-2, SC-3, SC-13 | Phase 1 |
+| R-2 (preserve keys/cross-refs/examples) | SC-1, SC-2, SC-3, SC-14 | Phase 1, Phase 2, Phase 3 |
 | R-3 (XeLaTeX PDF) | SC-1 | Phase 2 |
 | R-4 (multi-page HTML site) | SC-2, SC-3 | Phase 3 |
 | R-5 (single-command build) | SC-4 | Phase 4 |
 | R-6 (CI/CD release assets, no Pages) | SC-5 | Phase 4 |
 | R-7 (artifacts tracked under `docs/mdf/build/`) | SC-6 | Phase 4 |
-| R-8 (fail-fast on empty, no crash on malformed) | SC-1, SC-2, SC-3 | Phase 1 |
+| R-8 (fail-fast on empty, no crash on malformed) | SC-13 | Phase 1 |
 | R-9 (in-app MDF Reference page) | SC-7, SC-8 | Phase 5 |
 | R-10 (Unicode-preserving filter) | SC-9 | Phase 5 |
 | R-11 (in-context hooks, three surfaces) | SC-12 | Phase 6 |
 | R-12 (any authenticated user) | SC-10 | Phase 5 |
 | R-13 (PDF download in MDF view) | SC-11 | Phase 5 |
 | R-14 (PDF named to match contents) | SC-4, SC-5, SC-11 | Phase 4, Phase 5 |
+| R-15 (test-only E2E role selection) | SC-10 | Phase 5 |
 
 ## Root Cause → SC Traceability
 
@@ -310,7 +329,7 @@ This spec is enforced by the project's approval gate and verification-before-com
 |---|---|
 | Source is not web-renderable or printable (marker-based format) | SC-1, SC-2, SC-3 |
 | No automated conversion pipeline exists | SC-4 |
-| Manual conversion infeasible at 3353 lines / 315 cross-refs | SC-1, SC-2, SC-3 |
+| Manual conversion infeasible at 3353 lines / 297 cross-reference fields | SC-1, SC-2, SC-3 |
 | Outputs must be reproducible and attachable to releases | SC-5 |
 | Outputs must be consumable as artifacts by downstream specs | SC-6 |
 | Users need the reference in-app (self-contained), mirroring the source's structure | SC-7, SC-8 |
@@ -328,11 +347,12 @@ This spec is enforced by the project's approval gate and verification-before-com
 - New: `docs/mdf/build/site/` (HTML output directory, generated, tracked, archival)
 - New: `.github/workflows/mdf-docs.yml` (CI workflow: release asset upload, no Pages)
 - New: `src/frontend/pages/mdf_reference.py` (in-app MDF Reference page)
+- Existing: `src/services/security_manager.py` (test-only E2E role-selection extension per R-15; production path unchanged)
 - Existing: `src/services/navigation_service.py` (add MDF Reference nav entry)
 - Existing: `src/frontend/pages/direct_entry.py` (per-field help affordance + expander)
 - Existing: `src/frontend/pages/records.py` (marker-token help)
 - Existing: `src/frontend/pages/upload_mdf.py` (review warning links)
-- Existing: `docs/mdf/MDFields19a_UTF8.txt` (source, present in working tree but untracked by git)
+- Existing: `docs/mdf/MDFields19a_UTF8.txt` (source, committed and tracked — verified live 2026-10-05)
 
 ## Type
 SPEC (documentation conversion tooling + in-app reference integration)
@@ -346,9 +366,10 @@ SPEC (documentation conversion tooling + in-app reference integration)
 | 2026-07-26 | Added preamble sections (Intent, Root Cause, Approach, Alternatives, Key Decisions), evidence type column, verification methods, implementation phases, tightened SC wording | Spec audit returned DRAFT — 5 defects remediated | AI agent (spec-creation revise task) |
 | 2026-07-26 | Corrected example count from 425 to 444 (414 `\ftx` + 30 `\fxv`); added Requirements→SCs→Phases traceability table | Validation: correctness (wrong count) + traceability (missing table) | AI agent (spec-creation revise task) |
 | 2026-07-26 | Added SC-6 (build artifact tracking); updated all output paths from `docs/mdf/` to `docs/mdf/build/`; updated Affected Files, traceability table, and Phase 4 to reflect new paths and artifact commitment | Revision request: add SC-6 for artifact tracking, consolidate outputs under `docs/mdf/build/` | Developer (Michael Conrad) |
-| 2026-07-27 | Corrected `\cf` cross-reference count from 297 to 315 (verified by `rg '\\cf' docs/mdf/MDFields19a_UTF8.txt | wc -l`); verified total `\ftx` marker count 425 (414 non-empty + 11 empty) is correct. Note: 425 is the total `\ftx` MARKER count (including 11 empty/whitespace-only markers); it is DISTINCT from the 444 formatting/printing EXAMPLES figure (414 non-empty `\ftx` + 30 `\fxv`) stated in the body. These measure different things and are not contradictory | Revision request: fix incorrect count | Developer (Michael Conrad) |
+| 2026-07-27 | Corrected `\cf` cross-reference count from 297 to 315 (verified by `rg '\\cf' docs/mdf/MDFields19a_UTF8.txt | wc -l`); verified total `\ftx` marker count 425 (414 non-empty + 11 empty) is correct. Note: 425 is the total `\ftx` MARKER count (including 11 empty/whitespace-only markers); it is DISTINCT from the 444 formatting/printing EXAMPLES figure (414 non-empty `\ftx` + 30 `\fxv`) stated in the body. These measure different things and are not contradictory [ANNOTATED 2026-10-05: the 297→315 "correction" was ERRONEOUS — `rg '\cf' | wc -l` counts prose mentions and example content, not cross-reference fields; line-initial `\cf` count is 297. Corrected back in the 2026-10-05 audit entry below] | Revision request: fix incorrect count | Developer (Michael Conrad) |
 | 2026-08-11 | Added User Intent / Original Prompt field, Dependencies section, Documentation Sources table, per-SC cost-frame column, Enforcement Gate statement, Edge Cases section, Recency Check, Preconditions, Boundary Testing, Root Cause → SC traceability; made SC-2 wording deterministic; removed prescriptive anchor code from SC-3; aligned SC-6 evidence type to `structural` | Spec audit FAILED with 16 criteria — 12 remediation findings addressed | AI agent (spec-creation revise task) |
 | 2026-08-11 | Corrected 3 fabricated-provenance claims: `docs/mdf/MDFields19a_UTF8.txt` is UNTRACKED (`??`), not committed — updated Recency Check, Preconditions, Affected Files. Reconcile marker-type count to 8 (Phase 1). Aligned SC-6 evidence type `structural`→`behavioral` (criterion is artifact tracking, not file existence). Added Not Included section, numbered SHALL Requirements (R-1..R-8), per-SC Items (RED/GREEN/verify/commit), and per-SC cost-frame language. Made 3 discretion escape hatches deterministic (client-side search impl, malformed-marker handling, missing-target handling). Made font and CI dependencies explicit in Dependencies (Noto Serif, Gentium, xelatex, pdftotext availability requirements) | Spec re-audit returned DRAFT — 8/11 holistic dimensions FAIL (HOL-2, HOL-3, HOL-5, HOL-6, HOL-7, HOL-8); all 6 SCs and their intent preserved | AI agent (spec-creation revise task) |
 | 2026-08-11 | Replaced each SC's Cost Frame column magnitude label (e.g., "Low — single CI job, ~1 min") with a canonical dark-prose-007 cost-frame statement: action cost (what implementing the verification costs) + skipping cost (what not implementing it costs) + identity anchor ("Correctness is the only metric"). All 6 SCs (SC-1..SC-6) and their intent preserved; no SC removed, weakened, deferred, or skipped | Spec re-audit returned FAIL on single criterion SC-13 (cost-frame): Cost Frame column contained only magnitude labels rather than the canonical dark-prose-007 action-cost + skipping-cost pattern required by cost-model-standards.md | AI agent (spec-creation revise task) |
 | 2026-08-11 | Clarified the 2026-07-27 Change Control entry: 425 is the total `\ftx` MARKER count (414 non-empty + 11 empty markers), which is DISTINCT from the 444 formatting/printing EXAMPLES figure (414 non-empty `\ftx` + 30 `\fxv`). The two entries measure different quantities and are not contradictory. The 444 examples count in the body (lines: Intent, Source Document, R-2, Phase 1, Boundary Testing), SCs, and all 6 success criteria are unchanged. All 6 SCs and their intent preserved | Spec re-audit returned DRAFT on a single holistic dimension (Internal Consistency, HOL-2) due to an apparent example-count contradiction between the 444 examples figure and the 425 `\ftx` marker count in the Change Control log. Authoritative counts verified live against `docs/mdf/MDFields19a_UTF8.txt`: total `\ftx` 425, empty 11, non-empty 414, `\fxv` 30 | AI agent (spec-creation revise task) |
-| 2026-10-05 | Redesigned outputs for in-app integration: added R-9..R-14 and SC-7..SC-12 (in-app "MDF Reference" page rendering natively from `master.json` with the source-mirroring chapter hierarchy — 17 chapter topics, 21 `\shd2` subsections, landing on home entry `aa`; Unicode-preserving filter; in-context hooks on Direct Entry/Records/Upload MDF; any-authenticated-user visibility; PDF download in the MDF view; PDF deliverable named `mdf-lexical-fields-1.9a.pdf` per the document's self-identification and repo naming convention). Amended R-6/SC-5: GitHub Pages deployment DROPPED (self-contained goal); HTML site retained as committed archival artifact with vendored lunr.js (no CDN). Added in-app edge cases (unknown deep-link key, empty filter result, missing artifacts at runtime). Counts verified live 2026-10-05: 108 keyed topics = ~91 marker keys + 17 chapter topics, 21 `\shd2` subsections; source non-ASCII content is 30 chars across 26 lines (á×26, ñ×3, é×1), zero ∞, no IPA symbols. Ranked full-text search deferred to follow-up issue #1417 | Developer redesign direction: self-contained in-app reference, chapter-grouped layout mirroring source structure, PDF committed in-repo with download link in the MDF view, correctly-named PDF, search deferral | Developer (Michael Conrad) |
+| 2026-10-05 | Redesigned outputs for in-app integration: added R-9..R-14 and SC-7..SC-12 (in-app "MDF Reference" page rendering natively from `master.json` with the source-mirroring chapter hierarchy — 17 chapter topics, 21 `\shd2` subsections, landing on home entry `aa`; Unicode-preserving filter; in-context hooks on Direct Entry/Records/Upload MDF; any-authenticated-user visibility; PDF download in the MDF view; PDF deliverable named `mdf-lexical-fields-1.9a.pdf` per the document's self-identification and repo naming convention). Amended R-6/SC-5: GitHub Pages deployment DROPPED (self-contained goal); HTML site retained as committed archival artifact with vendored lunr.js (no CDN). Added in-app edge cases (unknown deep-link key, empty filter result, missing artifacts at runtime). Ranked full-text search deferred to follow-up issue #1417 | Developer redesign direction: self-contained in-app reference, chapter-grouped layout mirroring source structure, PDF committed in-repo with download link in the MDF view, correctly-named PDF, search deferral | Developer (Michael Conrad) |
+| 2026-10-05 | Spec audit remediation (9 defects): corrected `\cf` count 315→297 cross-reference fields (line-initial census; annotated the erroneous 2026-07-27 entry); corrected non-ASCII census 30→32 chars (• ×2 U+2022 inside `\nwt`, missed earlier); expanded parser enumeration to ALL line-initial markers present (\shd2/\shd3/\shd4/\bib/\nwt/\_sh) so R-9/SC-7's hierarchy is producible and `\nwt` content survives; updated stale untracked claims (file is committed/tracked); added SC-13 (R-8 fail-fast/warn-continue verification) and SC-14 (R-2 444-example preservation, previously unverified); added R-15 (test-only E2E role selection) making SC-10's per-role Playwright method feasible — bypass currently resolves to admin only; corrected file size 133KB→130KB (130,520 bytes) | Spec audit returned FAIL — 8 defects in #1379 + 1 in #1417; all remediated with live verification | AI agent (audit remediation, authorized by developer's `audit` dispatch) |
