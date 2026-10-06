@@ -15,6 +15,7 @@ Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
 import json
 import os
 import threading
+import time
 
 import pytest
 from playwright.sync_api import sync_playwright
@@ -330,6 +331,44 @@ def test_sc8_cf_target_button_navigates_from_marker_entry():
     _run_in_worker_thread(flow)
 
 
+def test_cf_lookup_pairs_render_as_per_pair_rows():
+    """2026-10-06 change control: the Introduction detail pane renders the shd4
+    group "Information Relating Directly to the Headword" as a per-pair list —
+    the marker as a deep-link button with its gloss beside it — not a single
+    run-together line."""
+
+    def flow():
+        pw, browser, page = _open_mdf_page()
+        try:
+            page.goto(f"{MDF_URL}?marker=Introduction")
+            heading = page.locator('h6:has-text("Information Relating Directly to the Headword")')
+            heading.wait_for(timeout=60_000)
+            heading.scroll_into_view_if_needed()
+            main_col = page.locator('[data-testid="stColumn"]').nth(1)
+
+            def pair_row(marker_label: str) -> str:
+                button = main_col.get_by_role("button", name=marker_label, exact=True).first
+                row = button.locator("xpath=ancestor::div[@data-testid='stHorizontalBlock'][1]")
+                return row.inner_text()
+
+            lx_row = pair_row("lx")
+            assert "lexeme" in lx_row, f"lx row must carry its gloss beside the marker: {lx_row!r}"
+            assert "homonym" not in lx_row, f"lx row must not run together with hm: {lx_row!r}"
+            hm_row = pair_row("hm")
+            assert "homonym number" in hm_row, f"hm row gloss missing: {hm_row!r}"
+            sn_row = pair_row("sn")
+            assert "sense number" in sn_row, f"sn row gloss missing: {sn_row!r}"
+
+            body = page.inner_text("body")
+            assert "→ lx lexeme" not in body, "run-together cf caption must be gone for the glossed group"
+            page.screenshot(path=os.path.join(ARTIFACTS_DIR, "cf-pairs-headword-rows.png"))
+        finally:
+            browser.close()
+            pw.stop()
+
+    _run_in_worker_thread(flow)
+
+
 def _filter_flow(query: str, screenshot_name: str):
     """Type a filter query into the MDF Reference browser and return the
     left-column state (button labels, h3 count, body text) for assertions."""
@@ -339,6 +378,20 @@ def _filter_flow(query: str, screenshot_name: str):
         try:
             left_col = page.locator('[data-testid="stColumn"]').nth(0)
             flt = page.get_by_label("Filter topics")
+            # Session-start reruns can transiently mount the browser column
+            # twice (two identically-labeled inputs; observed intermittently
+            # and reproduced on the pre-change branch 2026-10-06). Interact
+            # only once a single live input has settled — filling during the
+            # transient window hits strict-mode ambiguity or the stale mount.
+            deadline = time.monotonic() + 30
+            while True:
+                if flt.count() == 1:
+                    page.wait_for_timeout(400)
+                    if flt.count() == 1:
+                        break
+                if time.monotonic() > deadline:
+                    pytest.fail(f"filter input did not settle to one element (count={flt.count()})")
+                page.wait_for_timeout(200)
             flt.wait_for(state="visible", timeout=30_000)
             flt.fill(query)
             flt.press("Enter")

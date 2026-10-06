@@ -12,6 +12,11 @@ each group) — the same semantic regrouping the PDF and HTML renderers
 implement. The
 detail pane preserves the source content; ``\\ftx``/``\\fxv`` formatting
 examples render as code blocks; ``\\cf`` cross-references navigate in-app.
+Per the 2026-10-06 change control, cf blocks that are marker+gloss lookup
+pairs render as a per-pair list — one row per pair, the source's own marker
+token as the deep-link affordance and its gloss beside it — with strictly
+consecutive glossed cf blocks coalesced into one list (the Introduction's
+shd4 groups); bare-target cf blocks keep the caption + button grid.
 
 Deep-linking: ``?marker=<topic-key>`` selects a topic; an unknown key falls
 back to the home entry with a visible notice.
@@ -275,6 +280,43 @@ def split_cf_targets(targets: list[str], known_keys: set) -> tuple[list[str], li
     return resolved, missing
 
 
+def pair_is_glossed(pair: dict) -> bool:
+    """Mirror of the renderer predicate in scripts/convert_mdf_master.py: a
+    lookup pair is glossed iff its gloss carries alphanumeric content — the
+    parser never stores punctuation-only or connective-position fragments as
+    gloss (they are list structure between pairs)."""
+    return any(ch.isalnum() for ch in pair.get("gloss", ""))
+
+
+def cf_block_glossed(block: dict) -> bool:
+    """A cf block renders as a per-pair list iff ≥1 of its pairs is glossed
+    (2026-10-06 change control); bare target lists (prose connectives like
+    ``\\xe, \\xn, and \\xr``) keep the existing caption + button grid."""
+    return any(pair_is_glossed(pair) for pair in block.get("pairs") or [])
+
+
+def render_cf_pair_rows(st, run: list[dict], selected: str, first_block_index: int, navigate_to) -> None:
+    """One row per lookup pair (2026-10-06 change control): the source's own
+    marker token as a deep-link affordance to the target topic, its gloss as
+    plain text beside it — the in-app mirror of the PDF/HTML description-list
+    rendering. Pair targets resolve by construction (the parser starts a pair
+    only on a target-set hit), so no missing-target placeholder is needed."""
+    for run_offset, block in enumerate(run):
+        block_index = first_block_index + run_offset
+        for pair_pos, pair in enumerate(block.get("pairs") or []):
+            cols = st.columns([1, 3], gap="small")
+            if cols[0].button(
+                pair.get("token") or pair["target"],
+                key=f"mdf-cf-pair-{selected}-{block_index}-{pair_pos}",
+                help=f"Open the {pair['target']} reference entry",
+                use_container_width=True,
+            ):
+                navigate_to(pair["target"])
+            gloss = pair.get("gloss") or ""
+            if gloss:
+                cols[1].markdown(md_escape(gloss))
+
+
 def _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, navigate_to, home_key):
     """Render the unfiltered browser: home entry; the 17 chapter groups in
     home TOC order with ``\\shd2`` subsections nested and only their
@@ -434,11 +476,28 @@ def mdf_reference():
             meta_bits.append(f"chapter {topic['chapter']}")
         meta_bits.append(f"source line {topic['line']}")
         st.caption(" · ".join(meta_bits))
-        for block_index, block in enumerate(topic["blocks"]):
+        blocks = topic["blocks"]
+        block_index = 0
+        while block_index < len(blocks):
+            block = blocks[block_index]
             marker = block["marker"]
             text = block["text"]
             if marker == "shd":
+                block_index += 1
                 continue  # the heading is rendered above
+            if marker == "cf" and cf_block_glossed(block):
+                # 2026-10-06 change control: strictly consecutive glossed cf
+                # blocks coalesce into ONE per-pair list (the shd4 groups).
+                run_end = block_index + 1
+                while (
+                    run_end < len(blocks)
+                    and blocks[run_end]["marker"] == "cf"
+                    and cf_block_glossed(blocks[run_end])
+                ):
+                    run_end += 1
+                render_cf_pair_rows(st, blocks[block_index:run_end], selected, block_index, _navigate_to)
+                block_index = run_end
+                continue
             if marker in ("shd2", "shd3", "shd4"):
                 level = {"shd2": "#### ", "shd3": "##### ", "shd4": "###### "}[marker]
                 st.markdown(level + md_escape(strip_marker(text).strip()))
@@ -475,6 +534,7 @@ def mdf_reference():
                 st.caption("📚 " + md_escape(strip_marker(text)).strip())
             else:  # txt, nwt, and any continuation-bearing content marker
                 st.markdown(md_escape(strip_marker(text)))
+            block_index += 1
 
 
 if __name__ == "__main__":
