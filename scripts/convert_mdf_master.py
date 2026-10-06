@@ -18,8 +18,10 @@ Parsing semantics (deterministic, line-anchored):
 
 JSON schema (snea-mdf-master/1):
 - source: path/sha256/bytes/lines provenance of the parsed file, plus
-  `git_last_modified` (the source file's last-modified commit date as
-  YYYY-MM-DD, from `git log -1 --format=%cs`; used by the LaTeX title block)
+  `git_last_modified` (the tracked transcription file's last-modified commit
+  date as YYYY-MM-DD, from `git log -1 --format=%cs`; provenance record only —
+  the cover-page date is renderer-level, sourced from
+  docs/mdf/SOURCE-PROVENANCE.md via --cover-date)
 - document_header: the pre-first-key region ("\\_sh" title block and any
   sibling blocks), with `title` derived from the first "\\_sh" payload
 - home_key: the source's built-in home/TOC entry ("aa", spec-pinned)
@@ -829,6 +831,29 @@ FOREWORD_PARAGRAPHS = (
     "alteration; the AI's role was structural and typographic, not editorial. No content was "
     "invented, paraphrased, or omitted.",
 )
+FOREWORD_SOURCE_HEADING = "About the source document"
+FOREWORD_SOURCE_PARAGRAPHS = (
+    "The source document was distributed by SIL International in the ToolboxMDFFields.zip "
+    "documentation package for the Field Linguist's Toolbox (http://www.fieldlinguiststoolbox.org/). "
+    "The package's documentation file, MDFields19a.txt, carries a zip-internal last-modified date of "
+    "May 12, 2006 — the same date the document's own draft line records, and the date shown on this "
+    "edition's cover page.",
+    "The original file is a legacy non-Unicode document (cp1252 text with CRLF line endings). This "
+    "edition is typeset from a byte-verified UTF-8 transcription of that original: the conversion "
+    "(line endings normalized from CRLF to LF, text transcoded from cp1252 to UTF-8) was verified to "
+    "reproduce the transcription exactly, byte for byte.",
+    "Toolbox is the successor to Shoebox and the predecessor of FieldWorks. SIL recommends the use "
+    "of FieldWorks but continues to provide Toolbox for those who do not want to switch, and the "
+    "software remains entirely free to download and use. The marker set documented here is the "
+    "Multi-Dictionary Formatter's (MDF) standardized field set.",
+    "For licensing: the Toolbox software itself is MIT-licensed (the sillsdev/Toolbox repository). "
+    "The MDF field documentation carries no explicit license statement; SIL publishes it freely as "
+    "program documentation for Toolbox (\"entirely free to download and use\"). This edition is "
+    "attributed to its authors — revisions by Karen Buseman, original database by David Coward — "
+    "and to SIL International, with the source archive and the distribution site cited. Any use "
+    "beyond such free documentation use should be confirmed with SIL International.",
+)
+
 FOREWORD_CHANGES_LEAD = "Changes made relative to the source:"
 FOREWORD_CHANGES = (
     "Table of contents. The source has no print-style table of contents; its navigation is a "
@@ -865,6 +890,9 @@ def latex_foreword() -> str:
     ]
     for paragraph in FOREWORD_PARAGRAPHS:
         parts.append(latex_prose(paragraph) + "\n\n")
+    parts.append("\\section*{" + FOREWORD_SOURCE_HEADING + "}\n\n")
+    for paragraph in FOREWORD_SOURCE_PARAGRAPHS:
+        parts.append(latex_prose(paragraph) + "\n\n")
     parts.append(latex_prose(FOREWORD_CHANGES_LEAD) + "\n\\begin{enumerate}\n")
     for change in FOREWORD_CHANGES:
         parts.append("  \\item " + latex_prose(change) + "\n")
@@ -880,6 +908,9 @@ def html_foreword_content() -> str:
     out = ['<section class="topic foreword" id="foreword">']
     out.append(f'  <h2 class="topic-heading">{html_escape(FOREWORD_TITLE)}</h2>')
     for paragraph in FOREWORD_PARAGRAPHS:
+        out.append(f"  <p>{html_prose(paragraph)}</p>")
+    out.append(f'  <h3 class="section-heading">{html_escape(FOREWORD_SOURCE_HEADING)}</h3>')
+    for paragraph in FOREWORD_SOURCE_PARAGRAPHS:
         out.append(f"  <p>{html_prose(paragraph)}</p>")
     out.append(f"  <p>{html_prose(FOREWORD_CHANGES_LEAD)}</p>")
     out.append('  <ol>')
@@ -1093,22 +1124,31 @@ def latex_topic(
     return "\n".join(out), example_number
 
 
-def render_latex(document: dict, out_path: str) -> list[str]:
+def render_latex(document: dict, out_path: str, cover_date: str | None = None) -> list[str]:
     """Render the book-class XeLaTeX document per the Typographic Mapping table:
     home entry, discussion chapters in home-TOC order, then the terminal Field
-    Marker Reference chapter grouping the marker-definition entries."""
+    Marker Reference chapter grouping the marker-definition entries.
+
+    cover_date is the ORIGINAL document's date (sourced from
+    docs/mdf/SOURCE-PROVENANCE.md by the build script); when given it is shown
+    on the title page with an "original document" label. Without it the title
+    page falls back to the tracked file's git last-modified date."""
     warnings: list[str] = []
     topics = document["topics"]
     slugs = build_slugs(topics)
     title = "MDF Lexical Fields"
     raw_title = document["document_header"].get("title") or ""
     version = latex_escape(raw_title.split()[0]) if raw_title.split() else "unknown"
-    date = document["source"].get("git_last_modified") or "unknown date"
+    date = cover_date or document["source"].get("git_last_modified") or "unknown date"
 
     chunks = [LATEX_PREAMBLE, "\\begin{document}\n\\frontmatter\n\\begin{titlepage}\n\\centering\n"]
     chunks.append("{\\Huge " + title + "\\par}\n\\vspace{1.5em}\n")
     chunks.append("{\\large Version " + version + "\\par}\n\\vspace{0.5em}\n")
-    chunks.append("{\\large " + date + "\\par}\n\\vspace{2em}\n")
+    if cover_date:
+        chunks.append("{\\large " + date + "\\par}\n\\vspace{0.5em}\n")
+        chunks.append("{\\normalsize\\itshape original document\\par}\n\\vspace{2em}\n")
+    else:
+        chunks.append("{\\large " + date + "\\par}\n\\vspace{2em}\n")
     chunks.append(
         "{\\small Generated from \\texttt{"
         + latex_escape(document["source"]["path"])
@@ -1594,11 +1634,16 @@ def html_nav(document: dict, page_by_key: dict[str, str], slugs: dict[str, str])
     return "\n".join(items)
 
 
-def render_html(document: dict, out_dir: str) -> list[str]:
+def render_html(document: dict, out_dir: str, cover_date: str | None = None) -> list[str]:
     """Render the multi-page static site: index.html (home entry), one page per
     discussion chapter (own content plus non-reference members), and the terminal
     Field Marker Reference page, with vendored-lunr search, deep-link anchors,
-    and print CSS."""
+    and print CSS.
+
+    cover_date is the ORIGINAL document's date (sourced from
+    docs/mdf/SOURCE-PROVENANCE.md by the build script) for the sidebar header;
+    without it the header falls back to the tracked file's git last-modified
+    date."""
     warnings: list[str] = []
     out = Path(out_dir)
     assets = out / "assets"
@@ -1629,7 +1674,7 @@ def render_html(document: dict, out_dir: str) -> list[str]:
 
     version = (document["document_header"].get("title") or "").split()
     version_text = html_escape(version[0]) if version else "unknown"
-    date = document["source"].get("git_last_modified") or "unknown date"
+    date = cover_date or document["source"].get("git_last_modified") or "unknown date"
     nav = html_nav(document, page_by_key, slugs)
     home_topic = structure["home"]
 
@@ -1752,7 +1797,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--source-date",
         metavar="YYYY-MM-DD",
-        help="source last-modified date for the LaTeX title block (default: git log of the source file)",
+        help="override the recorded source last-modified date in the JSON provenance"
+        " (default: git log of the source file; the title-block date is --cover-date)",
+    )
+    parser.add_argument(
+        "--cover-date",
+        metavar="YYYY-MM-DD",
+        help="original document's date for the PDF title block and HTML sidebar header"
+        " (the build script sources it from docs/mdf/SOURCE-PROVENANCE.md)",
     )
     args = parser.parse_args(argv)
 
@@ -1784,9 +1836,9 @@ def main(argv: list[str] | None = None) -> int:
 
     render_warnings: list[str] = []
     if args.latex:
-        render_warnings.extend(render_latex(document, args.latex))
+        render_warnings.extend(render_latex(document, args.latex, cover_date=args.cover_date))
     if args.html_dir:
-        render_warnings.extend(render_html(document, args.html_dir))
+        render_warnings.extend(render_html(document, args.html_dir, cover_date=args.cover_date))
     for message in render_warnings:
         print(f"warning: {message}", file=sys.stderr)
 

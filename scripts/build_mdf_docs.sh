@@ -2,18 +2,31 @@
 # Build the MDF reference deliverables from the Toolbox source:
 # pipeline: converter (JSON + LaTeX + HTML renderers) -> xelatex x2 -> PDF rename.
 # Outputs: docs/mdf/build/mdf-lexical-fields-1.9a.pdf and docs/mdf/build/site/index.html
-# Spec: .issues/1379/spec.md — R-5/R-7 (SC-4, SC-6).
+# Cover date: parsed from docs/mdf/SOURCE-PROVENANCE.md (the original document's
+# date, 2006-05-12) — a missing or invalid line is a build error, never a silent
+# fallback to the git date.
+# Spec: issue #1379 — R-5/R-7 (SC-4, SC-6); provenance: docs/mdf/SOURCE-PROVENANCE.md.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 BUILD_DIR="docs/mdf/build"
 SOURCE="docs/mdf/MDFields19a_UTF8.txt"
 DELIVERABLE="$BUILD_DIR/mdf-lexical-fields-1.9a.pdf"
+PROVENANCE="docs/mdf/SOURCE-PROVENANCE.md"
 
-SOURCE_DATE="$(git log -1 --format=%cs -- "$SOURCE")"
-echo "== converter: JSON + LaTeX + HTML renderers (source date $SOURCE_DATE)"
+COVER_DATE="$(grep -m1 '^cover-date:' "$PROVENANCE" 2>/dev/null | cut -d: -f2- | tr -d ' ' || true)"
+case "$COVER_DATE" in
+  [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;;
+  *)
+    echo "error: no valid 'cover-date: YYYY-MM-DD' line in $PROVENANCE" >&2
+    echo "       the cover date must come from the provenance file (never the git date)" >&2
+    exit 1
+    ;;
+esac
+
+echo "== converter: JSON + LaTeX + HTML renderers (cover date $COVER_DATE, original document)"
 uv run python scripts/convert_mdf_master.py \
-  --source-date "$SOURCE_DATE" \
+  --cover-date "$COVER_DATE" \
   --latex "$BUILD_DIR/master.tex" \
   --html-dir "$BUILD_DIR/site"
 
