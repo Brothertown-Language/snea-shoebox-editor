@@ -460,26 +460,33 @@ def _quote_closes(text: str, i: int) -> bool:
     previous = text[i - 1] if i else ""
     if previous.isalnum() or previous in _CLOSING_QUOTE_CONTEXT:
         return True
-    # Padded-literal carveout (corpus census 2026-10-06, source pinned MDF
-    # 1.9a): "the sequence ' ; '" style literals — <quote><space><one
-    # non-space non-quote char><space><quote> — put a space before the pair's
-    # closing quote, so the preceding-character rule alone mis-opens it. When
-    # the four characters before this quote are [space][item][space][quote]
-    # and that earlier quote itself classifies as an OPENER (it opened the
-    # pair this quote must close), this quote closes. A chained third quote
-    # (its own pair-opener already closed) fails the opener check and keeps
-    # the base opening behavior.
-    if (
-        i >= 4
-        and text[i - 1] == " "
-        and text[i - 2] != " "
-        and text[i - 2] not in _QUOTE_CHARS
-        and text[i - 3] == " "
-        and text[i - 4] in _QUOTE_CHARS
-        and not _quote_closes(text, i - 4)
-    ):
-        return True
-    return False
+    # Refined pair window (corpus census 2026-10-06, source pinned MDF 1.9a):
+    # a pair whose closing quote is pad-separated from its item — reading
+    # backward from this quote Q: one space, a run of one or more item chars
+    # (non-whitespace, non-quote), then optionally exactly one space, then a
+    # straight quote O — puts a space before Q, so the preceding-character
+    # rule alone mis-opens it (corpus instances: the padded literals ' ; ',
+    # ' } ', ' f '; the hug-right sequences ', ' and '; '; the quoted labels
+    # "Ant: " style). Q closes its pair only when O itself classifies as an
+    # OPENER under this same look-behind rule (equivalently the base rule on
+    # every corpus instance): in the 12 sequences the unconditioned window
+    # would also match, O is immediately preceded by an alphanumeric and so
+    # is a closer — the pair reading fails and the condition excludes every
+    # one. A chained third quote (its own putative pair-opener already
+    # classified closing) fails the opener check and keeps the base opening
+    # behavior — pairing would be required to do better on synthetic
+    # three-quote runs such as "' a ' b ' c", and the corpus contains none.
+    if i < 4 or text[i - 1] != " ":
+        return False
+    k = i - 2
+    while k >= 0 and not text[k].isspace() and text[k] not in _QUOTE_CHARS:
+        k -= 1
+    if i - 2 == k:
+        return False
+    j = k - 1 if (k >= 0 and text[k] == " ") else k
+    if j < 0 or text[j] not in _QUOTE_CHARS:
+        return False
+    return not _quote_closes(text, j)
 
 
 def shape_quotes(text: str, form: str = "unicode") -> str:
@@ -499,18 +506,29 @@ def shape_quotes(text: str, form: str = "unicode") -> str:
     ambiguous classes observed in the corpus keep the current behavior (a
     quote after "(" opens — 13/13 word-initial instances; a quote after
     whitespace or string start opens — 262/262 instances).
-    Padded-literal carveout (corpus census 2026-10-06, source pinned MDF
-    1.9a — all 7 census matches genuine: ' ; ' in the ge/gn/gr/re/rn
-    discussions, ' } ' in Character_Style_Codes, ' f ' in
-    Summary_of_Fields): at <quote><space><one non-space non-quote
-    char><space><quote> the pair's closing quote is preceded by a space, so
-    the preceding-character rule alone mis-opens it; when the four characters
-    before a straight quote are [space][item][space][quote] and that earlier
-    quote classifies as an opener, this quote CLOSES its pair. The window is
-    exact — a zero left pad ("', '", "'; '"), multi-character items
-    ("\"Ant: \""), or wider padding stay with the base rule (still rendered
-    open-open, disclosed) — and a three-quote chain's third quote keeps the
-    base opening behavior. Already-curly input (U+2018/2019/201C/201D) holds
+    Refined pair window (corpus census 2026-10-06, source pinned MDF 1.9a):
+    a pair whose closing quote is pad-separated from its item — reading
+    backward from a straight quote Q: one space, a run of one or more item
+    chars (non-whitespace, non-quote), then optionally exactly one space,
+    then a straight quote O — puts a space before Q, so the
+    preceding-character rule alone mis-opens it. Corpus instances: the
+    padded literals ' ; ' (ge/gn/gr/re/rn), ' } ' (Character_Style_Codes),
+    ' f ' (Summary_of_Fields); the hug-right sequences ', ' (ge/gn/gr) and
+    '; ' (lf); and the quoted labels "Ant: "-style (23 instances). Q CLOSES
+    its pair only when O itself classifies as an OPENER under this same
+    look-behind rule (equivalently the base rule on every corpus instance):
+    census total exactly 34 window matches, zero counterexamples corpus-wide
+    — the 12 sequences the unconditioned window would also match (e.g.
+    "'-nya' means 'his' 'hers' or 'its'") all have O immediately preceded by
+    an alphanumeric, so O is a closer, the pair reading fails, and the
+    opener condition excludes every one. The window is exact: whitespace
+    other than a space terminates the item run without counting as pad,
+    wider padding ("'  x  '") or a second pad space stays with the base
+    rule, and a three-quote chain's third quote (its own putative
+    pair-opener already classified closing) fails the opener check and keeps
+    the base opening behavior — pairing would be required to do better on
+    synthetic three-quote runs such as "' a ' b ' c", and the corpus
+    contains none. Already-curly input (U+2018/2019/201C/201D) holds
     no straight quotes and passes through unchanged, so the unicode form is
     idempotent. Presentation only: applied exclusively on prose rendering
     paths (\\txt, \\nt, \\bib, \\typ, \\shd topic headings, cf pair glosses,

@@ -296,7 +296,7 @@
   <p>An oldere style allows you to list the glosses strung together, separated by a semicolon with a space on either side of it (so as to be unlike any normal punctuation):</p>
   <pre class="example mdf-example"><code>  \ge put_out ; move
 </code></pre>
-  <p>Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case. The sequence ‘ ; ’ is also converted to ‘, ‘ by MDF printing when formatting a dictionary or finderlist.</p>
+  <p>Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case. The sequence ‘ ; ’ is also converted to ‘, ’ by MDF printing when formatting a dictionary or finderlist.</p>
   <p>The advantage of keeping your glosses in separate fields is that if you setup Toolbox to sort on the \ge fields (to get a type of finderlist), it will sort on all of the glosses; but if the glosses are all concatenated, Toolbox will only sort on the first form.</p>
   <p>For important related information, see:</p>
   <dl class="mdf-cf-list">
@@ -318,7 +318,7 @@
   <pre class="example mdf-example"><code>  \gn keluarkan ; pindahkan
 </code></pre>
   <p>Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case.</p>
-  <p>MDF will convert the ‘ ; ’ sequence to ‘, ‘ when formatting the dictionary. (MDF will also automatically convert any underline character ‘_’ in a gloss field to a space when formatting.)</p>
+  <p>MDF will convert the ‘ ; ’ sequence to ‘, ’ when formatting the dictionary. (MDF will also automatically convert any underline character ‘_’ in a gloss field to a space when formatting.)</p>
   <p>For important related information, see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-dn">\dn</a></dt>
@@ -355,7 +355,7 @@
     <dt><a class="cf-link" href="field-marker-reference.html#key-nq">\nq</a></dt>
     <dd>questions</dd>
 </dl>
-  <p>If selected for output, MDF adds the label “Notes: “ to this field and brackets it with “[ ]”.</p>
+  <p>If selected for output, MDF adds the label “Notes: ” to this field and brackets it with “[ ]”.</p>
   <p class="note">This is a “free-form” field.   Punctuation and capitalization should be used as needed.</p>
   <p class="typ">&lt;Basic&gt;</p>
 </section>
@@ -419,7 +419,7 @@
 </code></pre>
   <p>Usually these are grouped with the \rf field at the beginning of each bundle, but if you don’t want to use the \rf field, then the \xv field will mark the beginning of example sentence bundles.</p>
   <p>You may use as many different example sentence bundles as you need for each sense, part of speech, and/or subentry in a record. Within a given section (e.g. sense), multiple examples are printed one after the other.</p>
-  <p>MDF adds the label “Ref: “ to this field.</p>
+  <p>MDF adds the label “Ref: ” to this field.</p>
   <p>See also:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-xv">\xv</a></dt>
@@ -566,7 +566,7 @@
 <section class="topic" id="key-an">
   <h4 class="topic-heading">\an  antonym</h4>
   <p>This field is used to reference an antonym of the lexeme.</p>
-  <p>MDF’s standard printing adds the label “Ant: “ to this field.</p>
+  <p>MDF’s standard printing adds the label “Ant: ” to this field.</p>
   <p>Using the \lf (lexical function) field for this is a better practice. For example,</p>
   <pre class="example mdf-example"><code>  \an sal
 </code></pre>
@@ -762,7 +762,7 @@
   <pre class="example mdf-example"><code>  \ge kasi_pinda ; kasi_pulang
 </code></pre>
   <p>Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case.</p>
-  <p>The underline character ‘_’ in the example glosses above is to force Toolbox to treat the multiple word gloss ‘kasi pinda’ as a single gloss. MDF will convert underline characters in gloss fields to spaces automatically. The sequence ‘ ; ’ is also converted to ‘, ‘ by MDF when formatting a dictionary or finderlist.</p>
+  <p>The underline character ‘_’ in the example glosses above is to force Toolbox to treat the multiple word gloss ‘kasi pinda’ as a single gloss. MDF will convert underline characters in gloss fields to spaces automatically. The sequence ‘ ; ’ is also converted to ‘, ’ by MDF when formatting a dictionary or finderlist.</p>
   <p>If this field is included in the output, MDF adds a label and brackets “[ ]” around it and it is treated as part of the national field.</p>
   <p>For important related information, see:</p>
   <dl class="mdf-cf-list">
@@ -784,7 +784,7 @@
   <h4 class="topic-heading">\is  index  of  semantics</h4>
   <p>“Beyond key terms: a lexicon useful for translation” (Rick Nivens, manuscript) discusses the use of Louw and Nida’s (1988) Greek-English semantic domain categories. While Nivens proposes another way of doing this in his paper, it is also possible to use this \is field to catalog lexical entries according to these semantic domains. Reversing on this field would then yield semantically related entries (in relation to the New Testament).</p>
   <p>One word of caution: this is an etic approach, i.e. Greek semantics will rarely line up exactly with the vernacular domains. This field is to be a tool, and no attempt should be made to “force-fit” lexemes into pre-defined domains.</p>
-  <p>If selected for output, MDF adds the label “Semantics: “ to this field.</p>
+  <p>If selected for output, MDF adds the label “Semantics: ” to this field.</p>
   <p>For related fields see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-sd">\sd</a></dt>
@@ -844,7 +844,7 @@
   <p>This lexical function would be typically print as:</p>
   <pre class="example mdf-example"><code>   Syn: -dew 'chop on end'.
 </code></pre>
-  <p>If the other glosses were filled in, they would be included in the printout (if a triglot dictionary was requested). Multiple lexical function bundles are concatenated with a semicolon ‘; ‘, e.g.:</p>
+  <p>If the other glosses were filled in, they would be included in the printout (if a triglot dictionary was requested). Multiple lexical function bundles are concatenated with a semicolon ‘; ’, e.g.:</p>
   <pre class="example mdf-example"><code>   Syn: -dew 'chop on end'; Syn: -sin 'split'.
 </code></pre>
   <p>Note: In the original MDF manual and even in the revision of Chapter 2 you will see examples in which the label and the vernacular word were both in the \lf field. For example, \lf Syn = -dew. This approach is now strongly discouraged. The user is strongly encouraged to use the \lv field as shown in the examples in this record.</p>
@@ -923,7 +923,7 @@
        exhausting, tiring, or frustrating</code></pre>
   <pre class="example mdf-example"><code>   \lt half dead
 </code></pre>
-  <p>MDF adds the label “Lit: “ to this field and adds single quote marks around the data.</p>
+  <p>MDF adds the label “Lit: ” to this field and adds single quote marks around the data.</p>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-lv">
@@ -991,7 +991,7 @@
 <section class="topic" id="key-na">
   <h4 class="topic-heading">\na  notes  on   anthropology</h4>
   <p>This field is for any ethnographic note that is pertinent to the lexeme that you wish to keep separate.</p>
-  <p>If selected for output, MDF adds the label “Anth: “ to this field and brackets it with “[ ]”.</p>
+  <p>If selected for output, MDF adds the label “Anth: ” to this field and brackets it with “[ ]”.</p>
   <p>For generic notes, use:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-nt">\nt</a></p>
   <p>For closely related fields, designed to print (not just for notes), see:</p>
@@ -1010,7 +1010,7 @@
 <section class="topic" id="key-nd">
   <h4 class="topic-heading">\nd  notes on discourse</h4>
   <p>This is a place for your notes on discourse/text analysis, should you wish to keep them separate.</p>
-  <p>If selected for output, MDF adds the label “Disc: “ to this field and brackets it with “[ ]”.</p>
+  <p>If selected for output, MDF adds the label “Disc: ” to this field and brackets it with “[ ]”.</p>
   <p>For generic notes, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-nt">\nt</a></p>
   <p class="note">This is a “free-form” field.   Punctuation and capitalization should be used as needed.</p>
@@ -1019,7 +1019,7 @@
 <section class="topic" id="key-ng">
   <h4 class="topic-heading">\ng  notes on grammar</h4>
   <p>This is a place for your grammar notes, should you wish to keep them separate.</p>
-  <p>If selected for output, MDF adds the label “Gram: “ to this field and brackets it with “[ ]”.</p>
+  <p>If selected for output, MDF adds the label “Gram: ” to this field and brackets it with “[ ]”.</p>
   <p>For generic notes, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-nt">\nt</a></p>
   <p class="note">This is a “free-form” field.   Punctuation and capitalization should be used as needed.</p>
@@ -1028,7 +1028,7 @@
 <section class="topic" id="key-np">
   <h4 class="topic-heading">\np  notes on phonology</h4>
   <p>This is a place for your phonology notes, should you wish to keep them separate.</p>
-  <p>If selected for output, MDF adds the label “Phon: “ to this field and brackets it with “[ ]”.</p>
+  <p>If selected for output, MDF adds the label “Phon: ” to this field and brackets it with “[ ]”.</p>
   <p>For generic notes, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-nt">\nt</a></p>
   <p class="note">This is a “free-form” field.   Punctuation and capitalization should be used as needed.</p>
@@ -1037,7 +1037,7 @@
 <section class="topic" id="key-nq">
   <h4 class="topic-heading">\nq  questions</h4>
   <p>This is a place for your questions, should you wish to keep them separate.</p>
-  <p>If selected for output, MDF adds the label “Ques: “ to this field and brackets it with “[ ]”.</p>
+  <p>If selected for output, MDF adds the label “Ques: ” to this field and brackets it with “[ ]”.</p>
   <p>For generic notes, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-nt">\nt</a></p>
   <p class="note">This is a “free-form” field.   Punctuation and capitalization should be used as needed.</p>
@@ -1066,7 +1066,7 @@
     <dt><a class="cf-link" href="field-marker-reference.html#key-or">\or</a></dt>
     <dd>(Only --restrictions)</dd>
 </dl>
-  <p>If selected for output, MDF adds the label “Socio: “ to this field and brackets it with “[ ]”.</p>
+  <p>If selected for output, MDF adds the label “Socio: ” to this field and brackets it with “[ ]”.</p>
   <p>For generic notes, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-nt">\nt</a></p>
   <p class="note">This is a “free-form” field.   Punctuation and capitalization should be used as needed.</p>
@@ -1092,7 +1092,7 @@
 <section class="topic" id="key-on">
   <h4 class="topic-heading">\on  only [restrictions] (national)</h4>
   <p>The national language equivalent to the \oe field. This field is for clarifying semantic and grammatical restrictions pertinent to the lexeme. See the \oe field for more information.</p>
-  <p>MDF initially adds the label “NatRestrict: “ to this field. This is later changed to whatever national language label is specified for this field in the national audience CC table. For more information on this, see:</p>
+  <p>MDF initially adds the label “NatRestrict: ” to this field. This is later changed to whatever national language label is specified for this field in the national audience CC table. For more information on this, see:</p>
   <p class="cf"><a class="cf-link" href="Printed_Field_Labels.html#key-Printed_Field_Labels">Printed_Field_Labels</a></p>
   <p>For more information, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-oe">\oe</a></p>
@@ -1115,7 +1115,7 @@
 <section class="topic" id="key-ov">
   <h4 class="topic-heading">\ov  only   [restrictions]   (vernacular)</h4>
   <p>This field contains the vernacular description of any semantic and/or grammatical restrictions pertinent to the lexeme or headword. This is intended for use in a monolingual dictionary, but can be used in diglot and triglot dictionaries as well.</p>
-  <p>MDF initially adds the label “VerRestrict: “ to this field. This is not changed by either the English or national audience CC table. But you may add a rule to change this if you wish. For more information on how to do this, see:</p>
+  <p>MDF initially adds the label “VerRestrict: ” to this field. This is not changed by either the English or national audience CC table. But you may add a rule to change this if you wish. For more information on how to do this, see:</p>
   <p class="cf"><a class="cf-link" href="Printed_Field_Labels.html#key-Printed_Field_Labels">Printed_Field_Labels</a></p>
   <p>For more information, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-oe">\oe</a></p>
@@ -1327,7 +1327,7 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <p>This is a special field used to give the plural form of the lexeme, e.g. in Selaru, the plural form of the lexical entry ‘asw’ (‘dog’) is entered as:</p>
   <pre class="example mdf-example"><code>  \pl asure
 </code></pre>
-  <p>MDF adds a “Pl: “ label to this form. The data is formatted as vernacular text.</p>
+  <p>MDF adds a “Pl: ” label to this form. The data is formatted as vernacular text.</p>
   <p>For more flexible labeling and to allow for glossing, MDF provides the following set of paradigm fields:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a></dt>
@@ -1355,7 +1355,7 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <p>A repository for reduplication forms for later study (conceivably these forms will be moved to subentries, etc. as more is learned about them). For example, the reduplicated form for ‘yoban’ (‘hit’) in Selaru is:</p>
   <pre class="example mdf-example"><code>  \rd ioboban
 </code></pre>
-  <p>MDF adds a “Redup: “ label to this form. The data is formatted as vernacular text.</p>
+  <p>MDF adds a “Redup: ” label to this form. The data is formatted as vernacular text.</p>
   <p>For information on subentries, see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-se">\se</a></dt>
@@ -1396,7 +1396,7 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 <section class="topic" id="key-sd">
   <h4 class="topic-heading">\sd  semantic domain</h4>
   <p>This is the English version of \th and probably the one to use first. Here you try to catalog and differentiate the semantic compartments of an entry, being careful to not let the English force or mask the vernacular relations. Moving to the vernacular terms (given in \th field) as early as possible is best.</p>
-  <p>If selected for output, MDF adds the label “SD: “ to this field.</p>
+  <p>If selected for output, MDF adds the label “SD: ” to this field.</p>
   <p>For related fields see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-th">\th</a></dt>
@@ -1412,7 +1412,7 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <p>This is a special field used to give the singular form of the lexeme, e.g. in Selaru, the singular form of the lexical entry ‘asw’ (‘dog’) is entered as:</p>
   <pre class="example mdf-example"><code>  \sg askwe
 </code></pre>
-  <p>MDF adds a “Sg: “ label to this form. The data is formatted as vernacular text.</p>
+  <p>MDF adds a “Sg: ” label to this form. The data is formatted as vernacular text.</p>
   <p>For more flexible labeling and to allow for glossing, MDF provides the following set of paradigm fields:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a></dt>
@@ -1438,7 +1438,7 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 <section class="topic" id="key-so">
   <h4 class="topic-heading">\so  source of data</h4>
   <p>This is a place to indicate the name and village of the informant who gave you the data in the current entry. There is no standard way such information should be encoded.</p>
-  <p>If selected for output, MDF adds the label “Source: “ to this field and brackets it with “[ ]”.</p>
+  <p>If selected for output, MDF adds the label “Source: ” to this field and brackets it with “[ ]”.</p>
   <p class="note">This field does not normally print.</p>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
@@ -1450,7 +1450,7 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <pre class="example mdf-example"><code>   \st check
 </code></pre>
   <p>Later you could filter the database to select only “check” records, export this filtered database through MDF, and print the formatted output from Word. This makes it easy for a language assistant to systematically check these entries.</p>
-  <p>If selected for output, the label “Status: “ is usually added to this field and the whole field is bracketed with “[ ]”.</p>
+  <p>If selected for output, the label “Status: ” is usually added to this field and the whole field is bracketed with “[ ]”.</p>
   <p class="note">This field does not normally print.</p>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
@@ -1508,7 +1508,7 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 <section class="topic" id="key-th">
   <h4 class="topic-heading">\th  thesaurus</h4>
   <p>This is a field for developing a vernacular-based thesaurus. It is to be labeled with the vernacular term governing the semantic domain of the entry. Reversing on this field (within Toolbox) would yield a vernacular thesaurus.</p>
-  <p>If selected for output, MDF adds the label “Thes: “ to this field.</p>
+  <p>If selected for output, MDF adds the label “Thes: ” to this field.</p>
   <p>For related fields see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-sd">\sd</a></dt>
@@ -1527,7 +1527,7 @@ feature to insure consistent labeling. For more information, see: </code></pre>
      but may not be said to siblings of the
      opposite sex.
 </code></pre>
-  <p>MDF adds the label “Usage: “ to this field.</p>
+  <p>MDF adds the label “Usage: ” to this field.</p>
   <p>Identical national and regional language fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-un">\un</a> and <a class="cf-link" href="field-marker-reference.html#key-ur">\ur</a></p>
   <p>Closely related fields are:</p>
@@ -1542,7 +1542,7 @@ feature to insure consistent labeling. For more information, see: </code></pre>
     <dt><a class="cf-link" href="field-marker-reference.html#key-ue">\ue</a></dt>
     <dd>usage (English)</dd>
 </dl>
-  <p>MDF initially adds the label “NatUsage: “ to this field. This is later changed to whatever national language label is specified for this field in the national audience CC table. For more information on this, see:</p>
+  <p>MDF initially adds the label “NatUsage: ” to this field. This is later changed to whatever national language label is specified for this field in the national audience CC table. For more information on this, see:</p>
   <p class="cf"><a class="cf-link" href="Printed_Field_Labels.html#key-Printed_Field_Labels">Printed_Field_Labels</a></p>
   <p>Identical English and regional language fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ue">\ue</a> and <a class="cf-link" href="field-marker-reference.html#key-ur">\ur</a></p>
@@ -1573,7 +1573,7 @@ feature to insure consistent labeling. For more information, see: </code></pre>
     <dt><a class="cf-link" href="field-marker-reference.html#key-ue">\ue</a></dt>
     <dd>usage (English)</dd>
 </dl>
-  <p>MDF initially adds the label “VerUsage: “ to this field.  This is not changed by either the English or national audience CC table. But you may add a rule to change this if you wish. For more information on how to do this, see:</p>
+  <p>MDF initially adds the label “VerUsage: ” to this field.  This is not changed by either the English or national audience CC table. But you may add a rule to change this if you wish. For more information on how to do this, see:</p>
   <p class="cf"><a class="cf-link" href="Printed_Field_Labels.html#key-Printed_Field_Labels">Printed_Field_Labels</a></p>
   <p>Identical English, national and regional language fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ue">\ue,</a> <a class="cf-link" href="field-marker-reference.html#key-un">\un</a> and <a class="cf-link" href="field-marker-reference.html#key-ur">\ur</a></p>
