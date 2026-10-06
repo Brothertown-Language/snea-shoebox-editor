@@ -252,7 +252,10 @@ def test_sc9_filter_matches_accented_definition_text():
     """SC-9: the accented source term 'léwat' matches exactly the lc topic —
     the diacritic survives the filter losslessly."""
     state = _run_in_worker_thread(lambda: _filter_flow("léwat", "sc9-01-accented-lewat.png"))
-    assert state["labels"] == ["lc"], f"expected only lc for 'léwat'; got {state['labels']}"
+    # The left browser column also carries the R-13 PDF download control —
+    # assert on the topic-match buttons only.
+    topic_labels = [l for l in state["labels"] if l != "Download the MDF reference (PDF)"]
+    assert topic_labels == ["lc"], f"expected only lc for 'léwat'; got {topic_labels}"
     assert state["h3_count"] == 0, "filter mode must replace the chapter tree (no h3 headers)"
 
 
@@ -272,3 +275,37 @@ def test_sc9_filter_no_matches_shows_info_banner():
     assert "No topics match your filter." in state["body"], (
         f"empty-state banner missing; body tail: {state['body'][-400:]}"
     )
+
+
+def test_sc11_pdf_download_serves_committed_bytes():
+    """SC-11: the download control serves a file named
+    mdf-lexical-fields-1.9a.pdf whose bytes are identical to the committed
+    deliverable (checksum-compared)."""
+
+    def flow():
+        import hashlib
+
+        pw, browser, page = _open_mdf_page()
+        try:
+            with page.expect_download(timeout=30_000) as download_info:
+                page.get_by_role("button", name="Download the MDF reference (PDF)").click()
+            download = download_info.value
+            assert download.suggested_filename == "mdf-lexical-fields-1.9a.pdf", (
+                f"served filename {download.suggested_filename!r} violates R-14"
+            )
+            target = os.path.join(ARTIFACTS_DIR, "sc11-downloaded.pdf")
+            download.save_as(target)
+            served_sha = hashlib.sha256(open(target, "rb").read()).hexdigest()
+            with open(PDF_PATH, "rb") as fh:
+                committed_sha = hashlib.sha256(fh.read()).hexdigest()
+            assert served_sha == committed_sha, (
+                f"served PDF bytes differ from the committed file "
+                f"(served {served_sha[:16]}…, committed {committed_sha[:16]}…)"
+            )
+            with open(os.path.join(ARTIFACTS_DIR, "sc11-result.json"), "w") as fh:
+                json.dump({"filename": download.suggested_filename, "sha256": served_sha}, fh)
+        finally:
+            browser.close()
+            pw.stop()
+
+    _run_in_worker_thread(flow)

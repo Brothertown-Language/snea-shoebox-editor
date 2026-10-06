@@ -200,3 +200,16 @@ def test_smoke_sc9_filter_empty_query_returns_all_topics():
     mod = _page_module()
     master = mod.load_master(REPO_ROOT)
     assert len(mod.filter_topics(master["topics"], "")) == 108
+
+
+def test_smoke_sc11_pdf_loader_and_r14_filename():
+    """SC-11/R-14 (structural): the PDF loader reads the committed deliverable
+    and the served filename constant is exactly mdf-lexical-fields-1.9a.pdf."""
+    mod = _page_module()
+    assert mod.PDF_FILENAME == "mdf-lexical-fields-1.9a.pdf"
+    pdf_path = REPO_ROOT / "docs" / "mdf" / "build" / "mdf-lexical-fields-1.9a.pdf"
+    if pdf_path.exists():  # the concurrent build may not have produced it yet
+        data = mod.load_pdf_bytes(REPO_ROOT)
+        assert data == pdf_path.read_bytes()
+    missing = mod.load_pdf_bytes(REPO_ROOT / "does" / "not" / "exist")
+    assert missing is None

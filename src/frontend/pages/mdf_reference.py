@@ -257,6 +257,23 @@ def mdf_reference():
 
     with left:
         st.caption(f"{len(topics)} topics · MDF 1.9a field reference")
+        # R-13/R-14: the committed PDF deliverable is offered from the page's
+        # left browser column, served under its content-accurate name.
+        pdf_bytes = load_pdf_bytes()
+        if pdf_bytes is None:
+            st.warning(
+                "The PDF deliverable (docs/mdf/build/mdf-lexical-fields-1.9a.pdf) is not built yet. "
+                "Generate it with: bash scripts/build_mdf_docs.sh"
+            )
+        else:
+            st.download_button(
+                "Download the MDF reference (PDF)",
+                data=pdf_bytes,
+                file_name=PDF_FILENAME,
+                mime="application/pdf",
+                key="mdf_pdf_download",
+                use_container_width=True,
+            )
         query = st.text_input(
             "Filter topics (substring, case-insensitive)",
             key="mdf_filter",
@@ -288,7 +305,7 @@ def mdf_reference():
             meta_bits.append(f"chapter {topic['chapter']}")
         meta_bits.append(f"source line {topic['line']}")
         st.caption(" · ".join(meta_bits))
-        for block in topic["blocks"]:
+        for block_index, block in enumerate(topic["blocks"]):
             marker = block["marker"]
             text = block["text"]
             if marker == "shd":
@@ -305,7 +322,7 @@ def mdf_reference():
                 for t in missing:
                     st.button(
                         f"⚠ {t} — topic not found",
-                        key=f"mdf-cf-missing-{selected}-{t}",
+                        key=f"mdf-cf-missing-{selected}-{block_index}-{t}",
                         disabled=True,
                         help="The source names this cross-reference target, but no such topic exists.",
                         use_container_width=True,
@@ -316,7 +333,7 @@ def mdf_reference():
                     for col, target in zip(cols, row):
                         if col.button(
                             target,
-                            key=f"mdf-cf-{selected}-{row_start}-{target}",
+                            key=f"mdf-cf-{selected}-{block_index}-{row_start}-{target}",
                             use_container_width=True,
                             help=f"Open the {target} reference entry",
                         ):
