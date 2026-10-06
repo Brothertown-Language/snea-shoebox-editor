@@ -65,7 +65,7 @@ The source file is in Toolbox/Shoebox help format — a plain-text marker-based 
 | Source | Type | Purpose |
 |---|---|---|
 | `docs/mdf/MDFields19a_UTF8.txt` | Primary source document | MDF 1.9a field reference (Buseman, 2006) — the authoritative content to convert |
-| `docs/from-other-projects/SIL-Shoe-1.24/` | Tracked format reference | SIL's own Standard Format implementation (`lib/Data.pm`) — grounds the Parsing Semantics; see its `PROVENANCE.md` |
+| `docs/from-other-projects/SIL-Shoe-1.24/` | Tracked format reference | SIL's own Standard Format implementation (`modules/Data.pm`) — grounds the Parsing Semantics; see its `PROVENANCE.md` |
 | MDF 1.9a specification (Buseman, 2006) | Reference | Marker semantics, hierarchy, cross-reference meaning |
 | Project AGENTS.md | Standard | XeLaTeX mandate, Unicode handling, data integrity rules |
 | Project `docs/lessons-learned/` | Reference | FTS/regex/normalization lessons for linguistic data handling |
