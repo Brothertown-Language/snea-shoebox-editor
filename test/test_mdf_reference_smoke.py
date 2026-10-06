@@ -253,3 +253,15 @@ def test_smoke_sc11_pdf_loader_and_r14_filename():
         assert data == pdf_path.read_bytes()
     missing = mod.load_pdf_bytes(REPO_ROOT / "does" / "not" / "exist")
     assert missing is None
+
+
+def test_smoke_no_visible_key_annotation_in_detail_pane():
+    """2026-10-06 directive: visible ``\\key`` annotations are dropped from the
+    rendered surfaces — the detail pane must not build the former
+    "key <key> · ... · source line N" caption. Structural guard: the page
+    module must no longer construct a key caption (user-visible behavior is
+    asserted by the Playwright E2E suite)."""
+    source = PAGE_PATH.read_text(encoding="utf-8")
+    assert "meta_bits" not in source
+    assert 'f"key {topic' not in source
+    assert "source line {topic" not in source

@@ -746,7 +746,6 @@ LATEX_PREAMBLE = """% !TEX program = xelatex
 \\definecolor{cflink}{RGB}{0,110,0}
 \\definecolor{cfmissing}{RGB}{170,0,0}
 \\definecolor{exlabel}{RGB}{110,110,110}
-\\definecolor{keycolor}{RGB}{110,110,110}
 \\IfFontExistsTF{Noto Serif}{\\setmainfont{Noto Serif}}{%
 \\IfFontExistsTF{Gentium Book Plus}{\\setmainfont{Gentium Book Plus}}{%
 \\IfFontExistsTF{Gentium Plus}{\\setmainfont{Gentium Plus}}{%
@@ -756,7 +755,8 @@ LATEX_PREAMBLE = """% !TEX program = xelatex
 \\setcounter{secnumdepth}{-2}
 \\setcounter{tocdepth}{0}
 \\pagestyle{headings}
-\\hypersetup{hidelinks,bookmarksnumbered=false,pdftitle={MDF Lexical Fields},pdfsubject={MDF 1.9a field documentation}}
+\\hypersetup{hidelinks,bookmarksnumbered=false,bookmarksdepth=2,
+pdftitle={MDF Lexical Fields},pdfsubject={MDF 1.9a field documentation}}
 """
 
 
@@ -827,7 +827,6 @@ def latex_topic(
     out = [
         f"{LATEX_HEADING_LADDER[level]}{{{latex_escape(topic['heading'] or key)}}}\\label{{{label}}}\n"
     ]
-    out.append("{\\small\\ttfamily\\color{keycolor} " + latex_escape("\\key " + key) + "}\\par\n")
     preamble = join_prose(topic["preamble"])
     if preamble:
         out.append(latex_escape(preamble) + "\n\n")
@@ -1037,8 +1036,6 @@ body {
   border-bottom: 2px solid #444;
   padding-bottom: 0.2rem;
 }
-.key-line { margin: 0.2rem 0 0.8rem; }
-.key-line code { font-family: var(--mono); color: #555; font-size: 0.85rem; }
 .section-heading { margin: 1.4rem 0 0.4rem; }
 p.cf { color: var(--cf-green); }
 a.cf-link { color: var(--cf-green); }
@@ -1239,7 +1236,6 @@ def html_topic(
     heading_tag = html_heading_tag(2 + offset)
     out = [f'<section class="topic" id="key-{slugs[key]}">']
     out.append(f'  <{heading_tag} class="topic-heading">{html_escape(topic["heading"] or key)}</{heading_tag}>')
-    out.append(f'  <p class="key-line"><code>{html_escape("\\key " + key)}</code></p>')
     preamble = join_prose(topic["preamble"])
     if preamble:
         out.append(f"  <p>{html_escape(preamble)}</p>")

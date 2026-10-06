@@ -83,8 +83,6 @@ body {
   border-bottom: 2px solid #444;
   padding-bottom: 0.2rem;
 }
-.key-line { margin: 0.2rem 0 0.8rem; }
-.key-line code { font-family: var(--mono); color: #555; font-size: 0.85rem; }
 .section-heading { margin: 1.4rem 0 0.4rem; }
 p.cf { color: var(--cf-green); }
 a.cf-link { color: var(--cf-green); }

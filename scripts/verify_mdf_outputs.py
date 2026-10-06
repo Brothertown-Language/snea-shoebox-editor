@@ -4,8 +4,13 @@
 Spec: .issues/1379/spec.md — SC-1, SC-2, SC-3, SC-14 verification methods.
 
 Checks (all against docs/mdf/build/ artifacts):
-- SC-1/SC-3 PDF: pdftotext extraction contains an exact ``\\key <key>`` line for
-  every one of the 108 topics (1:1 against the source key list).
+- SC-1/SC-3 PDF: pdftotext extraction contains each topic's rendered heading
+  (the ``\\shd`` payload, key fallback) — 108 topics, 1:1 against the source
+  key list. Amended 2026-10-06 (developer directive): the visible
+  ``\\key <key>`` annotation lines no longer render — the marker heading and
+  structure carry the topic's identity, while the invisible
+  ``\\label{key:<slug>}`` anchors (checked in master.tex) keep every
+  cross-reference hot.
 - SC-2 HTML: every ``a.cf-link`` href resolves to an existing anchor element on
   the target page; unresolved ``\\cf`` tokens appear only as visible
   ``a.cf-missing`` placeholders (none exist in the 1.9a source).
@@ -197,13 +202,27 @@ def pdf_text(pdf_path: str | Path) -> str:
 
 
 def check_sc1_sc3_pdf(document: dict, text: str) -> dict:
-    lines = [line.rstrip() for line in text.split("\n")]
-    missing = [topic["key"] for topic in document["topics"] if f"\\key {topic['key']}" not in lines]
+    """PDF topic-presence check (SC-1/SC-3), amended 2026-10-06 (developer
+    directive in the PR review): visible ``\\key <key>`` annotation lines are
+    removed from the rendered surfaces, so the key string itself is no longer
+    a reliable PDF-side identity probe. Presence is instead verified via each
+    topic's own rendered heading — the ``\\shd`` payload, falling back to the
+    key when the source provides no heading — matched as a whitespace-collapsed
+    substring of the extracted text (headings may wrap across lines). The
+    invisible ``\\label{key:<slug>}`` anchors behind every cross-reference are
+    asserted separately against master.tex; PDF-bookmark reachability is
+    checked against the document outline."""
+    collapsed = " ".join(text.split())
+    missing = [
+        topic["key"]
+        for topic in document["topics"]
+        if " ".join((topic.get("heading") or topic["key"]).split()) not in collapsed
+    ]
     return {
         "ok": not missing,
         "keys_found": len(document["topics"]) - len(missing),
         "keys_expected": len(document["topics"]),
-        "failures": [] if not missing else [f"keys absent from PDF text: {missing}"],
+        "failures": [] if not missing else [f"topic headings absent from PDF text: {missing}"],
     }
 
 
@@ -237,7 +256,7 @@ def main(argv: list[str] | None = None) -> int:
     ]
     if not args.skip_pdf and Path(args.pdf).is_file():
         text = pdf_text(args.pdf)
-        results.append(("SC-1/SC-3 PDF 108-key coverage", check_sc1_sc3_pdf(document, text)))
+        results.append(("SC-1/SC-3 PDF topic coverage (heading identity)", check_sc1_sc3_pdf(document, text)))
         results.append(("SC-14 PDF example count", check_sc14_pdf(text)))
 
     failed = False

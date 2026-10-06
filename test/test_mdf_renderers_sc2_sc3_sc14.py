@@ -68,12 +68,11 @@ def test_sc3_tex_roundtrip_all_keys_present(document):
         topic["key"] for topic in document["topics"] if f"\\label{{key:{slugs[topic['key']]}}}" not in tex
     ]
     assert missing_labels == []
-    missing_key_lines = [
-        topic["key"]
-        for topic in document["topics"]
-        if f"\\textbackslash{{}}key {convert_mdf_master.latex_escape(topic['key'])}" not in tex
-    ]
-    assert missing_key_lines == []
+    # 2026-10-06 directive: the visible "\key <key>" annotation lines are gone
+    # from every rendered surface; the invisible \label{key:<slug>} anchors
+    # carry the cross-reference identity. latex_escape never occurs inside
+    # Verbatim example content, so the escaped form must not appear at all.
+    assert "\\textbackslash{}key" not in tex
 
 
 def test_sc14_html_examples_444(document, site_dir):

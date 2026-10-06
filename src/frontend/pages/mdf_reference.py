@@ -471,11 +471,10 @@ def mdf_reference():
         if unknown_notice:
             st.warning(f"No reference topic '{unknown_notice}' — showing the MDF home entry instead.")
         st.header(md_escape(topic_display_heading(topic)))
-        meta_bits = [f"key {topic['key']}"]
-        if topic.get("chapter"):
-            meta_bits.append(f"chapter {topic['chapter']}")
-        meta_bits.append(f"source line {topic['line']}")
-        st.caption(" · ".join(meta_bits))
+        # 2026-10-06 directive: visible ``\key`` annotations are dropped — the
+        # heading and structure carry the topic's identity (the former
+        # "key <key> · source line N" caption showed only parser provenance,
+        # none of which the PDF/HTML surfaces render).
         blocks = topic["blocks"]
         block_index = 0
         while block_index < len(blocks):

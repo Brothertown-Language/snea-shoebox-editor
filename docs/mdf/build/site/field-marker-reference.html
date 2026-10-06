@@ -159,7 +159,6 @@
 <h3 class="section-heading" id="group-record">Record Marker</h3>
 <section class="topic" id="key-lx">
   <h4 class="topic-heading">\lx  lexeme or headword of the lexical entry</h4>
-  <p class="key-line"><code>\key lx</code></p>
   <p>This is the record marker in Toolbox and is the field by which the database is normally sorted. When formatted, MDF resorts the dictionary based on this field (or the \lc field, if present).</p>
   <p>This field contains the lexeme or headword, which is commonly mono-morphemic in a Toolbox lexical database. But such a lexeme form may not be very accessible for vernacular speakers if printed. To provide a more readable form for vernacular speakers, use the \lc field.</p>
   <p>For a discussion of "lexical citation", see:</p>
@@ -169,7 +168,6 @@
 <h3 class="section-heading" id="group-basic">Basic Fields</h3>
 <section class="topic" id="key-ce">
   <h4 class="topic-heading">\ce  cross-reference (English gloss)</h4>
-  <p class="key-line"><code>\key ce</code></p>
   <p>This gives the English gloss for the vernacular lexeme referenced by the preceding \cf field.</p>
   <p>For more information, see:</p>
   <dl class="mdf-cf-list">
@@ -182,7 +180,6 @@
 </section>
 <section class="topic" id="key-cf">
   <h4 class="topic-heading">\cf  confer/cross-reference</h4>
-  <p class="key-line"><code>\key cf</code></p>
   <p>This is a generic reference marker used to link together any two related entries in the lexicon. For example, in Selaru, '-aswasw kaha' means 'high water mark' and needs to cross-reference 'manahma' (the entry for 'rising tide') and visa-versa.</p>
   <p>The \cf field is bundled with the \ce, \cn, and \cr gloss fields, so this example would be encoded as:</p>
   <pre class="example mdf-example"><code> \cf manahma</code></pre>
@@ -227,7 +224,6 @@
 </section>
 <section class="topic" id="key-cn">
   <h4 class="topic-heading">\cn  cross-reference (national gloss)</h4>
-  <p class="key-line"><code>\key cn</code></p>
   <p>This gives the national language gloss for the vernacular lexeme referenced by the preceding \cf field.</p>
   <p>For more information, see:</p>
   <dl class="mdf-cf-list">
@@ -240,7 +236,6 @@
 </section>
 <section class="topic" id="key-de">
   <h4 class="topic-heading">\de  definition (English)</h4>
-  <p class="key-line"><code>\key de</code></p>
   <p>This field is used to fully express the semantic domains of each sense of a lexeme in English. For related information, see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-ge">\ge</a></dt>
@@ -262,7 +257,6 @@
 </section>
 <section class="topic" id="key-dn">
   <h4 class="topic-heading">\dn  definition (national)</h4>
-  <p class="key-line"><code>\key dn</code></p>
   <p>This field is used to fully express the semantic domains of each sense of a lexeme in the national language.</p>
   <p>For more information, see "Hint" under:</p>
   <dl class="mdf-cf-list">
@@ -282,14 +276,12 @@
 </section>
 <section class="topic" id="key-dt">
   <h4 class="topic-heading">\dt  datestamp</h4>
-  <p class="key-line"><code>\key dt</code></p>
   <p>A Toolbox field to help you keep track of the last time you edited an entry. There need only be one of these in a record (usually the last field) and is usually inserted automatically by Toolbox. The field is set up under the Toolbox menu option: Database-Properties-Options tab. The field marker must be defined first before it can be selected as the datestamp field.</p>
   <p class="note">This field does not normally print.</p>
   <p class="typ">&lt;Basic&gt;</p>
 </section>
 <section class="topic" id="key-ge">
   <h4 class="topic-heading">\ge  gloss (English)</h4>
-  <p class="key-line"><code>\key ge</code></p>
   <p>This is intended for interlinear morpheme-level glossing. It is used for reversing the dictionary if an \re field is not present (or is present but empty). It is also used as an English definition in the printed dictionary if there is no \de field (or it is present but empty).</p>
   <p>The user may enter data either with each gloss getting its own field:</p>
   <pre class="example mdf-example"><code>  \ge put_out</code></pre>
@@ -317,7 +309,6 @@
 </section>
 <section class="topic" id="key-gn">
   <h4 class="topic-heading">\gn  gloss (national)</h4>
-  <p class="key-line"><code>\key gn</code></p>
   <p>This is intended for interlinear morpheme-level glossing. It is used for reversing the dictionary if an \rn field is not present (or is present but empty). It is also used as a national language definition in the printed dictionary if there is no \dn field (or it is present but empty).</p>
   <p>The user may enter data either with each gloss getting its own field:</p>
   <pre class="example mdf-example"><code>  \gn keluarkan</code></pre>
@@ -339,7 +330,6 @@
 </section>
 <section class="topic" id="key-nt">
   <h4 class="topic-heading">\nt  notes, etc.</h4>
-  <p class="key-line"><code>\key nt</code></p>
   <p>This is a generic dump for all your personal notes about an entry, subentry, or sense. More specific note fields are provided for "splitters", i.e. those who desire a finer differentiation to their notes. These are:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-np">\np</a></dt>
@@ -371,7 +361,6 @@
 </section>
 <section class="topic" id="key-pn">
   <h4 class="topic-heading">\pn  part of speech (national)</h4>
-  <p class="key-line"><code>\key pn</code></p>
   <p>This field is used to classify the part of speech with labels found in national language dictionaries. Consistent labeling is important. Use Toolbox's Range Set feature for this field.</p>
   <p>MDF requires that the \pn field follow the \ps field:</p>
   <pre class="example mdf-example"><code> \ps n   (noun)</code></pre>
@@ -390,7 +379,6 @@
 </section>
 <section class="topic" id="key-ps">
   <h4 class="topic-heading">\ps  part of speech</h4>
-  <p class="key-line"><code>\key ps</code></p>
   <p>This field is used to classify the part of speech for the vernacular form (not the national or English gloss), i.e., "fat" may be an adjective in English, but that does not mean the vernacular form can be classified as such. Consistent labeling is important. Use Toolbox's Range Set feature for this field. For more information, see:</p>
   <p class="cf"><a class="cf-link" href="Range_Sets.html#key-Range_Sets">Range_Sets</a></p>
   <p>To specify a national part of speech label, see:</p>
@@ -402,7 +390,6 @@
 </section>
 <section class="topic" id="key-re">
   <h4 class="topic-heading">\re  reversal form (English)</h4>
-  <p class="key-line"><code>\key re</code></p>
   <p>This gives the English word or phrase to be use to reverse the dictionary for an English index. If an \re * is present, the relevant entry, subentry, or sense will be ignored (i.e. not included in the reversed index). Like the \ge field, the data for this field can be kept each in its own field or concatenated in one field, separated by ' ; '.</p>
   <p>It is often the case that there are several translation equivalents for a single vernacular term. 'huma' might mean 'house', 'hut', 'shack', 'dwelling', 'lean-to', etc. Each of these equivalents would be good to have in the reversed index, e.g.:</p>
   <pre class="example mdf-example"><code> \re house ; hut ; shack ; dwelling ; lean-to
@@ -418,7 +405,6 @@
 </section>
 <section class="topic" id="key-rf">
   <h4 class="topic-heading">\rf  reference to notebooks, texts, etc.</h4>
-  <p class="key-line"><code>\key rf</code></p>
   <p>This field keeps the notebook reference for the following example sentence. This will enable you to validate the example at a later date (e.g., if it comes from an early notebook, it may be suspect).</p>
   <p>The \rf, \xv, \xn, and \xe fields are considered "bundled" (or grouped) together. If you include multiple examples for a single entry, subentry, or sense, be sure to include the fields grouped together.</p>
   <pre class="example mdf-example"><code> \rf nbk1.23.12</code></pre>
@@ -444,7 +430,6 @@
 </section>
 <section class="topic" id="key-rn">
   <h4 class="topic-heading">\rn  reversal form (national)</h4>
-  <p class="key-line"><code>\key rn</code></p>
   <p>This gives the national language word or phrase form to be use to reverse the dictionary for a national language index. If an \rn * is present the relevant entry, subentry, or sense will be ignored (i.e. not included in the reversed index). Like the \gn field, the data for this field can be kept each in its own field or concatenated in one field, separated by ' ; '.</p>
   <p>For more information, see:</p>
   <dl class="mdf-cf-list">
@@ -461,7 +446,6 @@
 </section>
 <section class="topic" id="key-xe">
   <h4 class="topic-heading">\xe  translation of example (English)</h4>
-  <p class="key-line"><code>\key xe</code></p>
   <p>This provides the English translation of the example sentence given in the \xv field.</p>
   <p>For more information about example sentences, see:</p>
   <dl class="mdf-cf-list">
@@ -477,7 +461,6 @@
 </section>
 <section class="topic" id="key-xn">
   <h4 class="topic-heading">\xn  translation of example (national)</h4>
-  <p class="key-line"><code>\key xn</code></p>
   <p>This provides the national translation of the example sentence given in the \xv field.</p>
   <p>For more information about example sentences, see:</p>
   <dl class="mdf-cf-list">
@@ -493,7 +476,6 @@
 </section>
 <section class="topic" id="key-xv">
   <h4 class="topic-heading">\xv  example sentence (vernacular)</h4>
-  <p class="key-line"><code>\key xv</code></p>
   <p>A good rule of thumb is to keep your example sentences relatively short (one line or so). Good examples should indicate the usage of the lexeme without being stilted.</p>
   <p>Be aware that sentences taken straight from texts generally do not make good example sentences, because this removes them from their context. Such sentences are often encoded with particles operating on the larger discourse and are likely to be bound anaphorically with preceding participants.</p>
   <p>Nouns rarely need example sentences, but good sentences are crucial to differentiating the various senses of verbs and can demonstrate and verify peculiar or rare domains or usages.</p>
@@ -510,7 +492,6 @@
 <h3 class="section-heading" id="group-reserved">Reserved Fields</h3>
 <section class="topic" id="key-hm">
   <h4 class="topic-heading">\hm  homonym number</h4>
-  <p class="key-line"><code>\key hm</code></p>
   <p>This is field is used to differentiate homonym entries (lexemes that sound or are spelled the same but have no semantic relationship). This field generally comes directly after the \lx field and is simply followed by a 1, 2, or 3, etc.:</p>
   <pre class="example mdf-example"><code>  \lx asw</code></pre>
   <pre class="example mdf-example"><code>  \hm 2</code></pre>
@@ -527,7 +508,6 @@
 </section>
 <section class="topic" id="key-lc">
   <h4 class="topic-heading">\lc  lexical citation</h4>
-  <p class="key-line"><code>\key lc</code></p>
   <p>This should be added only if the lexical entry form is inappropriate for the printed dictionary, and you want to substitute another form for the printed entry, e.g. you might want the entry "lewat" printed as "léwat" if its stress pattern were not predictable.</p>
   <p>Roots are commonly used as the lexeme form in Toolbox lexical databases, but if the language affixes prepositionally, a dictionary printed with root forms as the entry form can be very confusing to native speakers. In this case, you could choose a consistent conjugated form (e.g. 3s-verb form) for a citation form.</p>
   <p>MDF will always replace the \lx field with the \lc field, if present, and then resort the dictionary according to these fields. (You can choose to restrict MDF to sort the database only by the \lx field, even for those entries with an \lc field. This restriction will not effect the \lc field though, an \lc field will still print as the entry form for its record. Choosing to restrict MDF to the \lx field may cause some citation forms to appear out of sequence.)</p>
@@ -535,7 +515,6 @@
 </section>
 <section class="topic" id="key-se">
   <h4 class="topic-heading">\se  subentry (a polymorphemic form or a phrase)</h4>
-  <p class="key-line"><code>\key se</code></p>
   <p>This is like the \lx field except it occurs within the record, marking the word (or phrase) as a form derived from the root. Following this marker would be all the fields that comprise a typical lexical entry. There can be several of these subentries within a record. Subentries can also have multiple senses. A simple example using subentries would be:</p>
   <pre class="example mdf-example"><code> \lx bren</code></pre>
   <pre class="example mdf-example"><code> \ps vi</code></pre>
@@ -571,7 +550,6 @@
 </section>
 <section class="topic" id="key-sn">
   <h4 class="topic-heading">\sn  sense number</h4>
-  <p class="key-line"><code>\key sn</code></p>
   <p>Where an entry has more than one sense, this code gives the number and marks the beginning of each sense, e.g.:</p>
   <pre class="example mdf-example"><code> \sn 3             (no punctuation)
 </code></pre>
@@ -587,7 +565,6 @@
 <h3 class="section-heading" id="group-optional">Optional Fields</h3>
 <section class="topic" id="key-an">
   <h4 class="topic-heading">\an  antonym</h4>
-  <p class="key-line"><code>\key an</code></p>
   <p>This field is used to reference an antonym of the lexeme.</p>
   <p>MDF's standard printing adds the label "Ant: " to this field.</p>
   <p>Using the \lf (lexical function) field for this is a better practice. For example,</p>
@@ -609,13 +586,11 @@
 </section>
 <section class="topic" id="key-bb">
   <h4 class="topic-heading">\bb  bibliographic reference</h4>
-  <p class="key-line"><code>\key bb</code></p>
   <p>This is used to record any bibliographic information pertinent to the lexeme. MDF adds the label 'Read:' to this field.</p>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-bw">
   <h4 class="topic-heading">\bw  borrowed word</h4>
-  <p class="key-line"><code>\key bw</code></p>
   <p>This is for denoting a borrowed word or the source language. There is no standard way such information should be encoded, but generally the following is most common:</p>
   <pre class="example mdf-example"><code> \bw Arabic
 </code></pre>
@@ -626,7 +601,6 @@
 </section>
 <section class="topic" id="key-cr">
   <h4 class="topic-heading">\cr  cross-reference (regional gloss)</h4>
-  <p class="key-line"><code>\key cr</code></p>
   <p>This gives the regional language gloss for the vernacular lexeme referenced by the preceding \cf field. MDF formats the \cr field with quotes inside square brackets.</p>
   <p>For more information, see:</p>
   <dl class="mdf-cf-list">
@@ -639,7 +613,6 @@
 </section>
 <section class="topic" id="key-dr">
   <h4 class="topic-heading">\dr  definition (regional)</h4>
-  <p class="key-line"><code>\key dr</code></p>
   <p>Often early in the project the definitions we receive are actually in the regional language, not the national language; such definitions could be stored here.</p>
   <p>If this field is included in the output, MDF adds a label and brackets "[ ]" around it and it is treated as part of the national field.</p>
   <p>For more information, see "Hint" under:</p>
@@ -660,7 +633,6 @@
 </section>
 <section class="topic" id="key-dv">
   <h4 class="topic-heading">\dv  definition (vernacular)</h4>
-  <p class="key-line"><code>\key dv</code></p>
   <p>This is the hardest of all fields to fill in, because it requires the researcher to explain, in the vernacular, what the salient concepts are (i.e. the domain) that this "unit of meaning" captures -- from a native speaker's perspective. Obviously not easy and something usually left to much later.</p>
   <p>For the related definition fields, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-de">\de,</a> <a class="cf-link" href="field-marker-reference.html#key-dn">\dn,</a> and <a class="cf-link" href="field-marker-reference.html#key-dr">\dr</a></p>
@@ -670,7 +642,6 @@
 </section>
 <section class="topic" id="key-ec">
   <h4 class="topic-heading">\ec  etymology-comment</h4>
-  <p class="key-line"><code>\key ec</code></p>
   <p>Any comments the researcher needs to add concerning the etymology of the lexeme can be given here.</p>
   <p>For more information, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-et">\et</a></p>
@@ -680,7 +651,6 @@
 </section>
 <section class="topic" id="key-ee">
   <h4 class="topic-heading">\ee  encyclopedic information (English)</h4>
-  <p class="key-line"><code>\key ee</code></p>
   <p>A field researcher has an incredible opportunity to assimilate intuitive knowledge of the language and culture of the people with whom he/she works. This type of information is invaluable to others who have no access to the language area (or at least no extended contact with the language community).</p>
   <p>This knowledge is often never codified. Now Toolbox provides a simple means by which a researcher can "put on paper" this kind of information. Once added, the lexical database becomes more than a "dictionary" but a "knowledge-base" of the language.</p>
   <p>This field crosses over with the \de, \ue, and \oe fields, but is intended for more verbose explanations of the lexeme (headword, subentry or sense). Basically, the researcher should use this field to encode any additional information needed by a non-native speaker to understand and use this lexeme properly. For example, the lexeme "hatw" (in Selaru) can be described with the following fields:</p>
@@ -707,7 +677,6 @@
 </section>
 <section class="topic" id="key-eg">
   <h4 class="topic-heading">\eg  etymology-gloss</h4>
-  <p class="key-line"><code>\key eg</code></p>
   <p>The published gloss for the etymological reference is given here.</p>
   <p>For more information, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-et">\et</a></p>
@@ -715,7 +684,6 @@
 </section>
 <section class="topic" id="key-en">
   <h4 class="topic-heading">\en  encyclopedic information (national)</h4>
-  <p class="key-line"><code>\key en</code></p>
   <p>The national language equivalent to the \ee field. This field should cover information that provides a more complete knowledge-base on the lexeme.</p>
   <p>For more information, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ee">\ee</a></p>
@@ -726,7 +694,6 @@
 </section>
 <section class="topic" id="key-er">
   <h4 class="topic-heading">\er  encyclopedic information (regional)</h4>
-  <p class="key-line"><code>\key er</code></p>
   <p>The regional language equivalent to the \ee field. This field should cover information that provides a more complete knowledge-base on the lexeme.</p>
   <p>MDF adds the brackets "[ ]" around this field. If included in the output, it is treated as part of the national field.</p>
   <p>For more information, see:</p>
@@ -738,7 +705,6 @@
 </section>
 <section class="topic" id="key-es">
   <h4 class="topic-heading">\es  etymology-source</h4>
-  <p class="key-line"><code>\key es</code></p>
   <p>The reference or source abbreviation for etymology of the lexeme is given here.</p>
   <p>For more information, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-et">\et</a></p>
@@ -747,7 +713,6 @@
 </section>
 <section class="topic" id="key-et">
   <h4 class="topic-heading">\et  etymology</h4>
-  <p class="key-line"><code>\key et</code></p>
   <p>The etymology for the lexeme is put here, e.g.:</p>
   <pre class="example mdf-example"><code> \et *babuy
 </code></pre>
@@ -779,7 +744,6 @@
 </section>
 <section class="topic" id="key-ev">
   <h4 class="topic-heading">\ev  encyclopedic information (vernacular)</h4>
-  <p class="key-line"><code>\key ev</code></p>
   <p>This field contains the vernacular description of any pertinent encyclopedic information related to the lexeme or headword, subentry, or sense. This is intended for use in a monolingual dictionary, but can be used in diglot and triglot dictionaries as well.</p>
   <p>For more information, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ee">\ee</a></p>
@@ -789,7 +753,6 @@
 </section>
 <section class="topic" id="key-gr">
   <h4 class="topic-heading">\gr  gloss (regional)</h4>
-  <p class="key-line"><code>\key gr</code></p>
   <p>This helps clarify the national language gloss in the prominent regional language of the area. This is also used as a regional definition in the printed dictionary if there is no \dr field present (or it is present but empty).</p>
   <p>The user may enter data either with each gloss getting its own field:</p>
   <pre class="example mdf-example"><code>  \gr kasi_pinda</code></pre>
@@ -812,7 +775,6 @@
 </section>
 <section class="topic" id="key-gv">
   <h4 class="topic-heading">\gv  gloss (vernacular)</h4>
-  <p class="key-line"><code>\key gv</code></p>
   <p>This field is available for the development of a monolingual dictionary. And while this may seem somewhat meaningless (a vernacular gloss for a vernacular word), it actually can be a useful place to store the simple explanations the researcher is given by a language assistant concerning the meaning of the headword or lexeme. These can then be formulated into a more exact definition and transfer to the \dv field.  It could also be used for those lexemes which can actually be defined with short glosses. It could also serve as a subset to the information covered in \dv field.</p>
   <p>See:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-dv">\dv</a></p>
@@ -820,7 +782,6 @@
 </section>
 <section class="topic" id="key-is">
   <h4 class="topic-heading">\is  index  of  semantics</h4>
-  <p class="key-line"><code>\key is</code></p>
   <p>"Beyond key terms: a lexicon useful for translation" (Rick Nivens, manuscript) discusses the use of Louw and Nida's (1988) Greek-English semantic domain categories. While Nivens proposes another way of doing this in his paper, it is also possible to use this \is field to catalog lexical entries according to these semantic domains. Reversing on this field would then yield semantically related entries (in relation to the New Testament).</p>
   <p>One word of caution: this is an etic approach, i.e. Greek semantics will rarely line up exactly with the vernacular domains. This field is to be a tool, and no attempt should be made to "force-fit" lexemes into pre-defined domains.</p>
   <p>If selected for output, MDF adds the label "Semantics: " to this field.</p>
@@ -838,7 +799,6 @@
 </section>
 <section class="topic" id="key-le">
   <h4 class="topic-heading">\le  lexical function (English gloss)</h4>
-  <p class="key-line"><code>\key le</code></p>
   <p>This is for giving the English gloss of the vernacular lexeme referenced by the lexical function.</p>
   <p>For more information, see:</p>
   <dl class="mdf-cf-list">
@@ -858,7 +818,6 @@
 </section>
 <section class="topic" id="key-lf">
   <h4 class="topic-heading">\lf  lexical function label</h4>
-  <p class="key-line"><code>\key lf</code></p>
   <p>For encoding the semantic networks of a language. The \lf field bundle includes the following fields:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a></dt>
@@ -918,7 +877,6 @@
 </section>
 <section class="topic" id="key-ln">
   <h4 class="topic-heading">\ln  lexical function (national gloss)</h4>
-  <p class="key-line"><code>\key ln</code></p>
   <p>This is for giving the national gloss of the vernacular lexeme referenced by the lexical function.</p>
   <p>For more information, see:</p>
   <dl class="mdf-cf-list">
@@ -938,7 +896,6 @@
 </section>
 <section class="topic" id="key-lr">
   <h4 class="topic-heading">\lr  lexical function (regional gloss)</h4>
-  <p class="key-line"><code>\key lr</code></p>
   <p>This is for giving the regional gloss of the vernacular lexeme referenced by the lexical function.</p>
   <p>For more information, see:</p>
   <dl class="mdf-cf-list">
@@ -958,7 +915,6 @@
 </section>
 <section class="topic" id="key-lt">
   <h4 class="topic-heading">\lt  literal meaning</h4>
-  <p class="key-line"><code>\key lt</code></p>
   <p>Used to elucidate the destinct meanings of the parts of an idiom or complex phrase in a lexical entry (\lx) or subentry (\se).</p>
   <pre class="example mdf-example"><code>   \lx setengah mati</code></pre>
   <pre class="example mdf-example"><code>   \ps idm</code></pre>
@@ -972,7 +928,6 @@
 </section>
 <section class="topic" id="key-lv">
   <h4 class="topic-heading">\lv  vernacular lexeme referenced by the lexical function</h4>
-  <p class="key-line"><code>\key lv</code></p>
   <p>This field is used in MDF for encoding the vernacular lexeme in a lexical function network. The \lv field "points to" the vernacular lexeme (morpheme, word, or phrase) that is semantically related to the current headword as mapped or cataloged by the label in the \lf field. An example of its use would be:</p>
   <pre class="example mdf-example"><code>   \lx feten            &lt;-- the headword/lexeme</code></pre>
   <pre class="example mdf-example"><code>   \ps n</code></pre>
@@ -1000,7 +955,6 @@
 </section>
 <section class="topic" id="key-mn">
   <h4 class="topic-heading">\mn  main entry form</h4>
-  <p class="key-line"><code>\key mn</code></p>
   <p>This is used to reference a minimal entry back to its main entry. Minimal or "minor" entries consist of abbreviated information, e.g.:</p>
   <pre class="example mdf-example"><code>  \lx tado
   \ps adj
@@ -1025,7 +979,6 @@
 </section>
 <section class="topic" id="key-mr">
   <h4 class="topic-heading">\mr  morphemic representation</h4>
-  <p class="key-line"><code>\key mr</code></p>
   <p>This can be used to show the underlying morphemic structure for complex lexemes. MDF gives this field the label 'Morph:'</p>
   <p>In Buru, the lexeme 'agat' ('grain') is a complex morpheme. Its internal structure should be encoded as:</p>
   <pre class="example mdf-example"><code> \mr aga-t
@@ -1037,7 +990,6 @@
 </section>
 <section class="topic" id="key-na">
   <h4 class="topic-heading">\na  notes  on   anthropology</h4>
-  <p class="key-line"><code>\key na</code></p>
   <p>This field is for any ethnographic note that is pertinent to the lexeme that you wish to keep separate.</p>
   <p>If selected for output, MDF adds the label "Anth: " to this field and brackets it with "[ ]".</p>
   <p>For generic notes, use:</p>
@@ -1057,7 +1009,6 @@
 </section>
 <section class="topic" id="key-nd">
   <h4 class="topic-heading">\nd  notes on discourse</h4>
-  <p class="key-line"><code>\key nd</code></p>
   <p>This is a place for your notes on discourse/text analysis, should you wish to keep them separate.</p>
   <p>If selected for output, MDF adds the label "Disc: " to this field and brackets it with "[ ]".</p>
   <p>For generic notes, see:</p>
@@ -1067,7 +1018,6 @@
 </section>
 <section class="topic" id="key-ng">
   <h4 class="topic-heading">\ng  notes on grammar</h4>
-  <p class="key-line"><code>\key ng</code></p>
   <p>This is a place for your grammar notes, should you wish to keep them separate.</p>
   <p>If selected for output, MDF adds the label "Gram: " to this field and brackets it with "[ ]".</p>
   <p>For generic notes, see:</p>
@@ -1077,7 +1027,6 @@
 </section>
 <section class="topic" id="key-np">
   <h4 class="topic-heading">\np  notes on phonology</h4>
-  <p class="key-line"><code>\key np</code></p>
   <p>This is a place for your phonology notes, should you wish to keep them separate.</p>
   <p>If selected for output, MDF adds the label "Phon: " to this field and brackets it with "[ ]".</p>
   <p>For generic notes, see:</p>
@@ -1087,7 +1036,6 @@
 </section>
 <section class="topic" id="key-nq">
   <h4 class="topic-heading">\nq  questions</h4>
-  <p class="key-line"><code>\key nq</code></p>
   <p>This is a place for your questions, should you wish to keep them separate.</p>
   <p>If selected for output, MDF adds the label "Ques: " to this field and brackets it with "[ ]".</p>
   <p>For generic notes, see:</p>
@@ -1097,7 +1045,6 @@
 </section>
 <section class="topic" id="key-ns">
   <h4 class="topic-heading">\ns  notes on sociolinguistics</h4>
-  <p class="key-line"><code>\key ns</code></p>
   <p>This is used for encoding sociolinguistic notes. Dialect information (i.e. which villages use this lexeme form, etc.) should be explained in the following fields:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-ue">\ue,</a></dt>
@@ -1127,7 +1074,6 @@
 </section>
 <section class="topic" id="key-oe">
   <h4 class="topic-heading">\oe  only [restrictions] (English)</h4>
-  <p class="key-line"><code>\key oe</code></p>
   <p>This is for encoding any semantic and/or grammatical restrictions pertinent to the lexeme.</p>
   <p>In Buru, the lexeme 'anafina' is glossed as 'female'. But this needs to be restricted to only 'human' references, which could be encoded as:</p>
   <pre class="example mdf-example"><code>  \oe Human
@@ -1145,7 +1091,6 @@
 </section>
 <section class="topic" id="key-on">
   <h4 class="topic-heading">\on  only [restrictions] (national)</h4>
-  <p class="key-line"><code>\key on</code></p>
   <p>The national language equivalent to the \oe field. This field is for clarifying semantic and grammatical restrictions pertinent to the lexeme. See the \oe field for more information.</p>
   <p>MDF initially adds the label "NatRestrict: " to this field. This is later changed to whatever national language label is specified for this field in the national audience CC table. For more information on this, see:</p>
   <p class="cf"><a class="cf-link" href="Printed_Field_Labels.html#key-Printed_Field_Labels">Printed_Field_Labels</a></p>
@@ -1158,7 +1103,6 @@
 </section>
 <section class="topic" id="key-or">
   <h4 class="topic-heading">\or  only [restrictions] (regional)</h4>
-  <p class="key-line"><code>\key or</code></p>
   <p>The regional language equivalent to the \oe field. This field is for clarifying semantic and grammatical restrictions pertinent to the lexeme.</p>
   <p>If included in the output, MDF adds brackets "[ ]" around this field, and it is treated as part of the national field.</p>
   <p>For more information, see:</p>
@@ -1170,7 +1114,6 @@
 </section>
 <section class="topic" id="key-ov">
   <h4 class="topic-heading">\ov  only   [restrictions]   (vernacular)</h4>
-  <p class="key-line"><code>\key ov</code></p>
   <p>This field contains the vernacular description of any semantic and/or grammatical restrictions pertinent to the lexeme or headword. This is intended for use in a monolingual dictionary, but can be used in diglot and triglot dictionaries as well.</p>
   <p>MDF initially adds the label "VerRestrict: " to this field. This is not changed by either the English or national audience CC table. But you may add a rule to change this if you wish. For more information on how to do this, see:</p>
   <p class="cf"><a class="cf-link" href="Printed_Field_Labels.html#key-Printed_Field_Labels">Printed_Field_Labels</a></p>
@@ -1182,7 +1125,6 @@
 </section>
 <section class="topic" id="key-pc">
   <h4 class="topic-heading">\pc  picture</h4>
-  <p class="key-line"><code>\key pc</code></p>
   <p>This contains either the book and page number reference of a relevant picture (you've either sketched in a notebook or found in a picture book), or a graphics link for a PCX file of a picture you want to include in your printed dictionary.</p>
   <p>If the field does not begin with '.G.' as in a graphics link, then the field is treated as "free-form". The field is output near the end of an entry paragraph, and the print tables put parentheses ( ) around the whole field (to set it off from other types of information).</p>
   <p>If the \pc field begins with a graphics link mark (.G.), then it is NOT a "free-form" field and should follow the basic form below:</p>
@@ -1195,7 +1137,6 @@
 </section>
 <section class="topic" id="key-pd">
   <h4 class="topic-heading">\pd  paradigm set</h4>
-  <p class="key-line"><code>\key pd</code></p>
   <p>This is used for specifying the noun or verb class, gender, or other paradigm set that the lexeme or headword is associated with. These classes are generally given labels or numbers to differentiate them. It is assumed that the classes are explained elsewhere (like the introduction to the dictionary) and all that is needed here is the class label or number, e.g.:</p>
   <pre class="example mdf-example"><code> \pd 3 
 </code></pre>
@@ -1224,7 +1165,6 @@
 </section>
 <section class="topic" id="key-pde">
   <h4 class="topic-heading">\pde  paradigm form (English gloss)</h4>
-  <p class="key-line"><code>\key pde</code></p>
   <p>This is used for glossing the vernacular paradigm form in English, e.g.:</p>
   <pre class="example mdf-example"><code>  \pdl Pl</code></pre>
   <pre class="example mdf-example"><code>  \pdv asure</code></pre>
@@ -1258,7 +1198,6 @@
 </section>
 <section class="topic" id="key-pdl">
   <h4 class="topic-heading">\pdl  paradigm label</h4>
-  <p class="key-line"><code>\key pdl</code></p>
   <p>The paradigm field (\pd) field is used to define the general paradigm set a headword  or lexeme is associated with. But it is also useful to give the actual forms for a paradigm, especially where a paradigm set is incomplete or irregular. For example, the third-singular genitive marker normally possesses nouns with the form '-na', except with certain nouns, where its form is irregular. Any noun that takes an irregular 3sGen form should be marked:</p>
   <pre class="example mdf-example"><code> \lx ow</code></pre>
   <pre class="example mdf-example"><code> \ps n</code></pre>
@@ -1299,7 +1238,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-pdn">
   <h4 class="topic-heading">\pdn  paradigm form (national gloss)</h4>
-  <p class="key-line"><code>\key pdn</code></p>
   <p>This is used for glossing the vernacular paradigm form in the national language. For the related glossing fields, see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a></dt>
@@ -1323,7 +1261,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-pdr">
   <h4 class="topic-heading">\pdr  paradigm form (regional gloss)</h4>
-  <p class="key-line"><code>\key pdr</code></p>
   <p>This is used for glossing the vernacular paradigm form in the regional language. For the related glossing fields, see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a></dt>
@@ -1347,7 +1284,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-pdv">
   <h4 class="topic-heading">\pdv  paradigm vernacular form</h4>
-  <p class="key-line"><code>\key pdv</code></p>
   <p>This field is used to give the vernacular paradigm form specified by the label in the \pdl field, e.g.:</p>
   <pre class="example mdf-example"><code> \pdl 1s</code></pre>
   <pre class="example mdf-example"><code> \pdv koban  
@@ -1376,7 +1312,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-ph">
   <h4 class="topic-heading">\ph  phonetic/phonemic form</h4>
-  <p class="key-line"><code>\key ph</code></p>
   <p>This can be used as needed to retain the phonetic information that is lost when an orthographic spelling is used for an entry.</p>
   <p>The print process can place square brackets around the data. For example:</p>
   <pre class="example mdf-example"><code> \ph apa
@@ -1389,7 +1324,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-pl">
   <h4 class="topic-heading">\pl  plural form</h4>
-  <p class="key-line"><code>\key pl</code></p>
   <p>This is a special field used to give the plural form of the lexeme, e.g. in Selaru, the plural form of the lexical entry 'asw' ('dog') is entered as:</p>
   <pre class="example mdf-example"><code>  \pl asure
 </code></pre>
@@ -1418,7 +1352,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-rd">
   <h4 class="topic-heading">\rd  reduplication form(s)</h4>
-  <p class="key-line"><code>\key rd</code></p>
   <p>A repository for reduplication forms for later study (conceivably these forms will be moved to subentries, etc. as more is learned about them). For example, the reduplicated form for 'yoban' ('hit') in Selaru is:</p>
   <pre class="example mdf-example"><code>  \rd ioboban
 </code></pre>
@@ -1452,21 +1385,18 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-rr">
   <h4 class="topic-heading">\rr  reversal form (regional)</h4>
-  <p class="key-line"><code>\key rr</code></p>
   <p>This gives a regional language form which could be used to reverse the dictionary (to make a regional language list), or to be included in a national language list marked as the regional language (to aid recall).</p>
   <p class="note">The ability to reverse on a regional form is not currently supported in MDF. This field does not normally print in the dictionary.</p>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-sc">
   <h4 class="topic-heading">\sc  scientific name</h4>
-  <p class="key-line"><code>\key sc</code></p>
   <p>Providing a scientific name for a lexeme can be very useful if accurate. The gloss "a type of tree" is nearly worthless (but often the best we can do at the time). Having the scientific name allows us to eventually find the appropriate English gloss for such a species. Getting the scientific name requires access to high quality books (color pictures help).</p>
   <p>The data given is automatically underlined and italicized by MDF; no formatting is needed.</p>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-sd">
   <h4 class="topic-heading">\sd  semantic domain</h4>
-  <p class="key-line"><code>\key sd</code></p>
   <p>This is the English version of \th and probably the one to use first. Here you try to catalog and differentiate the semantic compartments of an entry, being careful to not let the English force or mask the vernacular relations. Moving to the vernacular terms (given in \th field) as early as possible is best.</p>
   <p>If selected for output, MDF adds the label "SD: " to this field.</p>
   <p>For related fields see:</p>
@@ -1481,7 +1411,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-sg">
   <h4 class="topic-heading">\sg  singular form</h4>
-  <p class="key-line"><code>\key sg</code></p>
   <p>This is a special field used to give the singular form of the lexeme, e.g. in Selaru, the singular form of the lexical entry 'asw' ('dog') is entered as:</p>
   <pre class="example mdf-example"><code>  \sg askwe
 </code></pre>
@@ -1510,7 +1439,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-so">
   <h4 class="topic-heading">\so  source of data</h4>
-  <p class="key-line"><code>\key so</code></p>
   <p>This is a place to indicate the name and village of the informant who gave you the data in the current entry. There is no standard way such information should be encoded.</p>
   <p>If selected for output, MDF adds the label "Source: " to this field and brackets it with "[ ]".</p>
   <p class="note">This field does not normally print.</p>
@@ -1518,7 +1446,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-st">
   <h4 class="topic-heading">\st  status</h4>
-  <p class="key-line"><code>\key st</code></p>
   <p>This is used to indicate how complete or thoroughly checked an entry is, e.g.:</p>
   <pre class="example mdf-example"><code>   \st OK             </code></pre>
   <pre class="example mdf-example"><code>   \st no-print        </code></pre>
@@ -1531,7 +1458,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-sy">
   <h4 class="topic-heading">\sy  synonym</h4>
-  <p class="key-line"><code>\key sy</code></p>
   <p>This and the \an (antonym) field are helpful for those who want to keep track of such information without using the \lf structure.</p>
   <p>But you are encouraged to use the \lf fields to handle "synonym" and "antonym" cross-referencing (instead of the \sy and \an fields). This is because the \lf fields allow for glossing of the reference, whereas \sy and \an do not. Glossing has the advantage of giving the outside reader an idea of the meaning of a referenced lexeme without actually having to go and look it up directly. For example, a synonym of '-haw' ('to pound with a pestle') is '-tutu' ('to pound with a rock'). This could be encoded in the '-haw' entry as:</p>
   <pre class="example mdf-example"><code>  \sy -tutu
@@ -1556,7 +1482,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-tb">
   <h4 class="topic-heading">\tb  table</h4>
-  <p class="key-line"><code>\key tb</code></p>
   <p>This marks the following text as unformatted. Line-breaks and hard-coded tab characters will be retained. (Multiple spaces are also be retained, but this is only useful if you define the "Table" font in MS-Word to be a fixed width font.)</p>
   <p>A table, or list, of "cutting verbs" might look like this:</p>
   <pre class="example mdf-example"><code> \tb The summary of all types of cutting verbs:
@@ -1584,7 +1509,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-th">
   <h4 class="topic-heading">\th  thesaurus</h4>
-  <p class="key-line"><code>\key th</code></p>
   <p>This is a field for developing a vernacular-based thesaurus. It is to be labeled with the vernacular term governing the semantic domain of the entry. Reversing on this field (within Toolbox) would yield a vernacular thesaurus.</p>
   <p>If selected for output, MDF adds the label "Thes: " to this field.</p>
   <p>For related fields see:</p>
@@ -1599,7 +1523,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-ue">
   <h4 class="topic-heading">\ue  usage (English)</h4>
-  <p class="key-line"><code>\key ue</code></p>
   <p>This field should cover such information as common usage, or restrictions in usage, (such as taboos), or any other information that is needed so a non-native speaker can use this lexeme properly. For example, the Selaru lexical entry for "wai" contains the field:</p>
   <pre class="example mdf-example"><code> \ue A kin term of address which is used for
      same-sex siblings or for marriable non-kin;
@@ -1616,7 +1539,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-un">
   <h4 class="topic-heading">\un  usage (national)</h4>
-  <p class="key-line"><code>\key un</code></p>
   <p>The national language equivalent to the \ue field. This field should cover information such as common usage, or restrictions in usage. For more information, see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-ue">\ue</a></dt>
@@ -1633,7 +1555,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-ur">
   <h4 class="topic-heading">\ur  usage (regional)</h4>
-  <p class="key-line"><code>\key ur</code></p>
   <p>The regional language equivalent to the \ue field. This field should cover information such as common usage, or restrictions in usage. For more information, see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-ue">\ue</a></dt>
@@ -1649,7 +1570,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-uv">
   <h4 class="topic-heading">\uv usage (vernacular)</h4>
-  <p class="key-line"><code>\key uv</code></p>
   <p>This field contains the vernacular description of common usage, or restrictions in usage, (such as taboos), or any other information that is needed to describe the lexeme fully. This is intended for use in a monolingual dictionary, but can be used in diglot and triglot dictionaries as well. For more information, see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-ue">\ue</a></dt>
@@ -1665,7 +1585,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-va">
   <h4 class="topic-heading">\va  variant forms</h4>
-  <p class="key-line"><code>\key va</code></p>
   <p>This is where variant forms of the lexical entry or subentry can be noted (be they from another dialect or minor alternation in the focus dialect, as in "do not" and "don't"). These variant forms can (but do not have to) refer to minor or minimal entries found elsewhere in the dictionary.</p>
   <p>The \va field heads a bundle of comment fields (\ve, \vn, \vr). These comment fields can be used to specify the dialect name or area that uses the variant form given in the \va field. But because they are comment fields, you may enter any comment information that you want to appear in the dictionary with the variant form.</p>
   <p>MDF adds the label "Variant:" to the beginning of the first \va field in any given section of a lexical entry. The comment fields are added to the variant form with parentheses, but no additional label. Multiple variant bundles are allowed.</p>
@@ -1682,7 +1601,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-ve">
   <h4 class="topic-heading">\ve  variant comment (English)</h4>
-  <p class="key-line"><code>\key ve</code></p>
   <p>This is bundled with the \va field and is where English comments can be given for the variant form. For more information, see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-va">\va</a></dt>
@@ -1696,7 +1614,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-vn">
   <h4 class="topic-heading">\vn  variant comment (national)</h4>
-  <p class="key-line"><code>\key vn</code></p>
   <p>This is bundled with the  \va field and is where national language comments can be given for the variant form. For more information, see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-va">\va</a></dt>
@@ -1710,7 +1627,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-vr">
   <h4 class="topic-heading">\vr  variant comment (regional)</h4>
-  <p class="key-line"><code>\key vr</code></p>
   <p>This is bundled with the \va field and is where regional language comments can be given for the variant form. For more information, see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-va">\va</a></dt>
@@ -1724,7 +1640,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-we">
   <h4 class="topic-heading">\we  word-level gloss (English)</h4>
-  <p class="key-line"><code>\key we</code></p>
   <p>This gives the gloss to be used in word-level interlinear glossing.</p>
   <p>Related fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-wn">\wn</a> and <a class="cf-link" href="field-marker-reference.html#key-wr">\wr</a></p>
@@ -1733,7 +1648,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-wn">
   <h4 class="topic-heading">\wn  word-level gloss (national)</h4>
-  <p class="key-line"><code>\key wn</code></p>
   <p>This gives the gloss to be used in word-level interlinear glossing.</p>
   <p>Related fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-we">\we</a> and <a class="cf-link" href="field-marker-reference.html#key-wr">\wr</a></p>
@@ -1742,7 +1656,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-wr">
   <h4 class="topic-heading">\wr  word-level gloss (regional)</h4>
-  <p class="key-line"><code>\key wr</code></p>
   <p>This gives the gloss to be used in word-level interlinear glossing.</p>
   <p>Related fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-we">\we</a> and <a class="cf-link" href="field-marker-reference.html#key-wn">\wn</a></p>
@@ -1751,7 +1664,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </section>
 <section class="topic" id="key-xr">
   <h4 class="topic-heading">\xr  translation of example (regional)</h4>
-  <p class="key-line"><code>\key xr</code></p>
   <p>This provides the regional translation of the example sentence given in the \xv field.</p>
   <p>MDF adds the brackets "[ ]" around this field. If included in the output, it is treated as part of the national field.</p>
   <p>For more information about example sentences, see:</p>
@@ -1769,7 +1681,6 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 <h3 class="section-heading" id="group-discontinued">Discontinued</h3>
 <section class="topic" id="key-xg">
   <h4 class="topic-heading">\xg  (discontinued field)</h4>
-  <p class="key-line"><code>\key xg</code></p>
   <p>This field has been discontinued. Originally, MDF reserved the marker \xg for interlinear glossing, but its function was never fully developed. For this reason, it has been removed from the reserved list of field markers that MDF will recognized.</p>
   <p class="note">If this field is included in a lexical entry, MDF will simply treat it the same as an unknown field.</p>
   <p>For information on unknown fields, see:</p>

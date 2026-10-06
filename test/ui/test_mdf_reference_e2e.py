@@ -127,7 +127,12 @@ def test_sc7_renders_108_topics_17_chapters_lands_on_aa():
                 f"landing detail should show home entry heading {home_heading!r}; headers: {header}"
             )
             body = page.inner_text("body")
-            assert "key aa" in body, f"detail pane should identify key aa; body tail: {body[-400:]}"
+            # 2026-10-06 directive: the "key aa · source line N" caption is
+            # gone — the heading and structure carry the topic's identity.
+            assert "key aa" not in body, "the key caption must no longer render in the detail pane"
+            assert home_heading in body, (
+                f"detail pane should show the home entry heading {home_heading!r}; body tail: {body[-400:]}"
+            )
 
             with open(os.path.join(ARTIFACTS_DIR, "sc7-result.json"), "w") as fh:
                 json.dump(
