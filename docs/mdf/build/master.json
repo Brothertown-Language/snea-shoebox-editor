@@ -5,7 +5,8 @@
     "path": "docs/mdf/MDFields19a_UTF8.txt",
     "sha256": "06492d5bc2151b1c062863a2be303cb6cdc82734341beed2c554f832ee23bafd",
     "bytes": 130520,
-    "lines": 3353
+    "lines": 3353,
+    "git_last_modified": "2026-09-30"
   },
   "document_header": {
     "preamble": [],
