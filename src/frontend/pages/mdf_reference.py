@@ -330,7 +330,7 @@ def mdf_reference():
                 for row_start in range(0, len(resolved), _CF_ROW_WIDTH):
                     row = resolved[row_start : row_start + _CF_ROW_WIDTH]
                     cols = st.columns(len(row))
-                    for col, target in zip(cols, row):
+                    for col, target in zip(cols, row, strict=True):
                         if col.button(
                             target,
                             key=f"mdf-cf-{selected}-{block_index}-{row_start}-{target}",

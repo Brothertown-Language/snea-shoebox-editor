@@ -15,7 +15,6 @@ Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
 import json
 import os
 import threading
-import urllib.request
 
 import pytest
 from playwright.sync_api import sync_playwright
@@ -254,7 +253,7 @@ def test_sc9_filter_matches_accented_definition_text():
     state = _run_in_worker_thread(lambda: _filter_flow("léwat", "sc9-01-accented-lewat.png"))
     # The left browser column also carries the R-13 PDF download control —
     # assert on the topic-match buttons only.
-    topic_labels = [l for l in state["labels"] if l != "Download the MDF reference (PDF)"]
+    topic_labels = [lbl for lbl in state["labels"] if lbl != "Download the MDF reference (PDF)"]
     assert topic_labels == ["lc"], f"expected only lc for 'léwat'; got {topic_labels}"
     assert state["h3_count"] == 0, "filter mode must replace the chapter tree (no h3 headers)"
 

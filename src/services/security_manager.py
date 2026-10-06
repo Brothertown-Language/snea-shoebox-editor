@@ -105,7 +105,6 @@ class SecurityManager:
             from src.services.identity_service import (
                 _SIMULATED_USER_INFO,
                 _SIMULATED_USER_ORGS,
-                _SIMULATED_USER_TEAMS,
                 IdentityService,
             )
 

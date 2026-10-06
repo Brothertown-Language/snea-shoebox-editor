@@ -281,7 +281,7 @@ def sync_data():
                 # — recreate production's sequence first, then attach it to
                 # the new column so pg_get_serial_sequence() still finds it
                 # for the reset step below.
-                for seq_name, owner_col in meta.get("sequences", []):
+                for seq_name, _owner_col in meta.get("sequences", []):
                     lc.execute(text(f"CREATE SEQUENCE IF NOT EXISTS {seq_name}"))
                 lc.execute(text(meta["ddl"]))
                 for seq_name, owner_col in meta.get("sequences", []):
