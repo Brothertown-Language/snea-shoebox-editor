@@ -49,7 +49,12 @@ JSON schema (snea-mdf-master/1):
                                       "*.,;:"))
 
 Renderers (presentation belongs here, never the parser):
-- LaTeX: --latex PATH emits a book-class XeLaTeX document. Every one of the 108
+- LaTeX: --latex PATH emits a book-class XeLaTeX document. Topics are emitted in
+  the source's own navigation order — the home/TOC entry first, then each chapter
+  in the home TOC (chapter_keys) order with its member markers in document order
+  (topic_emission_order, mirroring the in-app MDF Reference page) — so the ToC
+  and PDF bookmarks follow the source's hierarchy, not source-document order.
+  Every one of the 108
   "\\key"+"\\shd" topics is an unnumbered \\chapter with \\label{key:<slug>} and a
   PDF bookmark; \\shd2/3/4 map to \\section/\\subsection/\\subsubsection; \\txt to
   body text; non-empty \\ftx and all \\fxv to byte-for-byte fancyvrb Verbatim
@@ -62,8 +67,8 @@ Renderers (presentation belongs here, never the parser):
   a "(N)" apparatus label (N = 1..444) so example-block counts are verifiable
   in pdftotext output; verbatim content itself is untouched.
 - HTML: --html-dir DIR emits a multi-page static site: index.html (home entry
-  "aa" plus the chapter TOC) and one page per chapter group. Sidebar navigation
-  on every page, deep-linking anchors, vendored lunr.js search (assets/lunr.js,
+  "aa" plus the chapter TOC) and one page per chapter group. Sidebar navigation on every page
+  (chapters in chapter_keys order), deep-linking anchors, vendored lunr.js search (assets/lunr.js,
   no CDN), @media print styles, responsive layout. Anchor scheme: every topic
   section carries id="key-<slug>" where <slug> is the exact \\key value with
   whitespace runs replaced by "-" (collision-safe by construction); \\cf links
@@ -386,6 +391,43 @@ def render_warning(warnings: list[str], message: str) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Shared emission order — the source's own navigation model
+# ---------------------------------------------------------------------------
+
+
+def topic_emission_order(document: dict) -> list[dict]:
+    """Flat emission order mirroring the in-app MDF Reference browser tree
+    (src/frontend/pages/mdf_reference.py _render_browser_tree): the home/TOC
+    entry first, then each chapter topic in the home TOC (chapter_keys) order
+    followed by its member markers (chapter == chapter_key, not is_chapter)
+    in document order. Anything the grouping leaves unplaced keeps document
+    order at the end, so no topic is dropped and none is duplicated."""
+    topics = document["topics"]
+    by_key: dict[str, list[dict]] = {}
+    for topic in topics:
+        by_key.setdefault(topic["key"], []).append(topic)
+    ordered: list[dict] = []
+    placed: set[int] = set()
+
+    def place(topic: dict) -> None:
+        if id(topic) not in placed:
+            placed.add(id(topic))
+            ordered.append(topic)
+
+    for topic in by_key.get(document.get("home_key"), []):
+        place(topic)
+    for chapter_key in document.get("chapter_keys") or []:
+        for topic in by_key.get(chapter_key, []):
+            place(topic)
+        for topic in topics:
+            if topic.get("chapter") == chapter_key and not topic["is_chapter"]:
+                place(topic)
+    for topic in topics:
+        place(topic)
+    return ordered
+
+
+# ---------------------------------------------------------------------------
 # LaTeX renderer (R-3; Typographic Mapping table)
 # ---------------------------------------------------------------------------
 
@@ -553,7 +595,7 @@ def render_latex(document: dict, out_path: str) -> list[str]:
     )
     chunks.append("\\end{titlepage}\n\\tableofcontents\n\\mainmatter\n")
     example_number = 0
-    for topic in topics:
+    for topic in topic_emission_order(document):
         body, example_number = latex_topic(topic, slugs, warnings, example_number)
         chunks.append(body + "\n")
     chunks.append("\\end{document}\n")
@@ -909,7 +951,7 @@ def html_nav(document: dict, page_by_key: dict[str, str], slugs: dict[str, str])
     if home is not None:
         label = html_escape(home["heading"] or home["key"])
         items.append(f'  <li class="nav-home"><a href="index.html">{label}</a></li>')
-    for chapter in (t for t in document["topics"] if t["is_chapter"]):
+    for chapter in (t for t in topic_emission_order(document) if t["is_chapter"]):
         page = page_by_key[chapter["key"]]
         label = html_escape(chapter["heading"] or chapter["key"])
         members = [t for t in document["topics"] if t["chapter"] == chapter["key"]]
@@ -958,7 +1000,7 @@ def render_html(document: dict, out_dir: str) -> list[str]:
 
     chapter_links = "\n".join(
         f'    <li><a href="{page_by_key[c["key"]]}">{html_escape(c["heading"] or c["key"])}</a></li>'
-        for c in (t for t in topics if t["is_chapter"])
+        for c in (t for t in topic_emission_order(document) if t["is_chapter"])
     )
     chapter_index = (
         '<section class="chapter-index" id="chapters">\n  <h2 class="topic-heading">Chapters</h2>\n'
