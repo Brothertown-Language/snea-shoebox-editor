@@ -113,6 +113,34 @@ def md_escape(text: str) -> str:
     return _MD_PUNCT_RE.sub(r"\\\1", text)
 
 
+def topic_search_text(topic: dict) -> str:
+    """The raw text a filter query matches against: key, heading, preamble,
+    and every block's raw content — nothing normalized, nothing stripped."""
+    parts = [topic["key"], topic.get("heading") or ""]
+    parts.extend(topic.get("preamble") or [])
+    parts.extend(block.get("text", "") for block in topic.get("blocks", []))
+    return "\n".join(parts)
+
+
+def filter_topics(topics: list[dict], query: str) -> list[dict]:
+    """Case-insensitive, Unicode-preserving substring match over keys and
+    definition text (R-10).
+
+    Plain ``str.lower()`` substring only — no unicode normalization, no
+    stripping: the source's accented content (á, ñ, é) matches losslessly,
+    and a decomposed query does not silently match precomposed text. Ranked
+    full-text search is out of scope (deferred to #1417).
+    """
+    needle = (query or "").lower()
+    if not needle:
+        return list(topics)
+    return [
+        topic
+        for topic in topics
+        if needle in topic["key"].lower() or needle in topic_search_text(topic).lower()
+    ]
+
+
 def topic_display_heading(topic: dict) -> str:
     """Heading shown for a topic; falls back to the raw key when the source
     provides no ``\\shd`` heading (e.g. the References bibliography topic)."""
@@ -143,6 +171,52 @@ def split_cf_targets(targets: list[str], known_keys: set) -> tuple[list[str], li
     resolved = [t for t in targets if t in known_keys]
     missing = [t for t in targets if t not in known_keys]
     return resolved, missing
+
+
+def _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, navigate_to, home_key):
+    """Render the unfiltered browser: home entry, 17 chapter groups in home
+    TOC order with \\shd2 subsections nested, and member marker entries."""
+    # Home/TOC entry — the source's own navigation model starts here.
+    if st.button(
+        home_key,
+        key=f"mdf-topic-{home_key}",
+        use_container_width=True,
+        type="primary" if selected == home_key else "secondary",
+    ):
+        navigate_to(home_key)
+    # 17 chapter-topic groups, in the home TOC order.
+    for chapter_key in chapter_keys:
+        chapter_topic = topics_by_key[chapter_key]
+        st.markdown(f"### {md_escape(topic_display_heading(chapter_topic))}")
+        if st.button(
+            chapter_key,
+            key=f"mdf-topic-{chapter_key}",
+            use_container_width=True,
+            type="primary" if selected == chapter_key else "secondary",
+        ):
+            navigate_to(chapter_key)
+        # \\shd2 subsections nested inside the chapter's own body.
+        for i, block in enumerate(chapter_topic["blocks"]):
+            if block["marker"] != "shd2":
+                continue
+            label = "▸ " + strip_marker(block["text"]).strip()
+            if st.button(
+                label,
+                key=f"mdf-shd2-{chapter_key}-{i}",
+                use_container_width=True,
+                type="secondary",
+            ):
+                navigate_to(chapter_key)
+        # Marker entries belonging to this chapter, in source order.
+        members = [t for t in topics if t.get("chapter") == chapter_key and not t["is_chapter"]]
+        for member in sorted(members, key=lambda t: t["index"]):
+            if st.button(
+                member["key"],
+                key=f"mdf-topic-{member['key']}",
+                use_container_width=True,
+                type="primary" if selected == member["key"] else "secondary",
+            ):
+                navigate_to(member["key"])
 
 
 def mdf_reference():
@@ -183,47 +257,26 @@ def mdf_reference():
 
     with left:
         st.caption(f"{len(topics)} topics · MDF 1.9a field reference")
-        # Home/TOC entry — the source's own navigation model starts here.
-        if st.button(
-            home_key,
-            key=f"mdf-topic-{home_key}",
-            use_container_width=True,
-            type="primary" if selected == home_key else "secondary",
-        ):
-            _navigate_to(home_key)
-        # 17 chapter-topic groups, in the home TOC order.
-        for chapter_key in chapter_keys:
-            chapter_topic = topics_by_key[chapter_key]
-            st.markdown(f"### {md_escape(topic_display_heading(chapter_topic))}")
-            if st.button(
-                chapter_key,
-                key=f"mdf-topic-{chapter_key}",
-                use_container_width=True,
-                type="primary" if selected == chapter_key else "secondary",
-            ):
-                _navigate_to(chapter_key)
-            # \\shd2 subsections nested inside the chapter's own body.
-            for i, block in enumerate(chapter_topic["blocks"]):
-                if block["marker"] != "shd2":
-                    continue
-                label = "▸ " + strip_marker(block["text"]).strip()
+        query = st.text_input(
+            "Filter topics (substring, case-insensitive)",
+            key="mdf_filter",
+        )
+        query = (query or "").strip()
+        if query:
+            matches = filter_topics(topics, query)
+            st.caption(f"{len(matches)} matching topics")
+            if not matches:
+                st.info("No topics match your filter. Clear the filter to see the full chapter list.")
+            for match in matches:
                 if st.button(
-                    label,
-                    key=f"mdf-shd2-{chapter_key}-{i}",
+                    match["key"],
+                    key=f"mdf-topic-{match['key']}",
                     use_container_width=True,
-                    type="secondary",
+                    type="primary" if selected == match["key"] else "secondary",
                 ):
-                    _navigate_to(chapter_key)
-            # Marker entries belonging to this chapter, in source order.
-            members = [t for t in topics if t.get("chapter") == chapter_key and not t["is_chapter"]]
-            for member in sorted(members, key=lambda t: t["index"]):
-                if st.button(
-                    member["key"],
-                    key=f"mdf-topic-{member['key']}",
-                    use_container_width=True,
-                    type="primary" if selected == member["key"] else "secondary",
-                ):
-                    _navigate_to(member["key"])
+                    _navigate_to(match["key"])
+        else:
+            _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, _navigate_to, home_key)
 
     with main:
         topic = topics_by_key[selected]

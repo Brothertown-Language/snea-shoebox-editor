@@ -150,3 +150,53 @@ def test_smoke_sc8_split_flags_missing_targets_for_placeholder():
     resolved, missing = mod.split_cf_targets(["aa", "ge", "zz"], {"aa", "ge"})
     assert resolved == ["aa", "ge"]
     assert missing == ["zz"]
+
+
+def test_smoke_sc9_filter_matches_keys_case_insensitively():
+    """SC-9: an uppercase query matches the lowercase topic key (substring
+    over definition text may also legitimately match other topics that
+    mention the marker)."""
+    mod = _page_module()
+    master = mod.load_master(REPO_ROOT)
+    topics = master["topics"]
+    keys = [t["key"] for t in mod.filter_topics(topics, "LX")]
+    assert "lx" in keys, "the lowercase key must match the uppercase query"
+
+
+def test_smoke_sc9_filter_matches_definition_text():
+    """SC-9: a query term occurring only in definition text (not the key)
+    matches the topics whose text contains it."""
+    mod = _page_module()
+    master = mod.load_master(REPO_ROOT)
+    topics = master["topics"]
+    matches = [t["key"] for t in mod.filter_topics(topics, "interlinear morpheme-level glossing")]
+    assert "ge" in matches, "the ge definition contains 'interlinear morpheme-level glossing'"
+
+
+def test_smoke_sc9_filter_matches_accented_source_content():
+    """SC-9: accented source content (á, é) matches losslessly — plain
+    substring on raw text, no normalization stripping the diacritics."""
+    mod = _page_module()
+    master = mod.load_master(REPO_ROOT)
+    topics = master["topics"]
+    assert [t["key"] for t in mod.filter_topics(topics, "adá")] == ["Alternate_Hierarchy"]
+    assert [t["key"] for t in mod.filter_topics(topics, "léwat")] == ["lc"]
+    # Case-insensitivity must also hold for the accented query term itself.
+    keys = [t["key"] for t in mod.filter_topics(topics, "ADÁ")]
+    assert keys == ["Alternate_Hierarchy"]
+
+
+def test_smoke_sc9_filter_does_not_normalize():
+    """SC-9: matching operates on raw text — a NFD-decomposed query must NOT
+    match the source's precomposed á (normalization is out of scope by spec)."""
+    mod = _page_module()
+    master = mod.load_master(REPO_ROOT)
+    decomposed = "ad\u0301a" if False else "ada\u0301"  # 'a' + combining acute + 'a'
+    assert mod.filter_topics(master["topics"], decomposed) == []
+
+
+def test_smoke_sc9_filter_empty_query_returns_all_topics():
+    """SC-9: an empty query yields the full topic list (browser tree mode)."""
+    mod = _page_module()
+    master = mod.load_master(REPO_ROOT)
+    assert len(mod.filter_topics(master["topics"], "")) == 108

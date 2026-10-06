@@ -40,16 +40,17 @@ pytestmark = [
 
 
 def _run_in_worker_thread(fn):
-    """Run a sync_playwright body in a worker thread.
+    """Run a sync_playwright body in a worker thread and return its value.
 
     pytest 9 + anyio keeps an asyncio loop on the main thread; the Playwright
     sync API forbids entering under a running loop. A worker thread has none.
     """
     box: list[BaseException | None] = []
+    result: list = []
 
     def _target():
         try:
-            fn()
+            result.append(fn())
             box.append(None)
         except BaseException as e:  # noqa: BLE001 — propagate test failure verbatim
             box.append(e)
@@ -60,6 +61,7 @@ def _run_in_worker_thread(fn):
     err = box[0]
     if err is not None:
         raise err
+    return result[0] if result else None
 
 
 def _master_topics():
@@ -207,7 +209,9 @@ def test_sc8_cf_target_button_navigates_from_marker_entry():
             page.wait_for_selector("text=lexeme or headword", timeout=60_000)
             main_col = page.locator('[data-testid="stColumn"]').nth(1)
             main_col.get_by_role("button", name="lc", exact=True).first.click()
-            page.wait_for_selector("text=lexical citation", timeout=30_000)
+            # lx's own body text mentions "lexical citation", so a plain text
+            # wait would pass before navigation — scope to the detail h2.
+            page.wait_for_selector('h2:has-text("lexical citation")', timeout=30_000)
             page.wait_for_url("**marker=lc*", timeout=15_000)
             header = page.eval_on_selector_all("h2", "els => els.map(e => e.innerText.trim())")
             assert any("lc" in h for h in header), f"expected lc detail; headers: {header}"
@@ -217,3 +221,54 @@ def test_sc8_cf_target_button_navigates_from_marker_entry():
             pw.stop()
 
     _run_in_worker_thread(flow)
+
+
+def _filter_flow(query: str, screenshot_name: str):
+    """Type a filter query into the MDF Reference browser and return the
+    left-column state (button labels, h3 count, body text) for assertions."""
+
+    def flow():
+        pw, browser, page = _open_mdf_page()
+        try:
+            left_col = page.locator('[data-testid="stColumn"]').nth(0)
+            flt = page.get_by_label("Filter topics")
+            flt.wait_for(state="visible", timeout=30_000)
+            flt.fill(query)
+            flt.press("Enter")
+            page.wait_for_timeout(2500)
+            labels = [t.strip() for t in left_col.locator("button").all_inner_texts()]
+            h3_count = len(page.query_selector_all("h3"))
+            body = page.inner_text("body")
+            page.screenshot(path=os.path.join(ARTIFACTS_DIR, screenshot_name))
+            return {"labels": labels, "h3_count": h3_count, "body": body}
+        finally:
+            browser.close()
+            pw.stop()
+
+    return flow()
+
+
+def test_sc9_filter_matches_accented_definition_text():
+    """SC-9: the accented source term 'léwat' matches exactly the lc topic —
+    the diacritic survives the filter losslessly."""
+    state = _run_in_worker_thread(lambda: _filter_flow("léwat", "sc9-01-accented-lewat.png"))
+    assert state["labels"] == ["lc"], f"expected only lc for 'léwat'; got {state['labels']}"
+    assert state["h3_count"] == 0, "filter mode must replace the chapter tree (no h3 headers)"
+
+
+def test_sc9_filter_case_insensitive_accented_query():
+    """SC-9: an uppercase accented query ('ADÁ') matches the lowercase source
+    content in the Alternate_Hierarchy chapter topic."""
+    state = _run_in_worker_thread(lambda: _filter_flow("ADÁ", "sc9-02-accented-ADÁ.png"))
+    assert "Alternate_Hierarchy" in state["labels"], (
+        f"uppercase accented query must match; got {state['labels']}"
+    )
+
+
+def test_sc9_filter_no_matches_shows_info_banner():
+    """Edge case: an empty filter result renders the standard empty-state
+    info banner, not a blank column."""
+    state = _run_in_worker_thread(lambda: _filter_flow("zzzznope", "sc9-03-empty-state.png"))
+    assert "No topics match your filter." in state["body"], (
+        f"empty-state banner missing; body tail: {state['body'][-400:]}"
+    )
