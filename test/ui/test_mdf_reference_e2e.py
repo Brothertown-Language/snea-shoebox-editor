@@ -1,5 +1,5 @@
 """SC-7/SC-8/SC-9/SC-11: Playwright real-browser verification of the MDF
-Reference page (.issues/1379 Phase 5).
+Reference page (issue #1379 Phase 5).
 
 Auth model: with SNEA_E2E=1 the app-side TEST-ONLY auth bypass hook
 (src/services/security_manager.py) authenticates a FRESH browser context —
@@ -120,6 +120,17 @@ def test_sc7_renders_108_topics_17_chapters_lands_on_aa():
             )
             missing = [k for k in keys if k not in labels]
             assert not missing, f"{len(missing)} topic browser nodes missing: {missing[:10]}"
+
+            # Single left rail (vision-review remediation): the global sidebar
+            # nav stays hidden and the standard back-to-main affordance rides
+            # the MDF browser column.
+            nav = page.locator('[data-testid="stSidebarNav"]')
+            assert nav.count() == 0 or not nav.first.is_visible(), (
+                "the global sidebar nav must stay hidden on the MDF Reference page"
+            )
+            assert page.get_by_role("button", name="Back to Main Menu").count() >= 1, (
+                "the back-to-main affordance must ride the MDF browser rail"
+            )
 
             # Landing entry is the home/TOC topic (aa)
             header = page.eval_on_selector_all("h2", "els => els.map(e => e.innerText.trim())")
@@ -468,9 +479,14 @@ def test_sc9_filter_matches_accented_definition_text():
     """SC-9: the accented source term 'léwat' matches exactly the lc topic —
     the diacritic survives the filter losslessly."""
     state = _run_in_worker_thread(lambda: _filter_flow("léwat", "sc9-01-accented-lewat.png"))
-    # The left browser column also carries the R-13 PDF download control —
-    # assert on the topic-match buttons only.
-    topic_labels = [lbl for lbl in state["labels"] if lbl != "Download the MDF reference (PDF)"]
+    # The left browser column also carries the R-13 PDF download control and
+    # the standard back-to-main affordance — assert on the topic-match
+    # buttons only. (Button inner_text embeds the icon and newlines, so the
+    # rail controls match by substring.)
+    rail_controls = ("Download the MDF reference (PDF)", "Back to Main Menu")
+    topic_labels = [
+        lbl for lbl in state["labels"] if not any(control in lbl for control in rail_controls)
+    ]
     assert topic_labels == ["lc"], f"expected only lc for 'léwat'; got {topic_labels}"
     assert state["h3_count"] == 0, "filter mode must replace the chapter tree (no h3 headers)"
 

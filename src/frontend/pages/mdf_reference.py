@@ -11,7 +11,11 @@ Reserved Fields / Optional Fields / Discontinued, alphabetical by key within
 each group) — the same semantic regrouping the PDF and HTML renderers
 implement. The
 detail pane preserves the source content; ``\\ftx``/``\\fxv`` formatting
-examples render as code blocks; ``\\cf`` cross-references navigate in-app.
+examples render as code blocks; ``\\cf`` cross-references navigate in-app
+and render green — the source's own stated convention, mirrored by the
+PDF and HTML editions. The page owns the full window: the global sidebar
+navigation is hidden and the MDF browser column is the single left rail,
+with the standard back-to-main affordance at its top.
 Per the 2026-10-06 change control, cf blocks that are marker+gloss lookup
 pairs render as a per-pair list — one row per pair, the source's own marker
 token as the deep-link affordance and its gloss beside it, with in-gloss
@@ -451,9 +455,62 @@ def mdf_reference():
     """Render the MDF Reference page (chapter-grouped browser + detail pane)."""
     import streamlit as st
 
-    from src.frontend.ui_utils import apply_standard_layout_css
+    from src.frontend.ui_utils import (
+        apply_standard_layout_css,
+        hide_sidebar_nav,
+        render_back_to_main_button,
+    )
 
+    # The MDF browser column below is this view's single left rail (the
+    # Records pattern): the global navigation sidebar is hidden and the
+    # standard back-to-main affordance rides at the top of the rail.
+    hide_sidebar_nav()
     apply_standard_layout_css()
+    st.html(
+        """
+        <style>
+        /* Drop the dead band above the detail pane heading: the fixed
+           6rem block-container top padding pushed the first heading
+           ~140px down the pane. */
+        .block-container {
+            padding-top: 1rem;
+        }
+        /* With the nav hidden the global sidebar holds nothing — but
+           Streamlit still expands it as a blank 300px rail. This page's
+           browser column is the single left rail, so the empty container
+           goes away entirely. */
+        [data-testid="stSidebar"] {
+            display: none;
+        }
+        /* Cross-references render green — the source's own stated
+           convention, mirrored by the PDF/HTML editions (--cf-green
+           #067d06). Every enabled button in the detail column is a
+           \\cf navigation affordance; the gloss links and the cf caption
+           carry their own hooks. Disabled missing-target placeholders
+           keep their muted error look. */
+        div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) button:not([disabled]) p,
+        div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) button:not([disabled]),
+        div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) a[href*="marker="],
+        .mdf-cf-caption {
+            color: #067d06 !important;
+        }
+        div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) button:not([disabled]) {
+            border-color: #067d06;
+        }
+        /* The selected-topic chip uses the app's emphasis orange (the
+           Records suggestion/status accent) — the theme's coral primary
+           reads as an error state. */
+        button[kind="primary"],
+        button[kind="primary"]:hover {
+            background-color: #ffa500;
+            border-color: #ffa500;
+        }
+        button[kind="primary"] p {
+            color: #313338 !important;
+        }
+        </style>
+        """
+    )
 
     master = load_master()
     if (
@@ -484,6 +541,7 @@ def mdf_reference():
     left, main = st.columns([1, 2], gap="medium")
 
     with left:
+        render_back_to_main_button()
         st.caption(f"{len(topics)} topics · MDF 1.9a field reference")
         # R-13/R-14: the committed PDF deliverable is offered from the page's
         # left browser column, served under its content-accurate name.
@@ -562,7 +620,13 @@ def mdf_reference():
             elif marker in ("ftx", "fxv"):
                 st.code(strip_marker(text), language=None)
             elif marker == "cf":
-                st.caption("→ " + md_escape(strip_marker(text)).strip())
+                # The classed span hooks the green cross-reference styling
+                # (the source's own convention); unsafe_allow_html only lets
+                # that one static wrapper tag through.
+                st.caption(
+                    '<span class="mdf-cf-caption">→ ' + md_escape(strip_marker(text)).strip() + "</span>",
+                    unsafe_allow_html=True,
+                )
                 targets = block.get("targets") or []
                 resolved, missing = split_cf_targets(targets, set(topics_by_key))
                 for t in missing:

@@ -5,9 +5,12 @@ selection (SNEA_E2E_ROLE, honored exclusively under SNEA_E2E=1).
 Each test restarts the local app with the role variable set, then drives a
 fresh browser context through the app-side SNEA_E2E auth bypass. Role
 evidence comes from the production RBAC path itself: get_user_role walks the
-synced DB's Permission rows, and the navigation tree the app actually builds
-differs per role (the Admin group exists only for admin) while the MDF
-Reference entry stays in Main for all roles. The module fixture restores the
+synced DB's Permission rows, and the bypass swaps in the role's seed team so
+each session resolves its role through that real walk. The page itself gates
+nothing by role (it is a reference browser for every authenticated user), so
+the per-role assertions are the user-visible single-rail contract: the page
+renders and is readable, the global sidebar nav stays hidden, and the
+standard back-to-main affordance is present. The module fixture restores the
 default bypass app (no role override) afterwards.
 
 Harness conventions follow test_playwright_backfill_clickthrough.py.
@@ -104,7 +107,7 @@ def _restore_default_bypass_app():
 
 def _role_flow(role: str, screenshot_name: str) -> dict:
     """Restart the app for `role`, open the MDF Reference page in a fresh
-    context, and return the sidebar/body state for assertions."""
+    context, and return the single-rail page state for assertions."""
 
     def flow():
         _restart_app(role)
@@ -115,11 +118,12 @@ def _role_flow(role: str, screenshot_name: str) -> dict:
                 page.goto(MDF_URL)
                 page.wait_for_selector(f"h2:has-text('{HOME_HEADING}')", timeout=90_000)
                 page.wait_for_timeout(1500)
-                sidebar = page.locator('[data-testid="stSidebar"]')
-                sidebar_text = sidebar.inner_text() if sidebar.count() else ""
+                nav = page.locator('[data-testid="stSidebarNav"]')
+                nav_visible = nav.count() > 0 and nav.first.is_visible()
+                back_button = page.get_by_role("button", name="Back to Main Menu").count() > 0
                 body = page.inner_text("body")
                 page.screenshot(path=os.path.join(ARTIFACTS_DIR, screenshot_name))
-                return {"sidebar": sidebar_text, "body": body}
+                return {"nav_visible": nav_visible, "back_button": back_button, "body": body}
             finally:
                 browser.close()
 
@@ -144,20 +148,26 @@ def _role_flow(role: str, screenshot_name: str) -> dict:
 
 def test_sc10_viewer_reaches_mdf_reference():
     state = _role_flow("viewer", "sc10-01-viewer.png")
-    assert "MDF Reference" in state["sidebar"], "viewer nav must include MDF Reference"
-    assert "Admin" not in state["sidebar"], "viewer must not see the Admin nav group"
+    assert not state["nav_visible"], (
+        "the global sidebar nav must stay hidden — the MDF browser is the single left rail"
+    )
+    assert state["back_button"], "viewer must have the standard back-to-main affordance"
     assert HOME_HEADING in state["body"], "viewer must be able to read the page content"
 
 
 def test_sc10_editor_reaches_mdf_reference():
     state = _role_flow("editor", "sc10-02-editor.png")
-    assert "MDF Reference" in state["sidebar"], "editor nav must include MDF Reference"
-    assert "Admin" not in state["sidebar"], "editor must not see the Admin nav group"
+    assert not state["nav_visible"], (
+        "the global sidebar nav must stay hidden — the MDF browser is the single left rail"
+    )
+    assert state["back_button"], "editor must have the standard back-to-main affordance"
     assert HOME_HEADING in state["body"], "editor must be able to read the page content"
 
 
 def test_sc10_admin_reaches_mdf_reference():
     state = _role_flow("admin", "sc10-03-admin.png")
-    assert "MDF Reference" in state["sidebar"], "admin nav must include MDF Reference"
-    assert "Admin" in state["sidebar"], "admin must see the Admin nav group"
+    assert not state["nav_visible"], (
+        "the global sidebar nav must stay hidden — the MDF browser is the single left rail"
+    )
+    assert state["back_button"], "admin must have the standard back-to-main affordance"
     assert HOME_HEADING in state["body"], "admin must be able to read the page content"
