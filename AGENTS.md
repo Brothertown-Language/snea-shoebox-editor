@@ -36,7 +36,7 @@ Before making changes to search infrastructure, text normalization, FTS configur
 | `docs/lessons-learned/2026-07-16-local-postgresql-setup.md` | Local PostgreSQL instance management and query patterns |
 
 ### Data Integrity — NO SYNTHETIC DATA
-**Global absolute prohibition:** NO synthetic, imaginary, fabricated, proxy, or guessed linguistic data. Only real, verifiable data from real sources. See `.opencode/guidelines/090-data-integrity.md`.
+**Global absolute prohibition:** NO synthetic, imaginary, fabricated, proxy, or guessed linguistic data. Only real, verifiable data from real sources. These rules are complete here — no external guideline file is cited.
 
 ---
 
@@ -128,6 +128,5 @@ Every .tex file MUST begin with:
 % !TEX encoding = UTF-8 Unicode
 ```
 
-The build script (`paper/build.sh`) uses `latexmk -pdf` which auto-detects
-xelatex from the % !TEX program directive. Do NOT use `pdflatex` for any
-.tex file in this project.
+Builds using `latexmk -pdf` auto-detect `xelatex` from the `% !TEX program`
+directive. Do NOT use `pdflatex` for any .tex file in this project.
