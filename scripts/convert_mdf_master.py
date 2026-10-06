@@ -33,10 +33,9 @@ JSON schema (snea-mdf-master/1):
                                       recent preceding chapter topic (None for
                                       the home entry, for chapter topics
                                       themselves, and before the first chapter).
-                                      The source's semantic chapter->marker
-                                      grouping is expressed by cf cross-references
-                                      (blocks[].targets); renderers should prefer
-                                      that model for grouping.
+                                      Renderers regroup on top of this raw
+                                      placement per the 2026-10-06 change control
+                                      (book_structure).
     occurrence/duplicate            — duplicate-key handling: the first
                                       occurrence is the primary anchor
     preamble/blocks                 — raw lines (preamble as a list of raw
@@ -49,14 +48,23 @@ JSON schema (snea-mdf-master/1):
                                       "*.,;:"))
 
 Renderers (presentation belongs here, never the parser):
-- LaTeX: --latex PATH emits a book-class XeLaTeX document. Topics are emitted in
-  the source's own navigation order — the home/TOC entry first, then each chapter
-  in the home TOC (chapter_keys) order with its member markers in document order
-  (topic_emission_order, mirroring the in-app MDF Reference page) — so the ToC
-  and PDF bookmarks follow the source's hierarchy, not source-document order.
-  Every one of the 108
-  "\\key"+"\\shd" topics is an unnumbered \\chapter with \\label{key:<slug>} and a
-  PDF bookmark; \\shd2/3/4 map to \\section/\\subsection/\\subsubsection; \\txt to
+- LaTeX: --latex PATH emits a book-class XeLaTeX document structured by the
+  source's own navigation model (book_structure; 2026-10-06 change control):
+  the home/TOC entry first as the opening chapter, then the 17 discussion
+  chapters in the home TOC (chapter_keys) order with their internal \\shd2/3/4
+  nesting, then the terminal "Field Marker Reference" apparatus chapter holding
+  every single-marker definition topic as a \\subsection entry grouped by
+  reference group (\\section: Record Marker / Basic Fields / Reserved Fields /
+  Optional Fields / Discontinued — the group derived from each topic's own
+  parsed data: \\lx is the Record Marker, a \\typ block value names
+  Basic/Reserved/Optional, and the sole \\typ-less marker \\xg is Discontinued by
+  its own heading wording), alphabetical by key within each group. The one
+  multi-key topic ("Old verb paradigm markers") rides under Old_and_Changed_Markers
+  per its own \\cf. Every one of the 108
+  "\\key"+"\\shd" topics is unnumbered with \\label{key:<slug>} and a PDF
+  bookmark; \\shd2/3/4 map to \\section/\\subsection/\\subsubsection (reference
+  entries descend one ladder step further, so an entry's \\shd2 is a
+  \\subsubsection); \\txt to
   body text; non-empty \\ftx and all \\fxv to byte-for-byte fancyvrb Verbatim
   blocks (no re-wrapping; long lines break visually via fvextra without altering
   characters); \\cf tokens to green hyperref links to the target topic's label
@@ -67,12 +75,18 @@ Renderers (presentation belongs here, never the parser):
   a "(N)" apparatus label (N = 1..444) so example-block counts are verifiable
   in pdftotext output; verbatim content itself is untouched.
 - HTML: --html-dir DIR emits a multi-page static site: index.html (home entry
-  "aa" plus the chapter TOC) and one page per chapter group. Sidebar navigation on every page
-  (chapters in chapter_keys order), deep-linking anchors, vendored lunr.js search (assets/lunr.js,
+  "aa" plus the chapter TOC), one page per discussion chapter (the chapter's own
+  content plus any non-reference member topics — for this source only the
+  multi-key stub, under Old_and_Changed_Markers), and the terminal
+  field-marker-reference.html holding the marker-definition entries in the same
+  group/entry structure as the PDF. Sidebar navigation on every page (aa, the
+  chapters in chapter_keys order, then the reference page with its groups and
+  entries), deep-linking anchors, vendored lunr.js search (assets/lunr.js,
   no CDN), @media print styles, responsive layout. Anchor scheme: every topic
   section carries id="key-<slug>" where <slug> is the exact \\key value with
   whitespace runs replaced by "-" (collision-safe by construction); \\cf links
-  point at "<page>#key-<slug>".
+  point at "<page>#key-<slug>" — a marker entry's anchor name is unchanged by
+  the regrouping, only the page carrying it moves.
 """
 
 from __future__ import annotations
@@ -391,40 +405,111 @@ def render_warning(warnings: list[str], message: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Shared emission order — the source's own navigation model
+# Shared book structure — the source's own navigation model
+# (2026-10-06 change control: .issues/1379/spec.md)
 # ---------------------------------------------------------------------------
 
+REFERENCE_GROUP_ORDER = ("record", "basic", "reserved", "optional", "discontinued")
+REFERENCE_GROUP_TITLES = {
+    "record": "Record Marker",
+    "basic": "Basic Fields",
+    "reserved": "Reserved Fields",
+    "optional": "Optional Fields",
+    "discontinued": "Discontinued",
+}
+REFERENCE_PAGE = "field-marker-reference.html"
+REFERENCE_CHAPTER_TITLE = "Field Marker Reference"
 
-def topic_emission_order(document: dict) -> list[dict]:
-    """Flat emission order mirroring the in-app MDF Reference browser tree
-    (src/frontend/pages/mdf_reference.py _render_browser_tree): the home/TOC
-    entry first, then each chapter topic in the home TOC (chapter_keys) order
-    followed by its member markers (chapter == chapter_key, not is_chapter)
-    in document order. Anything the grouping leaves unplaced keeps document
-    order at the end, so no topic is dropped and none is duplicated."""
+
+def is_reference_entry(topic: dict, home_key: str | None) -> bool:
+    """A single-marker definition topic: not the home entry, not a chapter topic,
+    and a \\key naming exactly one marker (no internal whitespace). The multi-key
+    "Old verb paradigm markers" stub is excluded here — placement_chapter rides
+    it under Old_and_Changed_Markers per its own \\cf."""
+    return not topic["is_chapter"] and topic["key"] != home_key and " " not in topic["key"].strip()
+
+
+def reference_group(topic: dict) -> str:
+    """Deterministic reference group from the topic's own parsed data: \\lx is the
+    record marker (the SF catalog's own "RECORD MARKER" section); otherwise the
+    \\typ block value (<Basic>/<Reserved>/<Optional>); a single-marker topic with
+    no \\typ block is \\xg, discontinued by its own heading wording."""
+    if topic["key"] == "lx":
+        return "record"
+    typ = next((block for block in topic["blocks"] if block["marker"] == "typ"), None)
+    if typ is not None:
+        first = typ["text"].split("\n", 1)[0]
+        if "<Basic>" in first:
+            return "basic"
+        if "<Reserved>" in first:
+            return "reserved"
+        if "<Optional>" in first:
+            return "optional"
+    return "discontinued"
+
+
+def placement_chapter(topic: dict, chapter_keys: list[str]) -> str | None:
+    """Chapter a non-chapter topic renders under. Default is the document-order
+    chapter; a multi-key topic instead follows its own \\cf when that names a
+    chapter topic (the source's placement for the numeric stub: "See the topic
+    Old_and_Changed_Markers")."""
+    if " " in topic["key"].strip():
+        for block in topic["blocks"]:
+            if block["marker"] == "cf":
+                for target in block.get("targets", []):
+                    if target in chapter_keys:
+                        return target
+    return topic["chapter"]
+
+
+def book_structure(document: dict) -> dict:
+    """The book's semantic structure, derived entirely from the parsed topics:
+    the home entry first; then the discussion chapters in home-TOC (chapter_keys)
+    order, each followed by its non-reference member topics in document order;
+    then the terminal reference groups with their single-marker entries
+    alphabetical by key. Anything the grouping leaves unplaced keeps document
+    order in "residual" (empty for the 1.9a source), so no topic is dropped and
+    none is duplicated."""
     topics = document["topics"]
-    by_key: dict[str, list[dict]] = {}
-    for topic in topics:
-        by_key.setdefault(topic["key"], []).append(topic)
-    ordered: list[dict] = []
-    placed: set[int] = set()
+    home_key = document.get("home_key")
+    chapter_keys: list[str] = document.get("chapter_keys") or []
 
-    def place(topic: dict) -> None:
-        if id(topic) not in placed:
+    def first_by_key(key: str | None) -> dict | None:
+        if key is None:
+            return None
+        return next((topic for topic in topics if topic["key"] == key), None)
+
+    home = first_by_key(home_key)
+    chapters: list[tuple[dict, list[dict]]] = []
+    placed: set[int] = {id(home)} if home is not None else set()
+    for chapter_key in chapter_keys:
+        chapter = first_by_key(chapter_key)
+        if chapter is None:
+            continue
+        placed.add(id(chapter))
+        members = [
+            topic
+            for topic in topics
+            if not topic["is_chapter"]
+            and topic["key"] != home_key
+            and not is_reference_entry(topic, home_key)
+            and placement_chapter(topic, chapter_keys) == chapter_key
+        ]
+        placed.update(id(member) for member in members)
+        chapters.append((chapter, members))
+
+    reference: dict[str, list[dict]] = {}
+    for topic in topics:
+        if is_reference_entry(topic, home_key):
             placed.add(id(topic))
-            ordered.append(topic)
-
-    for topic in by_key.get(document.get("home_key"), []):
-        place(topic)
-    for chapter_key in document.get("chapter_keys") or []:
-        for topic in by_key.get(chapter_key, []):
-            place(topic)
-        for topic in topics:
-            if topic.get("chapter") == chapter_key and not topic["is_chapter"]:
-                place(topic)
-    for topic in topics:
-        place(topic)
-    return ordered
+            reference.setdefault(reference_group(topic), []).append(topic)
+    residual = [topic for topic in topics if id(topic) not in placed]
+    groups = {
+        group: sorted(reference[group], key=lambda t: t["key"])
+        for group in REFERENCE_GROUP_ORDER
+        if group in reference
+    }
+    return {"home": home, "chapters": chapters, "residual": residual, "reference": groups}
 
 
 # ---------------------------------------------------------------------------
@@ -450,7 +535,7 @@ def latex_escape(text: str) -> str:
     return _LATEX_SPECIAL_RE.sub(lambda match: LATEX_SPECIALS[match.group()], text)
 
 
-LATEX_SECTION_COMMANDS = {"shd2": "\\section", "shd3": "\\subsection", "shd4": "\\subsubsection"}
+LATEX_HEADING_LADDER = ["\\chapter", "\\section", "\\subsection", "\\subsubsection", "\\paragraph", "\\subparagraph"]
 
 LATEX_PREAMBLE = """% !TEX program = xelatex
 % !TEX encoding = UTF-8 Unicode
@@ -515,11 +600,20 @@ def latex_nwt_group(blocks: list[dict]) -> str:
     return "\\begin{itemize}\n" + items + "\n\\end{itemize}"
 
 
-def latex_topic(topic: dict, slugs: dict[str, str], warnings: list[str], example_number: int) -> tuple[str, int]:
+def latex_topic(
+    topic: dict, slugs: dict[str, str], warnings: list[str], example_number: int, level: int = 0
+) -> tuple[str, int]:
+    """Render one topic. level is the LaTeX heading level of the topic itself:
+    0 = \\chapter (home entry and discussion chapters, plus multi-key stubs) and
+    2 = \\subsection (Field Marker Reference entries). Internal \\shd2/3/4 blocks
+    descend the heading ladder from there, so a reference entry's \\shd2 becomes
+    a \\subsubsection."""
     key = topic["key"]
     slug = slugs[key]
     label = f"key:{slug}" if topic["occurrence"] == 1 else f"key:{slug}-{topic['occurrence']}"
-    out = [f"\\chapter{{{latex_escape(topic['heading'] or key)}}}\\label{{{label}}}\n"]
+    out = [
+        f"{LATEX_HEADING_LADDER[level]}{{{latex_escape(topic['heading'] or key)}}}\\label{{{label}}}\n"
+    ]
     out.append("{\\small\\ttfamily\\color{keycolor} " + latex_escape("\\key " + key) + "}\\par\n")
     preamble = join_prose(topic["preamble"])
     if preamble:
@@ -540,9 +634,11 @@ def latex_topic(topic: dict, slugs: dict[str, str], warnings: list[str], example
         flush_nwt()
         if marker == "shd":
             continue
-        if marker in LATEX_SECTION_COMMANDS:
+        if marker in ("shd2", "shd3", "shd4"):
             heading = latex_escape(join_prose(block_lines(block)))
-            out.append(LATEX_SECTION_COMMANDS[marker] + "{" + heading + "}\n")
+            depth = int(marker[3]) - 2
+            command = LATEX_HEADING_LADDER[min(level + 1 + depth, len(LATEX_HEADING_LADDER) - 1)]
+            out.append(command + "{" + heading + "}\n")
         elif marker == "txt":
             text = join_prose(block_lines(block))
             if text:
@@ -575,7 +671,9 @@ def latex_topic(topic: dict, slugs: dict[str, str], warnings: list[str], example
 
 
 def render_latex(document: dict, out_path: str) -> list[str]:
-    """Render the book-class XeLaTeX document per the Typographic Mapping table."""
+    """Render the book-class XeLaTeX document per the Typographic Mapping table:
+    home entry, discussion chapters in home-TOC order, then the terminal Field
+    Marker Reference chapter grouping the marker-definition entries."""
     warnings: list[str] = []
     topics = document["topics"]
     slugs = build_slugs(topics)
@@ -594,10 +692,28 @@ def render_latex(document: dict, out_path: str) -> list[str]:
         + "} (MDF 1.9a field documentation).\\par}\n"
     )
     chunks.append("\\end{titlepage}\n\\tableofcontents\n\\mainmatter\n")
+    structure = book_structure(document)
     example_number = 0
-    for topic in topic_emission_order(document):
-        body, example_number = latex_topic(topic, slugs, warnings, example_number)
+
+    def emit(topic: dict, level: int = 0) -> None:
+        nonlocal example_number
+        body, example_number = latex_topic(topic, slugs, warnings, example_number, level)
         chunks.append(body + "\n")
+
+    if structure["home"] is not None:
+        emit(structure["home"])
+    for chapter, members in structure["chapters"]:
+        emit(chapter)
+        for member in members:
+            emit(member)
+    for topic in structure["residual"]:
+        emit(topic)
+    if structure["reference"]:
+        chunks.append("\\chapter{" + REFERENCE_CHAPTER_TITLE + "}\n")
+        for group, entries in structure["reference"].items():
+            chunks.append("\\section{" + REFERENCE_GROUP_TITLES[group] + "}\n")
+            for entry in entries:
+                emit(entry, level=2)
     chunks.append("\\end{document}\n")
 
     out = Path(out_path)
@@ -610,7 +726,7 @@ def render_latex(document: dict, out_path: str) -> list[str]:
 # HTML renderer (R-4)
 # ---------------------------------------------------------------------------
 
-HTML_SECTION_LEVELS = {"shd2": "h3", "shd3": "h4", "shd4": "h5"}
+HTML_SECTION_MARKERS = ("shd2", "shd3", "shd4")
 
 
 def html_escape(text: str) -> str:
@@ -683,6 +799,15 @@ body {
 }
 .nav a:hover { text-decoration: underline; }
 .nav-home a { text-decoration: none; color: #1a3a6b; font-weight: 600; }
+.nav-group { margin: 0.35rem 0; }
+.nav-group > a { font-weight: 600; text-decoration: none; color: #1a3a6b; }
+.nav-group > ul { list-style: none; margin: 0.15rem 0 0.35rem; padding-left: 1rem; }
+.nav-group > ul a {
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: #333;
+}
 .content { margin: 0; padding: 2rem 3rem; max-width: 52rem; }
 .crumbs { font-size: 0.85rem; color: #666; margin-top: 0; }
 .crumbs a { color: #1a3a6b; text-decoration: none; }
@@ -855,10 +980,23 @@ def html_nwt_group(blocks: list[dict]) -> str:
     return '<ul class="nwt-list">\n' + items + "\n</ul>"
 
 
-def html_topic(topic: dict, page_by_key: dict[str, str], slugs: dict[str, str], warnings: list[str]) -> str:
+def html_heading_tag(level: int) -> str:
+    """Heading tag for a semantic level (2 = topic heading on a chapter page,
+    3 = \\shd2 there); capped at h6."""
+    return f"h{min(level, 6)}"
+
+
+def html_topic(
+    topic: dict, page_by_key: dict[str, str], slugs: dict[str, str], warnings: list[str], offset: int = 0
+) -> str:
+    """Render one topic section. offset demotes the heading levels for topics
+    nested inside the Field Marker Reference page: an entry's own heading drops
+    to h4 and its \\shd2 "Hint"/"Tip" blocks to h5, mirroring the LaTeX
+    \\subsection/\\subsubsection levels."""
     key = topic["key"]
+    heading_tag = html_heading_tag(2 + offset)
     out = [f'<section class="topic" id="key-{slugs[key]}">']
-    out.append(f'  <h2 class="topic-heading">{html_escape(topic["heading"] or key)}</h2>')
+    out.append(f'  <{heading_tag} class="topic-heading">{html_escape(topic["heading"] or key)}</{heading_tag}>')
     out.append(f'  <p class="key-line"><code>{html_escape("\\key " + key)}</code></p>')
     preamble = join_prose(topic["preamble"])
     if preamble:
@@ -879,8 +1017,8 @@ def html_topic(topic: dict, page_by_key: dict[str, str], slugs: dict[str, str], 
         flush_nwt()
         if marker == "shd":
             continue
-        if marker in HTML_SECTION_LEVELS:
-            level = HTML_SECTION_LEVELS[marker]
+        if marker in HTML_SECTION_MARKERS:
+            level = html_heading_tag(int(marker[3]) + 1 + offset)
             heading = html_escape(join_prose(block_lines(block)))
             out.append(f'  <{level} class="section-heading">{heading}</{level}>')
         elif marker == "txt":
@@ -946,15 +1084,18 @@ HTML_PAGE_TEMPLATE = """<!DOCTYPE html>
 
 
 def html_nav(document: dict, page_by_key: dict[str, str], slugs: dict[str, str]) -> str:
+    """Sidebar: home entry, the discussion chapters in home-TOC order (with any
+    non-reference members — the multi-key stub under Old_and_Changed_Markers),
+    then the Field Marker Reference page with its group/entry structure."""
+    structure = book_structure(document)
     items = []
-    home = next((t for t in document["topics"] if t["key"] == document["home_key"]), None)
+    home = structure["home"]
     if home is not None:
         label = html_escape(home["heading"] or home["key"])
         items.append(f'  <li class="nav-home"><a href="index.html">{label}</a></li>')
-    for chapter in (t for t in topic_emission_order(document) if t["is_chapter"]):
+    for chapter, members in structure["chapters"]:
         page = page_by_key[chapter["key"]]
         label = html_escape(chapter["heading"] or chapter["key"])
-        members = [t for t in document["topics"] if t["chapter"] == chapter["key"]]
         if members:
             inner = "\n".join(
                 f'      <li><a href="{page}#key-{slugs[m["key"]]}">\\{html_escape(m["key"])}</a></li>' for m in members
@@ -964,12 +1105,31 @@ def html_nav(document: dict, page_by_key: dict[str, str], slugs: dict[str, str])
             )
         else:
             items.append(f'  <li class="nav-chapter"><a href="{page}">{label}</a></li>')
+    if structure["reference"]:
+        group_items = []
+        for group, entries in structure["reference"].items():
+            entry_links = "\n".join(
+                f'        <li><a href="{REFERENCE_PAGE}#key-{slugs[e["key"]]}">\\{html_escape(e["key"])}</a></li>'
+                for e in entries
+            )
+            group_items.append(
+                f'      <li class="nav-group"><a href="{REFERENCE_PAGE}#group-{group}">'
+                f"{REFERENCE_GROUP_TITLES[group]}</a>\n"
+                f"        <ul>\n{entry_links}\n        </ul>\n      </li>"
+            )
+        items.append(
+            f'  <li class="nav-chapter"><a href="{REFERENCE_PAGE}">{REFERENCE_CHAPTER_TITLE}</a>\n    <ul>\n'
+            + "\n".join(group_items)
+            + "\n    </ul>\n  </li>"
+        )
     return "\n".join(items)
 
 
 def render_html(document: dict, out_dir: str) -> list[str]:
-    """Render the multi-page static site: index.html (home entry) plus one page per
-    chapter group, with vendored-lunr search, deep-link anchors, and print CSS."""
+    """Render the multi-page static site: index.html (home entry), one page per
+    discussion chapter (own content plus non-reference members), and the terminal
+    Field Marker Reference page, with vendored-lunr search, deep-link anchors,
+    and print CSS."""
     warnings: list[str] = []
     out = Path(out_dir)
     assets = out / "assets"
@@ -982,25 +1142,31 @@ def render_html(document: dict, out_dir: str) -> list[str]:
     assets.mkdir(parents=True, exist_ok=True)
     topics = document["topics"]
     slugs = build_slugs(topics)
+    structure = book_structure(document)
 
     page_by_key: dict[str, str] = {}
-    for topic in topics:
-        if topic["key"] == document["home_key"] or (not topic["is_chapter"] and topic["chapter"] is None):
-            page_by_key[topic["key"]] = "index.html"
-        elif topic["is_chapter"]:
-            page_by_key[topic["key"]] = f"{slugs[topic['key']]}.html"
-        else:
-            page_by_key[topic["key"]] = f"{slugs[topic['chapter']]}.html"
+    if structure["home"] is not None:
+        page_by_key[structure["home"]["key"]] = "index.html"
+    for topic in structure["residual"]:
+        page_by_key.setdefault(topic["key"], "index.html")
+    for chapter, members in structure["chapters"]:
+        chapter_page = f"{slugs[chapter['key']]}.html"
+        page_by_key.setdefault(chapter["key"], chapter_page)
+        for member in members:
+            page_by_key.setdefault(member["key"], chapter_page)
+    for entries in structure["reference"].values():
+        for entry in entries:
+            page_by_key.setdefault(entry["key"], REFERENCE_PAGE)
 
     version = (document["document_header"].get("title") or "").split()
     version_text = html_escape(version[0]) if version else "unknown"
     date = document["source"].get("git_last_modified") or "unknown date"
     nav = html_nav(document, page_by_key, slugs)
-    home_topic = next((t for t in topics if t["key"] == document["home_key"]), None)
+    home_topic = structure["home"]
 
     chapter_links = "\n".join(
-        f'    <li><a href="{page_by_key[c["key"]]}">{html_escape(c["heading"] or c["key"])}</a></li>'
-        for c in (t for t in topic_emission_order(document) if t["is_chapter"])
+        f'    <li><a href="{page_by_key[chapter["key"]]}">{html_escape(chapter["heading"] or chapter["key"])}</a></li>'
+        for chapter, _members in structure["chapters"]
     )
     chapter_index = (
         '<section class="chapter-index" id="chapters">\n  <h2 class="topic-heading">Chapters</h2>\n'
@@ -1012,19 +1178,36 @@ def render_html(document: dict, out_dir: str) -> list[str]:
     if home_topic is not None:
         index_content.append(html_topic(home_topic, page_by_key, slugs, warnings))
     index_content.append(chapter_index)
+    index_content.extend(html_topic(topic, page_by_key, slugs, warnings) for topic in structure["residual"])
     pages["index.html"] = HTML_PAGE_TEMPLATE.format(
         page_title="Home", version=version_text, date=date, nav=nav, content="\n".join(index_content)
     )
-    for chapter in (t for t in topics if t["is_chapter"]):
-        members = [t for t in topics if t["chapter"] == chapter["key"]]
+    for chapter, members in structure["chapters"]:
         content = [html_topic(chapter, page_by_key, slugs, warnings)]
-        content.extend(html_topic(m, page_by_key, slugs, warnings) for m in members)
+        content.extend(html_topic(member, page_by_key, slugs, warnings) for member in members)
         pages[f"{slugs[chapter['key']]}.html"] = HTML_PAGE_TEMPLATE.format(
             page_title=html_escape(chapter["heading"] or chapter["key"]),
             version=version_text,
             date=date,
             nav=nav,
             content="\n".join(content),
+        )
+
+    if structure["reference"]:
+        reference_content = [f'<h2 class="topic-heading">{REFERENCE_CHAPTER_TITLE}</h2>']
+        for group, entries in structure["reference"].items():
+            reference_content.append(
+                f'<h3 class="section-heading" id="group-{group}">{REFERENCE_GROUP_TITLES[group]}</h3>'
+            )
+            reference_content.extend(
+                html_topic(entry, page_by_key, slugs, warnings, offset=2) for entry in entries
+            )
+        pages[REFERENCE_PAGE] = HTML_PAGE_TEMPLATE.format(
+            page_title=REFERENCE_CHAPTER_TITLE,
+            version=version_text,
+            date=date,
+            nav=nav,
+            content="\n".join(reference_content),
         )
 
     search_docs = []

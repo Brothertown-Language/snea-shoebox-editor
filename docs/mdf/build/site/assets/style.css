@@ -64,6 +64,15 @@ body {
 }
 .nav a:hover { text-decoration: underline; }
 .nav-home a { text-decoration: none; color: #1a3a6b; font-weight: 600; }
+.nav-group { margin: 0.35rem 0; }
+.nav-group > a { font-weight: 600; text-decoration: none; color: #1a3a6b; }
+.nav-group > ul { list-style: none; margin: 0.15rem 0 0.35rem; padding-left: 1rem; }
+.nav-group > ul a {
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: #333;
+}
 .content { margin: 0; padding: 2rem 3rem; max-width: 52rem; }
 .crumbs { font-size: 0.85rem; color: #666; margin-top: 0; }
 .crumbs a { color: #1a3a6b; text-decoration: none; }
