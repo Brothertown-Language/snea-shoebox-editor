@@ -444,6 +444,60 @@ def join_prose(lines: list[str]) -> str:
     return " ".join(parts)
 
 
+QUOTE_FORMS = {
+    "latex": {"open_double": "``", "close_double": "''", "open_single": "`", "close_single": "'"},
+    "unicode": {"open_double": "“", "close_double": "”", "open_single": "‘", "close_single": "’"},
+}
+_CLOSING_QUOTE_CONTEXT = frozenset(".,;:!?)]")
+
+
+def shape_quotes(text: str, form: str = "unicode") -> str:
+    """Deterministic typographic quote shaping (developer directive, 2026-10-06):
+    a per-character lookback state machine, no regex on content. A straight "
+    or ' whose PRECEDING character is alphanumeric, ")", "]", ".", ",", ";",
+    ":", "!", or "?" becomes the CLOSING form — American typesetting places
+    sentence punctuation inside the quotes, so a quote directly after
+    punctuation is a closing quote; any other preceding character —
+    whitespace, string/line start ("\\n" is whitespace, so a line start is
+    opening context), "(", "[", or anything else — becomes the OPENING form.
+    Already-curly input (U+2018/2019/201C/201D) holds no straight quotes and
+    passes through unchanged, so the unicode form is idempotent. Presentation
+    only: applied exclusively on prose rendering paths (\\txt, \\nt, \\bib,
+    \\typ, \\shd topic headings, cf pair glosses, bare-target cf display text,
+    and the authored Foreword) — never to \\ftx/\\fxv verbatim blocks (they
+    depict literal database input and stay byte-exact) and never to
+    master.json. form "latex" emits TeX quote ligatures for the XeLaTeX
+    output; form "unicode" emits the typographic characters directly (HTML).
+    """
+    shapes = QUOTE_FORMS[form]
+    out: list[str] = []
+    previous = ""
+    for ch in text:
+        if ch == '"' or ch == "'":
+            closing = previous.isalnum() or previous in _CLOSING_QUOTE_CONTEXT
+            if ch == '"':
+                out.append(shapes["close_double"] if closing else shapes["open_double"])
+            else:
+                out.append(shapes["close_single"] if closing else shapes["open_single"])
+        else:
+            out.append(ch)
+        previous = ch
+    return "".join(out)
+
+
+def latex_prose(text: str) -> str:
+    """LaTeX prose register: shape quotes to TeX ligatures first — the lookback
+    must see the source's own characters — then escape; the inserted `` `` ''
+    ` ' ligature characters are not LaTeX specials and pass through
+    latex_escape unchanged."""
+    return latex_escape(shape_quotes(text, "latex"))
+
+
+def html_prose(text: str) -> str:
+    """HTML prose register: shape quotes to their Unicode forms, then escape."""
+    return html_escape(shape_quotes(text, "unicode"))
+
+
 def cf_segments(payload: str, targets: list[str]) -> list[tuple[str, str, str | None]]:
     """Split a \\cf first-line payload into (kind, token, canonical) segments,
     consuming the block's parsed targets in order. A backslash-prefixed token that
@@ -724,8 +778,9 @@ FOREWORD_CHANGES = (
     'Cross-references ("See also") render as live links, set in green following the source\'s '
     "own stated convention.",
     "Formatting and printing examples are reproduced verbatim in monospaced blocks.",
-    "Typography, page layout, bookmarks, and pagination are new to this edition; the text "
-    "itself is unchanged.",
+    "Typography, page layout, bookmarks, pagination, and typographic quotation marks are new to "
+    "this edition; the text itself is unchanged. Formatting examples keep the source's literal "
+    "straight quotes, as they depict exact database input.",
 )
 FOREWORD_COLOPHON = (
     "Typeset with XeLaTeX (Noto Serif, with Gentium). "
@@ -733,13 +788,6 @@ FOREWORD_COLOPHON = (
     "Conversion of 2026-10-06. Assembled with AI assistance — OpenCode "
     "(huggingface/zai-org/GLM-5.3-Flash), directed by Michael Conrad.",
 )
-
-_LATEX_QUOTE_RE = re.compile('"([^"]*)"')
-
-
-def latex_quote(text: str) -> str:
-    """LaTeX register adaptation: straight double quotes to ``...'' pairs."""
-    return _LATEX_QUOTE_RE.sub("``\\1''", text)
 
 
 def latex_foreword() -> str:
@@ -750,10 +798,10 @@ def latex_foreword() -> str:
         "\\chapter*{" + FOREWORD_TITLE + "}\n",
     ]
     for paragraph in FOREWORD_PARAGRAPHS:
-        parts.append(latex_quote(latex_escape(paragraph)) + "\n\n")
-    parts.append(latex_escape(FOREWORD_CHANGES_LEAD) + "\n\\begin{enumerate}\n")
+        parts.append(latex_prose(paragraph) + "\n\n")
+    parts.append(latex_prose(FOREWORD_CHANGES_LEAD) + "\n\\begin{enumerate}\n")
     for change in FOREWORD_CHANGES:
-        parts.append("  \\item " + latex_quote(latex_escape(change)) + "\n")
+        parts.append("  \\item " + latex_prose(change) + "\n")
     parts.append("\\end{enumerate}\n\n")
     for paragraph in FOREWORD_COLOPHON:
         parts.append(latex_escape(paragraph) + "\n\n")
@@ -766,11 +814,11 @@ def html_foreword_content() -> str:
     out = ['<section class="topic foreword" id="foreword">']
     out.append(f'  <h2 class="topic-heading">{html_escape(FOREWORD_TITLE)}</h2>')
     for paragraph in FOREWORD_PARAGRAPHS:
-        out.append(f"  <p>{html_escape(paragraph)}</p>")
-    out.append(f"  <p>{html_escape(FOREWORD_CHANGES_LEAD)}</p>")
+        out.append(f"  <p>{html_prose(paragraph)}</p>")
+    out.append(f"  <p>{html_prose(FOREWORD_CHANGES_LEAD)}</p>")
     out.append('  <ol>')
     for change in FOREWORD_CHANGES:
-        out.append(f"    <li>{html_escape(change)}</li>")
+        out.append(f"    <li>{html_prose(change)}</li>")
     out.append("  </ol>")
     for paragraph in FOREWORD_COLOPHON:
         out.append(f"  <p>{html_escape(paragraph)}</p>")
@@ -846,10 +894,10 @@ def latex_cf(block: dict, slugs: dict[str, str], warnings: list[str], where: str
             )
             parts.append("\\textcolor{cfmissing}{" + latex_escape(f"[{chunk}]") + "}")
         else:
-            parts.append(latex_escape(chunk))
+            parts.append(latex_prose(chunk))
     tail = join_prose(lines[1:])
     if tail:
-        parts.append(" " + latex_escape(tail))
+        parts.append(" " + latex_prose(tail))
     return "{\\color{cflink} " + "".join(parts).strip() + "}"
 
 
@@ -857,7 +905,10 @@ def latex_gloss(gloss: str, slugs: dict[str, str]) -> str:
     """A pair gloss with its own marker mentions as live links (2026-10-06
     paren-depth change control): each mention chunk renders as a green
     hyperref link to its topic's anchor; every other character — text and
-    whitespace runs alike — passes through escaped-but-verbatim."""
+    whitespace runs alike — passes through escaped-but-verbatim, with quote
+    shaping on the text chunks (mention chunks stay byte-exact; chunks are
+    whitespace-delimited, so per-chunk lookback matches whole-string
+    lookback)."""
     parts: list[str] = []
     for kind, chunk, canonical in gloss_segments(gloss, slugs):
         if kind == "mention":
@@ -869,7 +920,7 @@ def latex_gloss(gloss: str, slugs: dict[str, str]) -> str:
                 + "}}"
             )
         else:
-            parts.append(latex_escape(chunk))
+            parts.append(latex_prose(chunk))
     return "".join(parts)
 
 
@@ -915,9 +966,8 @@ def latex_topic(
     key = topic["key"]
     slug = slugs[key]
     label = f"key:{slug}" if topic["occurrence"] == 1 else f"key:{slug}-{topic['occurrence']}"
-    out = [
-        f"{LATEX_HEADING_LADDER[level]}{{{latex_escape(topic['heading'] or key)}}}\\label{{{label}}}\n"
-    ]
+    heading_text = latex_escape(shape_quotes(topic["heading"] or key, "latex"))
+    out = [f"{LATEX_HEADING_LADDER[level]}{{{heading_text}}}\\label{{{label}}}\n"]
     preamble = join_prose(topic["preamble"])
     if preamble:
         out.append(latex_escape(preamble) + "\n\n")
@@ -942,14 +992,14 @@ def latex_topic(
         if marker == "shd":
             continue
         if marker in ("shd2", "shd3", "shd4"):
-            heading = latex_escape(join_prose(block_lines(block)))
+            heading = latex_escape(shape_quotes(join_prose(block_lines(block)), "latex"))
             depth = int(marker[3]) - 2
             command = LATEX_HEADING_LADDER[min(level + 1 + depth, len(LATEX_HEADING_LADDER) - 1)]
             out.append(command + "{" + heading + "}\n")
         elif marker == "txt":
             text = join_prose(block_lines(block))
             if text:
-                out.append(latex_escape(text) + "\n\n")
+                out.append(latex_prose(text) + "\n\n")
         elif marker in ("ftx", "fxv"):
             if marker == "ftx" and not is_example(block):
                 continue
@@ -960,17 +1010,17 @@ def latex_topic(
         elif marker == "nt":
             text = join_prose(block_lines(block))
             if text:
-                out.append("\\begin{quote}\\small\\itshape " + latex_escape(text) + "\\end{quote}\n")
+                out.append("\\begin{quote}\\small\\itshape " + latex_prose(text) + "\\end{quote}\n")
         elif marker == "typ":
             text = join_prose(block_lines(block))
             if text:
-                out.append("{\\small " + latex_escape(text) + "}\\par\n")
+                out.append("{\\small " + latex_prose(text) + "}\\par\n")
         elif marker == "bib":
             text = join_prose(block_lines(block))
             if text:
                 out.append(
                     "{\\small\\setlength{\\parindent}{0pt}\\hangindent=3em\\hangafter=1 "
-                    + latex_escape(text)
+                    + latex_prose(text)
                     + "\\par}\n"
                 )
     flush_nwt()
@@ -1281,10 +1331,10 @@ def html_cf(block: dict, page_by_key: dict[str, str], slugs: dict[str, str], war
             )
             parts.append(f'<a class="cf-missing" title="cross-reference target not found in source">{escaped}</a>')
         else:
-            parts.append(escaped)
+            parts.append(html_prose(chunk))
     tail = join_prose(lines[1:])
     if tail:
-        parts.append(" " + html_escape(tail))
+        parts.append(" " + html_prose(tail))
     return "".join(parts).strip()
 
 
@@ -1292,7 +1342,10 @@ def html_gloss(gloss: str, page_by_key: dict[str, str], slugs: dict[str, str]) -
     """A pair gloss with its own marker mentions as live links (2026-10-06
     paren-depth change control): each mention chunk renders as a
     class="cf-link" anchor to its topic's page anchor; every other character —
-    text and whitespace runs alike — passes through escaped-but-verbatim."""
+    text and whitespace runs alike — passes through escaped-but-verbatim, with
+    quote shaping on the text chunks (mention chunks stay byte-exact; chunks
+    are whitespace-delimited, so per-chunk lookback matches whole-string
+    lookback)."""
     parts: list[str] = []
     for kind, chunk, canonical in gloss_segments(gloss, slugs):
         if kind == "mention":
@@ -1300,7 +1353,7 @@ def html_gloss(gloss: str, page_by_key: dict[str, str], slugs: dict[str, str]) -
                 f'<a class="cf-link" href="{page_by_key[canonical]}#key-{slugs[canonical]}">{html_escape(chunk)}</a>'
             )
         else:
-            parts.append(html_escape(chunk))
+            parts.append(html_prose(chunk))
     return "".join(parts)
 
 
@@ -1341,8 +1394,9 @@ def html_topic(
     \\subsection/\\subsubsection levels."""
     key = topic["key"]
     heading_tag = html_heading_tag(2 + offset)
+    heading_text = html_escape(shape_quotes(topic["heading"] or key, "unicode"))
     out = [f'<section class="topic" id="key-{slugs[key]}">']
-    out.append(f'  <{heading_tag} class="topic-heading">{html_escape(topic["heading"] or key)}</{heading_tag}>')
+    out.append(f'  <{heading_tag} class="topic-heading">{heading_text}</{heading_tag}>')
     preamble = join_prose(topic["preamble"])
     if preamble:
         out.append(f"  <p>{html_escape(preamble)}</p>")
@@ -1368,12 +1422,12 @@ def html_topic(
             continue
         if marker in HTML_SECTION_MARKERS:
             level = html_heading_tag(int(marker[3]) + 1 + offset)
-            heading = html_escape(join_prose(block_lines(block)))
+            heading = html_escape(shape_quotes(join_prose(block_lines(block)), "unicode"))
             out.append(f'  <{level} class="section-heading">{heading}</{level}>')
         elif marker == "txt":
             text = join_prose(block_lines(block))
             if text:
-                out.append(f"  <p>{html_escape(text)}</p>")
+                out.append(f"  <p>{html_prose(text)}</p>")
         elif marker in ("ftx", "fxv"):
             if marker == "ftx" and not is_example(block):
                 continue
@@ -1385,15 +1439,15 @@ def html_topic(
         elif marker == "nt":
             text = join_prose(block_lines(block))
             if text:
-                out.append(f'  <p class="note">{html_escape(text)}</p>')
+                out.append(f'  <p class="note">{html_prose(text)}</p>')
         elif marker == "typ":
             text = join_prose(block_lines(block))
             if text:
-                out.append(f'  <p class="typ">{html_escape(text)}</p>')
+                out.append(f'  <p class="typ">{html_prose(text)}</p>')
         elif marker == "bib":
             text = join_prose(block_lines(block))
             if text:
-                out.append(f'  <p class="bib">{html_escape(text)}</p>')
+                out.append(f'  <p class="bib">{html_prose(text)}</p>')
     flush_nwt()
     out.append("</section>")
     return "\n".join(out)

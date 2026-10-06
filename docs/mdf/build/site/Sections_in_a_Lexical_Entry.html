@@ -158,21 +158,21 @@
 <section class="topic" id="key-Sections_in_a_Lexical_Entry">
   <h2 class="topic-heading">Sections in a Lexical Entry</h2>
   <h3 class="section-heading">(Understanding the hierarchical structure of an entry)</h3>
-  <p>MDF has two built-in hierarchical structures that should be flexible enough to meet most needs. (See "Alternate_Hierarchy" for a discussion of MDF's other hierarchy.) The field codes that mark the boundaries to lexical subsections are \lx, \ps (\pn), \sn, \se. Each of these sections or subsections can take a full set of field markers (except \lc and  \hm, which should only occur at the top of the record).</p>
+  <p>MDF has two built-in hierarchical structures that should be flexible enough to meet most needs. (See “Alternate_Hierarchy” for a discussion of MDF’s other hierarchy.) The field codes that mark the boundaries to lexical subsections are \lx, \ps (\pn), \sn, \se. Each of these sections or subsections can take a full set of field markers (except \lc and  \hm, which should only occur at the top of the record).</p>
   <h3 class="section-heading">Multiple parts of speech</h3>
-  <p>Multiple parts of speech (\ps) are used to organize sections within an entry. A lexeme that fills more than one syntactic slot (as a noun, verb, etc.) should not be handled as homonyms. This is because the different syntactic functions (e.g. 'shower' (n) 'shower' (v) are still clearly related to each other in meaning.</p>
+  <p>Multiple parts of speech (\ps) are used to organize sections within an entry. A lexeme that fills more than one syntactic slot (as a noun, verb, etc.) should not be handled as homonyms. This is because the different syntactic functions (e.g. ‘shower’ (n) ‘shower’ (v) are still clearly related to each other in meaning.</p>
   <pre class="example mdf-example"><code> \lx shower</code></pre>
   <pre class="example mdf-example"><code> \ps n</code></pre>
   <pre class="example mdf-example"><code> \de a light rain</code></pre>
   <pre class="example mdf-example"><code> \ps vt</code></pre>
   <pre class="example mdf-example"><code> \de to bestow special things on someone
 </code></pre>
-  <p>MDF's standard printing function starts new \ps fields within an entry on a new line, preceded by an em dash to show that the lexeme form has not changed but its function has.</p>
+  <p>MDF’s standard printing function starts new \ps fields within an entry on a new line, preceded by an em dash to show that the lexeme form has not changed but its function has.</p>
   <pre class="example mdf-example"><code>shower   n. a light rain.</code></pre>
   <pre class="example mdf-example"><code>       --  vt. to bestow special things on someone.
 </code></pre>
   <h3 class="section-heading">Multiple Senses</h3>
-  <p>MDF allows sense numbers (\sn) to be used as another level of hierarchy within an entry. In the standard hierarchy, the sense number is lower than part of speech, and so multiple senses should be grouped under the relevant parts of speech to denote related but distinct meanings within a particular part of speech. (See "Alternate_Hierarchy" for a discussion of MDF's other hierarchy.) Multiple senses in each separate part of speech should start with '1' (as seen in the following, more complete entry for 'shower'):</p>
+  <p>MDF allows sense numbers (\sn) to be used as another level of hierarchy within an entry. In the standard hierarchy, the sense number is lower than part of speech, and so multiple senses should be grouped under the relevant parts of speech to denote related but distinct meanings within a particular part of speech. (See “Alternate_Hierarchy” for a discussion of MDF’s other hierarchy.) Multiple senses in each separate part of speech should start with ‘1’ (as seen in the following, more complete entry for ‘shower’):</p>
   <pre class="example mdf-example"><code> \lx shower</code></pre>
   <pre class="example mdf-example"><code> \ps n</code></pre>
   <pre class="example mdf-example"><code> \sn 1</code></pre>
@@ -297,7 +297,7 @@
            renounce immoral actions.
     pembersih n. 1) cleanser. 2) janitor.
 </code></pre>
-  <p>For information on  MDF's alternate hierarchy, see:</p>
+  <p>For information on  MDF’s alternate hierarchy, see:</p>
   <p class="cf"><a class="cf-link" href="Alternate_Hierarchy.html#key-Alternate_Hierarchy">Alternate_Hierarchy</a></p>
   <p>To continue with the general discussion, jump to:</p>
   <p class="cf"><a class="cf-link" href="Using_Subentries_or_Lexical_Entries.html#key-Using_Subentries_or_Lexical_Entries">Using_Subentries_or_Lexical_Entries</a></p>

@@ -157,13 +157,13 @@
 <main class="content">
 <section class="topic" id="key-Character_Style_Codes">
   <h2 class="topic-heading">Character Style Codes</h2>
-  <p>Character style codes can be used in any field (usually the information or discussion type fields) to uniquely mark the specific language of the text that you are discussing. For example, 'fv:' marks the following word as vernacular text:</p>
+  <p>Character style codes can be used in any field (usually the information or discussion type fields) to uniquely mark the specific language of the text that you are discussing. For example, ‘fv:’ marks the following word as vernacular text:</p>
   <pre class="example mdf-example"><code>  \ue This usage is a bit blunt.  Most people don't say 
       this directly, rather they refer to where they are 
       going, e.g. fv:keta to refer to 'outside the village',
       but fv:-dai is used in familiar settings.
 </code></pre>
-  <p>Character style codes are applied only to the following word. A space or any punctuation (except the '-') terminates the style. The style codes must be in lower case, and there must not be any space between the colon and the following word, e.g.</p>
+  <p>Character style codes are applied only to the following word. A space or any punctuation (except the ‘-‘) terminates the style. The style codes must be in lower case, and there must not be any space between the colon and the following word, e.g.</p>
   <pre class="example mdf-example"><code>       fv:sabun       is okay</code></pre>
   <pre class="example mdf-example"><code>       fv: sabun      won't work (the fv: is treated as normal text)
 </code></pre>
@@ -191,12 +191,12 @@
                required in the \sc field)
 </code></pre>
   <p>The uc: code is able to detect which type of field it is used in. If the field is a vernacular field uc: will underline with bold characters (following the vernacular character style); if the field uses the national language, uc: will underline italic characters; and if the field uses English, uc: will underline normal characters (to follow the character style for English). If you want to specifically control the underlining character style, use ui: and ub:.</p>
-  <p>If you need to tweak your formatted dictionary or reversed finderlists and apply a character style where you had forgotten to place a code, simply use the same character style that MS-Word uses to format other such text (e.g. the vernacular font in MS-Word uses the "f_vernacular" style). Just be sure to also add the missing character style code in your lexical database too, otherwise you'll have to "tweak" the output every time.</p>
+  <p>If you need to tweak your formatted dictionary or reversed finderlists and apply a character style where you had forgotten to place a code, simply use the same character style that MS-Word uses to format other such text (e.g. the vernacular font in MS-Word uses the “f_vernacular” style). Just be sure to also add the missing character style code in your lexical database too, otherwise you’ll have to “tweak” the output every time.</p>
   <h3 class="section-heading">Explicit Font Codes</h3>
   <p>To explicitly control the character style or font of any phrase, word, or part of word, use the underlying bar codes used by MDF. For example, to underline only a part of a word, use the |u bar code:</p>
   <pre class="example mdf-example"><code>  \xv Aulopo|u{a} au lae weidu.
 </code></pre>
-  <p>The |u{} underlines the bracketed character ('a') only. Note that the curly braces {} can contain any string of letters, numbers, spaces, or punctuation.</p>
+  <p>The |u{} underlines the bracketed character (‘a’) only. Note that the curly braces {} can contain any string of letters, numbers, spaces, or punctuation.</p>
   <p>The complete list of explicit font codes follows:</p>
   <pre class="example mdf-example"><code>     |fv{ }      Vernacular font</code></pre>
   <pre class="example mdf-example"><code>     |fe{ }      English font</code></pre>
@@ -208,7 +208,7 @@
   <pre class="example mdf-example"><code>     |fb{ }      Bold font </code></pre>
   <pre class="example mdf-example"><code>     |fi{ }      Italic font
 </code></pre>
-  <p>Still supported, but not encouraged, are the older ("Manuscripter") style codes.</p>
+  <p>Still supported, but not encouraged, are the older (“Manuscripter”) style codes.</p>
   <p>Underlining is more complex and so provides the following:</p>
   <pre class="example mdf-example"><code>     |u{ }       General underlined character font (as shown above) </code></pre>
   <pre class="example mdf-example"><code>     |uc{ }      Specific regular underlined character font </code></pre>
@@ -223,7 +223,7 @@
       because proto *l ~ s in Selaru resulting in a loss 
       of contrast.
 </code></pre>
-  <p class="note">If you choose to use these explicit style codes, you must not forget the closing brace ' } '. If you do, the rest of the field will be considered a part of the specified font!</p>
+  <p class="note">If you choose to use these explicit style codes, you must not forget the closing brace ‘ } ‘. If you do, the rest of the field will be considered a part of the specified font!</p>
   <p class="note">Actually, any field marker can become a character style code and transmit its formatting to the data enclosed in the curly brackets. This is mostly useful for the fields mentioned already (sc, hm) but any field code can be used.</p>
   <p>To continue with the general discussion, jump to:</p>
   <p class="cf"><a class="cf-link" href="Punctuation_and_Special_Codes.html#key-Punctuation_and_Special_Codes">Punctuation_and_Special_Codes</a></p>

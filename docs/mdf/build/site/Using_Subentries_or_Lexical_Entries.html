@@ -185,19 +185,19 @@
      inabren    n. recreation, entertainment.
      rabrenak n. toy.
 </code></pre>
-  <p>This method allows you to see all of the related pieces close together. But you have to know where to look. And this is a major problem; outsiders will not know that to find a discussion of "inabren" they must look under "bren". To make this easier for new users, we recommend you also make extensive use of "Minimal Entries" (essentially the same as "minor entries") -- these are lexical entries that have only the most basic fields (maybe a \ps field and a gloss field), but they include the \mn "main entry" field which provides the sign-post back to the lexical entry where more information can be found.</p>
-  <p>The minimal entry for "inabren" might be:</p>
+  <p>This method allows you to see all of the related pieces close together. But you have to know where to look. And this is a major problem; outsiders will not know that to find a discussion of “inabren” they must look under “bren”. To make this easier for new users, we recommend you also make extensive use of “Minimal Entries” (essentially the same as “minor entries”) -- these are lexical entries that have only the most basic fields (maybe a \ps field and a gloss field), but they include the \mn “main entry” field which provides the sign-post back to the lexical entry where more information can be found.</p>
+  <p>The minimal entry for “inabren” might be:</p>
   <pre class="example mdf-example"><code>  \lx inabren</code></pre>
   <pre class="example mdf-example"><code>  \ps n</code></pre>
   <pre class="example mdf-example"><code>  \ge recreation</code></pre>
   <pre class="example mdf-example"><code>  \mn bren
 </code></pre>
-  <p>When printed the \mn field typically has the label "See main entry:".</p>
-  <p>That is all there is to this minimal entry. For this reason, it is expected that the subentry for "inabren" would look very much like a full lexical entry; it would contain verbose definitions, have example sentences, multiple senses (if needed), cross-referencing, and any encyclopedic information, notes, or comments that are needed to elucidate this lexeme, i.e. it would be as though a full lexical entry were stuck right inside another lexical entry. (The above example of subentry use obviously falls short of this expectation -- it is merely an example.)</p>
+  <p>When printed the \mn field typically has the label “See main entry:”.</p>
+  <p>That is all there is to this minimal entry. For this reason, it is expected that the subentry for “inabren” would look very much like a full lexical entry; it would contain verbose definitions, have example sentences, multiple senses (if needed), cross-referencing, and any encyclopedic information, notes, or comments that are needed to elucidate this lexeme, i.e. it would be as though a full lexical entry were stuck right inside another lexical entry. (The above example of subentry use obviously falls short of this expectation -- it is merely an example.)</p>
   <p>But practically speaking, many find it difficult to actually put the same amount of effort into embellishing a subentry as they would into a main lexical entry. For this reason, and for the fact that such embellished records soon become enormous, you might find the alternative way better for you:</p>
   <h3 class="section-heading">2. Lexical Entries and Cross-referencing</h3>
   <p>The alternative is nearly the exact opposite: make all lexemes (roots or polymorphemic forms) main lexical entries. But in order to see the relationships between the scattered pieces, you will need to use an extensive cross-referencing system. MDF provides the \cf and the \lf field bundles for this.</p>
-  <p>Again using the above example, the "bren" lexical entry would include the following fields:</p>
+  <p>Again using the above example, the “bren” lexical entry would include the following fields:</p>
   <pre class="example mdf-example"><code>  \cf brenak</code></pre>
   <pre class="example mdf-example"><code>  \ce play s.t.
 </code></pre>
@@ -207,7 +207,7 @@
   <pre class="example mdf-example"><code>  \cf rabrenak</code></pre>
   <pre class="example mdf-example"><code>  \ce toy
 </code></pre>
-  <p>These \cf fields reference full lexical entries for both "inabren" and for "rabrenak". If you wish to provide even further information regarding the relationship between the "bren" lexeme and these referenced lexemes, use the \lf field (the \lf labels shown here are not certain):</p>
+  <p>These \cf fields reference full lexical entries for both “inabren” and for “rabrenak”. If you wish to provide even further information regarding the relationship between the “bren” lexeme and these referenced lexemes, use the \lf field (the \lf labels shown here are not certain):</p>
   <pre class="example mdf-example"><code>  \lf Vgoal</code></pre>
   <pre class="example mdf-example"><code>  \lv brenak</code></pre>
   <pre class="example mdf-example"><code>  \le play s.t.
