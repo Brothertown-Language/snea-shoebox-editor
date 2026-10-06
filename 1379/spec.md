@@ -72,7 +72,7 @@ The source file is in Toolbox/Shoebox help format — a plain-text marker-based 
 
 ## Source Document
 `docs/mdf/MDFields19a_UTF8.txt` — Official MDF 1.9a field reference (Buseman, 2006). Contains:
-- 108 keyed topics, all unique: ~91 field-marker definitions (`\lx`, `\ge`, `\ps`, `\se`, `\cf`, etc.) + 17 conceptual chapters (e.g. `Introduction`, `Character_Style_Codes`, `Range_Sets`, `Order_of_Fields`, `Summary_of_Fields`, `Sections_in_a_Lexical_Entry`) — verified live 2026-10-05
+- 108 keyed topics, all unique: 91 field-marker definitions (`\lx`, `\ge`, `\ps`, `\se`, `\cf`, etc.) + 17 conceptual chapters (e.g. `Introduction`, `Character_Style_Codes`, `Range_Sets`, `Order_of_Fields`, `Summary_of_Fields`, `Sections_in_a_Lexical_Entry`) — 108 − 17 = 91, verified live 2026-10-05
 - 21 `\shd2` subsections, plus `\shd3` ×2, `\shd4` ×9, `\bib` ×4, `\nwt` ×2, `\_sh` ×1 header — verified live 2026-10-05
 - A built-in home/TOC entry (`\key aa` → "Helps Database for MDF Marker Set") whose `\cf` links index every chapter — the source's own navigation model
 - Hierarchy discussions (standard vs. alternate)
@@ -103,6 +103,7 @@ The source document `docs/mdf/MDFields19a_UTF8.txt` is now **committed and track
 - **R-13.** The MDF Reference view SHALL offer the committed PDF as a download via a control placed in the page's left browser column, serving the filename required by R-14.
 - **R-14.** The PDF deliverable SHALL be named `mdf-lexical-fields-1.9a.pdf` — matching the document's self-identification ("MDF Lexical Fields", draft v1.9a) and the repository's lowercase-hyphen file convention. The committed file, the release asset, and the in-app download SHALL all carry this name.
 - **R-15.** The `SNEA_E2E=1` test-only authentication bypass SHALL support role selection (viewer, editor, admin) via a test-only mechanism honored exclusively when `SNEA_E2E=1` is set, so SC-10's per-role verification can produce real Playwright evidence. With `SNEA_E2E` unset, the production auth path SHALL remain byte-identical (same invariant as the established #1400 SC-11a bypass inertness).
+- **R-16.** The repository's `AGENTS.md` SHALL NOT cite repository paths that do not exist. Specifically, the Data Integrity section's reference to `.opencode/guidelines/090-data-integrity.md` — a file retired to `.opencode/attic/guidelines/` — SHALL be removed; the Data Integrity rules are complete in `AGENTS.md` itself, so no agent following an `AGENTS.md` citation encounters a dead path.
 
 ### Output Formats
 - **PDF**: Professional typeset reference via XeLaTeX (fonts: Noto Serif / Gentium), named `mdf-lexical-fields-1.9a.pdf`
@@ -143,13 +144,13 @@ The LaTeX renderer attaches presentation to each semantic element produced by th
 
 | Semantic element | LaTeX presentation |
 |---|---|
-| `\_sh` header | Document metadata → title block ("MDF Lexical Fields", version, date) |
+| `\_sh` header | Document metadata → title block ("MDF Lexical Fields", version v3.0, and the MDF source file's last-modified date as recorded in the repository — `git log -1 --format=%cs -- docs/mdf/MDFields19a_UTF8.txt`, reproducible in CI) |
 | `\key` topic | Anchor target (`\label`) + PDF bookmark; chapter-topic keys structure the TOC |
-| `\shd` (chapter topics / entry headings) | Top-level sectioning (`\chapter` in a book-class document) |
+| `\shd` (chapter topics / entry headings) | `\chapter` — the document is book-class: each of the 108 `\key`+`\shd` pairs is a chapter; there is no alternative mapping |
 | `\shd2` / `\shd3` / `\shd4` | Nested sectioning levels (`\section` / `\subsection` / `\subsubsection`) |
 | `\typ` | Entry-attribute line, caption-size (e.g. `<Optional>`) |
 | `\txt` | Body text (Noto Serif) |
-| `\ftx` / `\fxv` | Verbatim-family monospace block — content byte-for-byte, no re-wrapping |
+| `\ftx` / `\fxv` | verbatim monospace block — content byte-for-byte, no re-wrapping |
 | `\cf` | `hyperref` link to the target topic's anchor, visually distinct — green, per the source's own stated convention |
 | `\nt` | Note text, caption-size |
 | `\bib` | Bibliography-style entry |
@@ -183,6 +184,7 @@ Invariants: every parsed element kind has a defined presentation — no silently
 | SC-12 | In-context hooks render on all three surfaces — Direct Entry (per-field help + reference expander), Records (marker-token definition on interaction), Upload MDF review (warning links) — each linking to the correct marker's entry | `behavioral` | Playwright: assert hook presence and correct link targets on each of the three surfaces | Running the three-surface hook verification costs minutes of test execution time — a bounded delay that surfaces a broken or misdirected help link before it reaches users. Skipping this verification means help affordances that link to the wrong marker (or don't render) ship to production and cost 1000× more to fix. Correctness is the only metric. |
 | SC-13 | The converter exits non-zero with a clear error on a zero-`\key` source, and emits a warning while continuing on a malformed-marker fixture — a line starting at byte offset 0 with a `\token` outside the Parsing Semantics whitelist (e.g. `\zzz ...`) — without crashing | `behavioral` | Run the converter against an empty/marker-less fixture (assert non-zero exit + clear error) and against a malformed-marker fixture per the Parsing Semantics definition (assert warning emitted, exit 0, valid entries still parsed) | Running the two fixture conversions costs seconds of execution time — a bounded delay that surfaces a fail-fast or crash defect before it reaches consumers. Skipping this verification means a converter that silently emits empty output or crashes on malformed input ships to production and costs 1000× more to fix. Correctness is the only metric. |
 | SC-14 | All 444 formatting/printing examples (414 non-empty `\ftx` + 30 `\fxv`) are preserved through the pipeline — present in the PDF, the HTML site, and the in-app page | `behavioral` | Count example blocks in each rendered surface (pdftotext for the PDF; HTML parse for the site; rendered-page check for in-app) and verify 1:1 against the source's 444 | Running the example-count comparison costs minutes of execution time — a bounded delay that surfaces a dropped-content defect before it reaches consumers. Skipping this verification means a renderer silently dropping example content ships to production and costs 1000× more to fix. Correctness is the only metric. |
+| SC-15 | `AGENTS.md` contains no citations to repository paths that do not exist; the Data Integrity section no longer references `090-data-integrity.md` | `structural` | Script-extract every repository path cited in `AGENTS.md` and verify each exists in the working tree; confirm the string `090-data-integrity.md` no longer appears in `AGENTS.md` | Running the citation-existence check costs seconds of execution time — a bounded delay that surfaces a dead-path citation before it misdirects an agent. Skipping this verification means agents keep following a retired guideline path and propagate the dead reference into downstream artifacts, which costs 1000× more to untangle. Correctness is the only metric. |
 
 ## Edge Cases
 - **Empty or malformed marker**: A `\key` entry with no definition body, or a malformed marker line, must not crash the parser; the converter MUST emit a warning and continue the build without aborting
@@ -297,6 +299,12 @@ This spec is enforced by the project's approval gate and verification-before-com
 - verify: Count example blocks per surface and compare against the source's 444 (414 non-empty `\ftx` + 30 `\fxv`).
 - commit: `docs/mdf/build/` artifacts, `src/frontend/pages/mdf_reference.py`.
 
+### Item 15 (SC-15): AGENTS.md dead citation removed
+- RED: `AGENTS.md` cites `.opencode/guidelines/090-data-integrity.md`, which does not exist (retired to `.opencode/attic/guidelines/`).
+- GREEN: The dead citation is removed from the Data Integrity section; the rules stand complete in `AGENTS.md` itself.
+- verify: Script-extract every repository path cited in `AGENTS.md`; assert each exists; assert `090-data-integrity.md` is no longer cited.
+- commit: `AGENTS.md`.
+
 ## Implementation Phases
 
 ### Phase 1: Parser — Toolbox-to-JSON converter
@@ -333,6 +341,10 @@ This spec is enforced by the project's approval gate and verification-before-com
 - Upload MDF review: invalid/unknown-marker warnings link to the marker's entry
 - Verify: SC-12
 
+### Phase 7: Repository documentation hygiene
+- Remove `AGENTS.md`'s dead data-integrity citation (R-16): the Data Integrity rules are complete in `AGENTS.md` itself
+- Verify: SC-15
+
 ## Requirements → SCs → Phases Traceability
 
 | Requirement | SCs | Phases |
@@ -352,6 +364,7 @@ This spec is enforced by the project's approval gate and verification-before-com
 | R-13 (PDF download in MDF view) | SC-11 | Phase 5 |
 | R-14 (PDF named to match contents) | SC-4, SC-5, SC-11 | Phase 4, Phase 5 |
 | R-15 (test-only E2E role selection) | SC-10 | Phase 5 |
+| R-16 (AGENTS.md dead citation removed) | SC-15 | Phase 7 |
 
 ## Root Cause → SC Traceability
 
@@ -378,6 +391,7 @@ This spec is enforced by the project's approval gate and verification-before-com
 - New: `.github/workflows/mdf-docs.yml` (CI workflow: release asset upload, no Pages)
 - New: `src/frontend/pages/mdf_reference.py` (in-app MDF Reference page)
 - Existing: `src/services/security_manager.py` (test-only E2E role-selection extension per R-15; production path unchanged)
+- Existing: `AGENTS.md` (remove the dead data-integrity citation per R-16)
 - Existing: `src/services/navigation_service.py` (add MDF Reference nav entry)
 - Existing: `src/frontend/pages/direct_entry.py` (per-field help affordance + expander)
 - Existing: `src/frontend/pages/records.py` (marker-token help)
@@ -405,3 +419,4 @@ SPEC (documentation conversion tooling + in-app reference integration)
 | 2026-10-05 | Spec audit remediation (9 defects): corrected `\cf` count 315→297 cross-reference fields (line-initial census; annotated the erroneous 2026-07-27 entry); corrected non-ASCII census 30→32 chars (• ×2 U+2022 inside `\nwt`, missed earlier); expanded parser enumeration to ALL line-initial markers present (\shd2/\shd3/\shd4/\bib/\nwt/\_sh) so R-9/SC-7's hierarchy is producible and `\nwt` content survives; updated stale untracked claims (file is committed/tracked); added SC-13 (R-8 fail-fast/warn-continue verification) and SC-14 (R-2 444-example preservation, previously unverified); added R-15 (test-only E2E role selection) making SC-10's per-role Playwright method feasible — bypass currently resolves to admin only; corrected file size 133KB→130KB (130,520 bytes) | Spec audit returned FAIL — 8 defects in #1379 + 1 in #1417; all remediated with live verification | AI agent (audit remediation, authorized by developer's `audit` dispatch) |
 | 2026-10-05 | Added deterministic Parsing Semantics subsection (line-anchored whitelist grammar: offset-0 structural markers, exact-token matching so \shd2 ≠ \shd, raw-line continuation preservation, content never regex-processed, unknown-marker fixture definition, LF-only source) — grounded in the newly vendored tracked format reference `docs/from-other-projects/SIL-Shoe-1.24/` (SIL's own SF implementation, curated subset, provenance + SHA-256 recorded; no explicit upstream license — reference-only, nothing imports it); added it to Documentation Sources; anchored SC-13's malformed fixture to the Parsing Semantics definition; verified live: all 14 markers occur at byte offset 0, and only `\cf` ever occurs at line-initial position elsewhere (3 indented occurrences — all content: prose lines 393/406, display row 2661; mid-line marker mentions are content entirely outside the structural rule), zero non-whitelist offset-0 tokens, LF-only line endings | Developer direction: add parsing semantics from the line-based analysis; use SIL-Shoe source as the format reference and vendor it as a tracked repo resource | Developer (Michael Conrad) |
 | 2026-10-05 | Added Typographic Mapping (PDF) subsection: per-semantic-element LaTeX presentation table covering all 14 parsed markers (\_sh→title block, \key→anchor+bookmark, \shd→chapter, \shd2–4→nested sections, \typ→entry-attribute line, \txt→body, \ftx/\fxv→verbatim block byte-for-byte, \cf→green hyperref link per the source's own stated convention, \nt→note text, \bib→bibliography entry, \nwt→bulleted list) with no-dropped-elements/monospace-examples/live-links invariants — framed as a new modern XeLaTeX take grounded in the tracked sh_rtf conversion model and the MDF documentation, explicitly NOT a literal RTF port; \typ/\nwt/\bib content sampled and verified live before mapping | Developer direction: map to TeX constructs as a new take using the RTF converter + MDF documentation as understanding inputs; not a literal sh_rtf match | Developer (Michael Conrad) |
+| 2026-10-05 | Removed all uncertainties: ~91→exact 91 (108 − 17, includes home entry `aa`); title-block date pinned to the MDF source file's git last-modified date (reproducible in CI); `\shd`→`\chapter` pinned with no alternative mapping (book class; each of the 108 `\key`+`\shd` pairs is a chapter); `\ftx`/`\fxv`→"verbatim block" (no package-family hedge). Added R-16/SC-15/Item 15/Phase 7: remove `AGENTS.md`'s dead data-integrity citation (`.opencode/guidelines/090-data-integrity.md` retired to `.opencode/attic/guidelines/`; rules complete in AGENTS.md itself) so agents stop being misdirected by a dead path | Developer directives: add an SC for the AGENTS.md fix; no uncertainties in specs; choose the source-file last-modified date; no either/or on the `\shd` mapping | Developer (Michael Conrad) |
