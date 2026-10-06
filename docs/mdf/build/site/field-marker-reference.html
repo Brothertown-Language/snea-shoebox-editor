@@ -172,7 +172,10 @@
   <p class="key-line"><code>\key ce</code></p>
   <p>This gives the English gloss for the vernacular lexeme referenced by the preceding \cf field.</p>
   <p>For more information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a> confer/cross-reference</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a></dt>
+    <dd>confer/cross-reference</dd>
+</dl>
   <p>Identical national and regional language gloss fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-cn">\cn</a> and <a class="cf-link" href="field-marker-reference.html#key-cr">\cr</a></p>
   <p class="typ">&lt;Basic&gt;</p>
@@ -212,8 +215,12 @@
   <p>One major short coming of using the cross-reference fields (rather than the lexical function fields) is that the semantic relationship between the two related lexemes is not made explicit. But it is often the case that a researcher will know there is some kind of relationship between two lexemes but is unclear as to the nature of that relationship. This is what the \cf field is good for. And once the relationship is determined, the cross-reference information could then be transferred to an \lf field bundle.</p>
   <p>It is not uncommon for there to be many lexemes that are interrelated. This creates a myriad of cross-references, where each lexeme of a given type is cross-referenced to all other lexemes of that type. Adding new entries to the group can also be very tedious. A simple solution to this is to choose one lexeme as the focal point and have all other related lexemes refer only to that one. That focal lexeme will then contain a listing of all other lexemes in the group, by using either a series of \lf (lexical function) bundles, to describe the relationships between that focal lexeme and each of the other lexemes, or by using the \tb (table) field to make an actual list of the other lexemes and their meanings.</p>
   <p>For more on grouping cross-references or mapping related lexemes, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a> lexical function label</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-tb">\tb</a> table</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a></dt>
+    <dd>lexical function label</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-tb">\tb</a></dt>
+    <dd>table</dd>
+</dl>
   <p>For the English, national and regional glossing fields, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ce">\ce,</a> <a class="cf-link" href="field-marker-reference.html#key-cn">\cn</a> and <a class="cf-link" href="field-marker-reference.html#key-cr">\cr</a></p>
   <p class="typ">&lt;Basic&gt;</p>
@@ -223,7 +230,10 @@
   <p class="key-line"><code>\key cn</code></p>
   <p>This gives the national language gloss for the vernacular lexeme referenced by the preceding \cf field.</p>
   <p>For more information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a> confer/cross-reference</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a></dt>
+    <dd>confer/cross-reference</dd>
+</dl>
   <p>Identical English and regional language gloss fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ce">\ce</a> and <a class="cf-link" href="field-marker-reference.html#key-cr">\cr</a></p>
   <p class="typ">&lt;Basic&gt;</p>
@@ -232,7 +242,10 @@
   <h4 class="topic-heading">\de  definition (English)</h4>
   <p class="key-line"><code>\key de</code></p>
   <p>This field is used to fully express the semantic domains of each sense of a lexeme in English. For related information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ge">\ge</a> gloss (English)</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ge">\ge</a></dt>
+    <dd>gloss (English)</dd>
+</dl>
   <h5 class="section-heading">Hint</h5>
   <p>If an entry has many English glosses, none of which are vitally important to differentiate while glossing texts, give only one gloss in the \ge field (to simplify interlinearizing) and then give all of the glosses in the \de and \re fields. When the dictionary is formatted, the \de field will be used and the \ge field will be discarded. Also, because there are \re fields, the \ge field will be ignored for reversing the database.</p>
   <p>For example, the Indonesian morpheme '-nya' means 'his' 'hers' or 'its', but for glossing '3sPOS' may be adequate (if not preferable), but '3sPOS' is awkward for both a dictionary printout and an entry in a reversed English finderlist. So, do something like this:</p>
@@ -252,9 +265,15 @@
   <p class="key-line"><code>\key dn</code></p>
   <p>This field is used to fully express the semantic domains of each sense of a lexeme in the national language.</p>
   <p>For more information, see "Hint" under:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-de">\de</a> definition English</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-de">\de</a></dt>
+    <dd>definition English</dd>
+</dl>
   <p>See also:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-gn">\gn</a> gloss national</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-gn">\gn</a></dt>
+    <dd>gloss national</dd>
+</dl>
   <p>For the related definition fields, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-dv">\dv,</a> <a class="cf-link" href="field-marker-reference.html#key-de">\de,</a> and <a class="cf-link" href="field-marker-reference.html#key-dr">\dr</a></p>
   <p>Closely related national language fields are:</p>
@@ -288,8 +307,12 @@
   <p>Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case. The sequence ' ; ' is also converted to ', ' by MDF printing when formatting a dictionary or finderlist.</p>
   <p>The advantage of keeping your glosses in separate fields is that if you setup Toolbox to sort on the \ge fields (to get a type of finderlist), it will sort on all of the glosses; but if the glosses are all concatenated, Toolbox will only sort on the first form.</p>
   <p>For important related information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-de">\de</a> definition (English)</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-re">\re</a> reverse form (English)</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-de">\de</a></dt>
+    <dd>definition (English)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-re">\re</a></dt>
+    <dd>reverse form (English)</dd>
+</dl>
   <p class="typ">&lt;Basic&gt;</p>
 </section>
 <section class="topic" id="key-gn">
@@ -306,20 +329,42 @@
   <p>Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case.</p>
   <p>MDF will convert the ' ; ' sequence to ', ' when formatting the dictionary. (MDF will also automatically convert any underline character '_' in a gloss field to a space when formatting.)</p>
   <p>For important related information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-dn">\dn</a> definition (national)</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-rn">\rn</a> reversal form (national)</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-dn">\dn</a></dt>
+    <dd>definition (national)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-rn">\rn</a></dt>
+    <dd>reversal form (national)</dd>
+</dl>
   <p class="typ">&lt;Basic&gt;</p>
 </section>
 <section class="topic" id="key-nt">
   <h4 class="topic-heading">\nt  notes, etc.</h4>
   <p class="key-line"><code>\key nt</code></p>
   <p>This is a generic dump for all your personal notes about an entry, subentry, or sense. More specific note fields are provided for "splitters", i.e. those who desire a finer differentiation to their notes. These are:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-np">\np</a> notes <a class="cf-link" href="field-marker-reference.html#key-on">on</a> phonology</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ng">\ng</a> notes <a class="cf-link" href="field-marker-reference.html#key-on">on</a> grammar</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-nd">\nd</a> notes <a class="cf-link" href="field-marker-reference.html#key-on">on</a> discourse</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-na">\na</a> notes <a class="cf-link" href="field-marker-reference.html#key-on">on</a> anthropology</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ns">\ns</a> notes <a class="cf-link" href="field-marker-reference.html#key-on">on</a> sociolinguistics</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-nq">\nq</a> questions</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-np">\np</a></dt>
+    <dd>notes</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-on">on</a></dt>
+    <dd>phonology</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ng">\ng</a></dt>
+    <dd>notes</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-on">on</a></dt>
+    <dd>grammar</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-nd">\nd</a></dt>
+    <dd>notes</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-on">on</a></dt>
+    <dd>discourse</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-na">\na</a></dt>
+    <dd>notes</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-on">on</a></dt>
+    <dd>anthropology</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ns">\ns</a></dt>
+    <dd>notes</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-on">on</a></dt>
+    <dd>sociolinguistics</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-nq">\nq</a></dt>
+    <dd>questions</dd>
+</dl>
   <p>If selected for output, MDF adds the label "Notes: " to this field and brackets it with "[ ]".</p>
   <p class="note">This is a "free-form" field.   Punctuation and capitalization should be used as needed.</p>
   <p class="typ">&lt;Basic&gt;</p>
@@ -335,7 +380,10 @@
   <p class="note">If the  order is  reversed, MDF  will not  function properly.</p>
   <p>MDF will format the \pn field only if you specify that the output is for a national audience. When a national audience is specified, the \pn field will replace the \ps field. But if there is no \pn field or it is empty, the \ps field will be output for the national audience as for an English audience.</p>
   <p>For more information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ps">\ps</a> part of speech</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ps">\ps</a></dt>
+    <dd>part of speech</dd>
+</dl>
   <p>For important information on Range Sets and on MDF's label substitution feature, see:</p>
   <p class="cf"><a class="cf-link" href="Range_Sets.html#key-Range_Sets">Range_Sets</a></p>
   <p class="typ">&lt;Basic&gt;</p>
@@ -346,7 +394,10 @@
   <p>This field is used to classify the part of speech for the vernacular form (not the national or English gloss), i.e., "fat" may be an adjective in English, but that does not mean the vernacular form can be classified as such. Consistent labeling is important. Use Toolbox's Range Set feature for this field. For more information, see:</p>
   <p class="cf"><a class="cf-link" href="Range_Sets.html#key-Range_Sets">Range_Sets</a></p>
   <p>To specify a national part of speech label, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pn">\pn</a> part of speech (national)</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pn">\pn</a></dt>
+    <dd>part of speech (national)</dd>
+</dl>
   <p class="typ">&lt;Basic&gt;</p>
 </section>
 <section class="topic" id="key-re">
@@ -357,7 +408,10 @@
   <pre class="example mdf-example"><code> \re house ; hut ; shack ; dwelling ; lean-to
 </code></pre>
   <p>They could also be entered in separate \re fields. For more information on this, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ge">\ge</a> gloss (English)</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ge">\ge</a></dt>
+    <dd>gloss (English)</dd>
+</dl>
   <p>The advantage of keeping them in separate fields is that if you setup Toolbox to sort on the \re fields (to get a type of finderlist), it will sort on all of them, but if the reversal glosses are all concatenated, Toolbox will only index on the first form.</p>
   <p class="note">This field does not normally print in the dictionary.</p>
   <p class="typ">&lt;Basic&gt;</p>
@@ -381,7 +435,10 @@
   <p>You may use as many different example sentence bundles as you need for each sense, part of speech, and/or subentry in a record. Within a given section (e.g. sense), multiple examples are printed one after the other.</p>
   <p>MDF adds the label "Ref: " to this field.</p>
   <p>See also:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-xv">\xv</a> example sentence (vernacular)</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-xv">\xv</a></dt>
+    <dd>example sentence (vernacular)</dd>
+</dl>
   <p class="note">This is a "free-form" field.   Punctuation and capitalization should be used as needed.</p>
   <p class="typ">&lt;Basic&gt;</p>
 </section>
@@ -390,9 +447,15 @@
   <p class="key-line"><code>\key rn</code></p>
   <p>This gives the national language word or phrase form to be use to reverse the dictionary for a national language index. If an \rn * is present the relevant entry, subentry, or sense will be ignored (i.e. not included in the reversed index). Like the \gn field, the data for this field can be kept each in its own field or concatenated in one field, separated by ' ; '.</p>
   <p>For more information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-re">\re</a> reverse English</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-re">\re</a></dt>
+    <dd>reverse English</dd>
+</dl>
   <p>Also see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-gn">\gn</a> gloss-national</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-gn">\gn</a></dt>
+    <dd>gloss-national</dd>
+</dl>
   <p class="note">This field does not normally print in the dictionary.</p>
   <p class="typ">&lt;Basic&gt;</p>
 </section>
@@ -401,8 +464,12 @@
   <p class="key-line"><code>\key xe</code></p>
   <p>This provides the English translation of the example sentence given in the \xv field.</p>
   <p>For more information about example sentences, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-xv">\xv</a> example sentence (vernacular)</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-rf">\rf</a> reference to notebooks, texts, etc.</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-xv">\xv</a></dt>
+    <dd>example sentence (vernacular)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-rf">\rf</a></dt>
+    <dd>reference to notebooks, texts, etc.</dd>
+</dl>
   <p>Related fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-xn">\xn</a> and <a class="cf-link" href="field-marker-reference.html#key-xr">\xr</a></p>
   <p class="note">This is a "free-form" field.   Punctuation and capitalization should be used as needed.</p>
@@ -413,8 +480,12 @@
   <p class="key-line"><code>\key xn</code></p>
   <p>This provides the national translation of the example sentence given in the \xv field.</p>
   <p>For more information about example sentences, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-xv">\xv</a> example sentence (vernacular)</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-rf">\rf</a> reference to notebooks, texts, etc.</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-xv">\xv</a></dt>
+    <dd>example sentence (vernacular)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-rf">\rf</a></dt>
+    <dd>reference to notebooks, texts, etc.</dd>
+</dl>
   <p>Related fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-xe">\xe</a> and <a class="cf-link" href="field-marker-reference.html#key-xr">\xr</a></p>
   <p class="note">This is a "free-form" field.   Punctuation and capitalization should be used as needed.</p>
@@ -427,7 +498,10 @@
   <p>Be aware that sentences taken straight from texts generally do not make good example sentences, because this removes them from their context. Such sentences are often encoded with particles operating on the larger discourse and are likely to be bound anaphorically with preceding participants.</p>
   <p>Nouns rarely need example sentences, but good sentences are crucial to differentiating the various senses of verbs and can demonstrate and verify peculiar or rare domains or usages.</p>
   <p>For more information about example sentences, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-rf">\rf</a> reference to notebooks, texts, etc.</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-rf">\rf</a></dt>
+    <dd>reference to notebooks, texts, etc.</dd>
+</dl>
   <p>Related fields, used to translate or gloss the vernacular example sentence, are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-xe">\xe,</a> <a class="cf-link" href="field-marker-reference.html#key-xn">\xn,</a> and <a class="cf-link" href="field-marker-reference.html#key-xr">\xr</a></p>
   <p class="note">This is a "free-form" field.   Punctuation and capitalization should be used as needed.</p>
@@ -525,8 +599,12 @@
 </code></pre>
   <p>The latter gives more information to the outside reader by providing a gloss. (National and regional glosses are available also.)</p>
   <p>For more detailed information on this, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-sy">\sy</a> synonym</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a> lexical function</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-sy">\sy</a></dt>
+    <dd>synonym</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a></dt>
+    <dd>lexical function</dd>
+</dl>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-bb">
@@ -551,7 +629,10 @@
   <p class="key-line"><code>\key cr</code></p>
   <p>This gives the regional language gloss for the vernacular lexeme referenced by the preceding \cf field. MDF formats the \cr field with quotes inside square brackets.</p>
   <p>For more information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a> confer/cross-reference</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a></dt>
+    <dd>confer/cross-reference</dd>
+</dl>
   <p>Identical English and national language gloss fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ce">\ce</a> and <a class="cf-link" href="field-marker-reference.html#key-cn">\cn</a></p>
   <p class="typ">&lt;Optional&gt;</p>
@@ -562,9 +643,15 @@
   <p>Often early in the project the definitions we receive are actually in the regional language, not the national language; such definitions could be stored here.</p>
   <p>If this field is included in the output, MDF adds a label and brackets "[ ]" around it and it is treated as part of the national field.</p>
   <p>For more information, see "Hint" under:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-de">\de</a> definition (English)</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-de">\de</a></dt>
+    <dd>definition (English)</dd>
+</dl>
   <p>See also:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-gr">\gr</a> gloss (regional)</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-gr">\gr</a></dt>
+    <dd>gloss (regional)</dd>
+</dl>
   <p>For the related definition fields, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-dv">\dv,</a> <a class="cf-link" href="field-marker-reference.html#key-de">\de,</a> and <a class="cf-link" href="field-marker-reference.html#key-dn">\dn</a></p>
   <p>Closely related regional language fields are:</p>
@@ -665,9 +752,14 @@
   <pre class="example mdf-example"><code> \et *babuy
 </code></pre>
   <p>This field is bundled with the following fields:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-eg">\eg</a> etymology-gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-es">\es</a> etymology-source [doesn't print normally]</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ec">\ec</a> etymology-comment [doesn't print normally]</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-eg">\eg</a></dt>
+    <dd>etymology-gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-es">\es</a></dt>
+    <dd>etymology-source [doesn't print normally]</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ec">\ec</a></dt>
+    <dd>etymology-comment [doesn't print normally]</dd>
+</dl>
   <p>A full example would be:</p>
   <pre class="example mdf-example"><code> \et *ha[ñ]seng</code></pre>
   <pre class="example mdf-example"><code> \eg breathe loudly</code></pre>
@@ -710,8 +802,12 @@
   <p>The underline character '_' in the example glosses above is to force Toolbox to treat the multiple word gloss 'kasi pinda' as a single gloss. MDF will convert underline characters in gloss fields to spaces automatically. The sequence ' ; ' is also converted to ', ' by MDF when formatting a dictionary or finderlist.</p>
   <p>If this field is included in the output, MDF adds a label and brackets "[ ]" around it and it is treated as part of the national field.</p>
   <p>For important related information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-dr">\dr</a> definition (regional)</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-rr">\rr</a> reversal form (regional)</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-dr">\dr</a></dt>
+    <dd>definition (regional)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-rr">\rr</a></dt>
+    <dd>reversal form (regional)</dd>
+</dl>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-gv">
@@ -729,8 +825,12 @@
   <p>One word of caution: this is an etic approach, i.e. Greek semantics will rarely line up exactly with the vernacular domains. This field is to be a tool, and no attempt should be made to "force-fit" lexemes into pre-defined domains.</p>
   <p>If selected for output, MDF adds the label "Semantics: " to this field.</p>
   <p>For related fields see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-sd">\sd</a> semantic domain</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-th">\th</a> thesaurus</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-sd">\sd</a></dt>
+    <dd>semantic domain</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-th">\th</a></dt>
+    <dd>thesaurus</dd>
+</dl>
   <p>For references see:</p>
   <p class="cf"><a class="cf-link" href="References.html#key-References">References</a></p>
   <p class="note">This field does not normally print.</p>
@@ -741,23 +841,39 @@
   <p class="key-line"><code>\key le</code></p>
   <p>This is for giving the English gloss of the vernacular lexeme referenced by the lexical function.</p>
   <p>For more information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a> lexical function label</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-lv">\lv</a> vernacular lexeme referenced by the lexical function</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a></dt>
+    <dd>lexical function label</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lv">\lv</a></dt>
+    <dd>vernacular lexeme referenced by the lexical function</dd>
+</dl>
   <p>Related fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ln">\ln</a> and <a class="cf-link" href="field-marker-reference.html#key-lr">\lr</a></p>
   <p>For generic cross-referencing, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a> confer/cross-reference</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a></dt>
+    <dd>confer/cross-reference</dd>
+</dl>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-lf">
   <h4 class="topic-heading">\lf  lexical function label</h4>
   <p class="key-line"><code>\key lf</code></p>
   <p>For encoding the semantic networks of a language. The \lf field bundle includes the following fields:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a> the lexical function <a class="cf-link" href="field-marker-reference.html#key-or">or</a> relationship label</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-lv">\lv</a> vernacular lexeme referenced by that lexical function/relation</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-le">\le</a> English gloss of the vernacular lexeme</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ln">\ln</a> national gloss of the vernacular lexeme</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-lr">\lr</a> regional gloss of the vernacular lexeme</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a></dt>
+    <dd>the lexical function</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-or">or</a></dt>
+    <dd>relationship label</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lv">\lv</a></dt>
+    <dd>vernacular lexeme referenced by that lexical function/relation</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-le">\le</a></dt>
+    <dd>English gloss of the vernacular lexeme</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ln">\ln</a></dt>
+    <dd>national gloss of the vernacular lexeme</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lr">\lr</a></dt>
+    <dd>regional gloss of the vernacular lexeme</dd>
+</dl>
   <p>MDF supports two ways of using the \lf bundles. A typical example using the original (mixed data) method would be:</p>
   <pre class="example mdf-example"><code>  \lf Syn</code></pre>
   <pre class="example mdf-example"><code>  \lv -dew</code></pre>
@@ -780,13 +896,22 @@
   <p>4) New Toolbox features like integrity checks, range-set building, and word lists will not work properly on the \lf field if it contains mixed data.</p>
   <p>5) If the vernacular language is written in a non-Roman script, the lexeme and lexical function label need to be in different fields since they have different language encodings.</p>
   <p>See also:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-lv">\lv</a> vernacular lexeme referenced by the lexical function label</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lv">\lv</a></dt>
+    <dd>vernacular lexeme referenced by the lexical function label</dd>
+</dl>
   <p>For more information on Range Sets, see:</p>
   <p class="cf"><a class="cf-link" href="Range_Sets.html#key-Range_Sets">Range_Sets</a></p>
   <p>For an alternative way to create a table of related lexical items, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-tb">\tb</a> table</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-tb">\tb</a></dt>
+    <dd>table</dd>
+</dl>
   <p>For generic cross-referencing, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a> confer/cross-reference</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a></dt>
+    <dd>confer/cross-reference</dd>
+</dl>
   <p>For more detailed information on language analysis through lexical functions, see the MDF field manual (Coward and Grimes, 1995) and the article "Mapping a culture through networks of meaning" (Grimes 1987). For referential information on these, see:</p>
   <p class="cf"><a class="cf-link" href="References.html#key-References">References</a></p>
   <p class="typ">&lt;Optional&gt;</p>
@@ -796,12 +921,19 @@
   <p class="key-line"><code>\key ln</code></p>
   <p>This is for giving the national gloss of the vernacular lexeme referenced by the lexical function.</p>
   <p>For more information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a> lexical function label</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-lv">\lv</a> vernacular lexeme referenced by the lexical function</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a></dt>
+    <dd>lexical function label</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lv">\lv</a></dt>
+    <dd>vernacular lexeme referenced by the lexical function</dd>
+</dl>
   <p>Related fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-le">\le</a> and <a class="cf-link" href="field-marker-reference.html#key-lr">\lr</a></p>
   <p>For generic cross-referencing, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a> confer/cross-reference</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a></dt>
+    <dd>confer/cross-reference</dd>
+</dl>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-lr">
@@ -809,12 +941,19 @@
   <p class="key-line"><code>\key lr</code></p>
   <p>This is for giving the regional gloss of the vernacular lexeme referenced by the lexical function.</p>
   <p>For more information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a> lexical function label</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-lv">\lv</a> vernacular lexeme referenced by the lexical function</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a></dt>
+    <dd>lexical function label</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lv">\lv</a></dt>
+    <dd>vernacular lexeme referenced by the lexical function</dd>
+</dl>
   <p>Related fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-le">\le</a> and <a class="cf-link" href="field-marker-reference.html#key-ln">\ln</a></p>
   <p>For generic cross-referencing, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a> confer/cross-reference</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a></dt>
+    <dd>confer/cross-reference</dd>
+</dl>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-lt">
@@ -846,11 +985,17 @@
 </code></pre>
   <p>In this example, 'agat' ('grain') is in a Generic relationship to 'feten' ('millet'). Note that the lexeme 'agat' should also appear in the lexicon.</p>
   <p>For more information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a> lexical function label</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a></dt>
+    <dd>lexical function label</dd>
+</dl>
   <p>Glossing fields for this vernacular lexeme are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-le">\le,</a> <a class="cf-link" href="field-marker-reference.html#key-ln">\ln,</a> and <a class="cf-link" href="field-marker-reference.html#key-lr">\lr</a></p>
   <p>For generic cross-referencing, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a> cross-reference</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a></dt>
+    <dd>cross-reference</dd>
+</dl>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-mn">
@@ -870,7 +1015,10 @@
 </code></pre>
   <p>The main entry "teduh" would be more verbose, containing all of the information normally included in a lexical entry. The "teduh" entry would also have the field "\va tado" to reference the variant (dialect) form.</p>
   <p>For related information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-va">\va</a> variant forms</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-va">\va</a></dt>
+    <dd>variant forms</dd>
+</dl>
   <p>For a detailed discussion of the issues involved in using minor (or minimal) entries, see:</p>
   <p class="cf"><a class="cf-link" href="Using_Subentries_or_Lexical_Entries.html#key-Using_Subentries_or_Lexical_Entries">Using_Subentries_or_Lexical_Entries</a></p>
   <p class="typ">&lt;Optional&gt;</p>
@@ -895,7 +1043,14 @@
   <p>For generic notes, use:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-nt">\nt</a></p>
   <p>For closely related fields, designed to print (not just for notes), see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ee">\ee,</a> <a class="cf-link" href="field-marker-reference.html#key-en">\en,</a> and <a class="cf-link" href="field-marker-reference.html#key-er">\er</a> encyclopedic field bundle</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ee">\ee,</a></dt>
+    <dd></dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-en">\en,</a></dt>
+    <dd></dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-er">\er</a></dt>
+    <dd>encyclopedic field bundle</dd>
+</dl>
   <p>Earlier versions of MDF recognized two types of ethnographic fields, this one (\na), and \en (which has been discontinued as an ethnographic field).</p>
   <p class="note">This is a "free-form" field.   Punctuation and capitalization should be used as needed.</p>
   <p class="typ">&lt;Optional&gt;</p>
@@ -944,9 +1099,26 @@
   <h4 class="topic-heading">\ns  notes on sociolinguistics</h4>
   <p class="key-line"><code>\key ns</code></p>
   <p>This is used for encoding sociolinguistic notes. Dialect information (i.e. which villages use this lexeme form, etc.) should be explained in the following fields:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ue">\ue,</a> <a class="cf-link" href="field-marker-reference.html#key-un">\un,</a> <a class="cf-link" href="field-marker-reference.html#key-ur">\ur</a> (Usage)</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ee">\ee,</a> <a class="cf-link" href="field-marker-reference.html#key-en">\en,</a> <a class="cf-link" href="field-marker-reference.html#key-er">\er</a> (Encyclopedic)</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-oe">\oe,</a> <a class="cf-link" href="field-marker-reference.html#key-on">\on,</a> <a class="cf-link" href="field-marker-reference.html#key-or">\or</a> (Only --restrictions)</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ue">\ue,</a></dt>
+    <dd></dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-un">\un,</a></dt>
+    <dd></dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ur">\ur</a></dt>
+    <dd>(Usage)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ee">\ee,</a></dt>
+    <dd></dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-en">\en,</a></dt>
+    <dd></dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-er">\er</a></dt>
+    <dd>(Encyclopedic)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-oe">\oe,</a></dt>
+    <dd></dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-on">\on,</a></dt>
+    <dd></dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-or">\or</a></dt>
+    <dd>(Only --restrictions)</dd>
+</dl>
   <p>If selected for output, MDF adds the label "Socio: " to this field and brackets it with "[ ]".</p>
   <p>For generic notes, see:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-nt">\nt</a></p>
@@ -1036,11 +1208,18 @@
   <pre class="example mdf-example"><code>   Prdm: met:vrt.
 </code></pre>
   <p>To give the actual vernacular form for a paradigm (especially needed where the paradigm is incomplete or is irregular in form), MDF provides the following fields:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a> paradigm label</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a> paradigm vernacular form</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a> paradigm form-English gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a> paradigm form-national gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a> paradigm form-regional gloss</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a></dt>
+    <dd>paradigm label</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a></dt>
+    <dd>paradigm vernacular form</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a></dt>
+    <dd>paradigm form-English gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a></dt>
+    <dd>paradigm form-national gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a></dt>
+    <dd>paradigm form-regional gloss</dd>
+</dl>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-pde">
@@ -1057,13 +1236,24 @@
 </code></pre>
   <p>where the paradigm label is italic, the vernacular form is in vernacular font, and the two glosses are in their appropriate language fonts.</p>
   <p>For a more detailed explanation of this set of fields, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a> paradigm label</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a> paradigm vernacular form</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a></dt>
+    <dd>paradigm label</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a></dt>
+    <dd>paradigm vernacular form</dd>
+</dl>
   <p>For the related glossing fields, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a> paradigm form-national gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a> paradigm form-regional gloss</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a></dt>
+    <dd>paradigm form-national gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a></dt>
+    <dd>paradigm form-regional gloss</dd>
+</dl>
   <p>For more information on the paradigm fields, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a> paradigm set</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a></dt>
+    <dd>paradigm set</dd>
+</dl>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-pdl">
@@ -1090,38 +1280,69 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <p class="cf"><a class="cf-link" href="Range_Sets.html#key-Range_Sets">Range_Sets</a></p>
   <p class="note">Note: All the fields in this bundle are made up of markers using three-letter codes.</p>
   <p>The related fields to this set are:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a> paradigm vernacular form</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a> paradigm form-English gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a> paradigm form-national gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a> paradigm form-regional gloss</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a></dt>
+    <dd>paradigm vernacular form</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a></dt>
+    <dd>paradigm form-English gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a></dt>
+    <dd>paradigm form-national gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a></dt>
+    <dd>paradigm form-regional gloss</dd>
+</dl>
   <p>For more information on the paradigm fields, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a> paradigm set</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a></dt>
+    <dd>paradigm set</dd>
+</dl>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-pdn">
   <h4 class="topic-heading">\pdn  paradigm form (national gloss)</h4>
   <p class="key-line"><code>\key pdn</code></p>
   <p>This is used for glossing the vernacular paradigm form in the national language. For the related glossing fields, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a> paradigm form-English gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a> paradigm form-regional gloss</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a></dt>
+    <dd>paradigm form-English gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a></dt>
+    <dd>paradigm form-regional gloss</dd>
+</dl>
   <p>For a more detailed explanation of this set of fields, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a> paradigm label</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a> paradigm vernacular form</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a></dt>
+    <dd>paradigm label</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a></dt>
+    <dd>paradigm vernacular form</dd>
+</dl>
   <p>For more information on the paradigm fields, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a> paradigm set</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a></dt>
+    <dd>paradigm set</dd>
+</dl>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-pdr">
   <h4 class="topic-heading">\pdr  paradigm form (regional gloss)</h4>
   <p class="key-line"><code>\key pdr</code></p>
   <p>This is used for glossing the vernacular paradigm form in the regional language. For the related glossing fields, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a> paradigm form-English gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a> paradigm form-national gloss</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a></dt>
+    <dd>paradigm form-English gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a></dt>
+    <dd>paradigm form-national gloss</dd>
+</dl>
   <p>For a more detailed explanation of this set of fields, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a> paradigm label</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a> paradigm vernacular form</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a></dt>
+    <dd>paradigm label</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a></dt>
+    <dd>paradigm vernacular form</dd>
+</dl>
   <p>For more information on the paradigm fields, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a> paradigm set</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a></dt>
+    <dd>paradigm set</dd>
+</dl>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-pdv">
@@ -1133,13 +1354,24 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </code></pre>
   <p>where "koban" is the first-singular verb form of the verb root "-oban". MDF will format the '1s' label as italic, and the contents of the \pdv field as vernacular text.</p>
   <p>For a more detailed explanation, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a> paradigm label</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a></dt>
+    <dd>paradigm label</dd>
+</dl>
   <p>For the related glossing fields, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a> paradigm form-English gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a> paradigm form-national gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a> paradigm form-regional gloss</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a></dt>
+    <dd>paradigm form-English gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a></dt>
+    <dd>paradigm form-national gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a></dt>
+    <dd>paradigm form-regional gloss</dd>
+</dl>
   <p>For more information on the paradigm fields, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a> paradigm set</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a></dt>
+    <dd>paradigm set</dd>
+</dl>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-ph">
@@ -1163,14 +1395,25 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </code></pre>
   <p>MDF adds a "Pl: " label to this form. The data is formatted as vernacular text.</p>
   <p>For more flexible labeling and to allow for glossing, MDF provides the following set of paradigm fields:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a> paradigm label</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a> paradigm vernacular form</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a> paradigm form-English gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a> paradigm form-national gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a> paradigm form-regional gloss</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a></dt>
+    <dd>paradigm label</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a></dt>
+    <dd>paradigm vernacular form</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a></dt>
+    <dd>paradigm form-English gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a></dt>
+    <dd>paradigm form-national gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a></dt>
+    <dd>paradigm form-regional gloss</dd>
+</dl>
   <p>For related fields, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-sg">\sg</a> singular form</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a> paradigm set</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-sg">\sg</a></dt>
+    <dd>singular form</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a></dt>
+    <dd>paradigm set</dd>
+</dl>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-rd">
@@ -1181,15 +1424,30 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </code></pre>
   <p>MDF adds a "Redup: " label to this form. The data is formatted as vernacular text.</p>
   <p>For information on subentries, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-se">\se</a> subentry (a polymorphemic form <a class="cf-link" href="field-marker-reference.html#key-or">or</a> a phrase)</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-se">\se</a></dt>
+    <dd>subentry (a polymorphemic form</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-or">or</a></dt>
+    <dd>a phrase)</dd>
+</dl>
   <p>For information on paradigm fields, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a> paradigm set</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a></dt>
+    <dd>paradigm set</dd>
+</dl>
   <p>For more flexible labeling and to allow for glossing, MDF now provides the following set of paradigm fields:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a> paradigm label</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a> paradigm vernacular form</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a> paradigm form-English gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a> paradigm form-national gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a> paradigm form-regional gloss</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a></dt>
+    <dd>paradigm label</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a></dt>
+    <dd>paradigm vernacular form</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a></dt>
+    <dd>paradigm form-English gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a></dt>
+    <dd>paradigm form-national gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a></dt>
+    <dd>paradigm form-regional gloss</dd>
+</dl>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-rr">
@@ -1212,8 +1470,12 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <p>This is the English version of \th and probably the one to use first. Here you try to catalog and differentiate the semantic compartments of an entry, being careful to not let the English force or mask the vernacular relations. Moving to the vernacular terms (given in \th field) as early as possible is best.</p>
   <p>If selected for output, MDF adds the label "SD: " to this field.</p>
   <p>For related fields see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-th">\th</a> thesaurus</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-is">\is</a> index of semantic</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-th">\th</a></dt>
+    <dd>thesaurus</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-is">\is</a></dt>
+    <dd>index of semantic</dd>
+</dl>
   <p class="note">This field does not normally print.</p>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
@@ -1225,14 +1487,25 @@ feature to insure consistent labeling. For more information, see: </code></pre>
 </code></pre>
   <p>MDF adds a "Sg: " label to this form. The data is formatted as vernacular text.</p>
   <p>For more flexible labeling and to allow for glossing, MDF provides the following set of paradigm fields:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a> paradigm label</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a> paradigm vernacular form</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a> paradigm form-English gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a> paradigm form-national gloss</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a> paradigm form-regional gloss</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdl">\pdl</a></dt>
+    <dd>paradigm label</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdv">\pdv</a></dt>
+    <dd>paradigm vernacular form</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pde">\pde</a></dt>
+    <dd>paradigm form-English gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdn">\pdn</a></dt>
+    <dd>paradigm form-national gloss</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdr">\pdr</a></dt>
+    <dd>paradigm form-regional gloss</dd>
+</dl>
   <p>For related fields, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pl">\pl</a> plural form</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a> paradigm set</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pl">\pl</a></dt>
+    <dd>plural form</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pd">\pd</a></dt>
+    <dd>paradigm set</dd>
+</dl>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
 <section class="topic" id="key-so">
@@ -1300,7 +1573,10 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <p>In Toolbox, the table field is marked as a "No Word Wrap" field (in the Marker-Properties dialog box). This allows you direct control over line-breaks and spacing. Note the |{tab} bar-code in the above example. This tells Toolbox to insert a Tab at each of these places, when the file is formatted by MDF or exported to an RTF file. (Currently Toolbox does not support typing the Tab character directly.)</p>
   <p>Inevitably, your tables will require some "tweaking" in MS-Word before you print the dictionary. To do this, first convert the file to MS-Word format using MDF, and then search for the "Table" style. After some tweaking, these could then be converted into a Word table (with the Word menu command: Table-Convert Text to Table).</p>
   <p>For a more powerful and in-depth approach to mapping the relations of lexical items, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a> lexical functions</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a></dt>
+    <dd>lexical functions</dd>
+</dl>
   <p>For more on special codes supported by Toolbox, see:</p>
   <p class="cf"><a class="cf-link" href="Punctuation_and_Special_Codes.html#key-Punctuation_and_Special_Codes">Punctuation_and_Special_Codes</a></p>
   <p class="note">This is a "free-form" field.   Punctuation and capitalization should be used as needed.</p>
@@ -1312,8 +1588,12 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <p>This is a field for developing a vernacular-based thesaurus. It is to be labeled with the vernacular term governing the semantic domain of the entry. Reversing on this field (within Toolbox) would yield a vernacular thesaurus.</p>
   <p>If selected for output, MDF adds the label "Thes: " to this field.</p>
   <p>For related fields see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-sd">\sd</a> semantic domain</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-is">\is</a> index of semantics</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-sd">\sd</a></dt>
+    <dd>semantic domain</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-is">\is</a></dt>
+    <dd>index of semantics</dd>
+</dl>
   <p class="note">This field does not normally print.</p>
   <p class="typ">&lt;Optional&gt;</p>
 </section>
@@ -1338,7 +1618,10 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <h4 class="topic-heading">\un  usage (national)</h4>
   <p class="key-line"><code>\key un</code></p>
   <p>The national language equivalent to the \ue field. This field should cover information such as common usage, or restrictions in usage. For more information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ue">\ue</a> usage (English)</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ue">\ue</a></dt>
+    <dd>usage (English)</dd>
+</dl>
   <p>MDF initially adds the label "NatUsage: " to this field. This is later changed to whatever national language label is specified for this field in the national audience CC table. For more information on this, see:</p>
   <p class="cf"><a class="cf-link" href="Printed_Field_Labels.html#key-Printed_Field_Labels">Printed_Field_Labels</a></p>
   <p>Identical English and regional language fields are:</p>
@@ -1352,7 +1635,10 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <h4 class="topic-heading">\ur  usage (regional)</h4>
   <p class="key-line"><code>\key ur</code></p>
   <p>The regional language equivalent to the \ue field. This field should cover information such as common usage, or restrictions in usage. For more information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ue">\ue</a> usage (English)</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ue">\ue</a></dt>
+    <dd>usage (English)</dd>
+</dl>
   <p>MDF adds the brackets "[ ]" around this field. If included in the output, it is treated as part of the national field.</p>
   <p>Identical English and national language fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ue">\ue</a> and <a class="cf-link" href="field-marker-reference.html#key-un">\un</a></p>
@@ -1365,7 +1651,10 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <h4 class="topic-heading">\uv usage (vernacular)</h4>
   <p class="key-line"><code>\key uv</code></p>
   <p>This field contains the vernacular description of common usage, or restrictions in usage, (such as taboos), or any other information that is needed to describe the lexeme fully. This is intended for use in a monolingual dictionary, but can be used in diglot and triglot dictionaries as well. For more information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ue">\ue</a> usage (English)</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ue">\ue</a></dt>
+    <dd>usage (English)</dd>
+</dl>
   <p>MDF initially adds the label "VerUsage: " to this field.  This is not changed by either the English or national audience CC table. But you may add a rule to change this if you wish. For more information on how to do this, see:</p>
   <p class="cf"><a class="cf-link" href="Printed_Field_Labels.html#key-Printed_Field_Labels">Printed_Field_Labels</a></p>
   <p>Identical English, national and regional language fields are:</p>
@@ -1383,7 +1672,10 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <p>The related comment fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ve">\ve,</a> <a class="cf-link" href="field-marker-reference.html#key-vn">\vn,</a> and <a class="cf-link" href="field-marker-reference.html#key-vr">\vr</a></p>
   <p>For information concerning minor entries, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-mn">\mn</a> main entry form</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-mn">\mn</a></dt>
+    <dd>main entry form</dd>
+</dl>
   <p>For a detailed discussion of the issues involved in using minor (or minimal) entries, see:</p>
   <p class="cf"><a class="cf-link" href="Using_Subentries_or_Lexical_Entries.html#key-Using_Subentries_or_Lexical_Entries">Using_Subentries_or_Lexical_Entries</a></p>
   <p class="typ">&lt;Optional&gt;</p>
@@ -1392,7 +1684,10 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <h4 class="topic-heading">\ve  variant comment (English)</h4>
   <p class="key-line"><code>\key ve</code></p>
   <p>This is bundled with the \va field and is where English comments can be given for the variant form. For more information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-va">\va</a> variant forms</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-va">\va</a></dt>
+    <dd>variant forms</dd>
+</dl>
   <p>MDF adds parentheses "( )" around this field.</p>
   <p>The related comment fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-vn">\vn</a> and <a class="cf-link" href="field-marker-reference.html#key-vr">\vr</a></p>
@@ -1403,7 +1698,10 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <h4 class="topic-heading">\vn  variant comment (national)</h4>
   <p class="key-line"><code>\key vn</code></p>
   <p>This is bundled with the  \va field and is where national language comments can be given for the variant form. For more information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-va">\va</a> variant forms</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-va">\va</a></dt>
+    <dd>variant forms</dd>
+</dl>
   <p>MDF adds parentheses "( )" around this field.</p>
   <p>The related comment fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ve">\ve</a> and <a class="cf-link" href="field-marker-reference.html#key-vr">\vr</a></p>
@@ -1414,7 +1712,10 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <h4 class="topic-heading">\vr  variant comment (regional)</h4>
   <p class="key-line"><code>\key vr</code></p>
   <p>This is bundled with the \va field and is where regional language comments can be given for the variant form. For more information, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-va">\va</a> variant forms</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-va">\va</a></dt>
+    <dd>variant forms</dd>
+</dl>
   <p>If this field is included in the output, MDF adds parentheses "( )" around it and it is treated as part of the national field.</p>
   <p>The related comment fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-ve">\ve</a> and <a class="cf-link" href="field-marker-reference.html#key-vn">\vn</a></p>
@@ -1454,8 +1755,12 @@ feature to insure consistent labeling. For more information, see: </code></pre>
   <p>This provides the regional translation of the example sentence given in the \xv field.</p>
   <p>MDF adds the brackets "[ ]" around this field. If included in the output, it is treated as part of the national field.</p>
   <p>For more information about example sentences, see:</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-xv">\xv</a> example sentence (vernacular)</p>
-  <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-rf">\rf</a> reference to notebooks, texts, etc.</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-xv">\xv</a></dt>
+    <dd>example sentence (vernacular)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-rf">\rf</a></dt>
+    <dd>reference to notebooks, texts, etc.</dd>
+</dl>
   <p>Related fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-xe">\xe</a> and <a class="cf-link" href="field-marker-reference.html#key-xn">\xn</a></p>
   <p class="note">This is a "free-form" field.   Punctuation and capitalization should be used as needed.</p>

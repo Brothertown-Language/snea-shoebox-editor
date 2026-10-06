@@ -69,6 +69,13 @@
           "line": 14,
           "targets": [
             "Introduction"
+          ],
+          "pairs": [
+            {
+              "target": "Introduction",
+              "gloss": "",
+              "token": "Introduction"
+            }
           ]
         },
         {
@@ -83,6 +90,18 @@
           "targets": [
             "Introduction",
             "Range_Sets"
+          ],
+          "pairs": [
+            {
+              "target": "Introduction",
+              "gloss": "",
+              "token": "Introduction"
+            },
+            {
+              "target": "Range_Sets",
+              "gloss": "",
+              "token": "Range_Sets"
+            }
           ]
         },
         {
@@ -92,6 +111,18 @@
           "targets": [
             "Order_of_Fields",
             "Character_Style_Codes"
+          ],
+          "pairs": [
+            {
+              "target": "Order_of_Fields",
+              "gloss": "",
+              "token": "Order_of_Fields"
+            },
+            {
+              "target": "Character_Style_Codes",
+              "gloss": "",
+              "token": "Character_Style_Codes"
+            }
           ]
         },
         {
@@ -101,6 +132,18 @@
           "targets": [
             "Summary_of_Fields",
             "Punctuation_and_Special_Codes"
+          ],
+          "pairs": [
+            {
+              "target": "Summary_of_Fields",
+              "gloss": "",
+              "token": "Summary_of_Fields"
+            },
+            {
+              "target": "Punctuation_and_Special_Codes",
+              "gloss": "",
+              "token": "Punctuation_and_Special_Codes"
+            }
           ]
         },
         {
@@ -110,6 +153,18 @@
           "targets": [
             "Sections_in_a_Lexical_Entry",
             "Printed_Field_Labels"
+          ],
+          "pairs": [
+            {
+              "target": "Sections_in_a_Lexical_Entry",
+              "gloss": "",
+              "token": "Sections_in_a_Lexical_Entry"
+            },
+            {
+              "target": "Printed_Field_Labels",
+              "gloss": "",
+              "token": "Printed_Field_Labels"
+            }
           ]
         },
         {
@@ -119,6 +174,18 @@
           "targets": [
             "Using_Subentries_or_Lexical_Entries",
             "Unknown_Fields"
+          ],
+          "pairs": [
+            {
+              "target": "Using_Subentries_or_Lexical_Entries",
+              "gloss": "",
+              "token": "Using_Subentries_or_Lexical_Entries"
+            },
+            {
+              "target": "Unknown_Fields",
+              "gloss": "",
+              "token": "Unknown_Fields"
+            }
           ]
         },
         {
@@ -128,6 +195,18 @@
           "targets": [
             "Alternate_Hierarchy",
             "Formatting_and_Printing"
+          ],
+          "pairs": [
+            {
+              "target": "Alternate_Hierarchy",
+              "gloss": "",
+              "token": "Alternate_Hierarchy"
+            },
+            {
+              "target": "Formatting_and_Printing",
+              "gloss": "",
+              "token": "Formatting_and_Printing"
+            }
           ]
         },
         {
@@ -137,6 +216,18 @@
           "targets": [
             "Free-form_Fields",
             "References"
+          ],
+          "pairs": [
+            {
+              "target": "Free-form_Fields",
+              "gloss": "",
+              "token": "Free-form_Fields"
+            },
+            {
+              "target": "References",
+              "gloss": "",
+              "token": "References"
+            }
           ]
         },
         {
@@ -146,6 +237,18 @@
           "targets": [
             "The_MDF_Documentation",
             "Old_and_Changed_Markers"
+          ],
+          "pairs": [
+            {
+              "target": "The_MDF_Documentation",
+              "gloss": "",
+              "token": "The_MDF_Documentation"
+            },
+            {
+              "target": "Old_and_Changed_Markers",
+              "gloss": "",
+              "token": "Old_and_Changed_Markers"
+            }
           ]
         },
         {
@@ -154,6 +257,13 @@
           "line": 27,
           "targets": [
             "When_MDF_Fails_to_Meet_Your_Requirements"
+          ],
+          "pairs": [
+            {
+              "target": "When_MDF_Fails_to_Meet_Your_Requirements",
+              "gloss": "",
+              "token": "When_MDF_Fails_to_Meet_Your_Requirements"
+            }
           ]
         },
         {
@@ -251,6 +361,13 @@
           "line": 143,
           "targets": [
             "Sections_in_a_Lexical_Entry"
+          ],
+          "pairs": [
+            {
+              "target": "Sections_in_a_Lexical_Entry",
+              "gloss": "",
+              "token": "Sections_in_a_Lexical_Entry"
+            }
           ]
         },
         {
@@ -264,6 +381,13 @@
           "line": 146,
           "targets": [
             "Order_of_Fields"
+          ],
+          "pairs": [
+            {
+              "target": "Order_of_Fields",
+              "gloss": "",
+              "token": "Order_of_Fields"
+            }
           ]
         },
         {
@@ -277,6 +401,13 @@
           "line": 149,
           "targets": [
             "Using_Subentries_or_Lexical_Entries"
+          ],
+          "pairs": [
+            {
+              "target": "Using_Subentries_or_Lexical_Entries",
+              "gloss": "",
+              "token": "Using_Subentries_or_Lexical_Entries"
+            }
           ]
         },
         {
@@ -354,6 +485,13 @@
           "line": 175,
           "targets": [
             "sy"
+          ],
+          "pairs": [
+            {
+              "target": "sy",
+              "gloss": "synonym",
+              "token": "\\sy"
+            }
           ]
         },
         {
@@ -362,6 +500,13 @@
           "line": 176,
           "targets": [
             "lf"
+          ],
+          "pairs": [
+            {
+              "target": "lf",
+              "gloss": "lexical function",
+              "token": "\\lf"
+            }
           ]
         },
         {
@@ -482,6 +627,13 @@
           "line": 206,
           "targets": [
             "cf"
+          ],
+          "pairs": [
+            {
+              "target": "cf",
+              "gloss": "confer/cross-reference",
+              "token": "\\cf"
+            }
           ]
         },
         {
@@ -496,6 +648,18 @@
           "targets": [
             "cn",
             "cr"
+          ],
+          "pairs": [
+            {
+              "target": "cn",
+              "gloss": "",
+              "token": "\\cn"
+            },
+            {
+              "target": "cr",
+              "gloss": "",
+              "token": "\\cr"
+            }
           ]
         },
         {
@@ -663,6 +827,13 @@
           "line": 273,
           "targets": [
             "lf"
+          ],
+          "pairs": [
+            {
+              "target": "lf",
+              "gloss": "lexical function label",
+              "token": "\\lf"
+            }
           ]
         },
         {
@@ -671,6 +842,13 @@
           "line": 274,
           "targets": [
             "tb"
+          ],
+          "pairs": [
+            {
+              "target": "tb",
+              "gloss": "table",
+              "token": "\\tb"
+            }
           ]
         },
         {
@@ -686,6 +864,23 @@
             "ce",
             "cn",
             "cr"
+          ],
+          "pairs": [
+            {
+              "target": "ce",
+              "gloss": "",
+              "token": "\\ce,"
+            },
+            {
+              "target": "cn",
+              "gloss": "",
+              "token": "\\cn"
+            },
+            {
+              "target": "cr",
+              "gloss": "",
+              "token": "\\cr"
+            }
           ]
         },
         {
@@ -968,6 +1163,13 @@
           "line": 387,
           "targets": [
             "Punctuation_and_Special_Codes"
+          ],
+          "pairs": [
+            {
+              "target": "Punctuation_and_Special_Codes",
+              "gloss": "",
+              "token": "Punctuation_and_Special_Codes"
+            }
           ]
         },
         {
@@ -1010,6 +1212,13 @@
           "line": 396,
           "targets": [
             "cf"
+          ],
+          "pairs": [
+            {
+              "target": "cf",
+              "gloss": "confer/cross-reference",
+              "token": "\\cf"
+            }
           ]
         },
         {
@@ -1024,6 +1233,18 @@
           "targets": [
             "ce",
             "cr"
+          ],
+          "pairs": [
+            {
+              "target": "ce",
+              "gloss": "",
+              "token": "\\ce"
+            },
+            {
+              "target": "cr",
+              "gloss": "",
+              "token": "\\cr"
+            }
           ]
         },
         {
@@ -1066,6 +1287,13 @@
           "line": 409,
           "targets": [
             "cf"
+          ],
+          "pairs": [
+            {
+              "target": "cf",
+              "gloss": "confer/cross-reference",
+              "token": "\\cf"
+            }
           ]
         },
         {
@@ -1080,6 +1308,18 @@
           "targets": [
             "ce",
             "cn"
+          ],
+          "pairs": [
+            {
+              "target": "ce",
+              "gloss": "",
+              "token": "\\ce"
+            },
+            {
+              "target": "cn",
+              "gloss": "",
+              "token": "\\cn"
+            }
           ]
         },
         {
@@ -1117,6 +1357,13 @@
           "line": 420,
           "targets": [
             "ge"
+          ],
+          "pairs": [
+            {
+              "target": "ge",
+              "gloss": "gloss (English)",
+              "token": "\\ge"
+            }
           ]
         },
         {
@@ -1167,6 +1414,23 @@
             "dv",
             "dn",
             "dr"
+          ],
+          "pairs": [
+            {
+              "target": "dv",
+              "gloss": "",
+              "token": "\\dv,"
+            },
+            {
+              "target": "dn",
+              "gloss": "",
+              "token": "\\dn,"
+            },
+            {
+              "target": "dr",
+              "gloss": "",
+              "token": "\\dr"
+            }
           ]
         },
         {
@@ -1182,6 +1446,23 @@
             "ue",
             "oe",
             "ee"
+          ],
+          "pairs": [
+            {
+              "target": "ue",
+              "gloss": "",
+              "token": "\\ue,"
+            },
+            {
+              "target": "oe",
+              "gloss": "",
+              "token": "\\oe,"
+            },
+            {
+              "target": "ee",
+              "gloss": "",
+              "token": "\\ee"
+            }
           ]
         },
         {
@@ -1224,6 +1505,13 @@
           "line": 456,
           "targets": [
             "de"
+          ],
+          "pairs": [
+            {
+              "target": "de",
+              "gloss": "definition English",
+              "token": "\\de"
+            }
           ]
         },
         {
@@ -1237,6 +1525,13 @@
           "line": 458,
           "targets": [
             "gn"
+          ],
+          "pairs": [
+            {
+              "target": "gn",
+              "gloss": "gloss national",
+              "token": "\\gn"
+            }
           ]
         },
         {
@@ -1252,6 +1547,23 @@
             "dv",
             "de",
             "dr"
+          ],
+          "pairs": [
+            {
+              "target": "dv",
+              "gloss": "",
+              "token": "\\dv,"
+            },
+            {
+              "target": "de",
+              "gloss": "",
+              "token": "\\de,"
+            },
+            {
+              "target": "dr",
+              "gloss": "",
+              "token": "\\dr"
+            }
           ]
         },
         {
@@ -1267,6 +1579,23 @@
             "un",
             "on",
             "en"
+          ],
+          "pairs": [
+            {
+              "target": "un",
+              "gloss": "",
+              "token": "\\un,"
+            },
+            {
+              "target": "on",
+              "gloss": "",
+              "token": "\\on,"
+            },
+            {
+              "target": "en",
+              "gloss": "",
+              "token": "\\en"
+            }
           ]
         },
         {
@@ -1314,6 +1643,13 @@
           "line": 477,
           "targets": [
             "de"
+          ],
+          "pairs": [
+            {
+              "target": "de",
+              "gloss": "definition (English)",
+              "token": "\\de"
+            }
           ]
         },
         {
@@ -1327,6 +1663,13 @@
           "line": 480,
           "targets": [
             "gr"
+          ],
+          "pairs": [
+            {
+              "target": "gr",
+              "gloss": "gloss (regional)",
+              "token": "\\gr"
+            }
           ]
         },
         {
@@ -1342,6 +1685,23 @@
             "dv",
             "de",
             "dn"
+          ],
+          "pairs": [
+            {
+              "target": "dv",
+              "gloss": "",
+              "token": "\\dv,"
+            },
+            {
+              "target": "de",
+              "gloss": "",
+              "token": "\\de,"
+            },
+            {
+              "target": "dn",
+              "gloss": "",
+              "token": "\\dn"
+            }
           ]
         },
         {
@@ -1357,6 +1717,23 @@
             "ur",
             "or",
             "er"
+          ],
+          "pairs": [
+            {
+              "target": "ur",
+              "gloss": "",
+              "token": "\\ur,"
+            },
+            {
+              "target": "or",
+              "gloss": "",
+              "token": "\\or,"
+            },
+            {
+              "target": "er",
+              "gloss": "",
+              "token": "\\er"
+            }
           ]
         },
         {
@@ -1435,6 +1812,23 @@
             "de",
             "dn",
             "dr"
+          ],
+          "pairs": [
+            {
+              "target": "de",
+              "gloss": "",
+              "token": "\\de,"
+            },
+            {
+              "target": "dn",
+              "gloss": "",
+              "token": "\\dn,"
+            },
+            {
+              "target": "dr",
+              "gloss": "",
+              "token": "\\dr"
+            }
           ]
         },
         {
@@ -1451,6 +1845,28 @@
             "uv",
             "ov",
             "ev"
+          ],
+          "pairs": [
+            {
+              "target": "gv",
+              "gloss": "",
+              "token": "\\gv,"
+            },
+            {
+              "target": "uv",
+              "gloss": "",
+              "token": "\\uv,"
+            },
+            {
+              "target": "ov",
+              "gloss": "",
+              "token": "\\ov,"
+            },
+            {
+              "target": "ev",
+              "gloss": "",
+              "token": "\\ev"
+            }
           ]
         },
         {
@@ -1493,6 +1909,13 @@
           "line": 522,
           "targets": [
             "et"
+          ],
+          "pairs": [
+            {
+              "target": "et",
+              "gloss": "",
+              "token": "\\et"
+            }
           ]
         },
         {
@@ -1596,6 +2019,18 @@
           "targets": [
             "en",
             "er"
+          ],
+          "pairs": [
+            {
+              "target": "en",
+              "gloss": "",
+              "token": "\\en"
+            },
+            {
+              "target": "er",
+              "gloss": "",
+              "token": "\\er"
+            }
           ]
         },
         {
@@ -1611,6 +2046,23 @@
             "de",
             "ue",
             "oe"
+          ],
+          "pairs": [
+            {
+              "target": "de",
+              "gloss": "",
+              "token": "\\de,"
+            },
+            {
+              "target": "ue",
+              "gloss": "",
+              "token": "\\ue,"
+            },
+            {
+              "target": "oe",
+              "gloss": "",
+              "token": "\\oe"
+            }
           ]
         },
         {
@@ -1624,6 +2076,13 @@
           "line": 577,
           "targets": [
             "Character_Style_Codes"
+          ],
+          "pairs": [
+            {
+              "target": "Character_Style_Codes",
+              "gloss": "",
+              "token": "Character_Style_Codes"
+            }
           ]
         },
         {
@@ -1671,6 +2130,13 @@
           "line": 588,
           "targets": [
             "et"
+          ],
+          "pairs": [
+            {
+              "target": "et",
+              "gloss": "",
+              "token": "\\et"
+            }
           ]
         },
         {
@@ -1713,6 +2179,13 @@
           "line": 598,
           "targets": [
             "ee"
+          ],
+          "pairs": [
+            {
+              "target": "ee",
+              "gloss": "",
+              "token": "\\ee"
+            }
           ]
         },
         {
@@ -1728,6 +2201,23 @@
             "dn",
             "un",
             "on"
+          ],
+          "pairs": [
+            {
+              "target": "dn",
+              "gloss": "",
+              "token": "\\dn,"
+            },
+            {
+              "target": "un",
+              "gloss": "",
+              "token": "\\un,"
+            },
+            {
+              "target": "on",
+              "gloss": "",
+              "token": "\\on"
+            }
           ]
         },
         {
@@ -1780,6 +2270,13 @@
           "line": 616,
           "targets": [
             "ee"
+          ],
+          "pairs": [
+            {
+              "target": "ee",
+              "gloss": "",
+              "token": "\\ee"
+            }
           ]
         },
         {
@@ -1795,6 +2292,23 @@
             "dr",
             "ur",
             "or"
+          ],
+          "pairs": [
+            {
+              "target": "dr",
+              "gloss": "",
+              "token": "\\dr,"
+            },
+            {
+              "target": "ur",
+              "gloss": "",
+              "token": "\\ur,"
+            },
+            {
+              "target": "or",
+              "gloss": "",
+              "token": "\\or"
+            }
           ]
         },
         {
@@ -1842,6 +2356,13 @@
           "line": 630,
           "targets": [
             "et"
+          ],
+          "pairs": [
+            {
+              "target": "et",
+              "gloss": "",
+              "token": "\\et"
+            }
           ]
         },
         {
@@ -1894,6 +2415,13 @@
           "line": 643,
           "targets": [
             "eg"
+          ],
+          "pairs": [
+            {
+              "target": "eg",
+              "gloss": "etymology-gloss",
+              "token": "\\eg"
+            }
           ]
         },
         {
@@ -1902,6 +2430,13 @@
           "line": 644,
           "targets": [
             "es"
+          ],
+          "pairs": [
+            {
+              "target": "es",
+              "gloss": "etymology-source [doesn't print normally]",
+              "token": "\\es"
+            }
           ]
         },
         {
@@ -1910,6 +2445,13 @@
           "line": 645,
           "targets": [
             "ec"
+          ],
+          "pairs": [
+            {
+              "target": "ec",
+              "gloss": "etymology-comment [doesn't print normally]",
+              "token": "\\ec"
+            }
           ]
         },
         {
@@ -2007,6 +2549,13 @@
           "line": 677,
           "targets": [
             "ee"
+          ],
+          "pairs": [
+            {
+              "target": "ee",
+              "gloss": "",
+              "token": "\\ee"
+            }
           ]
         },
         {
@@ -2023,6 +2572,28 @@
             "dv",
             "ov",
             "uv"
+          ],
+          "pairs": [
+            {
+              "target": "gv",
+              "gloss": "",
+              "token": "\\gv,"
+            },
+            {
+              "target": "dv",
+              "gloss": "",
+              "token": "\\dv,"
+            },
+            {
+              "target": "ov",
+              "gloss": "",
+              "token": "\\ov,"
+            },
+            {
+              "target": "uv",
+              "gloss": "",
+              "token": "\\uv"
+            }
           ]
         },
         {
@@ -2145,6 +2716,13 @@
           "line": 743,
           "targets": [
             "References"
+          ],
+          "pairs": [
+            {
+              "target": "References",
+              "gloss": "",
+              "token": "References"
+            }
           ]
         },
         {
@@ -2163,6 +2741,13 @@
           "line": 751,
           "targets": [
             "Order_of_Fields"
+          ],
+          "pairs": [
+            {
+              "target": "Order_of_Fields",
+              "gloss": "",
+              "token": "Order_of_Fields"
+            }
           ]
         },
         {
@@ -2171,6 +2756,13 @@
           "line": 752,
           "targets": [
             "Summary_of_Fields"
+          ],
+          "pairs": [
+            {
+              "target": "Summary_of_Fields",
+              "gloss": "",
+              "token": "Summary_of_Fields"
+            }
           ]
         },
         {
@@ -2288,6 +2880,13 @@
           "line": 798,
           "targets": [
             "Range_Sets"
+          ],
+          "pairs": [
+            {
+              "target": "Range_Sets",
+              "gloss": "",
+              "token": "Range_Sets"
+            }
           ]
         },
         {
@@ -2385,6 +2984,13 @@
           "line": 839,
           "targets": [
             "de"
+          ],
+          "pairs": [
+            {
+              "target": "de",
+              "gloss": "definition (English)",
+              "token": "\\de"
+            }
           ]
         },
         {
@@ -2393,6 +2999,13 @@
           "line": 840,
           "targets": [
             "re"
+          ],
+          "pairs": [
+            {
+              "target": "re",
+              "gloss": "reverse form (English)",
+              "token": "\\re"
+            }
           ]
         },
         {
@@ -2470,6 +3083,13 @@
           "line": 867,
           "targets": [
             "dn"
+          ],
+          "pairs": [
+            {
+              "target": "dn",
+              "gloss": "definition (national)",
+              "token": "\\dn"
+            }
           ]
         },
         {
@@ -2478,6 +3098,13 @@
           "line": 868,
           "targets": [
             "rn"
+          ],
+          "pairs": [
+            {
+              "target": "rn",
+              "gloss": "reversal form (national)",
+              "token": "\\rn"
+            }
           ]
         },
         {
@@ -2560,6 +3187,13 @@
           "line": 900,
           "targets": [
             "dr"
+          ],
+          "pairs": [
+            {
+              "target": "dr",
+              "gloss": "definition (regional)",
+              "token": "\\dr"
+            }
           ]
         },
         {
@@ -2568,6 +3202,13 @@
           "line": 901,
           "targets": [
             "rr"
+          ],
+          "pairs": [
+            {
+              "target": "rr",
+              "gloss": "reversal form (regional)",
+              "token": "\\rr"
+            }
           ]
         },
         {
@@ -2610,6 +3251,13 @@
           "line": 916,
           "targets": [
             "dv"
+          ],
+          "pairs": [
+            {
+              "target": "dv",
+              "gloss": "",
+              "token": "\\dv"
+            }
           ]
         },
         {
@@ -2687,6 +3335,13 @@
           "line": 941,
           "targets": [
             "Character_Style_Codes"
+          ],
+          "pairs": [
+            {
+              "target": "Character_Style_Codes",
+              "gloss": "",
+              "token": "Character_Style_Codes"
+            }
           ]
         },
         {
@@ -2729,6 +3384,13 @@
           "line": 955,
           "targets": [
             "The_MDF_Documentation"
+          ],
+          "pairs": [
+            {
+              "target": "The_MDF_Documentation",
+              "gloss": "",
+              "token": "The_MDF_Documentation"
+            }
           ]
         },
         {
@@ -2757,6 +3419,13 @@
           "line": 975,
           "targets": [
             "When_MDF_Fails_to_Meet_Your_Requirements"
+          ],
+          "pairs": [
+            {
+              "target": "When_MDF_Fails_to_Meet_Your_Requirements",
+              "gloss": "",
+              "token": "When_MDF_Fails_to_Meet_Your_Requirements"
+            }
           ]
         },
         {
@@ -2837,6 +3506,23 @@
             "lx",
             "hm",
             "lc"
+          ],
+          "pairs": [
+            {
+              "target": "lx",
+              "gloss": "lexeme",
+              "token": "lx"
+            },
+            {
+              "target": "hm",
+              "gloss": "homonym number",
+              "token": "hm"
+            },
+            {
+              "target": "lc",
+              "gloss": "lexical citation form",
+              "token": "lc"
+            }
           ]
         },
         {
@@ -2847,6 +3533,23 @@
             "ph",
             "ps",
             "pn"
+          ],
+          "pairs": [
+            {
+              "target": "ph",
+              "gloss": "phonetic (pronunciation)",
+              "token": "ph"
+            },
+            {
+              "target": "ps",
+              "gloss": "part of speech",
+              "token": "ps"
+            },
+            {
+              "target": "pn",
+              "gloss": "National part of speech",
+              "token": "pn"
+            }
           ]
         },
         {
@@ -2855,6 +3558,13 @@
           "line": 1013,
           "targets": [
             "sn"
+          ],
+          "pairs": [
+            {
+              "target": "sn",
+              "gloss": "sense number",
+              "token": "sn"
+            }
           ]
         },
         {
@@ -2871,6 +3581,28 @@
             "ve",
             "mr",
             "lt"
+          ],
+          "pairs": [
+            {
+              "target": "va",
+              "gloss": "variant form (also",
+              "token": "va"
+            },
+            {
+              "target": "ve",
+              "gloss": "comments)",
+              "token": "ve*"
+            },
+            {
+              "target": "mr",
+              "gloss": "morphology",
+              "token": "mr"
+            },
+            {
+              "target": "lt",
+              "gloss": "literally",
+              "token": "lt"
+            }
           ]
         },
         {
@@ -2882,6 +3614,28 @@
             "sd",
             "is",
             "th"
+          ],
+          "pairs": [
+            {
+              "target": "sc",
+              "gloss": "scientific name",
+              "token": "sc"
+            },
+            {
+              "target": "sd",
+              "gloss": "semantic domain",
+              "token": "sd"
+            },
+            {
+              "target": "is",
+              "gloss": "index of semantics",
+              "token": "is"
+            },
+            {
+              "target": "th",
+              "gloss": "thesaurus",
+              "token": "th"
+            }
           ]
         },
         {
@@ -2892,6 +3646,23 @@
             "pd",
             "pdl",
             "pdv"
+          ],
+          "pairs": [
+            {
+              "target": "pd",
+              "gloss": "paradigm class",
+              "token": "pd"
+            },
+            {
+              "target": "pdl",
+              "gloss": "paradigm label (also",
+              "token": "pdl"
+            },
+            {
+              "target": "pdv",
+              "gloss": "paradigm form & glosses)",
+              "token": "pdv*"
+            }
           ]
         },
         {
@@ -2907,6 +3678,23 @@
             "va",
             "ve",
             "mr"
+          ],
+          "pairs": [
+            {
+              "target": "va",
+              "gloss": "variant form (also",
+              "token": "va"
+            },
+            {
+              "target": "ve",
+              "gloss": "comments)",
+              "token": "ve*"
+            },
+            {
+              "target": "mr",
+              "gloss": "morphology",
+              "token": "mr"
+            }
           ]
         },
         {
@@ -2917,6 +3705,23 @@
             "pd",
             "pdl",
             "pdv"
+          ],
+          "pairs": [
+            {
+              "target": "pd",
+              "gloss": "paradigm class",
+              "token": "pd"
+            },
+            {
+              "target": "pdl",
+              "gloss": "paradigm label (also",
+              "token": "pdl"
+            },
+            {
+              "target": "pdv",
+              "gloss": "paradigm form & glosses)",
+              "token": "pdv*"
+            }
           ]
         },
         {
@@ -2931,6 +3736,18 @@
           "targets": [
             "cf",
             "mn"
+          ],
+          "pairs": [
+            {
+              "target": "cf",
+              "gloss": "cross reference",
+              "token": "cf"
+            },
+            {
+              "target": "mn",
+              "gloss": "main-entry cross reference",
+              "token": "mn"
+            }
           ]
         },
         {
@@ -2939,6 +3756,18 @@
           "line": 1026,
           "targets": [
             "lf"
+          ],
+          "pairs": [
+            {
+              "target": "lf",
+              "gloss": "lexical function (like synonym, causal, generic, deverbal noun, locative, etc.) (also",
+              "token": "lf"
+            },
+            {
+              "target": "lv",
+              "gloss": "lexical function form and glosses)",
+              "token": "lv*"
+            }
           ]
         },
         {
@@ -2956,6 +3785,33 @@
             "eg",
             "es",
             "ec"
+          ],
+          "pairs": [
+            {
+              "target": "bw",
+              "gloss": "borrowed word",
+              "token": "bw"
+            },
+            {
+              "target": "et",
+              "gloss": "etymology (also",
+              "token": "et"
+            },
+            {
+              "target": "eg",
+              "gloss": "gloss,",
+              "token": "eg"
+            },
+            {
+              "target": "es",
+              "gloss": "source,",
+              "token": "es"
+            },
+            {
+              "target": "ec",
+              "gloss": "comment)",
+              "token": "ec"
+            }
           ]
         },
         {
@@ -2970,6 +3826,18 @@
           "targets": [
             "de",
             "ee"
+          ],
+          "pairs": [
+            {
+              "target": "de",
+              "gloss": "definition",
+              "token": "de*"
+            },
+            {
+              "target": "ee",
+              "gloss": "encyclopedic information (expanded definition)",
+              "token": "ee*"
+            }
           ]
         },
         {
@@ -2979,6 +3847,18 @@
           "targets": [
             "ue",
             "oe"
+          ],
+          "pairs": [
+            {
+              "target": "ue",
+              "gloss": "usage",
+              "token": "ue*"
+            },
+            {
+              "target": "oe",
+              "gloss": "\"only\" (restrictions)",
+              "token": "oe*"
+            }
           ]
         },
         {
@@ -2989,6 +3869,23 @@
             "ge",
             "re",
             "we"
+          ],
+          "pairs": [
+            {
+              "target": "ge",
+              "gloss": "gloss (for interlinear)",
+              "token": "ge*"
+            },
+            {
+              "target": "re",
+              "gloss": "reversal (for finder lists)",
+              "token": "re*"
+            },
+            {
+              "target": "we",
+              "gloss": "word-level gloss",
+              "token": "we*"
+            }
           ]
         },
         {
@@ -3003,6 +3900,18 @@
           "targets": [
             "rf",
             "xv"
+          ],
+          "pairs": [
+            {
+              "target": "rf",
+              "gloss": "source of example (reference)",
+              "token": "rf"
+            },
+            {
+              "target": "xv",
+              "gloss": "examples and translations",
+              "token": "xv*"
+            }
           ]
         },
         {
@@ -3011,6 +3920,13 @@
           "line": 1039,
           "targets": [
             "pc"
+          ],
+          "pairs": [
+            {
+              "target": "pc",
+              "gloss": "picture snd sound vid video",
+              "token": "pc"
+            }
           ]
         },
         {
@@ -3031,6 +3947,23 @@
             "va",
             "ue",
             "oe"
+          ],
+          "pairs": [
+            {
+              "target": "va",
+              "gloss": "(variant)",
+              "token": "va*"
+            },
+            {
+              "target": "ue",
+              "gloss": "(usage)",
+              "token": "ue*"
+            },
+            {
+              "target": "oe",
+              "gloss": "(only / restrictions)",
+              "token": "oe*"
+            }
           ]
         },
         {
@@ -3039,6 +3972,13 @@
           "line": 1045,
           "targets": [
             "lf"
+          ],
+          "pairs": [
+            {
+              "target": "lf",
+              "gloss": "SynD (lexical function: synonym dialect)",
+              "token": "lf"
+            }
           ]
         },
         {
@@ -3054,6 +3994,23 @@
             "tb",
             "bb",
             "nt"
+          ],
+          "pairs": [
+            {
+              "target": "tb",
+              "gloss": "table (caption)",
+              "token": "tb"
+            },
+            {
+              "target": "bb",
+              "gloss": "bibliography",
+              "token": "bb"
+            },
+            {
+              "target": "nt",
+              "gloss": "notes (various kinds)",
+              "token": "nt"
+            }
           ]
         },
         {
@@ -3064,6 +4021,23 @@
             "so",
             "st",
             "dt"
+          ],
+          "pairs": [
+            {
+              "target": "so",
+              "gloss": "source of data",
+              "token": "so"
+            },
+            {
+              "target": "st",
+              "gloss": "status",
+              "token": "st"
+            },
+            {
+              "target": "dt",
+              "gloss": "date last edited",
+              "token": "dt"
+            }
           ]
         },
         {
@@ -3132,6 +4106,13 @@
           "line": 1084,
           "targets": [
             "Order_of_Fields"
+          ],
+          "pairs": [
+            {
+              "target": "Order_of_Fields",
+              "gloss": "",
+              "token": "Order_of_Fields"
+            }
           ]
         },
         {
@@ -3184,6 +4165,13 @@
           "line": 1102,
           "targets": [
             "sd"
+          ],
+          "pairs": [
+            {
+              "target": "sd",
+              "gloss": "semantic domain",
+              "token": "\\sd"
+            }
           ]
         },
         {
@@ -3192,6 +4180,13 @@
           "line": 1103,
           "targets": [
             "th"
+          ],
+          "pairs": [
+            {
+              "target": "th",
+              "gloss": "thesaurus",
+              "token": "\\th"
+            }
           ]
         },
         {
@@ -3205,6 +4200,13 @@
           "line": 1106,
           "targets": [
             "References"
+          ],
+          "pairs": [
+            {
+              "target": "References",
+              "gloss": "",
+              "token": "References"
+            }
           ]
         },
         {
@@ -3291,6 +4293,13 @@
           "line": 1136,
           "targets": [
             "lf"
+          ],
+          "pairs": [
+            {
+              "target": "lf",
+              "gloss": "lexical function label",
+              "token": "\\lf"
+            }
           ]
         },
         {
@@ -3299,6 +4308,13 @@
           "line": 1137,
           "targets": [
             "lv"
+          ],
+          "pairs": [
+            {
+              "target": "lv",
+              "gloss": "vernacular lexeme referenced by the lexical function",
+              "token": "\\lv"
+            }
           ]
         },
         {
@@ -3313,6 +4329,18 @@
           "targets": [
             "ln",
             "lr"
+          ],
+          "pairs": [
+            {
+              "target": "ln",
+              "gloss": "",
+              "token": "\\ln"
+            },
+            {
+              "target": "lr",
+              "gloss": "",
+              "token": "\\lr"
+            }
           ]
         },
         {
@@ -3326,6 +4354,13 @@
           "line": 1143,
           "targets": [
             "cf"
+          ],
+          "pairs": [
+            {
+              "target": "cf",
+              "gloss": "confer/cross-reference",
+              "token": "\\cf"
+            }
           ]
         },
         {
@@ -3364,6 +4399,18 @@
           "targets": [
             "lf",
             "or"
+          ],
+          "pairs": [
+            {
+              "target": "lf",
+              "gloss": "the lexical function",
+              "token": "\\lf"
+            },
+            {
+              "target": "or",
+              "gloss": "relationship label",
+              "token": "or"
+            }
           ]
         },
         {
@@ -3372,6 +4419,13 @@
           "line": 1152,
           "targets": [
             "lv"
+          ],
+          "pairs": [
+            {
+              "target": "lv",
+              "gloss": "vernacular lexeme referenced by that lexical function/relation",
+              "token": "\\lv"
+            }
           ]
         },
         {
@@ -3380,6 +4434,13 @@
           "line": 1153,
           "targets": [
             "le"
+          ],
+          "pairs": [
+            {
+              "target": "le",
+              "gloss": "English gloss of the vernacular lexeme",
+              "token": "\\le"
+            }
           ]
         },
         {
@@ -3388,6 +4449,13 @@
           "line": 1154,
           "targets": [
             "ln"
+          ],
+          "pairs": [
+            {
+              "target": "ln",
+              "gloss": "national gloss of the vernacular lexeme",
+              "token": "\\ln"
+            }
           ]
         },
         {
@@ -3396,6 +4464,13 @@
           "line": 1155,
           "targets": [
             "lr"
+          ],
+          "pairs": [
+            {
+              "target": "lr",
+              "gloss": "regional gloss of the vernacular lexeme",
+              "token": "\\lr"
+            }
           ]
         },
         {
@@ -3499,6 +4574,13 @@
           "line": 1199,
           "targets": [
             "lv"
+          ],
+          "pairs": [
+            {
+              "target": "lv",
+              "gloss": "vernacular lexeme referenced by the lexical function label",
+              "token": "\\lv"
+            }
           ]
         },
         {
@@ -3512,6 +4594,13 @@
           "line": 1202,
           "targets": [
             "Range_Sets"
+          ],
+          "pairs": [
+            {
+              "target": "Range_Sets",
+              "gloss": "",
+              "token": "Range_Sets"
+            }
           ]
         },
         {
@@ -3525,6 +4614,13 @@
           "line": 1205,
           "targets": [
             "tb"
+          ],
+          "pairs": [
+            {
+              "target": "tb",
+              "gloss": "table",
+              "token": "\\tb"
+            }
           ]
         },
         {
@@ -3538,6 +4634,13 @@
           "line": 1208,
           "targets": [
             "cf"
+          ],
+          "pairs": [
+            {
+              "target": "cf",
+              "gloss": "confer/cross-reference",
+              "token": "\\cf"
+            }
           ]
         },
         {
@@ -3551,6 +4654,13 @@
           "line": 1213,
           "targets": [
             "References"
+          ],
+          "pairs": [
+            {
+              "target": "References",
+              "gloss": "",
+              "token": "References"
+            }
           ]
         },
         {
@@ -3593,6 +4703,13 @@
           "line": 1222,
           "targets": [
             "lf"
+          ],
+          "pairs": [
+            {
+              "target": "lf",
+              "gloss": "lexical function label",
+              "token": "\\lf"
+            }
           ]
         },
         {
@@ -3601,6 +4718,13 @@
           "line": 1223,
           "targets": [
             "lv"
+          ],
+          "pairs": [
+            {
+              "target": "lv",
+              "gloss": "vernacular lexeme referenced by the lexical function",
+              "token": "\\lv"
+            }
           ]
         },
         {
@@ -3615,6 +4739,18 @@
           "targets": [
             "le",
             "lr"
+          ],
+          "pairs": [
+            {
+              "target": "le",
+              "gloss": "",
+              "token": "\\le"
+            },
+            {
+              "target": "lr",
+              "gloss": "",
+              "token": "\\lr"
+            }
           ]
         },
         {
@@ -3628,6 +4764,13 @@
           "line": 1229,
           "targets": [
             "cf"
+          ],
+          "pairs": [
+            {
+              "target": "cf",
+              "gloss": "confer/cross-reference",
+              "token": "\\cf"
+            }
           ]
         },
         {
@@ -3670,6 +4813,13 @@
           "line": 1238,
           "targets": [
             "lf"
+          ],
+          "pairs": [
+            {
+              "target": "lf",
+              "gloss": "lexical function label",
+              "token": "\\lf"
+            }
           ]
         },
         {
@@ -3678,6 +4828,13 @@
           "line": 1239,
           "targets": [
             "lv"
+          ],
+          "pairs": [
+            {
+              "target": "lv",
+              "gloss": "vernacular lexeme referenced by the lexical function",
+              "token": "\\lv"
+            }
           ]
         },
         {
@@ -3692,6 +4849,18 @@
           "targets": [
             "le",
             "ln"
+          ],
+          "pairs": [
+            {
+              "target": "le",
+              "gloss": "",
+              "token": "\\le"
+            },
+            {
+              "target": "ln",
+              "gloss": "",
+              "token": "\\ln"
+            }
           ]
         },
         {
@@ -3705,6 +4874,13 @@
           "line": 1245,
           "targets": [
             "cf"
+          ],
+          "pairs": [
+            {
+              "target": "cf",
+              "gloss": "confer/cross-reference",
+              "token": "\\cf"
+            }
           ]
         },
         {
@@ -3851,6 +5027,13 @@
           "line": 1285,
           "targets": [
             "lf"
+          ],
+          "pairs": [
+            {
+              "target": "lf",
+              "gloss": "lexical function label",
+              "token": "\\lf"
+            }
           ]
         },
         {
@@ -3866,6 +5049,23 @@
             "le",
             "ln",
             "lr"
+          ],
+          "pairs": [
+            {
+              "target": "le",
+              "gloss": "",
+              "token": "\\le,"
+            },
+            {
+              "target": "ln",
+              "gloss": "",
+              "token": "\\ln,"
+            },
+            {
+              "target": "lr",
+              "gloss": "",
+              "token": "\\lr"
+            }
           ]
         },
         {
@@ -3879,6 +5079,13 @@
           "line": 1291,
           "targets": [
             "cf"
+          ],
+          "pairs": [
+            {
+              "target": "cf",
+              "gloss": "cross-reference",
+              "token": "\\cf"
+            }
           ]
         },
         {
@@ -3926,6 +5133,13 @@
           "line": 1305,
           "targets": [
             "lc"
+          ],
+          "pairs": [
+            {
+              "target": "lc",
+              "gloss": "",
+              "token": "\\lc"
+            }
           ]
         },
         {
@@ -3998,6 +5212,13 @@
           "line": 1335,
           "targets": [
             "va"
+          ],
+          "pairs": [
+            {
+              "target": "va",
+              "gloss": "variant forms",
+              "token": "\\va"
+            }
           ]
         },
         {
@@ -4011,6 +5232,13 @@
           "line": 1338,
           "targets": [
             "Using_Subentries_or_Lexical_Entries"
+          ],
+          "pairs": [
+            {
+              "target": "Using_Subentries_or_Lexical_Entries",
+              "gloss": "",
+              "token": "Using_Subentries_or_Lexical_Entries"
+            }
           ]
         },
         {
@@ -4107,6 +5335,13 @@
           "line": 1366,
           "targets": [
             "nt"
+          ],
+          "pairs": [
+            {
+              "target": "nt",
+              "gloss": "",
+              "token": "\\nt"
+            }
           ]
         },
         {
@@ -4122,6 +5357,23 @@
             "ee",
             "en",
             "er"
+          ],
+          "pairs": [
+            {
+              "target": "ee",
+              "gloss": "",
+              "token": "\\ee,"
+            },
+            {
+              "target": "en",
+              "gloss": "",
+              "token": "\\en,"
+            },
+            {
+              "target": "er",
+              "gloss": "encyclopedic field bundle",
+              "token": "\\er"
+            }
           ]
         },
         {
@@ -4179,6 +5431,13 @@
           "line": 1386,
           "targets": [
             "nt"
+          ],
+          "pairs": [
+            {
+              "target": "nt",
+              "gloss": "",
+              "token": "\\nt"
+            }
           ]
         },
         {
@@ -4231,6 +5490,13 @@
           "line": 1399,
           "targets": [
             "nt"
+          ],
+          "pairs": [
+            {
+              "target": "nt",
+              "gloss": "",
+              "token": "\\nt"
+            }
           ]
         },
         {
@@ -4283,6 +5549,13 @@
           "line": 1412,
           "targets": [
             "nt"
+          ],
+          "pairs": [
+            {
+              "target": "nt",
+              "gloss": "",
+              "token": "\\nt"
+            }
           ]
         },
         {
@@ -4335,6 +5608,13 @@
           "line": 1425,
           "targets": [
             "nt"
+          ],
+          "pairs": [
+            {
+              "target": "nt",
+              "gloss": "",
+              "token": "\\nt"
+            }
           ]
         },
         {
@@ -4379,6 +5659,23 @@
             "ue",
             "un",
             "ur"
+          ],
+          "pairs": [
+            {
+              "target": "ue",
+              "gloss": "",
+              "token": "\\ue,"
+            },
+            {
+              "target": "un",
+              "gloss": "",
+              "token": "\\un,"
+            },
+            {
+              "target": "ur",
+              "gloss": "(Usage)",
+              "token": "\\ur"
+            }
           ]
         },
         {
@@ -4389,6 +5686,23 @@
             "ee",
             "en",
             "er"
+          ],
+          "pairs": [
+            {
+              "target": "ee",
+              "gloss": "",
+              "token": "\\ee,"
+            },
+            {
+              "target": "en",
+              "gloss": "",
+              "token": "\\en,"
+            },
+            {
+              "target": "er",
+              "gloss": "(Encyclopedic)",
+              "token": "\\er"
+            }
           ]
         },
         {
@@ -4399,6 +5713,23 @@
             "oe",
             "on",
             "or"
+          ],
+          "pairs": [
+            {
+              "target": "oe",
+              "gloss": "",
+              "token": "\\oe,"
+            },
+            {
+              "target": "on",
+              "gloss": "",
+              "token": "\\on,"
+            },
+            {
+              "target": "or",
+              "gloss": "(Only --restrictions)",
+              "token": "\\or"
+            }
           ]
         },
         {
@@ -4417,6 +5748,13 @@
           "line": 1442,
           "targets": [
             "nt"
+          ],
+          "pairs": [
+            {
+              "target": "nt",
+              "gloss": "",
+              "token": "\\nt"
+            }
           ]
         },
         {
@@ -4460,6 +5798,18 @@
           "targets": [
             "np",
             "on"
+          ],
+          "pairs": [
+            {
+              "target": "np",
+              "gloss": "notes",
+              "token": "\\np"
+            },
+            {
+              "target": "on",
+              "gloss": "phonology",
+              "token": "on"
+            }
           ]
         },
         {
@@ -4469,6 +5819,18 @@
           "targets": [
             "ng",
             "on"
+          ],
+          "pairs": [
+            {
+              "target": "ng",
+              "gloss": "notes",
+              "token": "\\ng"
+            },
+            {
+              "target": "on",
+              "gloss": "grammar",
+              "token": "on"
+            }
           ]
         },
         {
@@ -4478,6 +5840,18 @@
           "targets": [
             "nd",
             "on"
+          ],
+          "pairs": [
+            {
+              "target": "nd",
+              "gloss": "notes",
+              "token": "\\nd"
+            },
+            {
+              "target": "on",
+              "gloss": "discourse",
+              "token": "on"
+            }
           ]
         },
         {
@@ -4487,6 +5861,18 @@
           "targets": [
             "na",
             "on"
+          ],
+          "pairs": [
+            {
+              "target": "na",
+              "gloss": "notes",
+              "token": "\\na"
+            },
+            {
+              "target": "on",
+              "gloss": "anthropology",
+              "token": "on"
+            }
           ]
         },
         {
@@ -4496,6 +5882,18 @@
           "targets": [
             "ns",
             "on"
+          ],
+          "pairs": [
+            {
+              "target": "ns",
+              "gloss": "notes",
+              "token": "\\ns"
+            },
+            {
+              "target": "on",
+              "gloss": "sociolinguistics",
+              "token": "on"
+            }
           ]
         },
         {
@@ -4504,6 +5902,13 @@
           "line": 1458,
           "targets": [
             "nq"
+          ],
+          "pairs": [
+            {
+              "target": "nq",
+              "gloss": "questions",
+              "token": "\\nq"
+            }
           ]
         },
         {
@@ -4583,6 +5988,23 @@
             "de",
             "ue",
             "ee"
+          ],
+          "pairs": [
+            {
+              "target": "de",
+              "gloss": "",
+              "token": "\\de,"
+            },
+            {
+              "target": "ue",
+              "gloss": "",
+              "token": "\\ue,"
+            },
+            {
+              "target": "ee",
+              "gloss": "",
+              "token": "\\ee"
+            }
           ]
         },
         {
@@ -4597,6 +6019,18 @@
           "targets": [
             "on",
             "or"
+          ],
+          "pairs": [
+            {
+              "target": "on",
+              "gloss": "",
+              "token": "\\on"
+            },
+            {
+              "target": "or",
+              "gloss": "",
+              "token": "\\or"
+            }
           ]
         },
         {
@@ -4704,6 +6138,13 @@
           "line": 1522,
           "targets": [
             "lf"
+          ],
+          "pairs": [
+            {
+              "target": "lf",
+              "gloss": "the lexical function label",
+              "token": "\\lf"
+            }
           ]
         },
         {
@@ -4712,6 +6153,13 @@
           "line": 1523,
           "targets": [
             "pd"
+          ],
+          "pairs": [
+            {
+              "target": "pd",
+              "gloss": "paradigm set",
+              "token": "\\pd"
+            }
           ]
         },
         {
@@ -4720,6 +6168,13 @@
           "line": 1524,
           "targets": [
             "pdl"
+          ],
+          "pairs": [
+            {
+              "target": "pdl",
+              "gloss": "the paradigm label",
+              "token": "\\pdl"
+            }
           ]
         },
         {
@@ -4733,6 +6188,13 @@
           "line": 1527,
           "targets": [
             "The_MDF_Documentation"
+          ],
+          "pairs": [
+            {
+              "target": "The_MDF_Documentation",
+              "gloss": "",
+              "token": "The_MDF_Documentation"
+            }
           ]
         }
       ]
@@ -4770,6 +6232,13 @@
           "line": 1537,
           "targets": [
             "Printed_Field_Labels"
+          ],
+          "pairs": [
+            {
+              "target": "Printed_Field_Labels",
+              "gloss": "",
+              "token": "Printed_Field_Labels"
+            }
           ]
         },
         {
@@ -4783,6 +6252,13 @@
           "line": 1540,
           "targets": [
             "oe"
+          ],
+          "pairs": [
+            {
+              "target": "oe",
+              "gloss": "",
+              "token": "\\oe"
+            }
           ]
         },
         {
@@ -4798,6 +6274,23 @@
             "dn",
             "un",
             "en"
+          ],
+          "pairs": [
+            {
+              "target": "dn",
+              "gloss": "",
+              "token": "\\dn,"
+            },
+            {
+              "target": "un",
+              "gloss": "",
+              "token": "\\un,"
+            },
+            {
+              "target": "en",
+              "gloss": "",
+              "token": "\\en"
+            }
           ]
         },
         {
@@ -4850,6 +6343,13 @@
           "line": 1558,
           "targets": [
             "oe"
+          ],
+          "pairs": [
+            {
+              "target": "oe",
+              "gloss": "",
+              "token": "\\oe"
+            }
           ]
         },
         {
@@ -4865,6 +6365,23 @@
             "dr",
             "ur",
             "er"
+          ],
+          "pairs": [
+            {
+              "target": "dr",
+              "gloss": "",
+              "token": "\\dr,"
+            },
+            {
+              "target": "ur",
+              "gloss": "",
+              "token": "\\ur,"
+            },
+            {
+              "target": "er",
+              "gloss": "",
+              "token": "\\er"
+            }
           ]
         },
         {
@@ -4907,6 +6424,13 @@
           "line": 1574,
           "targets": [
             "Alternate_Hierarchy"
+          ],
+          "pairs": [
+            {
+              "target": "Alternate_Hierarchy",
+              "gloss": "",
+              "token": "Alternate_Hierarchy"
+            }
           ]
         },
         {
@@ -4970,6 +6494,13 @@
           "line": 1597,
           "targets": [
             "Sections_in_a_Lexical_Entry"
+          ],
+          "pairs": [
+            {
+              "target": "Sections_in_a_Lexical_Entry",
+              "gloss": "",
+              "token": "Sections_in_a_Lexical_Entry"
+            }
           ]
         },
         {
@@ -5528,6 +7059,13 @@
           "line": 1724,
           "targets": [
             "Summary_of_Fields"
+          ],
+          "pairs": [
+            {
+              "target": "Summary_of_Fields",
+              "gloss": "",
+              "token": "Summary_of_Fields"
+            }
           ]
         },
         {
@@ -5570,6 +7108,13 @@
           "line": 1736,
           "targets": [
             "Printed_Field_Labels"
+          ],
+          "pairs": [
+            {
+              "target": "Printed_Field_Labels",
+              "gloss": "",
+              "token": "Printed_Field_Labels"
+            }
           ]
         },
         {
@@ -5583,6 +7128,13 @@
           "line": 1739,
           "targets": [
             "oe"
+          ],
+          "pairs": [
+            {
+              "target": "oe",
+              "gloss": "",
+              "token": "\\oe"
+            }
           ]
         },
         {
@@ -5599,6 +7151,28 @@
             "dv",
             "ev",
             "uv"
+          ],
+          "pairs": [
+            {
+              "target": "gv",
+              "gloss": "",
+              "token": "\\gv,"
+            },
+            {
+              "target": "dv",
+              "gloss": "",
+              "token": "\\dv,"
+            },
+            {
+              "target": "ev",
+              "gloss": "",
+              "token": "\\ev,"
+            },
+            {
+              "target": "uv",
+              "gloss": "",
+              "token": "\\uv"
+            }
           ]
         },
         {
@@ -5715,6 +7289,13 @@
           "line": 1793,
           "targets": [
             "Range_Sets"
+          ],
+          "pairs": [
+            {
+              "target": "Range_Sets",
+              "gloss": "",
+              "token": "Range_Sets"
+            }
           ]
         },
         {
@@ -5738,6 +7319,13 @@
           "line": 1802,
           "targets": [
             "pdl"
+          ],
+          "pairs": [
+            {
+              "target": "pdl",
+              "gloss": "paradigm label",
+              "token": "\\pdl"
+            }
           ]
         },
         {
@@ -5746,6 +7334,13 @@
           "line": 1803,
           "targets": [
             "pdv"
+          ],
+          "pairs": [
+            {
+              "target": "pdv",
+              "gloss": "paradigm vernacular form",
+              "token": "\\pdv"
+            }
           ]
         },
         {
@@ -5754,6 +7349,13 @@
           "line": 1804,
           "targets": [
             "pde"
+          ],
+          "pairs": [
+            {
+              "target": "pde",
+              "gloss": "paradigm form-English gloss",
+              "token": "\\pde"
+            }
           ]
         },
         {
@@ -5762,6 +7364,13 @@
           "line": 1805,
           "targets": [
             "pdn"
+          ],
+          "pairs": [
+            {
+              "target": "pdn",
+              "gloss": "paradigm form-national gloss",
+              "token": "\\pdn"
+            }
           ]
         },
         {
@@ -5770,6 +7379,13 @@
           "line": 1806,
           "targets": [
             "pdr"
+          ],
+          "pairs": [
+            {
+              "target": "pdr",
+              "gloss": "paradigm form-regional gloss",
+              "token": "\\pdr"
+            }
           ]
         },
         {
@@ -5847,6 +7463,13 @@
           "line": 1827,
           "targets": [
             "pdl"
+          ],
+          "pairs": [
+            {
+              "target": "pdl",
+              "gloss": "paradigm label",
+              "token": "\\pdl"
+            }
           ]
         },
         {
@@ -5855,6 +7478,13 @@
           "line": 1828,
           "targets": [
             "pdv"
+          ],
+          "pairs": [
+            {
+              "target": "pdv",
+              "gloss": "paradigm vernacular form",
+              "token": "\\pdv"
+            }
           ]
         },
         {
@@ -5868,6 +7498,13 @@
           "line": 1831,
           "targets": [
             "pdn"
+          ],
+          "pairs": [
+            {
+              "target": "pdn",
+              "gloss": "paradigm form-national gloss",
+              "token": "\\pdn"
+            }
           ]
         },
         {
@@ -5876,6 +7513,13 @@
           "line": 1832,
           "targets": [
             "pdr"
+          ],
+          "pairs": [
+            {
+              "target": "pdr",
+              "gloss": "paradigm form-regional gloss",
+              "token": "\\pdr"
+            }
           ]
         },
         {
@@ -5889,6 +7533,13 @@
           "line": 1835,
           "targets": [
             "pd"
+          ],
+          "pairs": [
+            {
+              "target": "pd",
+              "gloss": "paradigm set",
+              "token": "\\pd"
+            }
           ]
         },
         {
@@ -5996,6 +7647,13 @@
           "line": 1868,
           "targets": [
             "Range_Sets"
+          ],
+          "pairs": [
+            {
+              "target": "Range_Sets",
+              "gloss": "",
+              "token": "Range_Sets"
+            }
           ]
         },
         {
@@ -6014,6 +7672,13 @@
           "line": 1873,
           "targets": [
             "pdv"
+          ],
+          "pairs": [
+            {
+              "target": "pdv",
+              "gloss": "paradigm vernacular form",
+              "token": "\\pdv"
+            }
           ]
         },
         {
@@ -6022,6 +7687,13 @@
           "line": 1874,
           "targets": [
             "pde"
+          ],
+          "pairs": [
+            {
+              "target": "pde",
+              "gloss": "paradigm form-English gloss",
+              "token": "\\pde"
+            }
           ]
         },
         {
@@ -6030,6 +7702,13 @@
           "line": 1875,
           "targets": [
             "pdn"
+          ],
+          "pairs": [
+            {
+              "target": "pdn",
+              "gloss": "paradigm form-national gloss",
+              "token": "\\pdn"
+            }
           ]
         },
         {
@@ -6038,6 +7717,13 @@
           "line": 1876,
           "targets": [
             "pdr"
+          ],
+          "pairs": [
+            {
+              "target": "pdr",
+              "gloss": "paradigm form-regional gloss",
+              "token": "\\pdr"
+            }
           ]
         },
         {
@@ -6051,6 +7737,13 @@
           "line": 1879,
           "targets": [
             "pd"
+          ],
+          "pairs": [
+            {
+              "target": "pd",
+              "gloss": "paradigm set",
+              "token": "\\pd"
+            }
           ]
         },
         {
@@ -6088,6 +7781,13 @@
           "line": 1887,
           "targets": [
             "pde"
+          ],
+          "pairs": [
+            {
+              "target": "pde",
+              "gloss": "paradigm form-English gloss",
+              "token": "\\pde"
+            }
           ]
         },
         {
@@ -6096,6 +7796,13 @@
           "line": 1888,
           "targets": [
             "pdr"
+          ],
+          "pairs": [
+            {
+              "target": "pdr",
+              "gloss": "paradigm form-regional gloss",
+              "token": "\\pdr"
+            }
           ]
         },
         {
@@ -6109,6 +7816,13 @@
           "line": 1891,
           "targets": [
             "pdl"
+          ],
+          "pairs": [
+            {
+              "target": "pdl",
+              "gloss": "paradigm label",
+              "token": "\\pdl"
+            }
           ]
         },
         {
@@ -6117,6 +7831,13 @@
           "line": 1892,
           "targets": [
             "pdv"
+          ],
+          "pairs": [
+            {
+              "target": "pdv",
+              "gloss": "paradigm vernacular form",
+              "token": "\\pdv"
+            }
           ]
         },
         {
@@ -6130,6 +7851,13 @@
           "line": 1895,
           "targets": [
             "pd"
+          ],
+          "pairs": [
+            {
+              "target": "pd",
+              "gloss": "paradigm set",
+              "token": "\\pd"
+            }
           ]
         },
         {
@@ -6167,6 +7895,13 @@
           "line": 1903,
           "targets": [
             "pde"
+          ],
+          "pairs": [
+            {
+              "target": "pde",
+              "gloss": "paradigm form-English gloss",
+              "token": "\\pde"
+            }
           ]
         },
         {
@@ -6175,6 +7910,13 @@
           "line": 1904,
           "targets": [
             "pdn"
+          ],
+          "pairs": [
+            {
+              "target": "pdn",
+              "gloss": "paradigm form-national gloss",
+              "token": "\\pdn"
+            }
           ]
         },
         {
@@ -6188,6 +7930,13 @@
           "line": 1907,
           "targets": [
             "pdl"
+          ],
+          "pairs": [
+            {
+              "target": "pdl",
+              "gloss": "paradigm label",
+              "token": "\\pdl"
+            }
           ]
         },
         {
@@ -6196,6 +7945,13 @@
           "line": 1908,
           "targets": [
             "pdv"
+          ],
+          "pairs": [
+            {
+              "target": "pdv",
+              "gloss": "paradigm vernacular form",
+              "token": "\\pdv"
+            }
           ]
         },
         {
@@ -6209,6 +7965,13 @@
           "line": 1911,
           "targets": [
             "pd"
+          ],
+          "pairs": [
+            {
+              "target": "pd",
+              "gloss": "paradigm set",
+              "token": "\\pd"
+            }
           ]
         },
         {
@@ -6266,6 +8029,13 @@
           "line": 1927,
           "targets": [
             "pdl"
+          ],
+          "pairs": [
+            {
+              "target": "pdl",
+              "gloss": "paradigm label",
+              "token": "\\pdl"
+            }
           ]
         },
         {
@@ -6279,6 +8049,13 @@
           "line": 1930,
           "targets": [
             "pde"
+          ],
+          "pairs": [
+            {
+              "target": "pde",
+              "gloss": "paradigm form-English gloss",
+              "token": "\\pde"
+            }
           ]
         },
         {
@@ -6287,6 +8064,13 @@
           "line": 1931,
           "targets": [
             "pdn"
+          ],
+          "pairs": [
+            {
+              "target": "pdn",
+              "gloss": "paradigm form-national gloss",
+              "token": "\\pdn"
+            }
           ]
         },
         {
@@ -6295,6 +8079,13 @@
           "line": 1932,
           "targets": [
             "pdr"
+          ],
+          "pairs": [
+            {
+              "target": "pdr",
+              "gloss": "paradigm form-regional gloss",
+              "token": "\\pdr"
+            }
           ]
         },
         {
@@ -6308,6 +8099,13 @@
           "line": 1935,
           "targets": [
             "pd"
+          ],
+          "pairs": [
+            {
+              "target": "pd",
+              "gloss": "paradigm set",
+              "token": "\\pd"
+            }
           ]
         },
         {
@@ -6414,6 +8212,13 @@
           "line": 1967,
           "targets": [
             "pdl"
+          ],
+          "pairs": [
+            {
+              "target": "pdl",
+              "gloss": "paradigm label",
+              "token": "\\pdl"
+            }
           ]
         },
         {
@@ -6422,6 +8227,13 @@
           "line": 1968,
           "targets": [
             "pdv"
+          ],
+          "pairs": [
+            {
+              "target": "pdv",
+              "gloss": "paradigm vernacular form",
+              "token": "\\pdv"
+            }
           ]
         },
         {
@@ -6430,6 +8242,13 @@
           "line": 1969,
           "targets": [
             "pde"
+          ],
+          "pairs": [
+            {
+              "target": "pde",
+              "gloss": "paradigm form-English gloss",
+              "token": "\\pde"
+            }
           ]
         },
         {
@@ -6438,6 +8257,13 @@
           "line": 1970,
           "targets": [
             "pdn"
+          ],
+          "pairs": [
+            {
+              "target": "pdn",
+              "gloss": "paradigm form-national gloss",
+              "token": "\\pdn"
+            }
           ]
         },
         {
@@ -6446,6 +8272,13 @@
           "line": 1971,
           "targets": [
             "pdr"
+          ],
+          "pairs": [
+            {
+              "target": "pdr",
+              "gloss": "paradigm form-regional gloss",
+              "token": "\\pdr"
+            }
           ]
         },
         {
@@ -6459,6 +8292,13 @@
           "line": 1974,
           "targets": [
             "sg"
+          ],
+          "pairs": [
+            {
+              "target": "sg",
+              "gloss": "singular form",
+              "token": "\\sg"
+            }
           ]
         },
         {
@@ -6467,6 +8307,13 @@
           "line": 1975,
           "targets": [
             "pd"
+          ],
+          "pairs": [
+            {
+              "target": "pd",
+              "gloss": "paradigm set",
+              "token": "\\pd"
+            }
           ]
         },
         {
@@ -6534,6 +8381,13 @@
           "line": 1997,
           "targets": [
             "ps"
+          ],
+          "pairs": [
+            {
+              "target": "ps",
+              "gloss": "part of speech",
+              "token": "\\ps"
+            }
           ]
         },
         {
@@ -6547,6 +8401,13 @@
           "line": 2000,
           "targets": [
             "Range_Sets"
+          ],
+          "pairs": [
+            {
+              "target": "Range_Sets",
+              "gloss": "",
+              "token": "Range_Sets"
+            }
           ]
         },
         {
@@ -6679,6 +8540,13 @@
           "line": 2057,
           "targets": [
             "Formatting_and_Printing"
+          ],
+          "pairs": [
+            {
+              "target": "Formatting_and_Printing",
+              "gloss": "",
+              "token": "Formatting_and_Printing"
+            }
           ]
         },
         {
@@ -6692,6 +8560,13 @@
           "line": 2060,
           "targets": [
             "Range_Sets"
+          ],
+          "pairs": [
+            {
+              "target": "Range_Sets",
+              "gloss": "",
+              "token": "Range_Sets"
+            }
           ]
         },
         {
@@ -6705,6 +8580,13 @@
           "line": 2063,
           "targets": [
             "Unknown_Fields"
+          ],
+          "pairs": [
+            {
+              "target": "Unknown_Fields",
+              "gloss": "",
+              "token": "Unknown_Fields"
+            }
           ]
         },
         {
@@ -6742,6 +8624,13 @@
           "line": 2072,
           "targets": [
             "Range_Sets"
+          ],
+          "pairs": [
+            {
+              "target": "Range_Sets",
+              "gloss": "",
+              "token": "Range_Sets"
+            }
           ]
         },
         {
@@ -6755,6 +8644,13 @@
           "line": 2075,
           "targets": [
             "pn"
+          ],
+          "pairs": [
+            {
+              "target": "pn",
+              "gloss": "part of speech (national)",
+              "token": "\\pn"
+            }
           ]
         },
         {
@@ -6792,6 +8688,13 @@
           "line": 2085,
           "targets": [
             "Free-form_Fields"
+          ],
+          "pairs": [
+            {
+              "target": "Free-form_Fields",
+              "gloss": "",
+              "token": "Free-form_Fields"
+            }
           ]
         },
         {
@@ -6845,6 +8748,13 @@
           "line": 2099,
           "targets": [
             "tb"
+          ],
+          "pairs": [
+            {
+              "target": "tb",
+              "gloss": "Tables",
+              "token": "\\tb"
+            }
           ]
         },
         {
@@ -6858,6 +8768,13 @@
           "line": 2102,
           "targets": [
             "Character_Style_Codes"
+          ],
+          "pairs": [
+            {
+              "target": "Character_Style_Codes",
+              "gloss": "",
+              "token": "Character_Style_Codes"
+            }
           ]
         },
         {
@@ -6871,6 +8788,13 @@
           "line": 2105,
           "targets": [
             "Printed_Field_Labels"
+          ],
+          "pairs": [
+            {
+              "target": "Printed_Field_Labels",
+              "gloss": "",
+              "token": "Printed_Field_Labels"
+            }
           ]
         },
         {
@@ -6908,6 +8832,13 @@
           "line": 2113,
           "targets": [
             "ps"
+          ],
+          "pairs": [
+            {
+              "target": "ps",
+              "gloss": "part of speech",
+              "token": "\\ps"
+            }
           ]
         },
         {
@@ -6916,6 +8847,13 @@
           "line": 2114,
           "targets": [
             "pn"
+          ],
+          "pairs": [
+            {
+              "target": "pn",
+              "gloss": "part of speech (national)",
+              "token": "\\pn"
+            }
           ]
         },
         {
@@ -6924,6 +8862,13 @@
           "line": 2115,
           "targets": [
             "pd"
+          ],
+          "pairs": [
+            {
+              "target": "pd",
+              "gloss": "paradigm set",
+              "token": "\\pd"
+            }
           ]
         },
         {
@@ -6932,6 +8877,13 @@
           "line": 2116,
           "targets": [
             "sd"
+          ],
+          "pairs": [
+            {
+              "target": "sd",
+              "gloss": "semantic domain",
+              "token": "\\sd"
+            }
           ]
         },
         {
@@ -6940,6 +8892,13 @@
           "line": 2117,
           "targets": [
             "is"
+          ],
+          "pairs": [
+            {
+              "target": "is",
+              "gloss": "index of semantics",
+              "token": "\\is"
+            }
           ]
         },
         {
@@ -6948,6 +8907,13 @@
           "line": 2118,
           "targets": [
             "th"
+          ],
+          "pairs": [
+            {
+              "target": "th",
+              "gloss": "thesaurus",
+              "token": "\\th"
+            }
           ]
         },
         {
@@ -6961,6 +8927,13 @@
           "line": 2121,
           "targets": [
             "lf"
+          ],
+          "pairs": [
+            {
+              "target": "lf",
+              "gloss": "lexical function",
+              "token": "\\lf"
+            }
           ]
         },
         {
@@ -6969,6 +8942,13 @@
           "line": 2122,
           "targets": [
             "pdl"
+          ],
+          "pairs": [
+            {
+              "target": "pdl",
+              "gloss": "paradigm form label",
+              "token": "\\pdl"
+            }
           ]
         },
         {
@@ -6982,6 +8962,13 @@
           "line": 2125,
           "targets": [
             "hm"
+          ],
+          "pairs": [
+            {
+              "target": "hm",
+              "gloss": "homonym number",
+              "token": "\\hm"
+            }
           ]
         },
         {
@@ -6990,6 +8977,13 @@
           "line": 2126,
           "targets": [
             "sn"
+          ],
+          "pairs": [
+            {
+              "target": "sn",
+              "gloss": "sense number",
+              "token": "\\sn"
+            }
           ]
         },
         {
@@ -6998,6 +8992,13 @@
           "line": 2127,
           "targets": [
             "bw"
+          ],
+          "pairs": [
+            {
+              "target": "bw",
+              "gloss": "borrowed word (source of a loan word)",
+              "token": "\\bw"
+            }
           ]
         },
         {
@@ -7006,6 +9007,13 @@
           "line": 2128,
           "targets": [
             "es"
+          ],
+          "pairs": [
+            {
+              "target": "es",
+              "gloss": "etymology source",
+              "token": "\\es"
+            }
           ]
         },
         {
@@ -7014,6 +9022,13 @@
           "line": 2129,
           "targets": [
             "so"
+          ],
+          "pairs": [
+            {
+              "target": "so",
+              "gloss": "source of data/information",
+              "token": "\\so"
+            }
           ]
         },
         {
@@ -7022,6 +9037,13 @@
           "line": 2130,
           "targets": [
             "st"
+          ],
+          "pairs": [
+            {
+              "target": "st",
+              "gloss": "status of the lexical entry",
+              "token": "\\st"
+            }
           ]
         },
         {
@@ -7065,6 +9087,13 @@
           "line": 2161,
           "targets": [
             "Printed_Field_Labels"
+          ],
+          "pairs": [
+            {
+              "target": "Printed_Field_Labels",
+              "gloss": "",
+              "token": "Printed_Field_Labels"
+            }
           ]
         },
         {
@@ -7128,6 +9157,13 @@
           "line": 2183,
           "targets": [
             "Character_Style_Codes"
+          ],
+          "pairs": [
+            {
+              "target": "Character_Style_Codes",
+              "gloss": "",
+              "token": "Character_Style_Codes"
+            }
           ]
         }
       ]
@@ -7176,6 +9212,18 @@
           "targets": [
             "se",
             "or"
+          ],
+          "pairs": [
+            {
+              "target": "se",
+              "gloss": "subentry (a polymorphemic form",
+              "token": "\\se"
+            },
+            {
+              "target": "or",
+              "gloss": "a phrase)",
+              "token": "or"
+            }
           ]
         },
         {
@@ -7189,6 +9237,13 @@
           "line": 2199,
           "targets": [
             "pd"
+          ],
+          "pairs": [
+            {
+              "target": "pd",
+              "gloss": "paradigm set",
+              "token": "\\pd"
+            }
           ]
         },
         {
@@ -7202,6 +9257,13 @@
           "line": 2203,
           "targets": [
             "pdl"
+          ],
+          "pairs": [
+            {
+              "target": "pdl",
+              "gloss": "paradigm label",
+              "token": "\\pdl"
+            }
           ]
         },
         {
@@ -7210,6 +9272,13 @@
           "line": 2204,
           "targets": [
             "pdv"
+          ],
+          "pairs": [
+            {
+              "target": "pdv",
+              "gloss": "paradigm vernacular form",
+              "token": "\\pdv"
+            }
           ]
         },
         {
@@ -7218,6 +9287,13 @@
           "line": 2205,
           "targets": [
             "pde"
+          ],
+          "pairs": [
+            {
+              "target": "pde",
+              "gloss": "paradigm form-English gloss",
+              "token": "\\pde"
+            }
           ]
         },
         {
@@ -7226,6 +9302,13 @@
           "line": 2206,
           "targets": [
             "pdn"
+          ],
+          "pairs": [
+            {
+              "target": "pdn",
+              "gloss": "paradigm form-national gloss",
+              "token": "\\pdn"
+            }
           ]
         },
         {
@@ -7234,6 +9317,13 @@
           "line": 2207,
           "targets": [
             "pdr"
+          ],
+          "pairs": [
+            {
+              "target": "pdr",
+              "gloss": "paradigm form-regional gloss",
+              "token": "\\pdr"
+            }
           ]
         },
         {
@@ -7286,6 +9376,13 @@
           "line": 2225,
           "targets": [
             "ge"
+          ],
+          "pairs": [
+            {
+              "target": "ge",
+              "gloss": "gloss (English)",
+              "token": "\\ge"
+            }
           ]
         },
         {
@@ -7434,6 +9531,13 @@
           "line": 2279,
           "targets": [
             "xv"
+          ],
+          "pairs": [
+            {
+              "target": "xv",
+              "gloss": "example sentence (vernacular)",
+              "token": "\\xv"
+            }
           ]
         },
         {
@@ -7481,6 +9585,13 @@
           "line": 2293,
           "targets": [
             "re"
+          ],
+          "pairs": [
+            {
+              "target": "re",
+              "gloss": "reverse English",
+              "token": "\\re"
+            }
           ]
         },
         {
@@ -7494,6 +9605,13 @@
           "line": 2295,
           "targets": [
             "gn"
+          ],
+          "pairs": [
+            {
+              "target": "gn",
+              "gloss": "gloss-national",
+              "token": "\\gn"
+            }
           ]
         },
         {
@@ -7614,6 +9732,13 @@
           "line": 2333,
           "targets": [
             "th"
+          ],
+          "pairs": [
+            {
+              "target": "th",
+              "gloss": "thesaurus",
+              "token": "\\th"
+            }
           ]
         },
         {
@@ -7622,6 +9747,13 @@
           "line": 2334,
           "targets": [
             "is"
+          ],
+          "pairs": [
+            {
+              "target": "is",
+              "gloss": "index of semantic",
+              "token": "\\is"
+            }
           ]
         },
         {
@@ -7759,6 +9891,13 @@
           "line": 2378,
           "targets": [
             "Using_Subentries_or_Lexical_Entries"
+          ],
+          "pairs": [
+            {
+              "target": "Using_Subentries_or_Lexical_Entries",
+              "gloss": "",
+              "token": "Using_Subentries_or_Lexical_Entries"
+            }
           ]
         },
         {
@@ -7772,6 +9911,13 @@
           "line": 2381,
           "targets": [
             "Sections_in_a_Lexical_Entry"
+          ],
+          "pairs": [
+            {
+              "target": "Sections_in_a_Lexical_Entry",
+              "gloss": "",
+              "token": "Sections_in_a_Lexical_Entry"
+            }
           ]
         },
         {
@@ -8304,6 +10450,13 @@
           "line": 2557,
           "targets": [
             "Alternate_Hierarchy"
+          ],
+          "pairs": [
+            {
+              "target": "Alternate_Hierarchy",
+              "gloss": "",
+              "token": "Alternate_Hierarchy"
+            }
           ]
         },
         {
@@ -8317,6 +10470,13 @@
           "line": 2560,
           "targets": [
             "Using_Subentries_or_Lexical_Entries"
+          ],
+          "pairs": [
+            {
+              "target": "Using_Subentries_or_Lexical_Entries",
+              "gloss": "",
+              "token": "Using_Subentries_or_Lexical_Entries"
+            }
           ]
         },
         {
@@ -8369,6 +10529,13 @@
           "line": 2574,
           "targets": [
             "pdl"
+          ],
+          "pairs": [
+            {
+              "target": "pdl",
+              "gloss": "paradigm label",
+              "token": "\\pdl"
+            }
           ]
         },
         {
@@ -8377,6 +10544,13 @@
           "line": 2575,
           "targets": [
             "pdv"
+          ],
+          "pairs": [
+            {
+              "target": "pdv",
+              "gloss": "paradigm vernacular form",
+              "token": "\\pdv"
+            }
           ]
         },
         {
@@ -8385,6 +10559,13 @@
           "line": 2576,
           "targets": [
             "pde"
+          ],
+          "pairs": [
+            {
+              "target": "pde",
+              "gloss": "paradigm form-English gloss",
+              "token": "\\pde"
+            }
           ]
         },
         {
@@ -8393,6 +10574,13 @@
           "line": 2577,
           "targets": [
             "pdn"
+          ],
+          "pairs": [
+            {
+              "target": "pdn",
+              "gloss": "paradigm form-national gloss",
+              "token": "\\pdn"
+            }
           ]
         },
         {
@@ -8401,6 +10589,13 @@
           "line": 2578,
           "targets": [
             "pdr"
+          ],
+          "pairs": [
+            {
+              "target": "pdr",
+              "gloss": "paradigm form-regional gloss",
+              "token": "\\pdr"
+            }
           ]
         },
         {
@@ -8414,6 +10609,13 @@
           "line": 2581,
           "targets": [
             "pl"
+          ],
+          "pairs": [
+            {
+              "target": "pl",
+              "gloss": "plural form",
+              "token": "\\pl"
+            }
           ]
         },
         {
@@ -8422,6 +10624,13 @@
           "line": 2582,
           "targets": [
             "pd"
+          ],
+          "pairs": [
+            {
+              "target": "pd",
+              "gloss": "paradigm set",
+              "token": "\\pd"
+            }
           ]
         },
         {
@@ -8474,6 +10683,13 @@
           "line": 2600,
           "targets": [
             "Sections_in_a_Lexical_Entry"
+          ],
+          "pairs": [
+            {
+              "target": "Sections_in_a_Lexical_Entry",
+              "gloss": "",
+              "token": "Sections_in_a_Lexical_Entry"
+            }
           ]
         },
         {
@@ -8482,6 +10698,13 @@
           "line": 2601,
           "targets": [
             "Alternate_Hierarchy"
+          ],
+          "pairs": [
+            {
+              "target": "Alternate_Hierarchy",
+              "gloss": "",
+              "token": "Alternate_Hierarchy"
+            }
           ]
         },
         {
@@ -8495,6 +10718,13 @@
           "line": 2604,
           "targets": [
             "rf"
+          ],
+          "pairs": [
+            {
+              "target": "rf",
+              "gloss": "",
+              "token": "\\rf"
+            }
           ]
         },
         {
@@ -8660,6 +10890,13 @@
           "line": 2706,
           "targets": [
             "Sections_in_a_Lexical_Entry"
+          ],
+          "pairs": [
+            {
+              "target": "Sections_in_a_Lexical_Entry",
+              "gloss": "",
+              "token": "Sections_in_a_Lexical_Entry"
+            }
           ]
         },
         {
@@ -8758,6 +10995,18 @@
           "targets": [
             "lf",
             "cf"
+          ],
+          "pairs": [
+            {
+              "target": "lf",
+              "gloss": "",
+              "token": "\\lf"
+            },
+            {
+              "target": "cf",
+              "gloss": "",
+              "token": "\\cf"
+            }
           ]
         },
         {
@@ -8771,6 +11020,13 @@
           "line": 2745,
           "targets": [
             "an"
+          ],
+          "pairs": [
+            {
+              "target": "an",
+              "gloss": "",
+              "token": "\\an"
+            }
           ]
         },
         {
@@ -8833,6 +11089,13 @@
           "line": 2780,
           "targets": [
             "lf"
+          ],
+          "pairs": [
+            {
+              "target": "lf",
+              "gloss": "lexical functions",
+              "token": "\\lf"
+            }
           ]
         },
         {
@@ -8846,6 +11109,13 @@
           "line": 2783,
           "targets": [
             "Punctuation_and_Special_Codes"
+          ],
+          "pairs": [
+            {
+              "target": "Punctuation_and_Special_Codes",
+              "gloss": "",
+              "token": "Punctuation_and_Special_Codes"
+            }
           ]
         },
         {
@@ -8898,6 +11168,13 @@
           "line": 2798,
           "targets": [
             "sd"
+          ],
+          "pairs": [
+            {
+              "target": "sd",
+              "gloss": "semantic domain",
+              "token": "\\sd"
+            }
           ]
         },
         {
@@ -8906,6 +11183,13 @@
           "line": 2799,
           "targets": [
             "is"
+          ],
+          "pairs": [
+            {
+              "target": "is",
+              "gloss": "index of semantics",
+              "token": "\\is"
+            }
           ]
         },
         {
@@ -9058,6 +11342,18 @@
           "targets": [
             "un",
             "ur"
+          ],
+          "pairs": [
+            {
+              "target": "un",
+              "gloss": "",
+              "token": "\\un"
+            },
+            {
+              "target": "ur",
+              "gloss": "",
+              "token": "\\ur"
+            }
           ]
         },
         {
@@ -9073,6 +11369,23 @@
             "de",
             "ee",
             "oe"
+          ],
+          "pairs": [
+            {
+              "target": "de",
+              "gloss": "",
+              "token": "\\de,"
+            },
+            {
+              "target": "ee",
+              "gloss": "",
+              "token": "\\ee,"
+            },
+            {
+              "target": "oe",
+              "gloss": "",
+              "token": "\\oe"
+            }
           ]
         },
         {
@@ -9115,6 +11428,13 @@
           "line": 2882,
           "targets": [
             "ue"
+          ],
+          "pairs": [
+            {
+              "target": "ue",
+              "gloss": "usage (English)",
+              "token": "\\ue"
+            }
           ]
         },
         {
@@ -9128,6 +11448,13 @@
           "line": 2887,
           "targets": [
             "Printed_Field_Labels"
+          ],
+          "pairs": [
+            {
+              "target": "Printed_Field_Labels",
+              "gloss": "",
+              "token": "Printed_Field_Labels"
+            }
           ]
         },
         {
@@ -9142,6 +11469,18 @@
           "targets": [
             "ue",
             "ur"
+          ],
+          "pairs": [
+            {
+              "target": "ue",
+              "gloss": "",
+              "token": "\\ue"
+            },
+            {
+              "target": "ur",
+              "gloss": "",
+              "token": "\\ur"
+            }
           ]
         },
         {
@@ -9157,6 +11496,23 @@
             "dn",
             "en",
             "on"
+          ],
+          "pairs": [
+            {
+              "target": "dn",
+              "gloss": "",
+              "token": "\\dn,"
+            },
+            {
+              "target": "en",
+              "gloss": "",
+              "token": "\\en,"
+            },
+            {
+              "target": "on",
+              "gloss": "",
+              "token": "\\on"
+            }
           ]
         },
         {
@@ -9224,6 +11580,13 @@
           "line": 2919,
           "targets": [
             "Formatting_and_Printing"
+          ],
+          "pairs": [
+            {
+              "target": "Formatting_and_Printing",
+              "gloss": "",
+              "token": "Formatting_and_Printing"
+            }
           ]
         }
       ]
@@ -9256,6 +11619,13 @@
           "line": 2925,
           "targets": [
             "ue"
+          ],
+          "pairs": [
+            {
+              "target": "ue",
+              "gloss": "usage (English)",
+              "token": "\\ue"
+            }
           ]
         },
         {
@@ -9275,6 +11645,18 @@
           "targets": [
             "ue",
             "un"
+          ],
+          "pairs": [
+            {
+              "target": "ue",
+              "gloss": "",
+              "token": "\\ue"
+            },
+            {
+              "target": "un",
+              "gloss": "",
+              "token": "\\un"
+            }
           ]
         },
         {
@@ -9290,6 +11672,23 @@
             "dr",
             "er",
             "or"
+          ],
+          "pairs": [
+            {
+              "target": "dr",
+              "gloss": "",
+              "token": "\\dr,"
+            },
+            {
+              "target": "er",
+              "gloss": "",
+              "token": "\\er,"
+            },
+            {
+              "target": "or",
+              "gloss": "",
+              "token": "\\or"
+            }
           ]
         },
         {
@@ -9582,6 +11981,13 @@
           "line": 3050,
           "targets": [
             "Sections_in_a_Lexical_Entry"
+          ],
+          "pairs": [
+            {
+              "target": "Sections_in_a_Lexical_Entry",
+              "gloss": "",
+              "token": "Sections_in_a_Lexical_Entry"
+            }
           ]
         },
         {
@@ -9590,6 +11996,13 @@
           "line": 3051,
           "targets": [
             "Alternate_Hierarchy"
+          ],
+          "pairs": [
+            {
+              "target": "Alternate_Hierarchy",
+              "gloss": "",
+              "token": "Alternate_Hierarchy"
+            }
           ]
         },
         {
@@ -9603,6 +12016,13 @@
           "line": 3054,
           "targets": [
             "mn"
+          ],
+          "pairs": [
+            {
+              "target": "mn",
+              "gloss": "main entry form",
+              "token": "\\mn"
+            }
           ]
         },
         {
@@ -9611,6 +12031,13 @@
           "line": 3055,
           "targets": [
             "cf"
+          ],
+          "pairs": [
+            {
+              "target": "cf",
+              "gloss": "general cross-reference",
+              "token": "\\cf"
+            }
           ]
         },
         {
@@ -9619,6 +12046,13 @@
           "line": 3056,
           "targets": [
             "lf"
+          ],
+          "pairs": [
+            {
+              "target": "lf",
+              "gloss": "lexical function cross-reference",
+              "token": "\\lf"
+            }
           ]
         },
         {
@@ -9632,6 +12066,13 @@
           "line": 3059,
           "targets": [
             "Free-form_Fields"
+          ],
+          "pairs": [
+            {
+              "target": "Free-form_Fields",
+              "gloss": "",
+              "token": "Free-form_Fields"
+            }
           ]
         },
         {
@@ -9669,6 +12110,13 @@
           "line": 3068,
           "targets": [
             "ue"
+          ],
+          "pairs": [
+            {
+              "target": "ue",
+              "gloss": "usage (English)",
+              "token": "\\ue"
+            }
           ]
         },
         {
@@ -9682,6 +12130,13 @@
           "line": 3073,
           "targets": [
             "Printed_Field_Labels"
+          ],
+          "pairs": [
+            {
+              "target": "Printed_Field_Labels",
+              "gloss": "",
+              "token": "Printed_Field_Labels"
+            }
           ]
         },
         {
@@ -9697,6 +12152,23 @@
             "ue",
             "un",
             "ur"
+          ],
+          "pairs": [
+            {
+              "target": "ue",
+              "gloss": "",
+              "token": "\\ue,"
+            },
+            {
+              "target": "un",
+              "gloss": "",
+              "token": "\\un"
+            },
+            {
+              "target": "ur",
+              "gloss": "",
+              "token": "\\ur"
+            }
           ]
         },
         {
@@ -9713,6 +12185,28 @@
             "ov",
             "dv",
             "gv"
+          ],
+          "pairs": [
+            {
+              "target": "ev",
+              "gloss": "",
+              "token": "\\ev,"
+            },
+            {
+              "target": "ov",
+              "gloss": "",
+              "token": "\\ov,"
+            },
+            {
+              "target": "dv",
+              "gloss": "",
+              "token": "\\dv,"
+            },
+            {
+              "target": "gv",
+              "gloss": "",
+              "token": "\\gv"
+            }
           ]
         },
         {
@@ -9767,6 +12261,23 @@
             "ve",
             "vn",
             "vr"
+          ],
+          "pairs": [
+            {
+              "target": "ve",
+              "gloss": "",
+              "token": "\\ve,"
+            },
+            {
+              "target": "vn",
+              "gloss": "",
+              "token": "\\vn,"
+            },
+            {
+              "target": "vr",
+              "gloss": "",
+              "token": "\\vr"
+            }
           ]
         },
         {
@@ -9780,6 +12291,13 @@
           "line": 3102,
           "targets": [
             "mn"
+          ],
+          "pairs": [
+            {
+              "target": "mn",
+              "gloss": "main entry form",
+              "token": "\\mn"
+            }
           ]
         },
         {
@@ -9793,6 +12311,13 @@
           "line": 3105,
           "targets": [
             "Using_Subentries_or_Lexical_Entries"
+          ],
+          "pairs": [
+            {
+              "target": "Using_Subentries_or_Lexical_Entries",
+              "gloss": "",
+              "token": "Using_Subentries_or_Lexical_Entries"
+            }
           ]
         },
         {
@@ -9830,6 +12355,13 @@
           "line": 3113,
           "targets": [
             "va"
+          ],
+          "pairs": [
+            {
+              "target": "va",
+              "gloss": "variant forms",
+              "token": "\\va"
+            }
           ]
         },
         {
@@ -9849,6 +12381,18 @@
           "targets": [
             "vn",
             "vr"
+          ],
+          "pairs": [
+            {
+              "target": "vn",
+              "gloss": "",
+              "token": "\\vn"
+            },
+            {
+              "target": "vr",
+              "gloss": "",
+              "token": "\\vr"
+            }
           ]
         },
         {
@@ -9891,6 +12435,13 @@
           "line": 3128,
           "targets": [
             "va"
+          ],
+          "pairs": [
+            {
+              "target": "va",
+              "gloss": "variant forms",
+              "token": "\\va"
+            }
           ]
         },
         {
@@ -9910,6 +12461,18 @@
           "targets": [
             "ve",
             "vr"
+          ],
+          "pairs": [
+            {
+              "target": "ve",
+              "gloss": "",
+              "token": "\\ve"
+            },
+            {
+              "target": "vr",
+              "gloss": "",
+              "token": "\\vr"
+            }
           ]
         },
         {
@@ -9952,6 +12515,13 @@
           "line": 3143,
           "targets": [
             "va"
+          ],
+          "pairs": [
+            {
+              "target": "va",
+              "gloss": "variant forms",
+              "token": "\\va"
+            }
           ]
         },
         {
@@ -9971,6 +12541,18 @@
           "targets": [
             "ve",
             "vn"
+          ],
+          "pairs": [
+            {
+              "target": "ve",
+              "gloss": "",
+              "token": "\\ve"
+            },
+            {
+              "target": "vn",
+              "gloss": "",
+              "token": "\\vn"
+            }
           ]
         },
         {
@@ -10019,6 +12601,18 @@
           "targets": [
             "wn",
             "wr"
+          ],
+          "pairs": [
+            {
+              "target": "wn",
+              "gloss": "",
+              "token": "\\wn"
+            },
+            {
+              "target": "wr",
+              "gloss": "",
+              "token": "\\wr"
+            }
           ]
         },
         {
@@ -10168,6 +12762,18 @@
           "targets": [
             "we",
             "wr"
+          ],
+          "pairs": [
+            {
+              "target": "we",
+              "gloss": "",
+              "token": "\\we"
+            },
+            {
+              "target": "wr",
+              "gloss": "",
+              "token": "\\wr"
+            }
           ]
         },
         {
@@ -10216,6 +12822,18 @@
           "targets": [
             "we",
             "wn"
+          ],
+          "pairs": [
+            {
+              "target": "we",
+              "gloss": "",
+              "token": "\\we"
+            },
+            {
+              "target": "wn",
+              "gloss": "",
+              "token": "\\wn"
+            }
           ]
         },
         {
@@ -10263,6 +12881,13 @@
           "line": 3267,
           "targets": [
             "xv"
+          ],
+          "pairs": [
+            {
+              "target": "xv",
+              "gloss": "example sentence (vernacular)",
+              "token": "\\xv"
+            }
           ]
         },
         {
@@ -10271,6 +12896,13 @@
           "line": 3268,
           "targets": [
             "rf"
+          ],
+          "pairs": [
+            {
+              "target": "rf",
+              "gloss": "reference to notebooks, texts, etc.",
+              "token": "\\rf"
+            }
           ]
         },
         {
@@ -10285,6 +12917,18 @@
           "targets": [
             "xn",
             "xr"
+          ],
+          "pairs": [
+            {
+              "target": "xn",
+              "gloss": "",
+              "token": "\\xn"
+            },
+            {
+              "target": "xr",
+              "gloss": "",
+              "token": "\\xr"
+            }
           ]
         },
         {
@@ -10337,6 +12981,13 @@
           "line": 3287,
           "targets": [
             "Unknown_Fields"
+          ],
+          "pairs": [
+            {
+              "target": "Unknown_Fields",
+              "gloss": "",
+              "token": "Unknown_Fields"
+            }
           ]
         }
       ]
@@ -10374,6 +13025,13 @@
           "line": 3294,
           "targets": [
             "xv"
+          ],
+          "pairs": [
+            {
+              "target": "xv",
+              "gloss": "example sentence (vernacular)",
+              "token": "\\xv"
+            }
           ]
         },
         {
@@ -10382,6 +13040,13 @@
           "line": 3295,
           "targets": [
             "rf"
+          ],
+          "pairs": [
+            {
+              "target": "rf",
+              "gloss": "reference to notebooks, texts, etc.",
+              "token": "\\rf"
+            }
           ]
         },
         {
@@ -10396,6 +13061,18 @@
           "targets": [
             "xe",
             "xr"
+          ],
+          "pairs": [
+            {
+              "target": "xe",
+              "gloss": "",
+              "token": "\\xe"
+            },
+            {
+              "target": "xr",
+              "gloss": "",
+              "token": "\\xr"
+            }
           ]
         },
         {
@@ -10448,6 +13125,13 @@
           "line": 3312,
           "targets": [
             "xv"
+          ],
+          "pairs": [
+            {
+              "target": "xv",
+              "gloss": "example sentence (vernacular)",
+              "token": "\\xv"
+            }
           ]
         },
         {
@@ -10456,6 +13140,13 @@
           "line": 3313,
           "targets": [
             "rf"
+          ],
+          "pairs": [
+            {
+              "target": "rf",
+              "gloss": "reference to notebooks, texts, etc.",
+              "token": "\\rf"
+            }
           ]
         },
         {
@@ -10470,6 +13161,18 @@
           "targets": [
             "xe",
             "xn"
+          ],
+          "pairs": [
+            {
+              "target": "xe",
+              "gloss": "",
+              "token": "\\xe"
+            },
+            {
+              "target": "xn",
+              "gloss": "",
+              "token": "\\xn"
+            }
           ]
         },
         {
@@ -10527,6 +13230,13 @@
           "line": 3336,
           "targets": [
             "rf"
+          ],
+          "pairs": [
+            {
+              "target": "rf",
+              "gloss": "reference to notebooks, texts, etc.",
+              "token": "\\rf"
+            }
           ]
         },
         {
@@ -10542,6 +13252,23 @@
             "xe",
             "xn",
             "xr"
+          ],
+          "pairs": [
+            {
+              "target": "xe",
+              "gloss": "",
+              "token": "\\xe,"
+            },
+            {
+              "target": "xn",
+              "gloss": "",
+              "token": "\\xn,"
+            },
+            {
+              "target": "xr",
+              "gloss": "",
+              "token": "\\xr"
+            }
           ]
         },
         {
@@ -10594,6 +13321,13 @@
           "line": 3351,
           "targets": [
             "Old_and_Changed_Markers"
+          ],
+          "pairs": [
+            {
+              "target": "Old_and_Changed_Markers",
+              "gloss": "",
+              "token": "Old_and_Changed_Markers"
+            }
           ]
         }
       ]

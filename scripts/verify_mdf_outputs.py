@@ -33,6 +33,13 @@ DEFAULT_JSON = "docs/mdf/build/master.json"
 DEFAULT_SITE = "docs/mdf/build/site"
 DEFAULT_PDF = "docs/mdf/build/mdf-lexical-fields-1.9a.pdf"
 
+# The renderer-side cf predicates live in the converter script; one source of
+# truth for the link-instance model (SC-2) and the anchor scheme (SC-3).
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+from convert_mdf_master import build_slugs, cf_block_glossed  # noqa: E402
+
 
 def iter_example_blocks(document: dict):
     """Every example block in document order (non-empty \\ftx plus all \\fxv — 444)."""
@@ -105,15 +112,20 @@ def resolve_href(href: str, source_page: str) -> tuple[str, str]:
     return (target or source_page), anchor
 
 
-def cf_target_instances(document: dict) -> list[tuple[str, str]]:
-    """Every (source topic, canonical target) pair rendered as a hyperlink."""
-    return [
-        (topic["key"], target)
-        for topic in document["topics"]
-        for block in topic["blocks"]
-        if block["marker"] == "cf"
-        for target in block.get("targets", [])
-    ]
+def cf_link_instances(document: dict) -> list[tuple[str, str]]:
+    """Every (source topic, canonical target) hyperlink instance the renderers
+    produce (2026-10-06 change control): glossed cf blocks render one link per
+    lookup pair; bare-target cf blocks render one link per parsed target."""
+    instances: list[tuple[str, str]] = []
+    for topic in document["topics"]:
+        for block in topic["blocks"]:
+            if block["marker"] != "cf":
+                continue
+            if cf_block_glossed(block):
+                instances.extend((topic["key"], pair["target"]) for pair in block.get("pairs", []))
+            else:
+                instances.extend((topic["key"], target) for target in block.get("targets", []))
+    return instances
 
 
 def check_sc2_html(document: dict, site_dir: str | Path) -> dict:
@@ -129,9 +141,9 @@ def check_sc2_html(document: dict, site_dir: str | Path) -> dict:
             elif anchor not in pages[target_file].ids:
                 failures.append(f"{page_name}: cf href {href!r} has no anchor on {target_file}")
     missing_placeholders = sum(len(page.cf_missing) for page in pages.values())
-    expected_links = len(cf_target_instances(document))
+    expected_links = len(cf_link_instances(document))
     if total_links != expected_links:
-        failures.append(f"cf-link count {total_links} != {expected_links} target instances parsed from source")
+        failures.append(f"cf-link count {total_links} != {expected_links} link instances parsed from source")
     if missing_placeholders:
         failures.append(f"{missing_placeholders} unresolved-target placeholder(s) rendered")
     return {
@@ -149,11 +161,6 @@ def check_sc3_html(document: dict, site_dir: str | Path) -> dict:
     found: set[str] = set()
     for page in pages.values():
         found |= {i for i in page.ids if i.startswith("key-")}
-    scripts_dir = str(Path(__file__).resolve().parent)
-    if scripts_dir not in sys.path:
-        sys.path.insert(0, scripts_dir)
-    from convert_mdf_master import build_slugs
-
     expected = {f"key-{slug}" for slug in build_slugs(document["topics"]).values()}
     failures = []
     if found != expected:

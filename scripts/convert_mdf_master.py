@@ -45,7 +45,21 @@ JSON schema (snea-mdf-master/1):
                                       for cf blocks targets (canonical keys
                                       resolved by whitespace-token exact lookup,
                                       accepting a leading "\\" and trailing
-                                      "*.,;:"))
+                                      "*.,;:")). cf blocks also carry pairs
+                                      (2026-10-06 change control): the block's
+                                      marker+gloss lookup pairs derived by
+                                      presentation-level whitespace tokenization
+                                      of the raw text — each token resolving
+                                      through the target set starts a pair
+                                      {"target": canonical key, "gloss":
+                                      intervening source words verbatim,
+                                      "token": the source's own display token};
+                                      punctuation-only tokens and the connective
+                                      "and" in list position (directly after a
+                                      bare target) are list structure between
+                                      pairs, never gloss content. Additive only:
+                                      targets and text are unchanged and the
+                                      round-trip ignores pairs.
 
 Renderers (presentation belongs here, never the parser):
 - LaTeX: --latex PATH emits a book-class XeLaTeX document structured by the
@@ -72,8 +86,14 @@ Renderers (presentation belongs here, never the parser):
   blocks (no re-wrapping; long lines break visually via fvextra without altering
   characters); \\cf tokens to green hyperref links to the target topic's label
   (backslash-prefixed tokens that resolve to no topic render as a visible
-  placeholder); \\nt to caption-size notes; \\typ to caption-size attribute
-  lines; \\bib to hanging-indent bibliography entries; \\nwt to bulleted lists
+  placeholder); cf blocks whose pairs carry a gloss render as a description
+  list — one \\item per pair, the label a green hyperref link to the target
+  anchor and the gloss plain body text (marker mentions inside a gloss stay
+  literal text; only the label is a link) — with strictly consecutive glossed
+  cf blocks coalesced into one list; bare-target cf blocks (all pairs
+  glossless) keep the inline rendering; \\nt to caption-size notes; \\typ to
+  caption-size attribute lines; \\bib to hanging-indent bibliography entries;
+  \\nwt to bulleted lists
   with the source's • characters preserved. Each rendered example block carries
   a "(N)" apparatus label (N = 1..444) so example-block counts are verifiable
   in pdftotext output; verbatim content itself is untouched.
@@ -166,6 +186,45 @@ def cf_targets(marker_line: str, aliases: dict[str, str]) -> list[str]:
     return targets
 
 
+def cf_pairs(text: str, aliases: dict[str, str]) -> list[dict]:
+    """Derive a \\cf block's marker+gloss lookup pairs (2026-10-06 change control).
+
+    Presentation-level whitespace tokenization of the block's raw text (the
+    marker-line payload minus the marker token, plus every continuation line):
+    each token resolving through the target set — exact set lookup, accepting a
+    leading "\\" and trailing "*.,;:" exactly as cf_targets — starts a new pair;
+    intervening words accumulate as that pair's gloss, joined with single spaces
+    and trimmed. A punctuation-only token, or the connective "and", arriving
+    while the current gloss is still empty is list structure between pairs —
+    the serialization of a target list, not gloss content — so the bare
+    connective case "\\xe, \\xn, and \\xr" yields all-empty glosses and no
+    stored gloss is fragment-only; the same tokens arriving mid-gloss are
+    gloss content and stay verbatim ("paradigm form & glosses)"). Every pair
+    carries the source's own display token so renderers label the link exactly
+    as the source row writes it (e.g. "ge*", "\\sy"). Tokens before the first
+    pair have no pair to attach to (none occur in the source); raw text is
+    preserved regardless. Content is never regex-processed.
+    """
+    lines = text.split("\n")
+    tokens = [tok for chunk in [field_payload(lines[0], "cf"), *lines[1:]] for tok in chunk.split()]
+    pairs: list[dict] = []
+    for tok in tokens:
+        candidate = tok[1:] if tok.startswith("\\") else tok
+        while candidate and candidate[-1] in TARGET_STRIP_CHARS:
+            candidate = candidate[:-1]
+        target = aliases.get(candidate)
+        if target is not None:
+            pairs.append({"target": target, "gloss": "", "token": tok})
+        elif pairs and not pairs[-1]["gloss"] and (
+            not any(ch.isalnum() for ch in tok) or tok.lower() == "and"
+        ):
+            continue
+        elif pairs:
+            current = pairs[-1]
+            current["gloss"] = (current["gloss"] + " " + tok).strip()
+    return pairs
+
+
 def parse_mdf_text(text: str, source_path: str, git_last_modified: str | None = None) -> dict:
     lines = text.split("\n")
     if lines and lines[-1] == "":
@@ -242,6 +301,7 @@ def parse_mdf_text(text: str, source_path: str, git_last_modified: str | None = 
         for block in region:
             if block["marker"] == "cf":
                 block["targets"] = cf_targets(first_line(block["text"]), aliases)
+                block["pairs"] = cf_pairs(block["text"], aliases)
 
     home = next((topic for topic in raw_topics if topic["key"] == HOME_KEY), None)
     chapter_keys: list[str] = []
@@ -406,6 +466,48 @@ def build_slugs(topics: list[dict]) -> dict[str, str]:
 def render_warning(warnings: list[str], message: str) -> None:
     warnings.append(message)
     print(f"warning: {message}", file=sys.stderr)
+
+
+# ---------------------------------------------------------------------------
+# cf lookup pairs — description-list rendering (2026-10-06 change control)
+# ---------------------------------------------------------------------------
+
+
+def pair_is_glossed(pair: dict) -> bool:
+    """A pair is glossed iff its gloss carries alphanumeric content. The
+    derivation never stores punctuation-only or connective-position fragments,
+    so this is the whole predicate."""
+    return any(ch.isalnum() for ch in pair.get("gloss", ""))
+
+
+def cf_block_glossed(block: dict) -> bool:
+    """A cf block renders as a description list iff ≥1 pair is glossed; blocks
+    whose pairs are all glossless (bare target lists, prose connectives) keep
+    the inline rendering."""
+    return any(pair_is_glossed(pair) for pair in block.get("pairs") or [])
+
+
+def coalesce_cf_blocks(blocks: list[dict]) -> list[tuple[str, list[dict]]]:
+    """Presentation grouping shared by all three renderers: a maximal run of
+    strictly consecutive cf blocks that ALL carry ≥1 glossed pair becomes one
+    ("list", run) group — rendered as a single description list; every other
+    block is a ("single", [block]) group rendered by the per-block rules."""
+    groups: list[tuple[str, list[dict]]] = []
+    i = 0
+    while i < len(blocks):
+        block = blocks[i]
+        if block["marker"] == "cf" and cf_block_glossed(block):
+            run = [block]
+            j = i + 1
+            while j < len(blocks) and blocks[j]["marker"] == "cf" and cf_block_glossed(blocks[j]):
+                run.append(blocks[j])
+                j += 1
+            groups.append(("list", run))
+            i = j
+        else:
+            groups.append(("single", [block]))
+            i += 1
+    return groups
 
 
 # ---------------------------------------------------------------------------
@@ -680,6 +782,24 @@ def latex_cf(block: dict, slugs: dict[str, str], warnings: list[str], where: str
     return "{\\color{cflink} " + "".join(parts).strip() + "}"
 
 
+def latex_cf_list(blocks: list[dict], slugs: dict[str, str]) -> str:
+    """A coalesced run of glossed cf blocks as one description list (2026-10-06
+    change control): one \\item per lookup pair — the label a green hyperref
+    link to the target topic's anchor carrying the source's own display token,
+    the gloss plain body text. Marker mentions inside a gloss stay literal
+    text; only the label is a link. Glossless pairs render as label-only rows."""
+    items: list[str] = []
+    for block in blocks:
+        for pair in block.get("pairs") or []:
+            slug = slugs[pair["target"]]
+            label = latex_escape(pair.get("token") or pair["target"])
+            item = "\\item[{\\hyperref[key:" + slug + "]{\\textcolor{cflink}{" + label + "}}}]"
+            if pair["gloss"]:
+                item += " " + latex_escape(pair["gloss"])
+            items.append(item)
+    return "\\begin{description}\n" + "\n".join(items) + "\n\\end{description}"
+
+
 def latex_example(block: dict, number: int) -> str:
     content = "\n".join(block_lines(block))
     return (
@@ -719,12 +839,16 @@ def latex_topic(
             out.append(latex_nwt_group(nwt_group) + "\n")
             nwt_group = []
 
-    for block in topic["blocks"]:
+    for kind, run in coalesce_cf_blocks(topic["blocks"]):
+        block = run[0]
         marker = block["marker"]
         if marker == "nwt":
             nwt_group.append(block)
             continue
         flush_nwt()
+        if kind == "list":
+            out.append(latex_cf_list(run, slugs) + "\n\n")
+            continue
         if marker == "shd":
             continue
         if marker in ("shd2", "shd3", "shd4"):
@@ -919,6 +1043,9 @@ body {
 p.cf { color: var(--cf-green); }
 a.cf-link { color: var(--cf-green); }
 a.cf-missing { color: #a00000; border-bottom: 1px dotted #a00000; }
+dl.mdf-cf-list { margin: 0.3rem 0 0.9rem; }
+dl.mdf-cf-list dt { font-weight: bold; }
+dl.mdf-cf-list dd { margin: 0 0 0.25rem 2rem; }
 pre.example {
   background: #f5f5f2;
   border: 1px solid #ddd;
@@ -1073,6 +1200,23 @@ def html_cf(block: dict, page_by_key: dict[str, str], slugs: dict[str, str], war
     return "".join(parts).strip()
 
 
+def html_cf_list(blocks: list[dict], page_by_key: dict[str, str], slugs: dict[str, str]) -> str:
+    """A coalesced run of glossed cf blocks as one description list (2026-10-06
+    change control): <dt> the target link carrying the source's own display
+    token, <dd> the gloss beside it — one row per pair, glossless pairs as
+    empty rows. Marker mentions inside a gloss stay literal text; only the
+    label is a link."""
+    rows: list[str] = []
+    for block in blocks:
+        for pair in block.get("pairs") or []:
+            target = pair["target"]
+            href = f"{page_by_key[target]}#key-{slugs[target]}"
+            label = html_escape(pair.get("token") or target)
+            rows.append(f'    <dt><a class="cf-link" href="{href}">{label}</a></dt>')
+            rows.append(f"    <dd>{html_escape(pair['gloss'])}</dd>")
+    return '<dl class="mdf-cf-list">\n' + "\n".join(rows) + "\n</dl>"
+
+
 def html_nwt_group(blocks: list[dict]) -> str:
     items = "\n".join(f"  <li>{html_escape(join_prose(block_lines(b)))}</li>" for b in blocks)
     return '<ul class="nwt-list">\n' + items + "\n</ul>"
@@ -1107,12 +1251,16 @@ def html_topic(
             out.append(html_nwt_group(nwt_group))
             nwt_group = []
 
-    for block in topic["blocks"]:
+    for kind, run in coalesce_cf_blocks(topic["blocks"]):
+        block = run[0]
         marker = block["marker"]
         if marker == "nwt":
             nwt_group.append(block)
             continue
         flush_nwt()
+        if kind == "list":
+            out.append("  " + html_cf_list(run, page_by_key, slugs))
+            continue
         if marker == "shd":
             continue
         if marker in HTML_SECTION_MARKERS:
