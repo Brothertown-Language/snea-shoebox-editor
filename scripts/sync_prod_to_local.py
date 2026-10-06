@@ -23,7 +23,9 @@ faithfully — including generated columns, all indexes — then copies
 production data while skipping generated columns in INSERT statements.
 """
 
+import json
 import os
+import re
 import sys
 import traceback
 from datetime import datetime
@@ -87,12 +89,15 @@ def load_secrets():
 
 
 def get_table_metadata(conn, table_name: str) -> dict:
-    """Return column names, generated column names, and CREATE TABLE DDL."""
+    """Return column names, generated columns, CREATE TABLE DDL, and the
+    sequences referenced by nextval column defaults (part of production's
+    own schema — the replica cannot even CREATE the table without them)."""
     # Get non-generated column names for INSERT
     regular_cols = []
     generated_cols = []
     all_cols = []
     type_map = {}
+    sequences = []
 
     rows = conn.execute(text(f"""
         SELECT
@@ -173,6 +178,9 @@ def get_table_metadata(conn, table_name: str) -> dict:
                                  WHERE a.attrelid = c.oid AND a.attname = '{name}')
             """)).scalar():
                 line += f" DEFAULT {info_default}"
+                seq_ref = re.search(r"nextval\('([^']+)'", info_default)
+                if seq_ref:
+                    sequences.append([seq_ref.group(1), name])
             ddl_parts.append(line)
 
     # Add constraints (primary key, foreign keys, unique, check)
@@ -197,7 +205,9 @@ def get_table_metadata(conn, table_name: str) -> dict:
         "regular_cols": regular_cols,
         "generated_cols": generated_cols,
         "all_cols": all_cols,
+        "type_map": type_map,
         "ddl": ddl,
+        "sequences": sequences,
     }
 
 
@@ -263,8 +273,19 @@ def sync_data():
 
         # Recreate tables in dependency order
         for tname in sorted_tables:
+            meta = table_meta[tname]
             with local_engine.connect() as lc:
-                lc.execute(text(table_meta[tname]["ddl"]))
+                # Serial columns carry a DEFAULT nextval('<seq>') whose
+                # ::regclass cast is evaluated at CREATE TABLE time, but the
+                # referenced sequence was CASCADE-dropped with the old table
+                # — recreate production's sequence first, then attach it to
+                # the new column so pg_get_serial_sequence() still finds it
+                # for the reset step below.
+                for seq_name, owner_col in meta.get("sequences", []):
+                    lc.execute(text(f"CREATE SEQUENCE IF NOT EXISTS {seq_name}"))
+                lc.execute(text(meta["ddl"]))
+                for seq_name, owner_col in meta.get("sequences", []):
+                    lc.execute(text(f"ALTER SEQUENCE {seq_name} OWNED BY {tname}.{owner_col}"))
                 lc.commit()
         log_message(f"  Created {len(sorted_tables)} tables in dependency order")
 
@@ -306,6 +327,18 @@ def sync_data():
             rows = ps.execute(text(f"SELECT {cols_str} FROM {tname}")).fetchall()
             if rows:
                 data = [dict(r._mapping) for r in rows]
+                # psycopg2 cannot adapt Python containers for jsonb columns
+                # bound through text(); serialize them the way production
+                # stores them (JSONB round-trips through the JSON text form).
+                jsonb_cols = [
+                    c for c in meta["regular_cols"]
+                    if meta.get("type_map", {}).get(c) == "jsonb"
+                ]
+                if jsonb_cols:
+                    for row in data:
+                        for col in jsonb_cols:
+                            if not isinstance(row[col], str):
+                                row[col] = json.dumps(row[col])
                 for bstart in range(0, len(data), 1000):
                     batch = data[bstart:bstart + 1000]
                     ls.execute(
