@@ -852,6 +852,8 @@ FOREWORD_SOURCE_PARAGRAPHS = (
     "attributed to its authors — revisions by Karen Buseman, original database by David Coward — "
     "and to SIL International, with the source archive and the distribution site cited. Any use "
     "beyond such free documentation use should be confirmed with SIL International.",
+    "The source header's 'v3.0' stamp identifies the Toolbox data-format version of the file, not "
+    "the document version; the document identifies itself as draft version 1.9a.",
 )
 
 FOREWORD_CHANGES_LEAD = "Changes made relative to the source:"
@@ -879,6 +881,10 @@ FOREWORD_COLOPHON = (
     "Conversion of 2026-10-06. Assembled with AI assistance — OpenCode "
     "(huggingface/zai-org/GLM-5.3-Flash), directed by Michael Conrad.",
 )
+
+# The document's own version (its draft line: "This is draft version 1.9a…"), not
+# the Toolbox data-format version stamped in the \_sh header line ("v3.0").
+DOCUMENT_VERSION = "1.9a"
 
 
 def latex_foreword() -> str:
@@ -1137,13 +1143,11 @@ def render_latex(document: dict, out_path: str, cover_date: str | None = None) -
     topics = document["topics"]
     slugs = build_slugs(topics)
     title = "MDF Lexical Fields"
-    raw_title = document["document_header"].get("title") or ""
-    version = latex_escape(raw_title.split()[0]) if raw_title.split() else "unknown"
     date = cover_date or document["source"].get("git_last_modified") or "unknown date"
 
     chunks = [LATEX_PREAMBLE, "\\begin{document}\n\\frontmatter\n\\begin{titlepage}\n\\centering\n"]
     chunks.append("{\\Huge " + title + "\\par}\n\\vspace{1.5em}\n")
-    chunks.append("{\\large Version " + version + "\\par}\n\\vspace{0.5em}\n")
+    chunks.append("{\\large Draft version " + DOCUMENT_VERSION + "\\par}\n\\vspace{0.5em}\n")
     if cover_date:
         chunks.append("{\\large " + date + "\\par}\n\\vspace{0.5em}\n")
         chunks.append("{\\normalsize\\itshape original document\\par}\n\\vspace{2em}\n")
@@ -1672,8 +1676,7 @@ def render_html(document: dict, out_dir: str, cover_date: str | None = None) -> 
         for entry in entries:
             page_by_key.setdefault(entry["key"], REFERENCE_PAGE)
 
-    version = (document["document_header"].get("title") or "").split()
-    version_text = html_escape(version[0]) if version else "unknown"
+    version_text = "draft " + DOCUMENT_VERSION
     date = cover_date or document["source"].get("git_last_modified") or "unknown date"
     nav = html_nav(document, page_by_key, slugs)
     home_topic = structure["home"]
