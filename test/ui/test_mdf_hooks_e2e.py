@@ -1,5 +1,5 @@
 """SC-12: Playwright real-browser verification of the in-context MDF
-reference hooks on the three MDF-touching surfaces (.issues/1379 Phase 6,
+reference hooks on the three MDF-touching surfaces (issue #1379 Phase 6,
 R-11): Direct Entry per-field marker links, Records marker tooltips + per-
 record marker help, and Upload MDF review warning links.
 
@@ -23,7 +23,10 @@ import threading
 import pytest
 from playwright.sync_api import sync_playwright
 
-APP_URL = "http://localhost:8501"
+# App port parameterized (SNEA_E2E_PORT) so the harness can run against a
+# dedicated app instance without touching a developer-owned app on :8501.
+E2E_PORT = os.environ.get("SNEA_E2E_PORT", "8501")
+APP_URL = f"http://localhost:{E2E_PORT}"
 ARTIFACTS_DIR = os.path.join("tmp", "issue-1379", "artifacts")
 MASTER_PATH = os.path.join("docs", "mdf", "build", "master.json")
 

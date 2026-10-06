@@ -20,7 +20,10 @@ import time
 import pytest
 from playwright.sync_api import sync_playwright
 
-APP_URL = "http://localhost:8501"
+# App port parameterized (SNEA_E2E_PORT) so the harness can run against a
+# dedicated app instance without touching a developer-owned app on :8501.
+E2E_PORT = os.environ.get("SNEA_E2E_PORT", "8501")
+APP_URL = f"http://localhost:{E2E_PORT}"
 MDF_URL = f"{APP_URL}/mdf-reference"
 ARTIFACTS_DIR = os.path.join("tmp", "issue-1379", "artifacts")
 MASTER_PATH = os.path.join("docs", "mdf", "build", "master.json")
@@ -463,7 +466,10 @@ def _filter_flow(query: str, screenshot_name: str):
             flt.fill(query)
             flt.press("Enter")
             page.wait_for_timeout(2500)
-            labels = [t.strip() for t in left_col.locator("button").all_inner_texts()]
+            labels = [
+                t.strip()
+                for t in left_col.locator("button:not(.mdf-split-toggle)").all_inner_texts()
+            ]
             h3_count = len(page.query_selector_all("h3"))
             body = page.inner_text("body")
             page.screenshot(path=os.path.join(ARTIFACTS_DIR, screenshot_name))
@@ -479,10 +485,11 @@ def test_sc9_filter_matches_accented_definition_text():
     """SC-9: the accented source term 'léwat' matches exactly the lc topic —
     the diacritic survives the filter losslessly."""
     state = _run_in_worker_thread(lambda: _filter_flow("léwat", "sc9-01-accented-lewat.png"))
-    # The left browser column also carries the R-13 PDF download control and
-    # the standard back-to-main affordance — assert on the topic-match
-    # buttons only. (Button inner_text embeds the icon and newlines, so the
-    # rail controls match by substring.)
+    # The left browser column also carries the R-13 PDF download control, the
+    # standard back-to-main affordance, and the split-pane « toggle (a
+    # JS-injected control strip button, not a topic node) — assert on the
+    # topic-match buttons only. (Button inner_text embeds the icon and
+    # newlines, so the rail controls match by substring.)
     rail_controls = ("Download the MDF reference (PDF)", "Back to Main Menu")
     topic_labels = [
         lbl for lbl in state["labels"] if not any(control in lbl for control in rail_controls)
@@ -536,6 +543,146 @@ def test_sc11_pdf_download_serves_committed_bytes():
             )
             with open(os.path.join(ARTIFACTS_DIR, "sc11-result.json"), "w") as fh:
                 json.dump({"filename": download.suggested_filename, "sha256": served_sha}, fh)
+        finally:
+            browser.close()
+            pw.stop()
+
+    _run_in_worker_thread(flow)
+
+
+# ── Split-pane layout (2026-10-06 developer layout directive) ──────────
+#
+# The MDF Reference page renders as a fixed-height split: the left browser
+# rail scrolls independently of the detail pane, a drag handle between the
+# panes resizes the rail (persisted), a «/» control hides/shows the rail
+# (persisted), and any navigation (topic click, cf cross-reference,
+# ?marker= deep link) lands the detail pane at ITS top while the rail keeps
+# its own scroll position. Assertions target the page's contract, not the
+# injection mechanism.
+
+
+def _split_panes(page):
+    """(rail, detail) — the two stColumns of the MDF split, in DOM order."""
+    rail = page.locator('[data-testid="stColumn"]').nth(0)
+    detail = page.locator('[data-testid="stColumn"]').nth(1)
+    return rail, detail
+
+
+def test_split_drag_resizes_rail_and_persists_across_rerun():
+    """(a) dragging the handle widens the rail and the width survives a
+    topic-click rerun."""
+
+    def flow():
+        pw, browser, page = _open_mdf_page()
+        try:
+            handle = page.locator(".mdf-split-handle")
+            handle.wait_for(state="visible", timeout=30_000)
+            rail, _detail = _split_panes(page)
+            w0 = rail.bounding_box()["width"]
+            box = handle.bounding_box()
+            cx, cy = box["x"] + box["width"] / 2, box["y"] + 300
+            page.mouse.move(cx, cy)
+            page.mouse.down()
+            page.mouse.move(cx + 150, cy, steps=10)
+            page.mouse.up()
+            page.wait_for_timeout(400)
+            w1 = rail.bounding_box()["width"]
+            assert w1 >= w0 + 140, f"dragging +150px must widen the rail: {w0:.0f} -> {w1:.0f}"
+            page.screenshot(path=os.path.join(ARTIFACTS_DIR, "vision3", "split-a-dragged.png"))
+            # Persistence: a topic click reruns the app; the width must hold.
+            rail.get_by_role("button", name="ge", exact=True).first.click()
+            page.wait_for_url("**marker=ge*", timeout=30_000)
+            page.wait_for_timeout(800)
+            w2 = rail.bounding_box()["width"]
+            assert abs(w2 - w1) < 3, f"rail width must persist across a rerun: {w1:.0f} -> {w2:.0f}"
+        finally:
+            browser.close()
+            pw.stop()
+
+    _run_in_worker_thread(flow)
+
+
+def test_split_independent_scrolling_on_navigation():
+    """(b) with the rail scrolled deep down, navigating to a topic found
+    there shows it in the detail pane AT ITS TOP while the rail keeps its
+    own scroll position."""
+
+    def flow():
+        pw, browser, page = _open_mdf_page()
+        try:
+            rail, detail = _split_panes(page)
+            rail.evaluate("el => { el.scrollTop = el.scrollHeight; }")
+            page.wait_for_timeout(400)
+            s0 = rail.evaluate("el => el.scrollTop")
+            assert s0 > 400, f"the rail must be its own scroll container (scrolled to {s0})"
+            # The terminal Discontinued topic (xg) sits at the rail's bottom.
+            rail.get_by_role("button", name="xg", exact=True).first.click()
+            page.wait_for_selector('h2:has-text("(discontinued field)")', timeout=30_000)
+            page.wait_for_timeout(1500)  # let the scroll-to-top settle window elapse
+            s1 = rail.evaluate("el => el.scrollTop")
+            assert abs(s1 - s0) < 60, f"rail scroll must survive navigation: {s0:.0f} -> {s1:.0f}"
+            dtop = detail.evaluate("el => el.scrollTop")
+            assert dtop < 10, f"the detail pane must land at its own top: {dtop}"
+            page.screenshot(path=os.path.join(ARTIFACTS_DIR, "vision3", "split-b-independent-scroll.png"))
+        finally:
+            browser.close()
+            pw.stop()
+
+    _run_in_worker_thread(flow)
+
+
+def test_split_deeplink_lands_with_detail_at_top():
+    """(c) a ?marker= deep link lands with the detail pane scrolled to its
+    own top, showing the requested marker's content."""
+
+    def flow():
+        pw = sync_playwright().start()
+        browser = pw.chromium.launch()
+        try:
+            page = browser.new_context(storage_state=None).new_page()
+            page.goto(f"{MDF_URL}?marker=ge")
+            page.wait_for_selector("text=gloss (English)", timeout=60_000)
+            page.wait_for_timeout(1500)  # settle window
+            _rail, detail = _split_panes(page)
+            dtop = detail.evaluate("el => el.scrollTop")
+            assert dtop < 10, f"deep link must land with the detail pane at its top: {dtop}"
+            page.screenshot(path=os.path.join(ARTIFACTS_DIR, "vision3", "split-c-deeplink-top.png"))
+        finally:
+            browser.close()
+            pw.stop()
+
+    _run_in_worker_thread(flow)
+
+
+def test_split_hide_show_rail_persists_state():
+    """(d) the «/» control hides the rail and shows it again at the persisted
+    width; the collapsed state survives a rerun."""
+
+    def flow():
+        pw, browser, page = _open_mdf_page()
+        try:
+            handle = page.locator(".mdf-split-handle")
+            handle.wait_for(state="visible", timeout=30_000)
+            rail, detail = _split_panes(page)
+            w0 = rail.bounding_box()["width"]
+            page.locator(".mdf-split-toggle").click()
+            page.wait_for_timeout(400)
+            assert rail.bounding_box() is None, "the rail must be hidden after the « toggle"
+            page.screenshot(path=os.path.join(ARTIFACTS_DIR, "vision3", "split-d-collapsed.png"))
+            # Collapsed state survives a navigation rerun (aa TOC cf button).
+            detail.get_by_role("button", name="Introduction", exact=True).first.click()
+            page.wait_for_url("**marker=Introduction*", timeout=30_000)
+            page.wait_for_timeout(800)
+            assert rail.bounding_box() is None, "the rail must stay collapsed across a rerun"
+            # » restores the rail at its persisted width.
+            page.locator(".mdf-split-expand").click()
+            page.wait_for_timeout(400)
+            w1 = rail.bounding_box()
+            assert w1 is not None and abs(w1["width"] - w0) < 3, (
+                f"the rail must return at its persisted width: {w0:.0f} -> "
+                f"{w1['width'] if w1 else 'hidden'}"
+            )
+            page.screenshot(path=os.path.join(ARTIFACTS_DIR, "vision3", "split-d-expanded.png"))
         finally:
             browser.close()
             pw.stop()

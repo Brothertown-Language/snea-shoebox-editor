@@ -28,7 +28,10 @@ import urllib.request
 import pytest
 from playwright.sync_api import sync_playwright
 
-APP_URL = "http://localhost:8501"
+# App port parameterized (SNEA_E2E_PORT) so the harness can run against a
+# dedicated app instance without touching a developer-owned app on :8501.
+E2E_PORT = os.environ.get("SNEA_E2E_PORT", "8501")
+APP_URL = f"http://localhost:{E2E_PORT}"
 MDF_URL = f"{APP_URL}/mdf-reference"
 ARTIFACTS_DIR = os.path.join("tmp", "issue-1379", "artifacts")
 HEALTH_URL = f"{APP_URL}/_stcore/health"
@@ -57,10 +60,10 @@ def _health_ok() -> bool:
 def _restart_app(role: str | None) -> None:
     """Restart the app under test with SNEA_E2E_ROLE set (or cleared).
 
-    The pattern targets only this app's command line, so concurrent app
-    processes on other ports are untouched.
+    The pattern targets only this harness's configured port, so apps on
+    other ports (e.g. a developer-owned instance on :8501) are untouched.
     """
-    subprocess.run(["pkill", "-f", "streamlit run streamlit_app.py"], check=False, capture_output=True)
+    subprocess.run(["pkill", "-f", f"server.port {E2E_PORT}"], check=False, capture_output=True)
     deadline = time.monotonic() + 20
     while time.monotonic() < deadline and _health_ok():
         time.sleep(0.5)
@@ -79,7 +82,7 @@ def _restart_app(role: str | None) -> None:
             [
                 "uv", "run", "--extra", "local", "python", "-m", "streamlit",
                 "run", "streamlit_app.py",
-                "--server.address", "0.0.0.0", "--server.port", "8501",
+                "--server.address", "0.0.0.0", "--server.port", E2E_PORT,
                 "--server.headless", "true",
             ],
             env=env,

@@ -12,10 +12,20 @@ each group) — the same semantic regrouping the PDF and HTML renderers
 implement. The
 detail pane preserves the source content; ``\\ftx``/``\\fxv`` formatting
 examples render as code blocks; ``\\cf`` cross-references navigate in-app
-and render green — the source's own stated convention, mirrored by the
-PDF and HTML editions. The page owns the full window: the global sidebar
+and render green — the source's own stated convention, mirrored by the PDF
+and HTML editions. The page owns the full window: the global sidebar
 navigation is hidden and the MDF browser column is the single left rail,
 with the standard back-to-main affordance at its top.
+
+Layout (2026-10-06 directive): the browser rail and the detail pane form a
+fixed-height split — each pane scrolls independently, a drag handle
+resizes the rail (persisted in sessionStorage), a «/» control hides/shows
+the rail (persisted), and every navigation (topic click, cf
+cross-reference, ``?marker=`` deep link, unknown-key fallback) lands the
+detail pane at its own top while the rail keeps its scroll position. The
+behavior is implemented by a controller script re-injected on every rerun
+(see ``_SPLIT_CONTROLLER_TEMPLATE``); without JavaScript the page
+degrades to the plain whole-page two-column layout, fully functional.
 Per the 2026-10-06 change control, cf blocks that are marker+gloss lookup
 pairs render as a per-pair list — one row per pair, the source's own marker
 token as the deep-link affordance and its gloss beside it, with in-gloss
@@ -34,6 +44,7 @@ source's accented content (á, ñ, é) must match losslessly (R-10).
 
 import json
 import re
+import time
 from pathlib import Path
 from urllib.parse import quote
 
@@ -451,6 +462,310 @@ def _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, navi
                     navigate_to(entry["key"])
 
 
+# ── Split-pane controller (2026-10-06 layout directive) ─────────────────
+#
+# Streamlit reruns rebuild the page DOM, so the split-pane behavior cannot be
+# a one-time setup: the controller script is re-injected on every rerun (the
+# per-run nonce in the body changes the sanitized string, which re-triggers
+# the frontend's html renderer effect) and re-applies everything idempotently
+# from sessionStorage. It runs in the app document itself — Streamlit 1.54's
+# st.html is not iframed; scripts execute only with
+# unsafe_allow_javascript=True (verified live: without the flag they are
+# dropped, and a components.html iframe reaches window.parent.document only
+# same-origin — the non-iframed path is the simpler, equivalent surface).
+#
+# Behaviors, all graceful-degrading (no JavaScript → the plain whole-page
+# two-column layout, fully functional, just not resizable):
+#   1. The two-column block is pinned to the viewport height; each column
+#      becomes its own scroll container (split-pane scrolling).
+#   2. A drag handle between the panes resizes the rail (persisted).
+#   3. A «/» control hides/shows the rail (persisted).
+#   4. Any navigation — a ?marker= query-param change (deep links, unknown
+#      keys, in-app topic/cf clicks whose URL update lands asynchronously
+#      after the rerun) or a detail-heading change (the same rerun the new
+#      topic renders in) — scrolls the DETAIL pane to its own top, while the
+#      rail's scroll position is saved to and restored from sessionStorage.
+_SPLIT_CONTROLLER_TEMPLATE = """
+<div id="mdf-split-anchor"></div>
+<script>
+/* mdf-split nonce @@NONCE@@ */
+(function () {
+    'use strict';
+    var K = {
+        width: 'mdfSplit.railWidth',
+        collapsed: 'mdfSplit.railCollapsed',
+        lastMarker: 'mdfSplit.lastMarker',
+        lastHeading: 'mdfSplit.lastHeading',
+        railScroll: 'mdfSplit.railScroll'
+    };
+    function ssGet(k) {
+        try { return window.sessionStorage.getItem(k); } catch (e) { return null; }
+    }
+    function ssSet(k, v) {
+        try { window.sessionStorage.setItem(k, String(v)); } catch (e) {}
+    }
+    function markerParam() {
+        try {
+            var m = new URLSearchParams(window.location.search).get('marker');
+            return m === null ? '' : m;
+        } catch (e) { return ''; }
+    }
+    function detailPane() {
+        return document.querySelector('[data-mdsplit-detail]');
+    }
+    function forceTop(el) {
+        // Navigation lands the pane at its top; the settle window covers
+        // the rest of Streamlit's post-rerun content streaming.
+        var n = 0;
+        var tick = function () {
+            if (el.scrollTop !== 0) { el.scrollTop = 0; }
+            if (n++ < 9) { window.setTimeout(tick, 100); }
+        };
+        el.scrollTop = 0;
+        window.setTimeout(tick, 100);
+    }
+    function checkMarker() {
+        var cur = markerParam();
+        var last = ssGet(K.lastMarker);
+        if (last === cur) { return; }
+        ssSet(K.lastMarker, cur);
+        var detail = detailPane();
+        if (detail) { forceTop(detail); }
+    }
+    function checkHeading() {
+        var h2 = document.querySelector('[data-mdsplit-detail] h2');
+        var cur = h2 ? h2.textContent.trim() : '';
+        if (!cur) { return; }
+        var last = ssGet(K.lastHeading);
+        ssSet(K.lastHeading, cur);
+        if (last === null || last === cur) { return; }
+        var detail = detailPane();
+        if (detail) { forceTop(detail); }
+    }
+    function findSplit() {
+        // The page's own two-column block: the only horizontal block whose
+        // wrapper chain is layoutWrapper > verticalBlock > block-container
+        // (cf rows inside the detail pane nest far deeper).
+        var blocks = document.querySelectorAll('[data-testid="stHorizontalBlock"]');
+        for (var i = 0; i < blocks.length; i++) {
+            var hb = blocks[i];
+            var cols = [];
+            for (var j = 0; j < hb.children.length; j++) {
+                var ch = hb.children[j];
+                if (ch.getAttribute && ch.getAttribute('data-testid') === 'stColumn') {
+                    cols.push(ch);
+                }
+            }
+            if (cols.length !== 2) { continue; }
+            var wrap = hb.parentElement;
+            if (!wrap || wrap.getAttribute('data-testid') !== 'stLayoutWrapper') { continue; }
+            var vb = wrap.parentElement;
+            if (!vb || vb.getAttribute('data-testid') !== 'stVerticalBlock') { continue; }
+            var bc = vb.parentElement;
+            if (!bc) { continue; }
+            if (bc.getAttribute('data-testid') !== 'stMainBlockContainer' &&
+                !(bc.classList && bc.classList.contains('block-container'))) { continue; }
+            return { hb: hb, rail: cols[0], detail: cols[1], handle: null };
+        }
+        return null;
+    }
+    function clampWidth(w) {
+        return Math.min(Math.max(w, 220), Math.round(window.innerWidth * 0.7));
+    }
+    function applyWidth(state) {
+        var saved = parseInt(ssGet(K.width) || '', 10);
+        if (!saved) {
+            saved = Math.round(state.rail.getBoundingClientRect().width);
+            ssSet(K.width, saved);
+        }
+        saved = clampWidth(saved);
+        state.rail.style.flex = '0 0 ' + saved + 'px';
+        state.rail.style.minWidth = '0';
+        state.detail.style.flex = '1 1 0%';
+        state.detail.style.minWidth = '0';
+    }
+    function fitHeight(state) {
+        var hb = state.hb;
+        // The layout wrapper is a column flex container and this block is
+        // its flex item: without flex:none the item grows to its content
+        // height and the inline height never takes effect.
+        hb.style.flex = '0 0 auto';
+        hb.style.minHeight = '0';
+        var top = hb.getBoundingClientRect().top +
+            (window.scrollY || window.pageYOffset || 0);
+        var h = Math.max(480, window.innerHeight - top - 4);
+        hb.style.height = h + 'px';
+        // If anything still overflows the viewport (theme paddings and
+        // margins), shrink the split by the measured overflow instead of
+        // hard-coding offsets.
+        var scroller = document.querySelector('section.stMain');
+        if (scroller) {
+            var over = scroller.scrollHeight - scroller.clientHeight;
+            if (over > 0 && h - over >= 480) { hb.style.height = (h - over) + 'px'; }
+        }
+        var docOver = document.documentElement.scrollHeight - window.innerHeight;
+        if (docOver > 0 && h - docOver >= 480) { hb.style.height = (h - docOver) + 'px'; }
+    }
+    function positionHandle(state) {
+        var handle = state.handle;
+        if (!handle || ssGet(K.collapsed) === '1') { return; }
+        var rr = state.rail.getBoundingClientRect();
+        var hr = state.hb.getBoundingClientRect();
+        handle.style.left = Math.round(rr.right - hr.left - handle.offsetWidth / 2) + 'px';
+    }
+    function startDrag(ev, state) {
+        if (ev.button !== 0) { return; }
+        var startX = ev.clientX;
+        var startW = state.rail.getBoundingClientRect().width;
+        state.hb.classList.add('mdf-dragging');
+        document.body.style.userSelect = 'none';
+        function onMove(e) {
+            var w = clampWidth(startW + (e.clientX - startX));
+            state.rail.style.flex = '0 0 ' + w + 'px';
+            ssSet(K.width, w);
+            positionHandle(state);
+            e.preventDefault();
+        }
+        function onUp() {
+            state.hb.classList.remove('mdf-dragging');
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+        ev.preventDefault();
+    }
+    function applyCollapsed(state) {
+        state.hb.classList.toggle('mdf-rail-collapsed', ssGet(K.collapsed) === '1');
+    }
+    function setCollapsed(state, collapsed) {
+        ssSet(K.collapsed, collapsed ? '1' : '0');
+        applyCollapsed(state);
+        positionHandle(state);
+    }
+    function buildChrome(state) {
+        var hb = state.hb;
+        var rail = state.rail;
+        var handle = hb.querySelector(':scope > .mdf-split-handle');
+        if (!handle) {
+            handle = document.createElement('div');
+            handle.className = 'mdf-split-handle';
+            handle.title = 'Drag to resize the browser panel';
+            handle.addEventListener('mousedown', function (ev) { startDrag(ev, state); });
+            hb.appendChild(handle);
+        }
+        state.handle = handle;
+        var expand = hb.querySelector(':scope > .mdf-split-expand');
+        if (!expand) {
+            expand = document.createElement('button');
+            expand.type = 'button';
+            expand.className = 'mdf-split-expand';
+            expand.title = 'Show browser panel';
+            expand.setAttribute('aria-label', 'Show browser panel');
+            expand.textContent = '\\u00BB';
+            expand.addEventListener('click', function () { setCollapsed(state, false); });
+            hb.appendChild(expand);
+        }
+        var strip = rail.querySelector(':scope > .mdf-rail-strip');
+        if (!strip) {
+            strip = document.createElement('div');
+            strip.className = 'mdf-rail-strip';
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'mdf-split-toggle';
+            btn.title = 'Hide browser panel';
+            btn.setAttribute('aria-label', 'Hide browser panel');
+            btn.textContent = '\\u00AB';
+            btn.addEventListener('click', function () { setCollapsed(state, true); });
+            strip.appendChild(btn);
+            rail.insertBefore(strip, rail.firstChild);
+        }
+        if (!rail.__mdfScrollHooked) {
+            rail.__mdfScrollHooked = true;
+            var pending = null;
+            rail.addEventListener('scroll', function () {
+                if (pending) { return; }
+                pending = window.setTimeout(function () {
+                    pending = null;
+                    ssSet(K.railScroll, Math.round(rail.scrollTop));
+                }, 120);
+            }, { passive: true });
+        }
+    }
+    function restoreRailScroll(rail) {
+        var saved = parseInt(ssGet(K.railScroll) || '0', 10);
+        if (!(saved > 40)) { return; }
+        var n = 0;
+        var tick = function () {
+            if (rail.scrollTop === 0) { rail.scrollTop = saved; }
+            if (n++ < 7) { window.setTimeout(tick, 120); }
+        };
+        if (rail.scrollTop === 0) { rail.scrollTop = saved; }
+        window.setTimeout(tick, 120);
+    }
+    // One-time installs (guarded): they survive reruns because they hang
+    // off window, not off the re-rendered DOM.
+    if (!window.__mdfSplitLive) {
+        window.__mdfSplitLive = true;
+        // st.query_params pushes the URL asynchronously AFTER a navigation
+        // rerun renders, so a poll — not just the per-rerun inline check —
+        // is what reliably sees ?marker= change (deep links included).
+        window.setInterval(function () { checkMarker(); }, 200);
+        window.addEventListener('resize', function () {
+            var api = window.__mdfSplitApi;
+            if (api) { api.refresh(); }
+        });
+    }
+    var state = findSplit();
+    if (state) {
+        state.hb.setAttribute('data-mdsplit', '1');
+        state.rail.setAttribute('data-mdsplit-rail', '1');
+        state.detail.setAttribute('data-mdsplit-detail', '1');
+        state.rail.style.overflowY = 'auto';
+        state.rail.style.overflowX = 'hidden';
+        state.rail.style.height = '100%';
+        state.detail.style.overflowY = 'auto';
+        state.detail.style.overflowX = 'hidden';
+        state.detail.style.height = '100%';
+        applyWidth(state);
+        buildChrome(state);
+        applyCollapsed(state);
+        fitHeight(state);
+        positionHandle(state);
+        restoreRailScroll(state.rail);
+        checkHeading();
+        checkMarker();
+        window.__mdfSplitApi = {
+            refresh: function () {
+                applyWidth(state);
+                fitHeight(state);
+                positionHandle(state);
+            }
+        };
+        // Fonts/images settle right after attach; re-fit briefly.
+        window.setTimeout(function () { fitHeight(state); positionHandle(state); }, 250);
+        window.setTimeout(function () { fitHeight(state); positionHandle(state); }, 900);
+    }
+})();
+</script>
+"""
+
+
+def _render_split_controller() -> None:
+    """Inject the split-pane controller script (see the template's rationale).
+
+    The nonce comment inside the body changes on every rerun, which makes the
+    frontend's html renderer re-run its effect (its memo key is the sanitized
+    body string) and therefore re-execute the script after Streamlit rebuilt
+    the page DOM.
+    """
+    import streamlit as st
+
+    body = _SPLIT_CONTROLLER_TEMPLATE.replace("@@NONCE@@", str(time.time_ns()))
+    st.html(body, unsafe_allow_javascript=True)
+
+
 def mdf_reference():
     """Render the MDF Reference page (chapter-grouped browser + detail pane)."""
     import streamlit as st
@@ -507,6 +822,101 @@ def mdf_reference():
         }
         button[kind="primary"] p {
             color: #313338 !important;
+        }
+        /* ── Split-pane layout (2026-10-06 layout directive) ─────────────
+           The page's two-column block is pinned to the viewport by the
+           controller script injected at the bottom of the page: each pane
+           scrolls independently, a drag handle between the panes resizes
+           the browser rail (persisted in sessionStorage), and a «/» control
+           hides/shows the rail (persisted). Without JavaScript the page
+           degrades to the unsplit whole-page layout — fully functional,
+           just not resizable. */
+        .block-container {
+            padding-bottom: 0;
+        }
+        /* The controller element itself is pure script — its layout slot
+           goes away entirely (script still runs: hiding does not unmount). */
+        div[data-testid="stElementContainer"]:has(> #mdf-split-anchor) {
+            display: none;
+        }
+        [data-mdsplit] {
+            position: relative;
+            overflow: hidden;
+        }
+        .mdf-split-handle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 12px;
+            cursor: col-resize;
+            z-index: 40;
+            touch-action: none;
+        }
+        .mdf-split-handle::after {
+            content: "";
+            position: absolute;
+            top: 4px;
+            bottom: 4px;
+            left: 5px;
+            width: 2px;
+            border-radius: 1px;
+            background: rgba(128, 128, 128, 0.35);
+        }
+        .mdf-split-handle:hover::after,
+        [data-mdsplit].mdf-dragging .mdf-split-handle::after {
+            background: #ffa500;
+        }
+        /* Rail-top control strip: the « collapse control rides the rail's
+            top edge (sticky — stays visible while the rail scrolls),
+            mirroring the app sidebar's collapse affordance. */
+        .mdf-rail-strip {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            display: flex;
+            justify-content: flex-end;
+            padding: 2px 4px 2px 0;
+            pointer-events: none;
+            background: var(--background-color, transparent);
+        }
+        .mdf-split-toggle,
+        .mdf-split-expand {
+            pointer-events: auto;
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            border: 1px solid rgba(128, 128, 128, 0.45);
+            border-radius: 6px;
+            background: transparent;
+            color: inherit;
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .mdf-split-toggle:hover,
+        .mdf-split-expand:hover {
+            border-color: #ffa500;
+            color: #ffa500;
+        }
+        /* Collapsed state: the » expand tab floats at the split's left
+           edge; the rail and the handle are removed from the flow. */
+        .mdf-split-expand {
+            display: none;
+            position: absolute;
+            top: 6px;
+            left: 4px;
+            z-index: 40;
+        }
+        [data-mdsplit].mdf-rail-collapsed .mdf-split-expand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        [data-mdsplit].mdf-rail-collapsed > [data-mdsplit-rail] {
+            display: none !important;
+        }
+        [data-mdsplit].mdf-rail-collapsed > .mdf-split-handle {
+            display: none !important;
         }
         </style>
         """
@@ -657,6 +1067,10 @@ def mdf_reference():
             else:  # txt, nwt, and any continuation-bearing content marker
                 st.markdown(md_escape(strip_marker(text)))
             block_index += 1
+
+    # Injected AFTER both panes render, so the controller attaches to the
+    # finished two-column DOM on every rerun (see _SPLIT_CONTROLLER_TEMPLATE).
+    _render_split_controller()
 
 
 if __name__ == "__main__":
