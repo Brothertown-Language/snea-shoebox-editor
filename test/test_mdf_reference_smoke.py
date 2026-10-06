@@ -129,3 +129,24 @@ def test_smoke_sc7_every_topic_has_browser_material():
             # The home/TOC entry belongs to no chapter — it sits above them.
             continue
         assert t["chapter"] in set(master["chapter_keys"]), t["key"]
+
+
+def test_smoke_sc8_every_cf_target_resolves_among_topics():
+    """SC-8: every cross-reference target named by the source's \\cf fields
+    must resolve to a rendered topic key in master.json."""
+    mod = _page_module()
+    master = mod.load_master(REPO_ROOT)
+    targets = mod.collect_cf_targets(master)
+    assert targets, "the source's \\cf fields must yield cross-reference targets"
+    keys = {t["key"] for t in master["topics"]}
+    unresolved = sorted({target for target in targets if target not in keys})
+    assert not unresolved, f"{len(unresolved)} \\cf targets do not resolve: {unresolved[:10]}"
+
+
+def test_smoke_sc8_split_flags_missing_targets_for_placeholder():
+    """SC-8 (defensive): a \\cf target absent from the topic keys must be
+    flagged for the visible placeholder, while resolved targets pass through."""
+    mod = _page_module()
+    resolved, missing = mod.split_cf_targets(["aa", "ge", "zz"], {"aa", "ge"})
+    assert resolved == ["aa", "ge"]
+    assert missing == ["zz"]

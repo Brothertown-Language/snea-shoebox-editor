@@ -35,6 +35,8 @@ _MD_PUNCT_RE = re.compile(r"([\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E])")
 # ``\\marker`` + exactly one separator whitespace; the remainder is the raw
 # content byte-for-byte (presentation stripping belongs to renderers).
 _MARKER_LINE_RE = re.compile(r"^\\(?P<tok>\S+)(?P<sep>\s)(?P<rest>.*)$", re.DOTALL)
+# Maximum \\cf target buttons per row in the detail pane.
+_CF_ROW_WIDTH = 6
 
 
 def project_root() -> Path:
@@ -118,6 +120,29 @@ def topic_display_heading(topic: dict) -> str:
     if heading:
         return heading
     return topic["key"]
+
+
+def collect_cf_targets(master: dict) -> list[str]:
+    """Every cross-reference target named by the source's ``\\cf`` fields,
+    in source order (repeats preserved — 297 \\cf fields name 297+ targets)."""
+    targets: list[str] = []
+    for topic in master.get("topics", []):
+        for block in topic.get("blocks", []):
+            if block.get("marker") == "cf":
+                targets.extend(block.get("targets") or [])
+    return targets
+
+
+def split_cf_targets(targets: list[str], known_keys: set) -> tuple[list[str], list[str]]:
+    """Split \\cf targets into (resolved, missing) for navigation rendering.
+
+    Missing targets are flagged here so the page can render a visible
+    placeholder instead of a dead link (all 104 distinct targets resolve in
+    the verified source; this guards future source revisions).
+    """
+    resolved = [t for t in targets if t in known_keys]
+    missing = [t for t in targets if t not in known_keys]
+    return resolved, missing
 
 
 def mdf_reference():
@@ -222,6 +247,27 @@ def mdf_reference():
                 st.code(strip_marker(text), language=None)
             elif marker == "cf":
                 st.caption("→ " + md_escape(strip_marker(text)).strip())
+                targets = block.get("targets") or []
+                resolved, missing = split_cf_targets(targets, set(topics_by_key))
+                for t in missing:
+                    st.button(
+                        f"⚠ {t} — topic not found",
+                        key=f"mdf-cf-missing-{selected}-{t}",
+                        disabled=True,
+                        help="The source names this cross-reference target, but no such topic exists.",
+                        use_container_width=True,
+                    )
+                for row_start in range(0, len(resolved), _CF_ROW_WIDTH):
+                    row = resolved[row_start : row_start + _CF_ROW_WIDTH]
+                    cols = st.columns(len(row))
+                    for col, target in zip(cols, row):
+                        if col.button(
+                            target,
+                            key=f"mdf-cf-{selected}-{row_start}-{target}",
+                            use_container_width=True,
+                            help=f"Open the {target} reference entry",
+                        ):
+                            _navigate_to(target)
             elif marker == "typ":
                 st.caption(md_escape(strip_marker(text)).strip())
             elif marker == "nt":

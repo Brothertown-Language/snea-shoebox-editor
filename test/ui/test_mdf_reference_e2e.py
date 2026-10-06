@@ -162,3 +162,58 @@ def test_sc7_unknown_deep_link_falls_back_to_home_with_notice():
             pw.stop()
 
     _run_in_worker_thread(flow)
+
+
+def test_sc8_cf_target_button_navigates_from_aa_toc():
+    """SC-8 spot-check: a \\cf target rendered in the home entry's TOC block
+    navigates in-app to its topic and the deep-link URL updates."""
+
+    def flow():
+        pw, browser, page = _open_mdf_page()
+        try:
+            # cf target buttons live in the detail column (right); the browser
+            # column (left) has same-labeled topic nodes, so scope to it. The
+            # home TOC names Introduction in several cf rows — any of its
+            # target buttons navigates there.
+            main_col = page.locator('[data-testid="stColumn"]').nth(1)
+            main_col.get_by_role("button", name="Introduction", exact=True).first.click()
+            # Scope to the detail-pane h2: the same text also appears as the
+            # Introduction chapter's left-column group header (h3), which is
+            # present before navigation and would satisfy a plain text wait.
+            page.wait_for_selector(
+                'h2:has-text("Standard Lexical Database Field Markers")', timeout=30_000
+            )
+            # The query param is pushed to the URL asynchronously after the
+            # rerun renders — wait for it rather than reading immediately.
+            page.wait_for_url("**marker=Introduction*", timeout=15_000)
+            assert "marker=Introduction" in page.url, f"deep-link URL not updated: {page.url}"
+            page.screenshot(path=os.path.join(ARTIFACTS_DIR, "sc8-01-toc-navigation.png"))
+        finally:
+            browser.close()
+            pw.stop()
+
+    _run_in_worker_thread(flow)
+
+
+def test_sc8_cf_target_button_navigates_from_marker_entry():
+    """SC-8 spot-check: the lx entry's \\cf to lc navigates to the lc topic."""
+
+    def flow():
+        pw = sync_playwright().start()
+        browser = pw.chromium.launch()
+        try:
+            page = browser.new_context(storage_state=None).new_page()
+            page.goto(f"{MDF_URL}?marker=lx")
+            page.wait_for_selector("text=lexeme or headword", timeout=60_000)
+            main_col = page.locator('[data-testid="stColumn"]').nth(1)
+            main_col.get_by_role("button", name="lc", exact=True).first.click()
+            page.wait_for_selector("text=lexical citation", timeout=30_000)
+            page.wait_for_url("**marker=lc*", timeout=15_000)
+            header = page.eval_on_selector_all("h2", "els => els.map(e => e.innerText.trim())")
+            assert any("lc" in h for h in header), f"expected lc detail; headers: {header}"
+            page.screenshot(path=os.path.join(ARTIFACTS_DIR, "sc8-02-cf-navigation.png"))
+        finally:
+            browser.close()
+            pw.stop()
+
+    _run_in_worker_thread(flow)
