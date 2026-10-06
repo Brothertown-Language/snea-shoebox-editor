@@ -287,7 +287,7 @@
   <pre class="example mdf-example"><code>  \ge put_out</code></pre>
   <pre class="example mdf-example"><code>  \ge move
 </code></pre>
-  <p>The underline character ‘_‘ in the example glosses above is to force Toolbox to treat the multiple word gloss ‘put out’ as a single gloss. When printing a dictionary, the underlines normally will be converted to spaces.</p>
+  <p>The underline character ‘_’ in the example glosses above is to force Toolbox to treat the multiple word gloss ‘put out’ as a single gloss. When printing a dictionary, the underlines normally will be converted to spaces.</p>
   <p>Similarly, a dot (“period” or “full stop”) can be placed between the words instead of the underline:</p>
   <pre class="example mdf-example"><code>  \ge put.out</code></pre>
   <pre class="example mdf-example"><code>  \ge move
@@ -318,7 +318,7 @@
   <pre class="example mdf-example"><code>  \gn keluarkan ; pindahkan
 </code></pre>
   <p>Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case.</p>
-  <p>MDF will convert the ‘ ; ‘ sequence to ‘, ‘ when formatting the dictionary. (MDF will also automatically convert any underline character ‘_‘ in a gloss field to a space when formatting.)</p>
+  <p>MDF will convert the ‘ ; ‘ sequence to ‘, ‘ when formatting the dictionary. (MDF will also automatically convert any underline character ‘_’ in a gloss field to a space when formatting.)</p>
   <p>For important related information, see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-dn">\dn</a></dt>
@@ -664,7 +664,7 @@
   <p>Since MDF does not format or add any label to this field, you can actually use this field to include additional information about a lexical entry which is not handled by any of the other fields that MDF supports. You can even add your own label to this information. It’s not pretty, but it works. For example, if you wanted to create a new field to keep track of the weather (a hypothetical example to be sure), you could enter your observations thus:</p>
   <pre class="example mdf-example"><code>  \ee |fl{Weather: }The sun is hot with scattered showers expected.
 </code></pre>
-  <p>The special character code “ |fl{ }“ tells MDF that the data contained in the curly braces needs to be formatted as a label. The rest of the field is treated just like a normal encyclopedic field.</p>
+  <p>The special character code “ |fl{ }” tells MDF that the data contained in the curly braces needs to be formatted as a label. The rest of the field is treated just like a normal encyclopedic field.</p>
   <p class="note">Note: Using the encyclopedic fields in this manner should not be a common practice, as this will make it impossible for Shoebox or any other program to know exactly what kind of data is contained in your encyclopedic fields. But in a pinch, it does allow for this kind of flexibility.</p>
   <p>Identical national and regional language fields are:</p>
   <p class="cf"><a class="cf-link" href="field-marker-reference.html#key-en">\en</a> and <a class="cf-link" href="field-marker-reference.html#key-er">\er</a></p>
@@ -762,7 +762,7 @@
   <pre class="example mdf-example"><code>  \ge kasi_pinda ; kasi_pulang
 </code></pre>
   <p>Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case.</p>
-  <p>The underline character ‘_‘ in the example glosses above is to force Toolbox to treat the multiple word gloss ‘kasi pinda’ as a single gloss. MDF will convert underline characters in gloss fields to spaces automatically. The sequence ‘ ; ‘ is also converted to ‘, ‘ by MDF when formatting a dictionary or finderlist.</p>
+  <p>The underline character ‘_’ in the example glosses above is to force Toolbox to treat the multiple word gloss ‘kasi pinda’ as a single gloss. MDF will convert underline characters in gloss fields to spaces automatically. The sequence ‘ ; ‘ is also converted to ‘, ‘ by MDF when formatting a dictionary or finderlist.</p>
   <p>If this field is included in the output, MDF adds a label and brackets “[ ]” around it and it is treated as part of the national field.</p>
   <p>For important related information, see:</p>
   <dl class="mdf-cf-list">

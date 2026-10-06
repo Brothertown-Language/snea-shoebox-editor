@@ -448,26 +448,35 @@ QUOTE_FORMS = {
     "latex": {"open_double": "``", "close_double": "''", "open_single": "`", "close_single": "'"},
     "unicode": {"open_double": "“", "close_double": "”", "open_single": "‘", "close_single": "’"},
 }
-_CLOSING_QUOTE_CONTEXT = frozenset(".,;:!?)]")
+_CLOSING_QUOTE_CONTEXT = frozenset(".,;:!?)]_-}")
 
 
 def shape_quotes(text: str, form: str = "unicode") -> str:
     """Deterministic typographic quote shaping (developer directive, 2026-10-06):
     a per-character lookback state machine, no regex on content. A straight "
-    or ' whose PRECEDING character is alphanumeric, ")", "]", ".", ",", ";",
-    ":", "!", or "?" becomes the CLOSING form — American typesetting places
-    sentence punctuation inside the quotes, so a quote directly after
-    punctuation is a closing quote; any other preceding character —
-    whitespace, string/line start ("\\n" is whitespace, so a line start is
-    opening context), "(", "[", or anything else — becomes the OPENING form.
-    Already-curly input (U+2018/2019/201C/201D) holds no straight quotes and
-    passes through unchanged, so the unicode form is idempotent. Presentation
-    only: applied exclusively on prose rendering paths (\\txt, \\nt, \\bib,
-    \\typ, \\shd topic headings, cf pair glosses, bare-target cf display text,
-    and the authored Foreword) — never to \\ftx/\\fxv verbatim blocks (they
-    depict literal database input and stay byte-exact) and never to
-    master.json. form "latex" emits TeX quote ligatures for the XeLaTeX
-    output; form "unicode" emits the typographic characters directly (HTML).
+    or ' whose PRECEDING character is alphanumeric, or is one of ".", ",",
+    ";", ":", "!", "?", ")", "]", "_", "-", or "}", becomes the CLOSING form —
+    American typesetting places sentence punctuation inside the quotes, so a
+    quote directly after punctuation is a closing quote, and the offline
+    corpus census of master.json prose paths (2026-10-06, design evidence
+    only) shows "_", "-", and "}" immediately before a straight quote only
+    where that quote closes a quoted token ('_', '-', and " |fl{ }"); any
+    other preceding character — whitespace, string/line start ("\\n" is
+    whitespace, so a line start is opening context), "(", or anything else —
+    becomes the OPENING form. The decision is look-behind only: the previous
+    character alone decides opening vs closing, with no lookahead, no pairing
+    memory, and no alternation counting; ambiguous classes observed in the
+    corpus keep the current behavior (a quote after "(" opens — 13/13
+    word-initial instances; a quote after whitespace or string start opens —
+    262/262 instances). Already-curly input (U+2018/2019/201C/201D) holds no
+    straight quotes and passes through unchanged, so the unicode form is
+    idempotent. Presentation only: applied exclusively on prose rendering
+    paths (\\txt, \\nt, \\bib, \\typ, \\shd topic headings, cf pair glosses,
+    bare-target cf display text, and the authored Foreword) — never to
+    \\ftx/\\fxv verbatim blocks (they depict literal database input and stay
+    byte-exact) and never to master.json. form "latex" emits TeX quote
+    ligatures for the XeLaTeX output; form "unicode" emits the typographic
+    characters directly (HTML).
     """
     shapes = QUOTE_FORMS[form]
     out: list[str] = []

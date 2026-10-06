@@ -2,13 +2,17 @@
 
 Developer directive 2026-10-06: a per-character lookback state machine — no
 regex on content. A straight double/single quote whose PRECEDING character is
-alphanumeric, ")", "]", ".", ",", ";", ":", "!", or "?" becomes the CLOSING
-form (American typesetting: sentence punctuation sits inside the quotes);
-any other preceding character — whitespace, string/line start, "(", "[", or
-anything else — becomes the OPENING form. Already-curly input passes through
-unchanged (idempotent). Shaping applies only to prose rendering paths;
-\\ftx/\\fxv verbatim blocks stay byte-exact straight quotes, and master.json
-is never touched.
+alphanumeric, or is one of ")", "]", ".", ",", ";", ":", "!", "?", "_", "-",
+or "}" becomes the CLOSING form (American typesetting: sentence punctuation
+sits inside the quotes; the offline corpus census of master.json prose paths
+shows "_", "-", and "}" immediately before a straight quote only where the
+quote closes a quoted token — '_', '-', and " |fl{ }"); any other preceding
+character — whitespace, string/line start, "(", or anything else — becomes the
+OPENING form. The decision is look-behind only: the previous character alone
+decides, with no lookahead, pairing memory, or alternation counting.
+Already-curly input passes through unchanged (idempotent). Shaping applies
+only to prose rendering paths; \\ftx/\\fxv verbatim blocks stay byte-exact
+straight quotes, and master.json is never touched.
 
 Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
 """
@@ -45,9 +49,33 @@ def test_opening_contexts_yield_opening_forms():
 
 
 def test_closing_contexts_yield_closing_forms():
-    for prev in "aZ0)].,;:!?":
+    for prev in "aZ0)].,;:!?_-}":
         assert shape_quotes(f'x{prev}"', "unicode") == f"x{prev}”", repr(prev)
         assert shape_quotes(f"x{prev}'", "unicode") == f"x{prev}’", repr(prev)
+
+
+def test_corpus_census_cases_close():
+    assert shape_quotes("gloss 'put out' as a single gloss", "unicode") == "gloss ‘put out’ as a single gloss"
+    assert (
+        shape_quotes("any underline character '_' in a gloss field", "unicode")
+        == "any underline character ‘_’ in a gloss field"
+    )
+    assert (
+        shape_quotes("The underline character '_' in the example glosses above", "unicode")
+        == "The underline character ‘_’ in the example glosses above"
+    )
+    assert (
+        shape_quotes("A space or any punctuation (except the '-') terminates", "unicode")
+        == "A space or any punctuation (except the ‘-’) terminates"
+    )
+    assert shape_quotes('code " |fl{ }" tells MDF', "unicode") == 'code “ |fl{ }” tells MDF'
+
+
+def test_decision_is_look_behind_only():
+    assert shape_quotes("a_'", "unicode") == "a_’"
+    assert shape_quotes("a_'y", "unicode") == "a_’y"
+    assert shape_quotes("a_'x'y", "unicode") == "a_’x’y"
+    assert shape_quotes("a '_'", "unicode") == "a ‘_’"
 
 
 def test_apostrophes_in_contractions_and_possessives_close():
