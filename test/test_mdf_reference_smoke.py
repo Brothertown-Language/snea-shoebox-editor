@@ -202,6 +202,46 @@ def test_smoke_sc9_filter_empty_query_returns_all_topics():
     assert len(mod.filter_topics(master["topics"], "")) == 108
 
 
+def test_smoke_sc7_browser_structure_derives_reference_groups():
+    """Semantic regrouping (holistic with PDF/HTML): the browser structure
+    derives the terminal Field Marker Reference groups from each topic's own
+    \\typ block — record 1 (lx), basic 17, reserved 4 (hm/lc/se/sn), optional
+    66, discontinued 1 (xg) — alphabetical by key within each group."""
+    mod = _page_module()
+    master = mod.load_master(REPO_ROOT)
+    structure = mod.browser_structure(master["topics"], master["chapter_keys"], master["home_key"])
+    reference = structure["reference"]
+    assert list(reference) == ["record", "basic", "reserved", "optional", "discontinued"]
+    assert [t["key"] for t in reference["record"]] == ["lx"]
+    assert len(reference["basic"]) == 17
+    assert [t["key"] for t in reference["reserved"]] == ["hm", "lc", "se", "sn"]
+    assert len(reference["optional"]) == 66
+    assert [t["key"] for t in reference["discontinued"]] == ["xg"]
+    for group, entries in reference.items():
+        keys = [t["key"] for t in entries]
+        assert keys == sorted(keys), f"group {group} not alphabetical: {keys}"
+
+
+def test_smoke_sc7_browser_structure_chapters_hold_only_own_content():
+    """Semantic regrouping: marker entries move OUT of the chapter groups —
+    only the multi-key verb-paradigm stub stays, placed under
+    Old_and_Changed_Markers by its own \\cf (not its document-order chapter)."""
+    mod = _page_module()
+    master = mod.load_master(REPO_ROOT)
+    structure = mod.browser_structure(master["topics"], master["chapter_keys"], master["home_key"])
+    stub_key = "1s 1p 1e 1i 1d 2s 2p 2d 3s 3p 3d 4s 4p 4d"
+    populated = [(key, [t["key"] for t in members]) for key, members in structure["chapters"] if members]
+    assert populated == [("Old_and_Changed_Markers", [stub_key])]
+    # Every topic is placed exactly once: chapters + reference + residual
+    # cover all 108 keys with no drops and no duplicates.
+    placed = [key for _, members in structure["chapters"] for key in (t["key"] for t in members)]
+    placed.extend(t["key"] for entries in structure["reference"].values() for t in entries)
+    placed.extend(t["key"] for t in structure["residual"])
+    placed.append(master["home_key"])
+    placed.extend(master["chapter_keys"])
+    assert sorted(placed) == sorted(t["key"] for t in master["topics"])
+
+
 def test_smoke_sc11_pdf_loader_and_r14_filename():
     """SC-11/R-14 (structural): the PDF loader reads the committed deliverable
     and the served filename constant is exactly mdf-lexical-fields-1.9a.pdf."""

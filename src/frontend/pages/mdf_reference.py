@@ -4,8 +4,12 @@
 
 Renders all keyed topics from ``docs/mdf/build/master.json`` (schema
 ``snea-mdf-master/1``) with the source's own navigation model: the home/TOC
-entry (``\\key aa``), the 17 chapter-topic groups in the home TOC order,
-``\\shd2`` subsections nested, and marker entries inside each chapter. The
+entry (``\\key aa``), the 17 chapter-topic groups in the home TOC order with
+``\\shd2`` subsections nested, then the terminal "Field Marker Reference"
+section grouping the marker-definition topics (Record Marker / Basic Fields /
+Reserved Fields / Optional Fields / Discontinued, alphabetical by key within
+each group) — the same semantic regrouping the PDF and HTML renderers
+implement. The
 detail pane preserves the source content; ``\\ftx``/``\\fxv`` formatting
 examples render as code blocks; ``\\cf`` cross-references navigate in-app.
 
@@ -37,6 +41,104 @@ _MD_PUNCT_RE = re.compile(r"([\x21-\x2F\x3A-\x40\x5B-\x60\x7B-\x7E])")
 _MARKER_LINE_RE = re.compile(r"^\\(?P<tok>\S+)(?P<sep>\s)(?P<rest>.*)$", re.DOTALL)
 # Maximum \\cf target buttons per row in the detail pane.
 _CF_ROW_WIDTH = 6
+
+# The terminal reference section's group apparatus — mirrors
+# REFERENCE_GROUP_ORDER/REFERENCE_GROUP_TITLES/REFERENCE_CHAPTER_TITLE in
+# scripts/convert_mdf_master.py so the in-app browser, PDF, and HTML all
+# present the same semantic regrouping.
+REFERENCE_GROUP_ORDER = ("record", "basic", "reserved", "optional", "discontinued")
+REFERENCE_GROUP_TITLES = {
+    "record": "Record Marker",
+    "basic": "Basic Fields",
+    "reserved": "Reserved Fields",
+    "optional": "Optional Fields",
+    "discontinued": "Discontinued",
+}
+REFERENCE_SECTION_TITLE = "Field Marker Reference"
+
+
+def is_reference_entry(topic: dict, home_key: str | None) -> bool:
+    """A single-marker definition topic: not the home entry, not a chapter
+    topic, and a ``\\key`` naming exactly one marker (no internal whitespace).
+    The multi-key "Old verb paradigm markers" stub is excluded here —
+    placement_chapter rides it under Old_and_Changed_Markers per its own
+    ``\\cf``."""
+    return not topic["is_chapter"] and topic["key"] != home_key and " " not in topic["key"].strip()
+
+
+def reference_group(topic: dict) -> str:
+    """Deterministic reference group from the topic's own parsed data: ``\\lx``
+    is the record marker (the SF catalog's own "RECORD MARKER" section);
+    otherwise the ``\\typ`` block value (<Basic>/<Reserved>/<Optional>); a
+    single-marker topic with no ``\\typ`` block is ``\\xg``, discontinued by
+    its own heading wording."""
+    if topic["key"] == "lx":
+        return "record"
+    typ = next((block for block in topic["blocks"] if block["marker"] == "typ"), None)
+    if typ is not None:
+        first = typ["text"].split("\n", 1)[0]
+        if "<Basic>" in first:
+            return "basic"
+        if "<Reserved>" in first:
+            return "reserved"
+        if "<Optional>" in first:
+            return "optional"
+    return "discontinued"
+
+
+def placement_chapter(topic: dict, chapter_keys: list[str]) -> str | None:
+    """Chapter a non-chapter topic renders under. Default is the document-order
+    chapter; a multi-key topic instead follows its own ``\\cf`` when that names
+    a chapter topic (the source's placement for the numeric stub: "See the
+    topic Old_and_Changed_Markers")."""
+    if " " in topic["key"].strip():
+        for block in topic["blocks"]:
+            if block["marker"] == "cf":
+                for target in block.get("targets", []):
+                    if target in chapter_keys:
+                        return target
+    return topic["chapter"]
+
+
+def browser_structure(topics: list[dict], chapter_keys: list[str], home_key: str | None) -> dict:
+    """The browser's semantic structure — mirrors book_structure() in
+    scripts/convert_mdf_master.py exactly, derived entirely from the parsed
+    topics: the discussion chapters in home-TOC (chapter_keys) order, each
+    followed by its non-reference member topics in document order; then the
+    terminal reference groups with their single-marker entries alphabetical by
+    key. Anything the grouping leaves unplaced keeps document order in
+    "residual" (empty for the 1.9a source), so no topic is dropped and none is
+    duplicated."""
+    chapters: list[tuple[str, list[dict]]] = []
+    home = next((topic for topic in topics if topic["key"] == home_key), None)
+    placed: set[int] = {id(home)} if home is not None else set()
+    for chapter_key in chapter_keys:
+        if not any(topic["key"] == chapter_key for topic in topics):
+            continue
+        placed.add(id(next(topic for topic in topics if topic["key"] == chapter_key)))
+        members = [
+            topic
+            for topic in topics
+            if not topic["is_chapter"]
+            and topic["key"] != home_key
+            and not is_reference_entry(topic, home_key)
+            and placement_chapter(topic, chapter_keys) == chapter_key
+        ]
+        placed.update(id(member) for member in members)
+        chapters.append((chapter_key, members))
+
+    reference: dict[str, list[dict]] = {}
+    for topic in topics:
+        if is_reference_entry(topic, home_key):
+            placed.add(id(topic))
+            reference.setdefault(reference_group(topic), []).append(topic)
+    residual = [topic for topic in topics if id(topic) not in placed]
+    groups = {
+        group: sorted(reference[group], key=lambda t: t["key"])
+        for group in REFERENCE_GROUP_ORDER
+        if group in reference
+    }
+    return {"chapters": chapters, "residual": residual, "reference": groups}
 
 
 def project_root() -> Path:
@@ -174,8 +276,11 @@ def split_cf_targets(targets: list[str], known_keys: set) -> tuple[list[str], li
 
 
 def _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, navigate_to, home_key):
-    """Render the unfiltered browser: home entry, 17 chapter groups in home
-    TOC order with \\shd2 subsections nested, and member marker entries."""
+    """Render the unfiltered browser: home entry; the 17 chapter groups in
+    home TOC order with ``\\shd2`` subsections nested and only their
+    non-reference member topics (the multi-key verb-paradigm stub rides its
+    source-directed chapter); then the terminal Field Marker Reference section
+    with its five groups of single-marker entries."""
     # Home/TOC entry — the source's own navigation model starts here.
     if st.button(
         home_key,
@@ -184,8 +289,9 @@ def _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, navi
         type="primary" if selected == home_key else "secondary",
     ):
         navigate_to(home_key)
+    structure = browser_structure(topics, chapter_keys, home_key)
     # 17 chapter-topic groups, in the home TOC order.
-    for chapter_key in chapter_keys:
+    for chapter_key, members in structure["chapters"]:
         chapter_topic = topics_by_key[chapter_key]
         st.markdown(f"### {md_escape(topic_display_heading(chapter_topic))}")
         if st.button(
@@ -207,9 +313,8 @@ def _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, navi
                 type="secondary",
             ):
                 navigate_to(chapter_key)
-        # Marker entries belonging to this chapter, in source order.
-        members = [t for t in topics if t.get("chapter") == chapter_key and not t["is_chapter"]]
-        for member in sorted(members, key=lambda t: t["index"]):
+        # Member topics belonging to this chapter, in source order.
+        for member in members:
             if st.button(
                 member["key"],
                 key=f"mdf-topic-{member['key']}",
@@ -217,6 +322,30 @@ def _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, navi
                 type="primary" if selected == member["key"] else "secondary",
             ):
                 navigate_to(member["key"])
+    # Anything the grouping leaves unplaced keeps document order (empty for
+    # the 1.9a source) — no topic is dropped from the browser.
+    for topic in structure["residual"]:
+        if st.button(
+            topic["key"],
+            key=f"mdf-topic-{topic['key']}",
+            use_container_width=True,
+            type="primary" if selected == topic["key"] else "secondary",
+        ):
+            navigate_to(topic["key"])
+    # Terminal reference section: the marker-definition topics grouped
+    # record/basic/reserved/optional/discontinued, alphabetical by key.
+    if structure["reference"]:
+        st.markdown(f"### {md_escape(REFERENCE_SECTION_TITLE)}")
+        for group, entries in structure["reference"].items():
+            st.markdown(f"#### {md_escape(REFERENCE_GROUP_TITLES[group])}")
+            for entry in entries:
+                if st.button(
+                    entry["key"],
+                    key=f"mdf-topic-{entry['key']}",
+                    use_container_width=True,
+                    type="primary" if selected == entry["key"] else "secondary",
+                ):
+                    navigate_to(entry["key"])
 
 
 def mdf_reference():

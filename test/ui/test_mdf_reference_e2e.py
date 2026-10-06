@@ -87,8 +87,9 @@ def _open_mdf_page():
 
 
 def test_sc7_renders_108_topics_17_chapters_lands_on_aa():
-    """SC-7: all 108 keyed topics rendered, the 17 chapter groups present,
-    and the landing entry is the source's home/TOC entry (aa)."""
+    """SC-7: all 108 keyed topics rendered, the 17 chapter groups plus the
+    terminal Field Marker Reference section present as group headers, and the
+    landing entry is the source's home/TOC entry (aa)."""
 
     def flow():
         master = _master_topics()
@@ -101,10 +102,15 @@ def test_sc7_renders_108_topics_17_chapters_lands_on_aa():
         try:
             page.screenshot(path=os.path.join(ARTIFACTS_DIR, "sc7-01-landing.png"))
 
-            # 17 chapter groups render as group headers
+            # 17 chapter groups + the terminal reference section render as
+            # group headers (semantic regrouping, holistic with PDF/HTML).
             h3_texts = page.eval_on_selector_all("h3", "els => els.map(e => e.innerText.trim())")
-            assert len(h3_texts) == len(chapter_keys), (
-                f"expected {len(chapter_keys)} chapter group headers, got {len(h3_texts)}: {h3_texts}"
+            assert len(h3_texts) == len(chapter_keys) + 1, (
+                f"expected {len(chapter_keys) + 1} group headers "
+                f"(chapters + Field Marker Reference), got {len(h3_texts)}: {h3_texts}"
+            )
+            assert "Field Marker Reference" in h3_texts, (
+                f"terminal reference section header missing: {h3_texts}"
             )
 
             # All 108 topic browser nodes present (button labels carry the keys)
@@ -126,8 +132,110 @@ def test_sc7_renders_108_topics_17_chapters_lands_on_aa():
                 json.dump(
                     {
                         "topics": len(keys),
-                        "chapter_groups": len(h3_texts),
+                        "chapter_groups": len(chapter_keys),
+                        "group_headers": len(h3_texts),
                         "landing": home_heading,
+                    },
+                    fh,
+                )
+        finally:
+            browser.close()
+            pw.stop()
+
+    _run_in_worker_thread(flow)
+
+
+def test_sc7_reference_section_structure_and_chapter_members():
+    """Semantic regrouping: the terminal Field Marker Reference section renders
+    its five groups (Record Marker → Basic Fields → Reserved Fields → Optional
+    Fields → Discontinued) with lx under Record Marker, hm/lc/se/sn under
+    Reserved, xg under Discontinued, the Basic entries alphabetical, and the
+    multi-key verb-paradigm stub still under Old_and_Changed_Markers."""
+
+    def flow():
+        pw, browser, page = _open_mdf_page()
+        try:
+            page.screenshot(path=os.path.join(ARTIFACTS_DIR, "sc7-03-reference-section.png"))
+            left_col = page.locator('[data-testid="stColumn"]').nth(0)
+            scan = left_col.locator("h3, h4, button").evaluate_all(
+                "els => els.map(e => [e.tagName, e.innerText.trim()])"
+            )
+
+            def group_slice(start_text, start_tag, stop_tags):
+                """Button labels strictly between the named header and the next
+                header of any stop tag, in DOM order."""
+                at_start = False
+                labels = []
+                for tag, text in scan:
+                    if not at_start:
+                        if tag == start_tag and text == start_text:
+                            at_start = True
+                        continue
+                    if tag in stop_tags:
+                        break
+                    if tag == "BUTTON":
+                        labels.append(text)
+                assert at_start, f"header {start_text!r} not found in browser column"
+                return labels
+
+            headers_h3 = [text for tag, text in scan if tag == "H3"]
+            headers_h4 = [text for tag, text in scan if tag == "H4"]
+            assert headers_h4 == [
+                "Record Marker",
+                "Basic Fields",
+                "Reserved Fields",
+                "Optional Fields",
+                "Discontinued",
+            ], f"reference group headers wrong: {headers_h4}"
+            assert headers_h3[-1] == "Field Marker Reference", (
+                f"reference section must be the terminal group; h3 tail: {headers_h3[-3:]}"
+            )
+
+            assert group_slice("Record Marker", "H4", {"H3", "H4"}) == ["lx"]
+            basic = group_slice("Basic Fields", "H4", {"H3", "H4"})
+            assert len(basic) == 17 and basic == sorted(basic) and "lx" not in basic, (
+                f"Basic Fields must hold its 17 entries alphabetical: {basic}"
+            )
+            assert group_slice("Reserved Fields", "H4", {"H3", "H4"}) == ["hm", "lc", "se", "sn"]
+            optional = group_slice("Optional Fields", "H4", {"H3", "H4"})
+            assert len(optional) == 66 and optional == sorted(optional), (
+                f"Optional Fields must hold 66 entries alphabetical: {optional[:5]}…"
+            )
+            assert group_slice("Discontinued", "H4", {"H3", "H4"}) == ["xg"]
+
+            # The multi-key verb-paradigm stub stays inside its chapter group
+            # (source-directed via its own \\cf), and no marker-definition
+            # topic renders inside any chapter group anymore.
+            stub_key = "1s 1p 1e 1i 1d 2s 2p 2d 3s 3p 3d 4s 4p 4d"
+            reference_keys = {"lx", "hm", "lc", "se", "sn", "xg"} | set(basic) | set(optional)
+            chapter_slices = []
+            current_header, current_labels = None, []
+            for tag, text in scan:
+                if tag == "H3":
+                    if current_header is not None:
+                        chapter_slices.append((current_header, current_labels))
+                    current_header, current_labels = text, []
+                elif tag == "H4":
+                    break  # reached the reference section — chapters are done
+                elif tag == "BUTTON" and current_header is not None:
+                    current_labels.append(text)
+            chapter_slices.append((current_header, current_labels))
+            by_chapter = dict(chapter_slices)
+            assert stub_key in by_chapter.get("Old and Changed Markers", []), (
+                f"numeric stub must render under Old and Changed Markers; "
+                f"that chapter's buttons: {by_chapter.get('Old and Changed Markers')}"
+            )
+            for header, labels in chapter_slices:
+                stray = [lbl for lbl in labels if lbl in reference_keys]
+                assert not stray, f"marker-definition topics leaked into chapter {header!r}: {stray}"
+
+            with open(os.path.join(ARTIFACTS_DIR, "sc7-structure-result.json"), "w") as fh:
+                json.dump(
+                    {
+                        "reference_groups": headers_h4,
+                        "basic_count": len(basic),
+                        "optional_count": len(optional),
+                        "stub_under": "Old and Changed Markers",
                     },
                     fh,
                 )
