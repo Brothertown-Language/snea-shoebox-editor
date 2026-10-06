@@ -30,6 +30,7 @@ def records():
         handle_ui_error,
         hide_sidebar_nav,
         render_back_to_main_button,
+        render_marker_help_block,
         render_mdf_block,
     )
     from src.mdf.parser import format_mdf_record
@@ -982,6 +983,14 @@ def records():
                         key=f"render_{record_id}",
                         highlight_spans=view_highlight_spans,
                     )
+
+                    # SC-12 (R-11b): per-record marker help — a native
+                    # expander outside the st.html iframe (Streamlit widgets
+                    # cannot live inside it) listing the record's markers
+                    # with definitions and deep links to their entries. The
+                    # block's marker tokens themselves carry static
+                    # definition tooltips injected by render_mdf_block.
+                    render_marker_help_block(mdf_data, context_label=f"record {record_id}")
 
                     # Action Toolbar
                     toolbar_cols = [1, 1]
