@@ -395,9 +395,12 @@ def _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, navi
     non-reference member topics (the multi-key verb-paradigm stub rides its
     source-directed chapter); then the terminal Field Marker Reference section
     with its five groups of single-marker entries."""
-    # Home/TOC entry — the source's own navigation model starts here.
+    # Home/TOC entry — the source's own navigation model starts here. The
+    # button is labeled "Home (aa)" for users (the bare key is meaningless to
+    # them); the source key stays in parentheses for traceability, and the
+    # detail pane's heading remains the source's own \shd text.
     if st.button(
-        home_key,
+        f"Home ({home_key})",
         key=f"mdf-topic-{home_key}",
         use_container_width=True,
         type="primary" if selected == home_key else "secondary",

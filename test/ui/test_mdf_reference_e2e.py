@@ -117,12 +117,18 @@ def test_sc7_renders_108_topics_17_chapters_lands_on_aa():
                 f"terminal reference section header missing: {h3_texts}"
             )
 
-            # All 108 topic browser nodes present (button labels carry the keys)
+            # All 108 topic browser nodes present: topic keys render as bare
+            # button labels; the home/TOC entry is labeled "Home (aa)" for
+            # users (2026-10-06 fix) and is asserted by its user label.
+            home_key = master["home_key"]
             labels = page.eval_on_selector_all(
                 "button", "els => els.map(e => e.innerText.trim())"
             )
-            missing = [k for k in keys if k not in labels]
+            missing = [k for k in keys if k != home_key and k not in labels]
             assert not missing, f"{len(missing)} topic browser nodes missing: {missing[:10]}"
+            assert f"Home ({home_key})" in labels, (
+                f"the home/TOC entry button must read Home ({home_key}); labels head: {labels[:10]}"
+            )
 
             # Single left rail (vision-review remediation): the global sidebar
             # nav stays hidden and the standard back-to-main affordance rides
