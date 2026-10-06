@@ -340,7 +340,9 @@ def test_cf_lookup_pairs_render_as_per_pair_rows():
     """2026-10-06 change control: the Introduction detail pane renders the shd4
     group "Information Relating Directly to the Headword" as a per-pair list —
     the marker as a deep-link button with its gloss beside it — not a single
-    run-together line."""
+    run-together line. 2026-10-06 paren-depth rule: the va row carries its
+    full parenthetical gloss "variant form (also ve* comments)" (unsplit) and
+    the in-gloss ve* mention is a live deep link to the ve topic."""
 
     def flow():
         pw, browser, page = _open_mdf_page()
@@ -351,22 +353,71 @@ def test_cf_lookup_pairs_render_as_per_pair_rows():
             heading.scroll_into_view_if_needed()
             main_col = page.locator('[data-testid="stColumn"]').nth(1)
 
-            def pair_row(marker_label: str) -> str:
+            def pair_row(marker_label: str) -> object:
                 button = main_col.get_by_role("button", name=marker_label, exact=True).first
-                row = button.locator("xpath=ancestor::div[@data-testid='stHorizontalBlock'][1]")
-                return row.inner_text()
+                return button.locator("xpath=ancestor::div[@data-testid='stHorizontalBlock'][1]")
 
             lx_row = pair_row("lx")
-            assert "lexeme" in lx_row, f"lx row must carry its gloss beside the marker: {lx_row!r}"
-            assert "homonym" not in lx_row, f"lx row must not run together with hm: {lx_row!r}"
+            assert "lexeme" in lx_row.inner_text(), (
+                f"lx row must carry its gloss beside the marker: {lx_row.inner_text()!r}"
+            )
+            assert "homonym" not in lx_row.inner_text(), (
+                f"lx row must not run together with hm: {lx_row.inner_text()!r}"
+            )
             hm_row = pair_row("hm")
-            assert "homonym number" in hm_row, f"hm row gloss missing: {hm_row!r}"
+            assert "homonym number" in hm_row.inner_text(), f"hm row gloss missing: {hm_row.inner_text()!r}"
             sn_row = pair_row("sn")
-            assert "sense number" in sn_row, f"sn row gloss missing: {sn_row!r}"
+            assert "sense number" in sn_row.inner_text(), f"sn row gloss missing: {sn_row.inner_text()!r}"
 
             body = page.inner_text("body")
             assert "→ lx lexeme" not in body, "run-together cf caption must be gone for the glossed group"
+
+            # Paren-depth rule: the va gloss stays one unsplit string in its
+            # own row, with the parenthetical cross-reference intact.
+            va_row = pair_row("va")
+            va_row.scroll_into_view_if_needed()
+            va_text = va_row.inner_text()
+            assert "variant form (also ve* comments)" in va_text, (
+                f"va row must carry the unsplit parenthetical gloss: {va_text!r}"
+            )
+            assert "morphology" not in va_text, f"va row must not run together with mr: {va_text!r}"
+            ve_link = va_row.get_by_role("link", name="ve*")
+            assert ve_link.count() == 1, "the in-gloss ve* mention must render as a live link"
+            assert "marker=ve" in ve_link.first.get_attribute("href"), (
+                f"ve* link must deep-link via ?marker=ve: {ve_link.first.get_attribute('href')!r}"
+            )
+            pdl_row = pair_row("pdl")
+            assert "paradigm label (also pdv* paradigm form & glosses)" in pdl_row.inner_text(), (
+                f"pdl row must carry the unsplit parenthetical gloss: {pdl_row.inner_text()!r}"
+            )
+            assert pdl_row.get_by_role("link", name="pdv*").count() == 1, (
+                "the in-gloss pdv* mention must render as a live link"
+            )
             page.screenshot(path=os.path.join(ARTIFACTS_DIR, "cf-pairs-headword-rows.png"))
+            va_row.screenshot(path=os.path.join(ARTIFACTS_DIR, "cf-pairs-va-row-unsplit.png"))
+
+            # Click-through: the ve* mention deep-links to the ve topic.
+            # Streamlit renders markdown links target="_blank" — the navigation
+            # may land in a new context page; accept either surface.
+            ve_link.first.click()
+            deadline = time.monotonic() + 60
+            target = None
+            while time.monotonic() < deadline and target is None:
+                for candidate in page.context.pages:
+                    if "marker=ve" in candidate.url:
+                        target = candidate
+                        break
+                if target is None:
+                    page.wait_for_timeout(250)
+            assert target is not None, "clicking the ve* mention must navigate to ?marker=ve"
+            target.bring_to_front()
+            target.wait_for_selector('h2:has-text("variant comment")', timeout=60_000)
+            # 2026-10-06 directive: the "key ve · …" caption is gone — the
+            # heading and structure carry the topic's identity.
+            assert "key ve" not in target.inner_text("body"), (
+                "the key caption must no longer render in the detail pane"
+            )
+            target.screenshot(path=os.path.join(ARTIFACTS_DIR, "cf-pairs-ve-mention-navigation.png"))
         finally:
             browser.close()
             pw.stop()

@@ -14,7 +14,9 @@ detail pane preserves the source content; ``\\ftx``/``\\fxv`` formatting
 examples render as code blocks; ``\\cf`` cross-references navigate in-app.
 Per the 2026-10-06 change control, cf blocks that are marker+gloss lookup
 pairs render as a per-pair list — one row per pair, the source's own marker
-token as the deep-link affordance and its gloss beside it — with strictly
+token as the deep-link affordance and its gloss beside it, with in-gloss
+marker mentions as live deep links (the 2026-10-06 paren-depth rule keeps
+cross-referenced markers inside the gloss they annotate) — with strictly
 consecutive glossed cf blocks coalesced into one list (the Introduction's
 shd4 groups); bare-target cf blocks keep the caption + button grid.
 
@@ -29,6 +31,7 @@ source's accented content (á, ñ, é) must match losslessly (R-10).
 import json
 import re
 from pathlib import Path
+from urllib.parse import quote
 
 # Paths are resolved from this file's location (never Path.cwd()), mirroring
 # src/database/connection.py's repo-root resolution.
@@ -295,12 +298,66 @@ def cf_block_glossed(block: dict) -> bool:
     return any(pair_is_glossed(pair) for pair in block.get("pairs") or [])
 
 
-def render_cf_pair_rows(st, run: list[dict], selected: str, first_block_index: int, navigate_to) -> None:
+def _ws_runs(text: str) -> list[tuple[bool, str]]:
+    """Mirror of split_ws_runs() in scripts/convert_mdf_master.py: a plain
+    character scan yields (is_whitespace, chunk) pairs covering the string
+    exactly, so individual tokens can be rewritten while every other character
+    (whitespace runs included) passes through verbatim."""
+    runs: list[tuple[bool, str]] = []
+    i = 0
+    length = len(text)
+    while i < length:
+        j = i
+        if text[j].isspace():
+            while j < length and text[j].isspace():
+                j += 1
+            runs.append((True, text[i:j]))
+        else:
+            while j < length and not text[j].isspace():
+                j += 1
+            runs.append((False, text[i:j]))
+        i = j
+    return runs
+
+
+def pair_gloss_markdown(gloss: str, topics_by_key: dict) -> str:
+    """A pair gloss with its own marker mentions as live deep links (2026-10-06
+    paren-depth change control).
+
+    Mirror of gloss_segments() in scripts/convert_mdf_master.py: each
+    whitespace-delimited token whose candidate — leading backslash stripped,
+    trailing ``*.,;:`` stripped, the same normalization the targets logic uses
+    — is a known topic key (exact lookup against the rendered topics) renders
+    as a markdown link through the page's existing ``?marker=`` deep-link
+    mechanism; every other character (text and whitespace runs alike) passes
+    through escaped-but-verbatim. The paren-depth pair extraction keeps
+    cross-referenced markers inside the gloss they annotate, so a resolving
+    token in a gloss is exactly such a mention.
+    """
+    parts: list[str] = []
+    for is_space, chunk in _ws_runs(gloss):
+        if is_space:
+            parts.append(chunk)
+            continue
+        candidate = chunk[1:] if chunk.startswith("\\") else chunk
+        while candidate and candidate[-1] in "*.,;:":
+            candidate = candidate[:-1]
+        if candidate in topics_by_key:
+            parts.append(f"[{md_escape(chunk)}](?marker={quote(candidate)})")
+        else:
+            parts.append(md_escape(chunk))
+    return "".join(parts)
+
+
+def render_cf_pair_rows(
+    st, run: list[dict], selected: str, first_block_index: int, navigate_to, topics_by_key: dict
+) -> None:
     """One row per lookup pair (2026-10-06 change control): the source's own
-    marker token as a deep-link affordance to the target topic, its gloss as
-    plain text beside it — the in-app mirror of the PDF/HTML description-list
-    rendering. Pair targets resolve by construction (the parser starts a pair
-    only on a target-set hit), so no missing-target placeholder is needed."""
+    marker token as a deep-link affordance to the target topic, its gloss
+    beside it with in-gloss marker mentions as live deep links — the in-app
+    mirror of the PDF/HTML description-list rendering. Pair targets resolve by
+    construction (the parser starts a pair only on a target-set hit), so no
+    missing-target placeholder is needed."""
     for run_offset, block in enumerate(run):
         block_index = first_block_index + run_offset
         for pair_pos, pair in enumerate(block.get("pairs") or []):
@@ -314,7 +371,7 @@ def render_cf_pair_rows(st, run: list[dict], selected: str, first_block_index: i
                 navigate_to(pair["target"])
             gloss = pair.get("gloss") or ""
             if gloss:
-                cols[1].markdown(md_escape(gloss))
+                cols[1].markdown(pair_gloss_markdown(gloss, topics_by_key))
 
 
 def _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, navigate_to, home_key):
@@ -494,7 +551,9 @@ def mdf_reference():
                     and cf_block_glossed(blocks[run_end])
                 ):
                     run_end += 1
-                render_cf_pair_rows(st, blocks[block_index:run_end], selected, block_index, _navigate_to)
+                render_cf_pair_rows(
+                    st, blocks[block_index:run_end], selected, block_index, _navigate_to, topics_by_key
+                )
                 block_index = run_end
                 continue
             if marker in ("shd2", "shd3", "shd4"):

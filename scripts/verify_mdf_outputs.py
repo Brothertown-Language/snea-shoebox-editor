@@ -43,7 +43,7 @@ DEFAULT_PDF = "docs/mdf/build/mdf-lexical-fields-1.9a.pdf"
 _SCRIPTS_DIR = str(Path(__file__).resolve().parent)
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
-from convert_mdf_master import build_slugs, cf_block_glossed  # noqa: E402
+from convert_mdf_master import build_slugs, cf_block_glossed, gloss_segments  # noqa: E402
 
 
 def iter_example_blocks(document: dict):
@@ -120,14 +120,24 @@ def resolve_href(href: str, source_page: str) -> tuple[str, str]:
 def cf_link_instances(document: dict) -> list[tuple[str, str]]:
     """Every (source topic, canonical target) hyperlink instance the renderers
     produce (2026-10-06 change control): glossed cf blocks render one link per
-    lookup pair; bare-target cf blocks render one link per parsed target."""
+    lookup pair plus one link per in-gloss marker mention (the paren-depth
+    rule keeps cross-referenced markers inside the gloss they annotate, and
+    the renderers make those mentions live); bare-target cf blocks render one
+    link per parsed target."""
+    keys = {topic["key"] for topic in document["topics"]}
     instances: list[tuple[str, str]] = []
     for topic in document["topics"]:
         for block in topic["blocks"]:
             if block["marker"] != "cf":
                 continue
             if cf_block_glossed(block):
-                instances.extend((topic["key"], pair["target"]) for pair in block.get("pairs", []))
+                for pair in block.get("pairs", []):
+                    instances.append((topic["key"], pair["target"]))
+                    instances.extend(
+                        (topic["key"], canonical)
+                        for kind, _chunk, canonical in gloss_segments(pair.get("gloss", ""), keys)
+                        if kind == "mention"
+                    )
             else:
                 instances.extend((topic["key"], target) for target in block.get("targets", []))
     return instances

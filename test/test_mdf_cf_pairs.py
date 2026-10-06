@@ -3,13 +3,19 @@
 The parser derives an additive ``pairs`` field on every ``\\cf`` block:
 presentation-level whitespace tokenization of the block's raw text (minus the
 leading marker token) — each token resolving through the target set starts a
-new pair; intervening words accumulate as that pair's gloss. Punctuation-only
-tokens and the connective ``and`` in list position (directly after a bare
-target) are list structure between pairs, never gloss content — the connective
-case ``\\xe, \\xn, and \\xr`` stays all-empty-gloss and therefore inline.
+new pair ONLY at parenthesis depth 0 (2026-10-06 paren-depth rule); at depth
+>=1 a target-shaped token is gloss text of the currently-open pair, so a
+parenthetical cross-reference inside a gloss stays unsplit
+("variant form (also ve* comments)" is ONE pair). Intervening words accumulate
+as that pair's gloss. Punctuation-only tokens and the connective ``and`` in
+list position (directly after a bare target) are list structure between pairs,
+never gloss content — the connective case ``\\xe, \\xn, and \\xr`` stays
+all-empty-gloss and therefore inline.
 
 Raw ``text`` and ``targets`` fields are untouched (round-trip is asserted in
-test_mdf_converter_sc13_and_census.py).
+test_mdf_converter_sc13_and_census.py); markers named inside parentheticals
+(``ve*``, ``pdv*``, ``lv*``, ``eg``, ``es``, ``ec``) stop being pairs but
+remain link targets.
 
 Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
 """
@@ -60,7 +66,7 @@ class TestCfPairsExtraction:
         assert all(isinstance(block.get("pairs"), list) for _topic, block in blocks)
 
     def test_total_pairs_census(self, document):
-        assert sum(len(block["pairs"]) for _topic, block in cf_blocks(document)) == 428
+        assert sum(len(block["pairs"]) for _topic, block in cf_blocks(document)) == 419
 
     def test_glossed_pairs_census(self, document):
         glossed = [
@@ -69,7 +75,7 @@ class TestCfPairsExtraction:
             for pair in block["pairs"]
             if convert_mdf_master.pair_is_glossed(pair)
         ]
-        assert len(glossed) == 210
+        assert len(glossed) == 201
 
     def test_every_pair_target_is_a_topic_key(self, document):
         keys = {topic["key"] for topic in document["topics"]}
@@ -167,18 +173,19 @@ class TestGlossedMarkerRows:
         ]
         assert convert_mdf_master.cf_block_glossed(block_by_line(document, 175))
 
-    def test_continuation_tokens_derive_pairs(self, document):
-        """L1026: the block's continuation line `(also lv* lexical function form
-        and glosses)` tokenizes with the rest — lv* starts a second pair, and
-        the mid-gloss 'and' stays verbatim gloss content."""
+    def test_continuation_tokens_join_the_open_pair(self, document):
+        """L1026/1027: the block's continuation line `(also lv* lexical function
+        form and glosses)` joins the lf pair — lv* sits at parenthesis depth 1,
+        so it is gloss text, not a new pair; the mid-gloss 'and' stays verbatim
+        gloss content."""
         block = block_by_line(document, 1026)
         assert as_triples(block["pairs"]) == [
             (
                 "lf",
-                "lexical function (like synonym, causal, generic, deverbal noun, locative, etc.) (also",
+                "lexical function (like synonym, causal, generic, deverbal noun, locative, etc.)"
+                " (also lv* lexical function form and glosses)",
                 "lf",
-            ),
-            ("lv", "lexical function form and glosses)", "lv*"),
+            )
         ]
 
     def test_mid_gloss_punctuation_stays_verbatim(self, document):
@@ -188,8 +195,7 @@ class TestGlossedMarkerRows:
         block = block_by_line(document, 1018)
         assert as_triples(block["pairs"]) == [
             ("pd", "paradigm class", "pd"),
-            ("pdl", "paradigm label (also", "pdl"),
-            ("pdv", "paradigm form & glosses)", "pdv*"),
+            ("pdl", "paradigm label (also pdv* paradigm form & glosses)", "pdl"),
         ]
 
     def test_bundle_gloss_attaches_to_last_target(self, document):
@@ -202,3 +208,111 @@ class TestGlossedMarkerRows:
             ("er", "encyclopedic field bundle", "\\er"),
         ]
         assert convert_mdf_master.cf_block_glossed(block)
+
+
+class TestParenDepthUnsplitGlosses:
+    """2026-10-06 paren-depth rule: a target-shaped token at parenthesis depth
+    >=1 is gloss text of the currently-open pair, so the six parenthetical
+    cross-references in the Introduction's by-Function groups stay unsplit."""
+
+    UNEXPECTED_IN_PAIRS = ("ve", "pdv", "lv", "eg", "es", "ec", "or")
+
+    def test_l1016_va_row_carries_full_parenthetical(self, document):
+        block = block_by_line(document, 1016)
+        assert as_triples(block["pairs"]) == [
+            ("va", "variant form (also ve* comments)", "va"),
+            ("mr", "morphology", "mr"),
+            ("lt", "literally", "lt"),
+        ]
+
+    def test_l1021_va_row_carries_full_parenthetical(self, document):
+        block = block_by_line(document, 1021)
+        assert as_triples(block["pairs"]) == [
+            ("va", "variant form (also ve* comments)", "va"),
+            ("mr", "morphology", "mr"),
+        ]
+
+    def test_l1018_and_l1022_pdl_row_carries_full_parenthetical(self, document):
+        expected = [
+            ("pd", "paradigm class", "pd"),
+            ("pdl", "paradigm label (also pdv* paradigm form & glosses)", "pdl"),
+        ]
+        assert as_triples(block_by_line(document, 1018)["pairs"]) == expected
+        assert as_triples(block_by_line(document, 1022)["pairs"]) == expected
+
+    def test_l1025_related_entries_rows_unchanged(self, document):
+        block = block_by_line(document, 1025)
+        assert as_triples(block["pairs"]) == [
+            ("cf", "cross reference", "cf"),
+            ("mn", "main-entry cross reference", "mn"),
+        ]
+
+    def test_l1030_et_row_carries_full_parenthetical(self, document):
+        block = block_by_line(document, 1030)
+        assert as_triples(block["pairs"]) == [
+            ("bw", "borrowed word", "bw"),
+            ("et", "etymology (also eg gloss, es source, ec comment)", "et"),
+        ]
+
+    def test_parenthetical_markers_absent_from_pairs_but_targets_unchanged(self, document):
+        """The markers named inside parentheticals stop being pairs, while the
+        targets field (separate existing logic, first line only) is untouched."""
+        expected_targets = {
+            1016: (["va", "ve", "mr", "lt"], "ve"),
+            1018: (["pd", "pdl", "pdv"], "pdv"),
+            1021: (["va", "ve", "mr"], "ve"),
+            1022: (["pd", "pdl", "pdv"], "pdv"),
+            1026: (["lf"], "lv"),
+            1030: (["bw", "et", "eg", "es", "ec"], "ec"),
+            2196: (["se", "or"], "or"),
+        }
+        for lineno, (targets, inner) in expected_targets.items():
+            block = block_by_line(document, lineno)
+            assert block["targets"] == targets, lineno
+            assert inner not in [p["target"] for p in block["pairs"]], lineno
+
+    def test_l2196_se_row_carries_full_parenthetical(self, document):
+        """L2196 (\\rd topic): the bare conjunction 'or' coincides with the \\or
+        marker key but sits inside the parenthetical — it stays gloss text of
+        the se pair instead of splitting a bogus 'a phrase)' row."""
+        block = block_by_line(document, 2196)
+        assert as_triples(block["pairs"]) == [
+            ("se", "subentry (a polymorphemic form or a phrase)", "\\se"),
+        ]
+
+    def test_headword_group_rows_unchanged(self, document):
+        """No legitimate pair lost: the shd4 Headword group (no parenthetical
+        cross-references) still yields one pair per marker with its gloss."""
+        expected = {
+            1011: [("lx", "lexeme"), ("hm", "homonym number"), ("lc", "lexical citation form")],
+            1012: [
+                ("ph", "phonetic (pronunciation)"),
+                ("ps", "part of speech"),
+                ("pn", "National part of speech"),
+            ],
+            1013: [("sn", "sense number")],
+        }
+        for lineno, pairs in expected.items():
+            block = block_by_line(document, lineno)
+            assert [(p["target"], p["gloss"]) for p in block["pairs"]] == pairs
+
+    def test_every_removed_pair_was_inside_a_parenthetical(self, document):
+        """Regression sweep: across all 297 cf blocks, a target-shaped token
+        becomes gloss text only where the source had it inside parens — so the
+        parenthetical markers appear in glosses only inside parentheticals."""
+        for _topic, block in cf_blocks(document):
+            for pair in block["pairs"]:
+                depth = 0
+                for token in pair["gloss"].split():
+                    depth += token.count("(") - token.count(")")
+                    candidate = token[1:] if token.startswith("\\") else token
+                    while candidate and candidate[-1] in convert_mdf_master.TARGET_STRIP_CHARS:
+                        candidate = candidate[:-1]
+                    if candidate in self.UNEXPECTED_IN_PAIRS:
+                        assert depth > 0, (block["line"], token, pair["gloss"])
+
+    def test_unsplit_glosses_still_glossed_and_coalesce(self, document):
+        """The six blocks keep >=1 glossed pair (so the description-list
+        rendering and coalescing are unchanged)."""
+        for lineno in (1016, 1018, 1021, 1022, 1026, 1030):
+            assert convert_mdf_master.cf_block_glossed(block_by_line(document, lineno)), lineno

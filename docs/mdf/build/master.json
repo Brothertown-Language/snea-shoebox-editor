@@ -3585,13 +3585,8 @@
           "pairs": [
             {
               "target": "va",
-              "gloss": "variant form (also",
+              "gloss": "variant form (also ve* comments)",
               "token": "va"
-            },
-            {
-              "target": "ve",
-              "gloss": "comments)",
-              "token": "ve*"
             },
             {
               "target": "mr",
@@ -3655,13 +3650,8 @@
             },
             {
               "target": "pdl",
-              "gloss": "paradigm label (also",
+              "gloss": "paradigm label (also pdv* paradigm form & glosses)",
               "token": "pdl"
-            },
-            {
-              "target": "pdv",
-              "gloss": "paradigm form & glosses)",
-              "token": "pdv*"
             }
           ]
         },
@@ -3682,13 +3672,8 @@
           "pairs": [
             {
               "target": "va",
-              "gloss": "variant form (also",
+              "gloss": "variant form (also ve* comments)",
               "token": "va"
-            },
-            {
-              "target": "ve",
-              "gloss": "comments)",
-              "token": "ve*"
             },
             {
               "target": "mr",
@@ -3714,13 +3699,8 @@
             },
             {
               "target": "pdl",
-              "gloss": "paradigm label (also",
+              "gloss": "paradigm label (also pdv* paradigm form & glosses)",
               "token": "pdl"
-            },
-            {
-              "target": "pdv",
-              "gloss": "paradigm form & glosses)",
-              "token": "pdv*"
             }
           ]
         },
@@ -3760,13 +3740,8 @@
           "pairs": [
             {
               "target": "lf",
-              "gloss": "lexical function (like synonym, causal, generic, deverbal noun, locative, etc.) (also",
+              "gloss": "lexical function (like synonym, causal, generic, deverbal noun, locative, etc.) (also lv* lexical function form and glosses)",
               "token": "lf"
-            },
-            {
-              "target": "lv",
-              "gloss": "lexical function form and glosses)",
-              "token": "lv*"
             }
           ]
         },
@@ -3794,23 +3769,8 @@
             },
             {
               "target": "et",
-              "gloss": "etymology (also",
+              "gloss": "etymology (also eg gloss, es source, ec comment)",
               "token": "et"
-            },
-            {
-              "target": "eg",
-              "gloss": "gloss,",
-              "token": "eg"
-            },
-            {
-              "target": "es",
-              "gloss": "source,",
-              "token": "es"
-            },
-            {
-              "target": "ec",
-              "gloss": "comment)",
-              "token": "ec"
             }
           ]
         },
@@ -9216,13 +9176,8 @@
           "pairs": [
             {
               "target": "se",
-              "gloss": "subentry (a polymorphemic form",
+              "gloss": "subentry (a polymorphemic form or a phrase)",
               "token": "\\se"
-            },
-            {
-              "target": "or",
-              "gloss": "a phrase)",
-              "token": "or"
             }
           ]
         },

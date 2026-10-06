@@ -152,6 +152,31 @@ def test_smoke_sc8_split_flags_missing_targets_for_placeholder():
     assert missing == ["zz"]
 
 
+def test_smoke_cf_pair_gloss_renders_in_gloss_mentions_as_deep_links():
+    """2026-10-06 paren-depth change control: a pair gloss's own marker
+    mentions render as markdown deep links through the page's existing
+    ?marker= mechanism, with every other character escaped-but-verbatim."""
+    mod = _page_module()
+    master = mod.load_master(REPO_ROOT)
+    topics_by_key = {t["key"]: t for t in master["topics"]}
+    introduction = next(t for t in master["topics"] if t["key"] == "Introduction")
+    block = next(b for b in introduction["blocks"] if b["line"] == 1016)
+    va_gloss = block["pairs"][0]["gloss"]
+    assert va_gloss == "variant form (also ve* comments)"
+    markdown = mod.pair_gloss_markdown(va_gloss, topics_by_key)
+    assert markdown == r"variant form \(also [ve\*](?marker=ve) comments\)"
+    # Every in-gloss mention across the document resolves to a rendered topic.
+    mentions = 0
+    for topic in master["topics"]:
+        for blk in topic["blocks"]:
+            if blk.get("marker") != "cf":
+                continue
+            for pair in blk.get("pairs") or []:
+                rendered = mod.pair_gloss_markdown(pair.get("gloss") or "", topics_by_key)
+                mentions += rendered.count("](?marker=")
+    assert mentions == 9
+
+
 def test_smoke_sc9_filter_matches_keys_case_insensitively():
     """SC-9: an uppercase query matches the lowercase topic key (substring
     over definition text may also legitimately match other topics that

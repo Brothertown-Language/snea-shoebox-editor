@@ -50,7 +50,13 @@ JSON schema (snea-mdf-master/1):
                                       marker+gloss lookup pairs derived by
                                       presentation-level whitespace tokenization
                                       of the raw text — each token resolving
-                                      through the target set starts a pair
+                                      through the target set starts a pair at
+                                      parenthesis depth 0 (the 2026-10-06
+                                      paren-depth rule: at depth >=1 a
+                                      target-shaped token is gloss text of the
+                                      currently-open pair, so a parenthetical
+                                      cross-reference inside a gloss stays
+                                      unsplit)
                                       {"target": canonical key, "gloss":
                                       intervening source words verbatim,
                                       "token": the source's own display token};
@@ -88,8 +94,10 @@ Renderers (presentation belongs here, never the parser):
   (backslash-prefixed tokens that resolve to no topic render as a visible
   placeholder); cf blocks whose pairs carry a gloss render as a description
   list — one \\item per pair, the label a green hyperref link to the target
-  anchor and the gloss plain body text (marker mentions inside a gloss stay
-  literal text; only the label is a link) — with strictly consecutive glossed
+  anchor and the gloss body text whose own marker mentions render as green
+  links to their topics (the 2026-10-06 paren-depth rule keeps
+  cross-referenced markers inside the gloss they annotate) — with strictly
+  consecutive glossed
   cf blocks coalesced into one list; bare-target cf blocks (all pairs
   glossless) keep the inline rendering; \\nt to caption-size notes; \\typ to
   caption-size attribute lines; \\bib to hanging-indent bibliography entries;
@@ -192,34 +200,50 @@ def cf_pairs(text: str, aliases: dict[str, str]) -> list[dict]:
     Presentation-level whitespace tokenization of the block's raw text (the
     marker-line payload minus the marker token, plus every continuation line):
     each token resolving through the target set — exact set lookup, accepting a
-    leading "\\" and trailing "*.,;:" exactly as cf_targets — starts a new pair;
-    intervening words accumulate as that pair's gloss, joined with single spaces
-    and trimmed. A punctuation-only token, or the connective "and", arriving
-    while the current gloss is still empty is list structure between pairs —
-    the serialization of a target list, not gloss content — so the bare
-    connective case "\\xe, \\xn, and \\xr" yields all-empty glosses and no
-    stored gloss is fragment-only; the same tokens arriving mid-gloss are
-    gloss content and stay verbatim ("paradigm form & glosses)"). Every pair
-    carries the source's own display token so renderers label the link exactly
-    as the source row writes it (e.g. "ge*", "\\sy"). Tokens before the first
-    pair have no pair to attach to (none occur in the source); raw text is
-    preserved regardless. Content is never regex-processed.
+    leading "\\" and trailing "*.,;:" exactly as cf_targets — starts a new pair
+    ONLY at parenthesis depth 0 (2026-10-06 paren-depth rule); at depth >=1 a
+    target-shaped token is gloss text of the currently-open pair, so a
+    parenthetical cross-reference inside a gloss stays unsplit ("variant form
+    (also ve* comments)" is one va pair, and ve* remains a link target without
+    becoming a row). Depth is a plain character count over the non-target
+    tokens ("(" increments, ")" decrements, floored at 0 so a stray close
+    paren cannot corrupt the state); a target-shaped token can never carry a
+    parenthesis character (the strip set never removes one), so its depth is
+    exactly the scan state before it. Intervening words accumulate as the
+    pair's gloss, joined with single spaces and trimmed. A punctuation-only
+    token, or the connective "and", arriving while the current gloss is still
+    empty is list structure between pairs — the serialization of a target
+    list, not gloss content — so the bare connective case "\\xe, \\xn, and
+    \\xr" yields all-empty glosses and no stored gloss is fragment-only; the
+    same tokens arriving mid-gloss are gloss content and stay verbatim
+    ("paradigm form & glosses)"). Every pair carries the source's own display
+    token so renderers label the link exactly as the source row writes it
+    (e.g. "ge*", "\\sy"). Tokens before the first pair have no pair to attach
+    to (none occur in the source); raw text is preserved regardless. Content
+    is never regex-processed.
     """
     lines = text.split("\n")
     tokens = [tok for chunk in [field_payload(lines[0], "cf"), *lines[1:]] for tok in chunk.split()]
     pairs: list[dict] = []
+    depth = 0
     for tok in tokens:
         candidate = tok[1:] if tok.startswith("\\") else tok
         while candidate and candidate[-1] in TARGET_STRIP_CHARS:
             candidate = candidate[:-1]
         target = aliases.get(candidate)
         if target is not None:
-            pairs.append({"target": target, "gloss": "", "token": tok})
-        elif pairs and not pairs[-1]["gloss"] and (
+            if depth == 0:
+                pairs.append({"target": target, "gloss": "", "token": tok})
+            elif pairs:
+                current = pairs[-1]
+                current["gloss"] = (current["gloss"] + " " + tok).strip()
+            continue
+        depth = max(0, depth + tok.count("(") - tok.count(")"))
+        if pairs and not pairs[-1]["gloss"] and (
             not any(ch.isalnum() for ch in tok) or tok.lower() == "and"
         ):
             continue
-        elif pairs:
+        if pairs:
             current = pairs[-1]
             current["gloss"] = (current["gloss"] + " " + tok).strip()
     return pairs
@@ -439,6 +463,53 @@ def cf_segments(payload: str, targets: list[str]) -> list[tuple[str, str, str | 
             segments.append(("link", chunk, candidate))
         elif chunk.startswith("\\"):
             segments.append(("missing", chunk, candidate))
+        else:
+            segments.append(("text", chunk, None))
+    return segments
+
+
+def split_ws_runs(text: str) -> list[tuple[bool, str]]:
+    """Whitespace-run-preserving tokenization, no regex on content: a plain
+    character scan yields (is_whitespace, chunk) pairs covering the input
+    exactly, so renderers can rewrite individual tokens while every other
+    character (all whitespace runs included) passes through verbatim."""
+    runs: list[tuple[bool, str]] = []
+    i = 0
+    length = len(text)
+    while i < length:
+        j = i
+        if text[j].isspace():
+            while j < length and text[j].isspace():
+                j += 1
+            runs.append((True, text[i:j]))
+        else:
+            while j < length and not text[j].isspace():
+                j += 1
+            runs.append((False, text[i:j]))
+        i = j
+    return runs
+
+
+def gloss_segments(gloss: str, keys) -> list[tuple[str, str, str | None]]:
+    """Split a pair gloss into (kind, chunk, canonical) segments covering the
+    string exactly (2026-10-06 paren-depth change control). Whitespace runs
+    and non-mention text stay verbatim; each whitespace-delimited token whose
+    candidate — leading backslash stripped, trailing "*.,;:" stripped, the
+    same normalization the targets logic uses — is a known topic key (exact
+    set lookup) becomes a "mention" segment carrying that key, which the
+    renderers turn into a live link. Punctuation is not part of the strip set,
+    so a resolving token never contains parenthesis characters and the gloss's
+    own parenthetical structure is untouched."""
+    segments: list[tuple[str, str, str | None]] = []
+    for is_space, chunk in split_ws_runs(gloss):
+        if is_space:
+            segments.append(("space", chunk, None))
+            continue
+        candidate = chunk[1:] if chunk.startswith("\\") else chunk
+        while candidate and candidate[-1] in TARGET_STRIP_CHARS:
+            candidate = candidate[:-1]
+        if candidate in keys:
+            segments.append(("mention", chunk, candidate))
         else:
             segments.append(("text", chunk, None))
     return segments
@@ -782,12 +853,32 @@ def latex_cf(block: dict, slugs: dict[str, str], warnings: list[str], where: str
     return "{\\color{cflink} " + "".join(parts).strip() + "}"
 
 
+def latex_gloss(gloss: str, slugs: dict[str, str]) -> str:
+    """A pair gloss with its own marker mentions as live links (2026-10-06
+    paren-depth change control): each mention chunk renders as a green
+    hyperref link to its topic's anchor; every other character — text and
+    whitespace runs alike — passes through escaped-but-verbatim."""
+    parts: list[str] = []
+    for kind, chunk, canonical in gloss_segments(gloss, slugs):
+        if kind == "mention":
+            parts.append(
+                "\\hyperref[key:"
+                + slugs[canonical]
+                + "]{\\textcolor{cflink}{"
+                + latex_escape(chunk)
+                + "}}"
+            )
+        else:
+            parts.append(latex_escape(chunk))
+    return "".join(parts)
+
+
 def latex_cf_list(blocks: list[dict], slugs: dict[str, str]) -> str:
     """A coalesced run of glossed cf blocks as one description list (2026-10-06
     change control): one \\item per lookup pair — the label a green hyperref
     link to the target topic's anchor carrying the source's own display token,
-    the gloss plain body text. Marker mentions inside a gloss stay literal
-    text; only the label is a link. Glossless pairs render as label-only rows."""
+    the gloss body text with its own marker mentions as green links. Glossless
+    pairs render as label-only rows."""
     items: list[str] = []
     for block in blocks:
         for pair in block.get("pairs") or []:
@@ -795,7 +886,7 @@ def latex_cf_list(blocks: list[dict], slugs: dict[str, str]) -> str:
             label = latex_escape(pair.get("token") or pair["target"])
             item = "\\item[{\\hyperref[key:" + slug + "]{\\textcolor{cflink}{" + label + "}}}]"
             if pair["gloss"]:
-                item += " " + latex_escape(pair["gloss"])
+                item += " " + latex_gloss(pair["gloss"], slugs)
             items.append(item)
     return "\\begin{description}\n" + "\n".join(items) + "\n\\end{description}"
 
@@ -1197,12 +1288,28 @@ def html_cf(block: dict, page_by_key: dict[str, str], slugs: dict[str, str], war
     return "".join(parts).strip()
 
 
+def html_gloss(gloss: str, page_by_key: dict[str, str], slugs: dict[str, str]) -> str:
+    """A pair gloss with its own marker mentions as live links (2026-10-06
+    paren-depth change control): each mention chunk renders as a
+    class="cf-link" anchor to its topic's page anchor; every other character —
+    text and whitespace runs alike — passes through escaped-but-verbatim."""
+    parts: list[str] = []
+    for kind, chunk, canonical in gloss_segments(gloss, slugs):
+        if kind == "mention":
+            parts.append(
+                f'<a class="cf-link" href="{page_by_key[canonical]}#key-{slugs[canonical]}">{html_escape(chunk)}</a>'
+            )
+        else:
+            parts.append(html_escape(chunk))
+    return "".join(parts)
+
+
 def html_cf_list(blocks: list[dict], page_by_key: dict[str, str], slugs: dict[str, str]) -> str:
     """A coalesced run of glossed cf blocks as one description list (2026-10-06
     change control): <dt> the target link carrying the source's own display
     token, <dd> the gloss beside it — one row per pair, glossless pairs as
-    empty rows. Marker mentions inside a gloss stay literal text; only the
-    label is a link."""
+    empty rows. Marker mentions inside the gloss render as cf-links to their
+    own topics."""
     rows: list[str] = []
     for block in blocks:
         for pair in block.get("pairs") or []:
@@ -1210,7 +1317,7 @@ def html_cf_list(blocks: list[dict], page_by_key: dict[str, str], slugs: dict[st
             href = f"{page_by_key[target]}#key-{slugs[target]}"
             label = html_escape(pair.get("token") or target)
             rows.append(f'    <dt><a class="cf-link" href="{href}">{label}</a></dt>')
-            rows.append(f"    <dd>{html_escape(pair['gloss'])}</dd>")
+            rows.append(f"    <dd>{html_gloss(pair['gloss'], page_by_key, slugs)}</dd>")
     return '<dl class="mdf-cf-list">\n' + "\n".join(rows) + "\n</dl>"
 
 
