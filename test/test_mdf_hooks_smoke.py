@@ -192,8 +192,9 @@ def captured_html(monkeypatch):
 
 def test_smoke_sc12_render_mdf_block_emits_marker_tooltips(captured_html):
     """render_mdf_block wraps each line-initial marker token with its
-    definition tooltip; display text and escaping stay intact."""
-    render_mdf_block("\\lx wampum\n\\ge ball & <chain>")
+    definition tooltip when the caller opts in (marker_tooltips=True);
+    display text and escaping stay intact."""
+    render_mdf_block("\\lx wampum\n\\ge ball & <chain>", marker_tooltips=True)
     assert len(captured_html) == 1
     html = captured_html[0]
     assert '<span class="mdf-marker" title="lexeme or headword of the lexical entry">\\lx</span>' in html
@@ -203,7 +204,7 @@ def test_smoke_sc12_render_mdf_block_emits_marker_tooltips(captured_html):
 def test_smoke_sc12_render_mdf_block_without_markers_renders_plain(captured_html):
     """A block whose lines carry no marker tokens renders unchanged (no
     mdf-marker tooltip spans emitted)."""
-    render_mdf_block("plain continuation text only")
+    render_mdf_block("plain continuation text only", marker_tooltips=True)
     html = captured_html[0]
     assert '<span class="mdf-marker"' not in html
 
@@ -211,7 +212,7 @@ def test_smoke_sc12_render_mdf_block_without_markers_renders_plain(captured_html
 def test_smoke_sc12_render_mdf_block_unicode_content_untouched(captured_html):
     """Accent/IPA-bearing record content renders byte-for-byte — no
     normalization anywhere in the hook path."""
-    render_mdf_block("\\lx wâpamêw\n\\ge ə, ʃ, tʃ, ŋ, ã, č")
+    render_mdf_block("\\lx wâpamêw\n\\ge ə, ʃ, tʃ, ŋ, ã, č", marker_tooltips=True)
     html = captured_html[0]
     assert "wâpamêw" in html
     assert "ə, ʃ, tʃ, ŋ, ã, č" in html

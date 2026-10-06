@@ -982,6 +982,7 @@ def records():
                         diagnostics=diagnostics,
                         key=f"render_{record_id}",
                         highlight_spans=view_highlight_spans,
+                        marker_tooltips=True,
                     )
 
                     # SC-12 (R-11b): per-record marker help — a native
@@ -1101,7 +1102,10 @@ def records():
                             if entry.get("current_data"):
                                 hist_diags, _ = compute_mdf_line_diffs(entry["current_data"], mdf_data)
                                 render_mdf_block(
-                                    entry["current_data"], diagnostics=hist_diags, key=f"hist_{record_id}_{entry['id']}"
+                                    entry["current_data"],
+                                    diagnostics=hist_diags,
+                                    key=f"hist_{record_id}_{entry['id']}",
+                                    marker_tooltips=True,
                                 )
                             if is_editing and entry.get("current_data"):
                                 if st.button("↩ Rollback to this version", key=f"rollback_{record_id}_{entry['id']}"):

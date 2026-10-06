@@ -267,6 +267,7 @@ def render_mdf_block(
     key: str = "",
     diagnostics: list[dict] | None = None,
     highlight_spans: list[tuple[int, int]] | list[list[tuple[int, int]]] | None = None,
+    marker_tooltips: bool = False,
 ) -> None:
     """Render MDF data in a soft-wrapped <pre> block with structural highlighting.
 
@@ -278,6 +279,11 @@ def render_mdf_block(
     the rendered lines (a flat list applied to every line, or a per-line list
     of lists). It is accepted for downstream highlight markup (SC-10); when
     None (default) rendering is unchanged.
+
+    'marker_tooltips' opts in to wrapping each line-initial marker token in a
+    definition-tooltip span (SC-12, R-11b). Default False keeps the rendered
+    markup byte-identical to the SC-9 baseline for call sites that do not
+    request the tooltip behavior.
     """
     import html as _html
 
@@ -286,7 +292,7 @@ def render_mdf_block(
     mdf_text = format_mdf_record(mdf_text)
     lines = mdf_text.split("\n")
     line_spans = _normalize_highlight_spans(highlight_spans, len(lines))
-    marker_defs = marker_definitions()
+    marker_defs = marker_definitions() if marker_tooltips else {}
 
     line_html_parts = []
     for i, line in enumerate(lines):
@@ -310,9 +316,12 @@ def render_mdf_block(
         else:
             inner_html = (_search_token_wrap(line, hl) if hl else _html.escape(line)) or "&nbsp;"
 
-        # R-11b: the line-initial marker token carries its definition as a
-        # static tooltip (no-op when markup interrupts the token).
-        inner_html = wrap_marker_token_html(inner_html, line, marker_defs)
+        # R-11b (opt-in): the line-initial marker token carries its definition
+        # as a static tooltip (no-op when markup interrupts the token). Only
+        # call sites that pass marker_tooltips=True pay the markup change;
+        # the default shape stays byte-identical to the SC-9 baseline.
+        if marker_tooltips:
+            inner_html = wrap_marker_token_html(inner_html, line, marker_defs)
 
         # Build line with optional tooltip/highlight
         title_attr = f'title="{_html.escape(msg)}"' if msg else ""
