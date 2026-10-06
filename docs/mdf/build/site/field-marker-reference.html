@@ -296,7 +296,7 @@
   <p>An oldere style allows you to list the glosses strung together, separated by a semicolon with a space on either side of it (so as to be unlike any normal punctuation):</p>
   <pre class="example mdf-example"><code>  \ge put_out ; move
 </code></pre>
-  <p>Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case. The sequence ‘ ; ‘ is also converted to ‘, ‘ by MDF printing when formatting a dictionary or finderlist.</p>
+  <p>Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case. The sequence ‘ ; ’ is also converted to ‘, ‘ by MDF printing when formatting a dictionary or finderlist.</p>
   <p>The advantage of keeping your glosses in separate fields is that if you setup Toolbox to sort on the \ge fields (to get a type of finderlist), it will sort on all of the glosses; but if the glosses are all concatenated, Toolbox will only sort on the first form.</p>
   <p>For important related information, see:</p>
   <dl class="mdf-cf-list">
@@ -318,7 +318,7 @@
   <pre class="example mdf-example"><code>  \gn keluarkan ; pindahkan
 </code></pre>
   <p>Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case.</p>
-  <p>MDF will convert the ‘ ; ‘ sequence to ‘, ‘ when formatting the dictionary. (MDF will also automatically convert any underline character ‘_’ in a gloss field to a space when formatting.)</p>
+  <p>MDF will convert the ‘ ; ’ sequence to ‘, ‘ when formatting the dictionary. (MDF will also automatically convert any underline character ‘_’ in a gloss field to a space when formatting.)</p>
   <p>For important related information, see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-dn">\dn</a></dt>
@@ -390,7 +390,7 @@
 </section>
 <section class="topic" id="key-re">
   <h4 class="topic-heading">\re  reversal form (English)</h4>
-  <p>This gives the English word or phrase to be use to reverse the dictionary for an English index. If an \re * is present, the relevant entry, subentry, or sense will be ignored (i.e. not included in the reversed index). Like the \ge field, the data for this field can be kept each in its own field or concatenated in one field, separated by ‘ ; ‘.</p>
+  <p>This gives the English word or phrase to be use to reverse the dictionary for an English index. If an \re * is present, the relevant entry, subentry, or sense will be ignored (i.e. not included in the reversed index). Like the \ge field, the data for this field can be kept each in its own field or concatenated in one field, separated by ‘ ; ’.</p>
   <p>It is often the case that there are several translation equivalents for a single vernacular term. ‘huma’ might mean ‘house’, ‘hut’, ‘shack’, ‘dwelling’, ‘lean-to’, etc. Each of these equivalents would be good to have in the reversed index, e.g.:</p>
   <pre class="example mdf-example"><code> \re house ; hut ; shack ; dwelling ; lean-to
 </code></pre>
@@ -430,7 +430,7 @@
 </section>
 <section class="topic" id="key-rn">
   <h4 class="topic-heading">\rn  reversal form (national)</h4>
-  <p>This gives the national language word or phrase form to be use to reverse the dictionary for a national language index. If an \rn * is present the relevant entry, subentry, or sense will be ignored (i.e. not included in the reversed index). Like the \gn field, the data for this field can be kept each in its own field or concatenated in one field, separated by ‘ ; ‘.</p>
+  <p>This gives the national language word or phrase form to be use to reverse the dictionary for a national language index. If an \rn * is present the relevant entry, subentry, or sense will be ignored (i.e. not included in the reversed index). Like the \gn field, the data for this field can be kept each in its own field or concatenated in one field, separated by ‘ ; ’.</p>
   <p>For more information, see:</p>
   <dl class="mdf-cf-list">
     <dt><a class="cf-link" href="field-marker-reference.html#key-re">\re</a></dt>
@@ -762,7 +762,7 @@
   <pre class="example mdf-example"><code>  \ge kasi_pinda ; kasi_pulang
 </code></pre>
   <p>Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case.</p>
-  <p>The underline character ‘_’ in the example glosses above is to force Toolbox to treat the multiple word gloss ‘kasi pinda’ as a single gloss. MDF will convert underline characters in gloss fields to spaces automatically. The sequence ‘ ; ‘ is also converted to ‘, ‘ by MDF when formatting a dictionary or finderlist.</p>
+  <p>The underline character ‘_’ in the example glosses above is to force Toolbox to treat the multiple word gloss ‘kasi pinda’ as a single gloss. MDF will convert underline characters in gloss fields to spaces automatically. The sequence ‘ ; ’ is also converted to ‘, ‘ by MDF when formatting a dictionary or finderlist.</p>
   <p>If this field is included in the output, MDF adds a label and brackets “[ ]” around it and it is treated as part of the national field.</p>
   <p>For important related information, see:</p>
   <dl class="mdf-cf-list">

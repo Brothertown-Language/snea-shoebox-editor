@@ -1380,7 +1380,7 @@ For example:
 
 \end{Verbatim}
 
-\begin{quote}\small\itshape If you choose to use these explicit style codes, you must not forget the closing brace ` \} `. If you do, the rest of the field will be considered a part of the specified font!\end{quote}
+\begin{quote}\small\itshape If you choose to use these explicit style codes, you must not forget the closing brace ` \} '. If you do, the rest of the field will be considered a part of the specified font!\end{quote}
 
 \begin{quote}\small\itshape Actually, any field marker can become a character style code and transmit its formatting to the data enclosed in the curly brackets. This is mostly useful for the fields mentioned already (sc, hm) but any field code can be used.\end{quote}
 
@@ -1395,7 +1395,7 @@ To continue with the general discussion, jump to:
 The following are all of the fields MDF recognizes, listed  in their suggested groups:
 
 
-\begin{quote}\small\itshape ( ` f ` marks free-form fields)\end{quote}
+\begin{quote}\small\itshape ( ` f ' marks free-form fields)\end{quote}
 
 {\small\color{exlabel}(147)}\par
 \noindent
@@ -3430,7 +3430,7 @@ An oldere style allows you to list the glosses strung together, separated by a s
 
 \end{Verbatim}
 
-Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case. The sequence ` ; ` is also converted to `, ` by MDF printing when formatting a dictionary or finderlist.
+Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case. The sequence ` ; ' is also converted to `, ` by MDF printing when formatting a dictionary or finderlist.
 
 
 The advantage of keeping your glosses in separate fields is that if you setup Toolbox to sort on the \textbackslash{}ge fields (to get a type of finderlist), it will sort on all of the glosses; but if the glosses are all concatenated, Toolbox will only sort on the first form.
@@ -3481,7 +3481,7 @@ Or with the glosses strung together, separated by a semicolon with a space on ei
 Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case.
 
 
-MDF will convert the ` ; ` sequence to `, ` when formatting the dictionary. (MDF will also automatically convert any underline character `\_' in a gloss field to a space when formatting.)
+MDF will convert the ` ; ' sequence to `, ` when formatting the dictionary. (MDF will also automatically convert any underline character `\_' in a gloss field to a space when formatting.)
 
 
 For important related information, see:
@@ -3584,7 +3584,7 @@ To specify a national part of speech label, see:
 
 \subsection{\textbackslash{}re  reversal form (English)}\label{key:re}
 
-This gives the English word or phrase to be use to reverse the dictionary for an English index. If an \textbackslash{}re * is present, the relevant entry, subentry, or sense will be ignored (i.e. not included in the reversed index). Like the \textbackslash{}ge field, the data for this field can be kept each in its own field or concatenated in one field, separated by ` ; `.
+This gives the English word or phrase to be use to reverse the dictionary for an English index. If an \textbackslash{}re * is present, the relevant entry, subentry, or sense will be ignored (i.e. not included in the reversed index). Like the \textbackslash{}ge field, the data for this field can be kept each in its own field or concatenated in one field, separated by ` ; '.
 
 
 It is often the case that there are several translation equivalents for a single vernacular term. `huma' might mean `house', `hut', `shack', `dwelling', `lean-to', etc. Each of these equivalents would be good to have in the reversed index, e.g.:
@@ -3693,7 +3693,7 @@ See also:
 
 \subsection{\textbackslash{}rn  reversal form (national)}\label{key:rn}
 
-This gives the national language word or phrase form to be use to reverse the dictionary for a national language index. If an \textbackslash{}rn * is present the relevant entry, subentry, or sense will be ignored (i.e. not included in the reversed index). Like the \textbackslash{}gn field, the data for this field can be kept each in its own field or concatenated in one field, separated by ` ; `.
+This gives the national language word or phrase form to be use to reverse the dictionary for a national language index. If an \textbackslash{}rn * is present the relevant entry, subentry, or sense will be ignored (i.e. not included in the reversed index). Like the \textbackslash{}gn field, the data for this field can be kept each in its own field or concatenated in one field, separated by ` ; '.
 
 
 For more information, see:
@@ -4460,7 +4460,7 @@ Or with the glosses strung together, separated by a semicolon with a space on ei
 Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case.
 
 
-The underline character `\_' in the example glosses above is to force Toolbox to treat the multiple word gloss `kasi pinda' as a single gloss. MDF will convert underline characters in gloss fields to spaces automatically. The sequence ` ; ` is also converted to `, ` by MDF when formatting a dictionary or finderlist.
+The underline character `\_' in the example glosses above is to force Toolbox to treat the multiple word gloss `kasi pinda' as a single gloss. MDF will convert underline characters in gloss fields to spaces automatically. The sequence ` ; ' is also converted to `, ` by MDF when formatting a dictionary or finderlist.
 
 
 If this field is included in the output, MDF adds a label and brackets ``[ ]'' around it and it is treated as part of the national field.

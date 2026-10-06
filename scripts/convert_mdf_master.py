@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Convert the MDF 1.9a Toolbox field reference into JSON + LaTeX + HTML outputs.
 
-Spec: .issues/1379/spec.md — Phases 1-3 (R-1..R-4, R-8; SC-13; SC-1/SC-3 renderers).
+Spec: issue 1379 spec — Phases 1-3 (R-1..R-4, R-8; SC-13; SC-1/SC-3 renderers).
 
 Parsing semantics (deterministic, line-anchored):
 - A line opens a field record iff, at byte offset 0, it is "\\" plus one
@@ -449,27 +449,69 @@ QUOTE_FORMS = {
     "unicode": {"open_double": "“", "close_double": "”", "open_single": "‘", "close_single": "’"},
 }
 _CLOSING_QUOTE_CONTEXT = frozenset(".,;:!?)]_-}")
+_QUOTE_CHARS = frozenset("\"'")
+
+
+def _quote_closes(text: str, i: int) -> bool:
+    """Look-behind-only classification of the straight quote at index i: True
+    when it is a closing quote. Bounded backward scan — every decision reads
+    only characters at positions < i; no lookahead, no pairing state, no
+    alternation counting."""
+    previous = text[i - 1] if i else ""
+    if previous.isalnum() or previous in _CLOSING_QUOTE_CONTEXT:
+        return True
+    # Padded-literal carveout (corpus census 2026-10-06, source pinned MDF
+    # 1.9a): "the sequence ' ; '" style literals — <quote><space><one
+    # non-space non-quote char><space><quote> — put a space before the pair's
+    # closing quote, so the preceding-character rule alone mis-opens it. When
+    # the four characters before this quote are [space][item][space][quote]
+    # and that earlier quote itself classifies as an OPENER (it opened the
+    # pair this quote must close), this quote closes. A chained third quote
+    # (its own pair-opener already closed) fails the opener check and keeps
+    # the base opening behavior.
+    if (
+        i >= 4
+        and text[i - 1] == " "
+        and text[i - 2] != " "
+        and text[i - 2] not in _QUOTE_CHARS
+        and text[i - 3] == " "
+        and text[i - 4] in _QUOTE_CHARS
+        and not _quote_closes(text, i - 4)
+    ):
+        return True
+    return False
 
 
 def shape_quotes(text: str, form: str = "unicode") -> str:
     """Deterministic typographic quote shaping (developer directive, 2026-10-06):
-    a per-character lookback state machine, no regex on content. A straight "
-    or ' whose PRECEDING character is alphanumeric, or is one of ".", ",",
-    ";", ":", "!", "?", ")", "]", "_", "-", or "}", becomes the CLOSING form —
-    American typesetting places sentence punctuation inside the quotes, so a
-    quote directly after punctuation is a closing quote, and the offline
-    corpus census of master.json prose paths (2026-10-06, design evidence
-    only) shows "_", "-", and "}" immediately before a straight quote only
-    where that quote closes a quoted token ('_', '-', and " |fl{ }"); any
-    other preceding character — whitespace, string/line start ("\\n" is
-    whitespace, so a line start is opening context), "(", or anything else —
-    becomes the OPENING form. The decision is look-behind only: the previous
-    character alone decides opening vs closing, with no lookahead, no pairing
-    memory, and no alternation counting; ambiguous classes observed in the
-    corpus keep the current behavior (a quote after "(" opens — 13/13
-    word-initial instances; a quote after whitespace or string start opens —
-    262/262 instances). Already-curly input (U+2018/2019/201C/201D) holds no
-    straight quotes and passes through unchanged, so the unicode form is
+    a look-behind quote shaper, no regex on content. A straight " or ' is the
+    CLOSING form when its preceding character is alphanumeric, or is one of
+    ".", ",", ";", ":", "!", "?", ")", "]", "_", "-", or "}" — American
+    typesetting places sentence punctuation inside the quotes, so a quote
+    directly after punctuation is a closing quote, and the offline corpus
+    census of master.json prose paths (2026-10-06, design evidence only)
+    shows "_", "-", and "}" immediately before a straight quote only where
+    that quote closes a quoted token ('_', '-', and " |fl{ }"); any other
+    preceding character — whitespace, string/line start ("\\n" is whitespace,
+    so a line start is opening context), "(", or anything else — is the
+    OPENING form. The decision is look-behind only: a bounded backward scan
+    with no lookahead, no pairing memory, and no alternation counting;
+    ambiguous classes observed in the corpus keep the current behavior (a
+    quote after "(" opens — 13/13 word-initial instances; a quote after
+    whitespace or string start opens — 262/262 instances).
+    Padded-literal carveout (corpus census 2026-10-06, source pinned MDF
+    1.9a — all 7 census matches genuine: ' ; ' in the ge/gn/gr/re/rn
+    discussions, ' } ' in Character_Style_Codes, ' f ' in
+    Summary_of_Fields): at <quote><space><one non-space non-quote
+    char><space><quote> the pair's closing quote is preceded by a space, so
+    the preceding-character rule alone mis-opens it; when the four characters
+    before a straight quote are [space][item][space][quote] and that earlier
+    quote classifies as an opener, this quote CLOSES its pair. The window is
+    exact — a zero left pad ("', '", "'; '"), multi-character items
+    ("\"Ant: \""), or wider padding stay with the base rule (still rendered
+    open-open, disclosed) — and a three-quote chain's third quote keeps the
+    base opening behavior. Already-curly input (U+2018/2019/201C/201D) holds
+    no straight quotes and passes through unchanged, so the unicode form is
     idempotent. Presentation only: applied exclusively on prose rendering
     paths (\\txt, \\nt, \\bib, \\typ, \\shd topic headings, cf pair glosses,
     bare-target cf display text, and the authored Foreword) — never to
@@ -480,17 +522,14 @@ def shape_quotes(text: str, form: str = "unicode") -> str:
     """
     shapes = QUOTE_FORMS[form]
     out: list[str] = []
-    previous = ""
-    for ch in text:
-        if ch == '"' or ch == "'":
-            closing = previous.isalnum() or previous in _CLOSING_QUOTE_CONTEXT
-            if ch == '"':
-                out.append(shapes["close_double"] if closing else shapes["open_double"])
+    for i, ch in enumerate(text):
+        if ch in _QUOTE_CHARS:
+            if _quote_closes(text, i):
+                out.append(shapes["close_double" if ch == '"' else "close_single"])
             else:
-                out.append(shapes["close_single"] if closing else shapes["open_single"])
+                out.append(shapes["open_double" if ch == '"' else "open_single"])
         else:
             out.append(ch)
-        previous = ch
     return "".join(out)
 
 
@@ -646,7 +685,7 @@ def coalesce_cf_blocks(blocks: list[dict]) -> list[tuple[str, list[dict]]]:
 
 # ---------------------------------------------------------------------------
 # Shared book structure — the source's own navigation model
-# (2026-10-06 change control: .issues/1379/spec.md)
+# (2026-10-06 change control: issue 1379 spec)
 # ---------------------------------------------------------------------------
 
 REFERENCE_GROUP_ORDER = ("record", "basic", "reserved", "optional", "discontinued")

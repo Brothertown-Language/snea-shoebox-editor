@@ -1,4 +1,4 @@
-"""Unit tests for the deterministic typographic quote shaper (.issues/1379).
+"""Unit tests for the deterministic typographic quote shaper (issue 1379).
 
 Developer directive 2026-10-06: a per-character lookback state machine — no
 regex on content. A straight double/single quote whose PRECEDING character is
@@ -76,6 +76,47 @@ def test_decision_is_look_behind_only():
     assert shape_quotes("a_'y", "unicode") == "a_’y"
     assert shape_quotes("a_'x'y", "unicode") == "a_’x’y"
     assert shape_quotes("a '_'", "unicode") == "a ‘_’"
+
+
+def test_padded_literal_carveout_closes_corpus_matches():
+    """2026-10-06 carveout census: <q> <x> <q> with single spaces and a single
+    item char — the pair's closing quote follows a space, so the base rule
+    mis-opens it; the carveout closes it (all census matches genuine, source
+    pinned MDF 1.9a)."""
+    assert shape_quotes("The sequence ' ; ' is also converted to ', '", "unicode") == (
+        "The sequence ‘ ; ’ is also converted to ‘, ‘"
+    )
+    assert shape_quotes("MDF will convert the ' ; ' sequence to ', '", "unicode") == (
+        "MDF will convert the ‘ ; ’ sequence to ‘, ‘"
+    )
+    assert (
+        shape_quotes("you must not forget the closing brace ' } '. If you", "unicode")
+        == "you must not forget the closing brace ‘ } ’. If you"
+    )
+    assert shape_quotes("( ' f ' marks free-form fields)", "unicode") == "( ‘ f ’ marks free-form fields)"
+    assert shape_quotes("separated by ' ; '. ", "unicode") == "separated by ‘ ; ’. "
+    assert shape_quotes("' ; ' and ' , '", "unicode") == "‘ ; ’ and ‘ , ’"
+    assert shape_quotes('x " ; " y', "unicode") == 'x “ ; ” y'
+
+
+def test_padded_literal_carveout_requires_opener_before_pair():
+    """False-positive guard: a three-quote run must not let the carveout close
+    the third quote — its putative pair-opener already classified closing, so
+    the base rule keeps it opening."""
+    assert shape_quotes("' a ' b ' c", "unicode") == "‘ a ’ b ‘ c"
+    assert shape_quotes("x 'a.' b ' c", "unicode") == "x ‘a.’ b ‘ c"
+    assert shape_quotes("'a.' b ' c", "latex") == "`a.' b ` c"
+
+
+def test_padded_literal_carveout_stays_narrow():
+    """Deliberate exclusions: zero left pad, multi-char items, and wider
+    padding keep the base rule (rendered open-open, disclosed)."""
+    assert shape_quotes("converted to ', ' here", "unicode") == "converted to ‘, ‘ here"
+    assert shape_quotes("a semicolon '; ', e.g.", "unicode") == "a semicolon ‘; ‘, e.g."
+    assert shape_quotes('the label "Ant: " to this field', "unicode") == 'the label “Ant: “ to this field'
+    assert shape_quotes("'  x  ' stays", "unicode") == "‘  x  ‘ stays"
+    assert shape_quotes("' ab ' stays", "unicode") == "‘ ab ‘ stays"
+    assert shape_quotes("' a  x ' stays", "unicode") == "‘ a  x ‘ stays"
 
 
 def test_apostrophes_in_contractions_and_possessives_close():
