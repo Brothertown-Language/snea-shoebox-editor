@@ -50,6 +50,9 @@ JSON schema (snea-mdf-master/1):
 Renderers (presentation belongs here, never the parser):
 - LaTeX: --latex PATH emits a book-class XeLaTeX document structured by the
   source's own navigation model (book_structure; 2026-10-06 change control):
+  title page, then the Foreword (unnumbered \\chapter* with a ToC entry and PDF
+  bookmark — AI-use disclosure and notes on changes relative to the source),
+  then \\tableofcontents, then
   the home/TOC entry first as the opening chapter, then the 17 discussion
   chapters in the home TOC (chapter_keys) order with their internal \\shd2/3/4
   nesting, then the terminal "Field Marker Reference" apparatus chapter holding
@@ -75,7 +78,8 @@ Renderers (presentation belongs here, never the parser):
   a "(N)" apparatus label (N = 1..444) so example-block counts are verifiable
   in pdftotext output; verbatim content itself is untouched.
 - HTML: --html-dir DIR emits a multi-page static site: index.html (home entry
-  "aa" plus the chapter TOC), one page per discussion chapter (the chapter's own
+  "aa" plus the chapter TOC and a Foreword link), foreword.html (the Foreword,
+  first link in the sidebar navigation), one page per discussion chapter (the chapter's own
   content plus any non-reference member topics — for this source only the
   multi-key stub, under Old_and_Changed_Markers), and the terminal
   field-marker-reference.html holding the marker-definition entries in the same
@@ -419,6 +423,8 @@ REFERENCE_GROUP_TITLES = {
 }
 REFERENCE_PAGE = "field-marker-reference.html"
 REFERENCE_CHAPTER_TITLE = "Field Marker Reference"
+FOREWORD_PAGE = "foreword.html"
+FOREWORD_TITLE = "Foreword"
 
 
 def is_reference_entry(topic: dict, home_key: str | None) -> bool:
@@ -510,6 +516,93 @@ def book_structure(document: dict) -> dict:
         if group in reference
     }
     return {"home": home, "chapters": chapters, "residual": residual, "reference": groups}
+
+
+# ---------------------------------------------------------------------------
+# Foreword — AI-use disclosure and transformation notes (issue #1379 directive,
+# 2026-10-06). One canonical text; each renderer adapts it to its own register.
+# ---------------------------------------------------------------------------
+
+FOREWORD_PARAGRAPHS = (
+    "This reference presents the MDF 1.9a field documentation in a printable, browsable form. "
+    "The source document is a Toolbox/Shoebox help file — a flat collection of records "
+    "designed for on-screen keyword search rather than linear reading. The source identifies "
+    "itself as draft version 1.9a (May 12, 2006); the original database was constructed by "
+    "David Coward and the revisions by Karen Buseman.",
+    "This edition was assembled with the assistance of AI. An automated conversion pipeline "
+    "(a Python parser, XeLaTeX typesetting, and static HTML generation), designed and "
+    "implemented by an AI agent under human direction and review, transformed the source "
+    "into the present formats. All field content is preserved from the source without "
+    "alteration; the AI's role was structural and typographic, not editorial. No content was "
+    "invented, paraphrased, or omitted.",
+)
+FOREWORD_CHANGES_LEAD = "Changes made relative to the source:"
+FOREWORD_CHANGES = (
+    "Table of contents. The source has no print-style table of contents; its navigation is a "
+    "cross-reference table on the home record plus keyword search. This edition adds a proper "
+    "ToC. The chapter order follows the source's own recommended reading order: the topics "
+    "listed on the home record, in the order it presents them.",
+    "Unified field reference. The field-marker records, which the source interleaves "
+    "alphabetically for on-screen lookup, are collected into a single Field Marker Reference "
+    "section, grouped by the source's own field classifications — the record marker, Basic "
+    "fields, Reserved fields, Optional fields (as defined in the source's Introduction), and "
+    "Discontinued markers — alphabetical within each group. One obsolete-marker record is "
+    "placed with the discussion of old and changed markers, as its own cross-reference directs.",
+    'Cross-references ("See also") render as live links, set in green following the source\'s '
+    "own stated convention.",
+    "Formatting and printing examples are reproduced verbatim in monospaced blocks.",
+    "Typography, page layout, bookmarks, and pagination are new to this edition; the text "
+    "itself is unchanged.",
+)
+FOREWORD_COLOPHON = (
+    "Typeset with XeLaTeX (Noto Serif, with Gentium). "
+    "HTML edition generated from the same parsed source.",
+    "Conversion of 2026-10-06. Assembled with AI assistance — OpenCode "
+    "(huggingface/zai-org/GLM-5.3-Flash), directed by Michael Conrad.",
+)
+
+_LATEX_QUOTE_RE = re.compile('"([^"]*)"')
+
+
+def latex_quote(text: str) -> str:
+    """LaTeX register adaptation: straight double quotes to ``...'' pairs."""
+    return _LATEX_QUOTE_RE.sub("``\\1''", text)
+
+
+def latex_foreword() -> str:
+    """Front-matter Foreword as an unnumbered chapter with a ToC entry and PDF
+    bookmark, placed before \\tableofcontents."""
+    parts = [
+        "\\clearpage\n\\phantomsection\n\\addcontentsline{toc}{chapter}{" + FOREWORD_TITLE + "}\n",
+        "\\chapter*{" + FOREWORD_TITLE + "}\n",
+    ]
+    for paragraph in FOREWORD_PARAGRAPHS:
+        parts.append(latex_quote(latex_escape(paragraph)) + "\n\n")
+    parts.append(latex_escape(FOREWORD_CHANGES_LEAD) + "\n\\begin{enumerate}\n")
+    for change in FOREWORD_CHANGES:
+        parts.append("  \\item " + latex_quote(latex_escape(change)) + "\n")
+    parts.append("\\end{enumerate}\n\n")
+    for paragraph in FOREWORD_COLOPHON:
+        parts.append(latex_escape(paragraph) + "\n\n")
+    return "".join(parts)
+
+
+def html_foreword_content() -> str:
+    """The Foreword page body: heading, paragraphs, the numbered changes list,
+    and the colophon, in the site's standard topic styling."""
+    out = ['<section class="topic foreword" id="foreword">']
+    out.append(f'  <h2 class="topic-heading">{html_escape(FOREWORD_TITLE)}</h2>')
+    for paragraph in FOREWORD_PARAGRAPHS:
+        out.append(f"  <p>{html_escape(paragraph)}</p>")
+    out.append(f"  <p>{html_escape(FOREWORD_CHANGES_LEAD)}</p>")
+    out.append('  <ol>')
+    for change in FOREWORD_CHANGES:
+        out.append(f"    <li>{html_escape(change)}</li>")
+    out.append("  </ol>")
+    for paragraph in FOREWORD_COLOPHON:
+        out.append(f"  <p>{html_escape(paragraph)}</p>")
+    out.append("</section>")
+    return "\n".join(out)
 
 
 # ---------------------------------------------------------------------------
@@ -691,7 +784,9 @@ def render_latex(document: dict, out_path: str) -> list[str]:
         + latex_escape(document["source"]["path"])
         + "} (MDF 1.9a field documentation).\\par}\n"
     )
-    chunks.append("\\end{titlepage}\n\\tableofcontents\n\\mainmatter\n")
+    chunks.append("\\end{titlepage}\n")
+    chunks.append(latex_foreword())
+    chunks.append("\\tableofcontents\n\\mainmatter\n")
     structure = book_structure(document)
     example_number = 0
 
@@ -845,6 +940,9 @@ p.typ { font-size: 0.85rem; color: #555; }
 p.bib { font-size: 0.9rem; padding-left: 2em; text-indent: -2em; }
 ul.nwt-list { list-style: none; padding-left: 1.2rem; }
 .chapter-index ol { padding-left: 1.5rem; }
+.foreword ol { padding-left: 1.5rem; }
+.foreword-link { margin: 0 0 1.5rem; }
+.foreword-link a { color: #1a3a6b; }
 @media (max-width: 900px) {
   .layout { display: block; }
   .sidebar {
@@ -1088,7 +1186,7 @@ def html_nav(document: dict, page_by_key: dict[str, str], slugs: dict[str, str])
     non-reference members — the multi-key stub under Old_and_Changed_Markers),
     then the Field Marker Reference page with its group/entry structure."""
     structure = book_structure(document)
-    items = []
+    items = [f'  <li class="nav-foreword"><a href="{FOREWORD_PAGE}">{FOREWORD_TITLE}</a></li>']
     home = structure["home"]
     if home is not None:
         label = html_escape(home["heading"] or home["key"])
@@ -1174,7 +1272,8 @@ def render_html(document: dict, out_dir: str) -> list[str]:
     )
 
     pages: dict[str, str] = {}
-    index_content = []
+    foreword_link = f'<p class="foreword-link"><a href="{FOREWORD_PAGE}">{FOREWORD_TITLE}</a></p>'
+    index_content = [foreword_link]
     if home_topic is not None:
         index_content.append(html_topic(home_topic, page_by_key, slugs, warnings))
     index_content.append(chapter_index)
@@ -1192,6 +1291,14 @@ def render_html(document: dict, out_dir: str) -> list[str]:
             nav=nav,
             content="\n".join(content),
         )
+
+    pages[FOREWORD_PAGE] = HTML_PAGE_TEMPLATE.format(
+        page_title=FOREWORD_TITLE,
+        version=version_text,
+        date=date,
+        nav=nav,
+        content=html_foreword_content(),
+    )
 
     if structure["reference"]:
         reference_content = [f'<h2 class="topic-heading">{REFERENCE_CHAPTER_TITLE}</h2>']

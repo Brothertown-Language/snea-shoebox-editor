@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Free-form Fields — MDF Lexical Fields</title>
+<title>Foreword — MDF Lexical Fields</title>
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -155,37 +155,20 @@
 </ul>
 </nav>
 <main class="content">
-<section class="topic" id="key-Free-form_Fields">
-  <h2 class="topic-heading">Free-form Fields</h2>
-  <p class="key-line"><code>\key Free-form_Fields</code></p>
-  <p>In the standard MDF printing, the following fields are "free-form" fields, meaning that MDF will not add periods, etc. to them; they are basically formatted as you entered them. Therefore, when using these fields, you are encouraged to use capitalization and proper punctuation. Free-form fields may be as long as you need, e.g. several sentences.</p>
-  <pre class="example mdf-example"><code> \rf  reference                * \pc  picture</code></pre>
-  <pre class="example mdf-example"><code> \xv  vernacular example         \nt  notes, general</code></pre>
-  <pre class="example mdf-example"><code> \xe  English example            \np  notes on phonology</code></pre>
-  <pre class="example mdf-example"><code> \xn  national example           \ng  notes on grammar</code></pre>
-  <pre class="example mdf-example"><code> \xr  regional example           \nd  notes on discourse</code></pre>
-  <pre class="example mdf-example"><code> \ve  variant form (English)     \na  notes on anthro.</code></pre>
-  <pre class="example mdf-example"><code> \vn  variant form (National)    \ns  notes on socioling.</code></pre>
-  <pre class="example mdf-example"><code> \vr  variant form (Regional)    \nq  questions</code></pre>
-  <pre class="example mdf-example"><code> \ur  usage (regional)
- \or  only (regional) 
- \er  encyclopedic (Regional) </code></pre>
-  <pre class="example mdf-example"><code> \tb  table
-</code></pre>
-  <p>The following fields are also free-form, except that the printing process will add punctuation to the end if you do not.</p>
-  <pre class="example mdf-example"><code> \uv  usage (vernacular)         \ov  only (vernacular)
- \ue  usage (English)            \oe  only (English)
- \un  usage (national)           \on  only (national)
- 
- \ev  encyclopedic (vern)     
- \ee  encyclopedic (English)  
- \en  encyclopedic (National) 
- </code></pre>
-  <p class="note">If a field is not explicitly marked in its description as being a "free-form" field, then it is not one.</p>
-  <p>If a field is not a free-form field, you do not need to use any terminating punctuation; MDF adds the needed punctuation to  the end of each non-free-form field.</p>
-  <p>* The picture reference field is free-form so long as the field does not begin with .G. (which marks it as a graphics link paragraph). See \pc for more information on the picture reference field.</p>
-  <p>To continue on with the general discussion, jump to:</p>
-  <p class="cf"><a class="cf-link" href="Range_Sets.html#key-Range_Sets">Range_Sets</a></p>
+<section class="topic foreword" id="foreword">
+  <h2 class="topic-heading">Foreword</h2>
+  <p>This reference presents the MDF 1.9a field documentation in a printable, browsable form. The source document is a Toolbox/Shoebox help file — a flat collection of records designed for on-screen keyword search rather than linear reading. The source identifies itself as draft version 1.9a (May 12, 2006); the original database was constructed by David Coward and the revisions by Karen Buseman.</p>
+  <p>This edition was assembled with the assistance of AI. An automated conversion pipeline (a Python parser, XeLaTeX typesetting, and static HTML generation), designed and implemented by an AI agent under human direction and review, transformed the source into the present formats. All field content is preserved from the source without alteration; the AI's role was structural and typographic, not editorial. No content was invented, paraphrased, or omitted.</p>
+  <p>Changes made relative to the source:</p>
+  <ol>
+    <li>Table of contents. The source has no print-style table of contents; its navigation is a cross-reference table on the home record plus keyword search. This edition adds a proper ToC. The chapter order follows the source's own recommended reading order: the topics listed on the home record, in the order it presents them.</li>
+    <li>Unified field reference. The field-marker records, which the source interleaves alphabetically for on-screen lookup, are collected into a single Field Marker Reference section, grouped by the source's own field classifications — the record marker, Basic fields, Reserved fields, Optional fields (as defined in the source's Introduction), and Discontinued markers — alphabetical within each group. One obsolete-marker record is placed with the discussion of old and changed markers, as its own cross-reference directs.</li>
+    <li>Cross-references ("See also") render as live links, set in green following the source's own stated convention.</li>
+    <li>Formatting and printing examples are reproduced verbatim in monospaced blocks.</li>
+    <li>Typography, page layout, bookmarks, and pagination are new to this edition; the text itself is unchanged.</li>
+  </ol>
+  <p>Typeset with XeLaTeX (Noto Serif, with Gentium). HTML edition generated from the same parsed source.</p>
+  <p>Conversion of 2026-10-06. Assembled with AI assistance — OpenCode (huggingface/zai-org/GLM-5.3-Flash), directed by Michael Conrad.</p>
 </section>
 </main>
 </div>

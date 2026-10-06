@@ -110,6 +110,9 @@ p.typ { font-size: 0.85rem; color: #555; }
 p.bib { font-size: 0.9rem; padding-left: 2em; text-indent: -2em; }
 ul.nwt-list { list-style: none; padding-left: 1.2rem; }
 .chapter-index ol { padding-left: 1.5rem; }
+.foreword ol { padding-left: 1.5rem; }
+.foreword-link { margin: 0 0 1.5rem; }
+.foreword-link a { color: #1a3a6b; }
 @media (max-width: 900px) {
   .layout { display: block; }
   .sidebar {
