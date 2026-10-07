@@ -118,16 +118,20 @@ def test_sc7_renders_108_topics_17_chapters_lands_on_aa():
             )
 
             # All 108 topic browser nodes present: topic keys render as bare
-            # button labels; the home/TOC entry is labeled "Home (aa)" for
-            # users (2026-10-06 fix) and is asserted by its user label.
+            # button labels; the home/TOC entry is labeled plain "Home" for
+            # users (2026-10-06 directive: no bare aa in any user-facing
+            # label) and is asserted by its user label.
             home_key = master["home_key"]
             labels = page.eval_on_selector_all(
                 "button", "els => els.map(e => e.innerText.trim())"
             )
             missing = [k for k in keys if k != home_key and k not in labels]
             assert not missing, f"{len(missing)} topic browser nodes missing: {missing[:10]}"
-            assert f"Home ({home_key})" in labels, (
-                f"the home/TOC entry button must read Home ({home_key}); labels head: {labels[:10]}"
+            assert "Home" in labels, (
+                f"the home/TOC entry button must read plain Home; labels head: {labels[:10]}"
+            )
+            assert f"Home ({home_key})" not in labels, (
+                "the parenthesized bare key must not render in the home button label"
             )
 
             # Single left rail (vision-review remediation): the global sidebar
@@ -520,6 +524,58 @@ def test_sc9_filter_no_matches_shows_info_banner():
     assert "No topics match your filter." in state["body"], (
         f"empty-state banner missing; body tail: {state['body'][-400:]}"
     )
+
+
+def test_filter_home_topic_chip_reads_home():
+    """2026-10-06 directive: the filter-mode chip for the home topic reads
+    plain "Home" — no bare aa in any user-facing label (all other matching
+    chips stay as their bare marker keys). Deep-link navigation by the aa
+    key itself is unaffected."""
+
+    def flow():
+        home_key = _master_topics()["home_key"]
+        state = _filter_flow("Helps Database", os.path.join("vision3", "09-home-label-plain.png"))
+        # The left browser column also carries the rail controls (download,
+        # back-to-main) — assert on the topic-match chips only, as in SC-9.
+        rail_controls = ("Download the MDF reference (PDF)", "Back to Main Menu")
+        topic_labels = [
+            lbl for lbl in state["labels"] if not any(control in lbl for control in rail_controls)
+        ]
+        assert topic_labels == ["Home"], (
+            f"the home topic's filter chip must read plain Home; got {topic_labels}"
+        )
+        assert "aa" not in topic_labels, (
+            f"the bare home key must not render as a filter chip label; got {topic_labels}"
+        )
+        # The chip still navigates by the aa key internally: clicking it
+        # lands on the home entry (heading assertion unchanged).
+        pw, browser, page = _open_mdf_page()
+        try:
+            left_col = page.locator('[data-testid="stColumn"]').nth(0)
+            flt = page.get_by_label("Filter topics")
+            flt.wait_for(state="visible", timeout=30_000)
+            flt.fill("Helps Database")
+            flt.press("Enter")
+            page.wait_for_timeout(2500)
+            left_col.get_by_role("button", name="Home", exact=True).first.click()
+            page.wait_for_url(f"**marker={home_key}*", timeout=30_000)
+            page.wait_for_timeout(1500)
+            header = page.eval_on_selector_all("h2", "els => els.map(e => e.innerText.trim())")
+            assert any("Helps Database for MDF Marker Set" in h for h in header), (
+                f"the Home chip must land on the home entry; headers: {header}"
+            )
+            # The aa deep link still navigates to the home entry.
+            page.goto(f"{MDF_URL}?marker={home_key}")
+            page.wait_for_selector("text=Helps Database for MDF Marker Set", timeout=60_000)
+            header = page.eval_on_selector_all("h2", "els => els.map(e => e.innerText.trim())")
+            assert any("Helps Database for MDF Marker Set" in h for h in header), (
+                f"?marker={home_key} deep link must land on the home entry; headers: {header}"
+            )
+        finally:
+            browser.close()
+            pw.stop()
+
+    _run_in_worker_thread(flow)
 
 
 def test_sc11_pdf_download_serves_committed_bytes():

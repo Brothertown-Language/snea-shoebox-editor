@@ -396,11 +396,11 @@ def _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, navi
     source-directed chapter); then the terminal Field Marker Reference section
     with its five groups of single-marker entries."""
     # Home/TOC entry — the source's own navigation model starts here. The
-    # button is labeled "Home (aa)" for users (the bare key is meaningless to
-    # them); the source key stays in parentheses for traceability, and the
-    # detail pane's heading remains the source's own \shd text.
+    # button is labeled plain "Home" for users (the bare key is meaningless
+    # to them and never renders user-facing); the detail pane's heading
+    # remains the source's own \shd text.
     if st.button(
-        f"Home ({home_key})",
+        "Home",
         key=f"mdf-topic-{home_key}",
         use_container_width=True,
         type="primary" if selected == home_key else "secondary",
@@ -984,8 +984,12 @@ def mdf_reference():
             if not matches:
                 st.info("No topics match your filter. Clear the filter to see the full chapter list.")
             for match in matches:
+                # The home topic's chip reads plain "Home" (2026-10-06
+                # directive: the bare key is never user-facing); every other
+                # chip keeps its bare marker key — that IS the lookup key.
+                label = "Home" if match["key"] == home_key else match["key"]
                 if st.button(
-                    match["key"],
+                    label,
                     key=f"mdf-topic-{match['key']}",
                     use_container_width=True,
                     type="primary" if selected == match["key"] else "secondary",
