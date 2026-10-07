@@ -1,0 +1,9 @@
+title: 'SPEC: Agent-facing read-only records API — bolted-in GET endpoints with admin-issued
+  key+secret auth'
+status: open
+labels:
+- needs-approval
+- spec
+body: ''
+created_at: '2026-10-07T22:45:25+00:00'
+updated_at: '2026-10-07T22:45:25+00:00'
