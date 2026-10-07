@@ -1,0 +1,64 @@
+name: MDF docs
+
+# Builds the MDF 1.9a reference deliverables on push to main and attaches the
+# correctly-named PDF to the latest release's assets. No Pages deployment.
+# Spec: .issues/1379/spec.md — R-6/R-14 (SC-5).
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-attach:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history for reproducible source date)
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install TeX Live, fonts, and poppler-utils
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            texlive-xetex \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            fonts-noto-core \
+            fonts-sil-gentiumplus \
+            poppler-utils
+
+      - name: Install uv and Python 3.12
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.12"
+
+      - name: Sync project environment
+        run: uv sync --frozen
+
+      - name: Build PDF and HTML site
+        run: scripts/build_mdf_docs.sh
+
+      - name: Verify outputs
+        run: |
+          test -s docs/mdf/build/mdf-lexical-fields-1.9a.pdf
+          test -s docs/mdf/build/site/index.html
+          uv run python scripts/verify_mdf_outputs.py --skip-pdf
+
+      - name: Attach PDF to the latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RELEASE_TAG="$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1 --json tagName --jq '.[0].tagName')"
+          if [ -z "$RELEASE_TAG" ]; then
+            RELEASE_TAG="$(git describe --tags --abbrev=0)"
+            gh release create "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$RELEASE_TAG" \
+              --notes "Automated release for $RELEASE_TAG."
+          fi
+          gh release upload "$RELEASE_TAG" docs/mdf/build/mdf-lexical-fields-1.9a.pdf \
+            --repo "$GITHUB_REPOSITORY" --clobber

@@ -4,6 +4,7 @@
 UI utilities for Streamlit components.
 """
 
+import re
 import time
 
 import streamlit as st
@@ -266,6 +267,7 @@ def render_mdf_block(
     key: str = "",
     diagnostics: list[dict] | None = None,
     highlight_spans: list[tuple[int, int]] | list[list[tuple[int, int]]] | None = None,
+    marker_tooltips: bool = False,
 ) -> None:
     """Render MDF data in a soft-wrapped <pre> block with structural highlighting.
 
@@ -277,6 +279,11 @@ def render_mdf_block(
     the rendered lines (a flat list applied to every line, or a per-line list
     of lists). It is accepted for downstream highlight markup (SC-10); when
     None (default) rendering is unchanged.
+
+    'marker_tooltips' opts in to wrapping each line-initial marker token in a
+    definition-tooltip span (SC-12, R-11b). Default False keeps the rendered
+    markup byte-identical to the SC-9 baseline for call sites that do not
+    request the tooltip behavior.
     """
     import html as _html
 
@@ -285,6 +292,7 @@ def render_mdf_block(
     mdf_text = format_mdf_record(mdf_text)
     lines = mdf_text.split("\n")
     line_spans = _normalize_highlight_spans(highlight_spans, len(lines))
+    marker_defs = marker_definitions() if marker_tooltips else {}
 
     line_html_parts = []
     for i, line in enumerate(lines):
@@ -307,6 +315,13 @@ def render_mdf_block(
             )
         else:
             inner_html = (_search_token_wrap(line, hl) if hl else _html.escape(line)) or "&nbsp;"
+
+        # R-11b (opt-in): the line-initial marker token carries its definition
+        # as a static tooltip (no-op when markup interrupts the token). Only
+        # call sites that pass marker_tooltips=True pay the markup change;
+        # the default shape stays byte-identical to the SC-9 baseline.
+        if marker_tooltips:
+            inner_html = wrap_marker_token_html(inner_html, line, marker_defs)
 
         # Build line with optional tooltip/highlight
         title_attr = f'title="{_html.escape(msg)}"' if msg else ""
@@ -362,6 +377,9 @@ def render_mdf_block(
             background-repeat: no-repeat;
             background-position: 0.1rem 1.5em;
             background-size: 2.2rem 1.5em;
+        }}
+        .mdf-marker {{
+            cursor: help;
         }}
         .mdf-line.status-suggestion {{
             background-color: rgba(255, 165, 0, 0.15);
@@ -559,6 +577,153 @@ def compute_mdf_line_diffs(
                 new_diags[new_idx[fj]] = {"status": "diff-added"}
 
     return existing_diags, new_diags
+
+
+# ── MDF Reference hooks (SC-12, .issues/1379 R-11) ─────────────────────
+
+# Line-initial marker token: ``\`` + the run of non-space characters at a
+# line start, followed by whitespace or end-of-line (the #1379 Parsing
+# Semantics offset-0 rule — indented marker mentions are content).
+_MDF_LINE_MARKER_RE = re.compile(r"^\\(?P<tok>\S+)(?=\s|$)", re.MULTILINE)
+
+_MARKER_DEFINITIONS_CACHE: dict[str, str] | None = None
+
+
+def marker_reference_url(key: str) -> str:
+    """Canonical deep-link URL for a marker's entry on the MDF Reference page.
+
+    The page (url_path ``mdf-reference``) selects its topic from the
+    ``?marker=<topic-key>`` query parameter via ``st.query_params``; an
+    unknown key falls back to the home entry with a visible notice (never an
+    error). The key is percent-encoded so an arbitrary token cannot break the
+    query string.
+    """
+    from urllib.parse import quote
+
+    return f"/mdf-reference?marker={quote(key, safe='')}"
+
+
+def marker_definitions(root=None) -> dict[str, str]:
+    """One-line definition per reference topic key from ``master.json``.
+
+    Read-only and loaded once per process (module-level cache). Each
+    definition is the topic's source heading with the line-initial
+    ``\\marker`` token dropped — the text is preserved byte-for-byte (no
+    normalization; the source's accented content must survive verbatim).
+    Returns an empty dict when the committed reference data is missing so
+    every hook degrades to its no-definition rendering instead of crashing.
+    """
+    global _MARKER_DEFINITIONS_CACHE
+    if root is None and _MARKER_DEFINITIONS_CACHE is not None:
+        return _MARKER_DEFINITIONS_CACHE
+    from src.frontend.pages.mdf_reference import load_master, strip_marker
+
+    master = load_master(root)
+    definitions: dict[str, str] = {}
+    if isinstance(master, dict):
+        for topic in master.get("topics", []):
+            key = topic.get("key")
+            heading = topic.get("heading") or ""
+            if key and heading:
+                definitions[key] = strip_marker(heading).strip()
+    if root is None:
+        _MARKER_DEFINITIONS_CACHE = definitions
+    return definitions
+
+
+def extract_mdf_markers(text: str) -> list[str]:
+    """Line-initial ``\\marker`` tokens of an MDF text, in first-occurrence
+    order, deduplicated.
+
+    Offset-0 line-anchored extraction: a token is ``\\`` + the run of
+    non-space characters at a line start followed by whitespace or
+    end-of-line. Indented marker mentions are content and are never
+    extracted; the input text is never modified.
+    """
+    markers: list[str] = []
+    seen: set[str] = set()
+    for match in _MDF_LINE_MARKER_RE.finditer(text or ""):
+        token = match.group("tok")
+        if token not in seen:
+            seen.add(token)
+            markers.append(token)
+    return markers
+
+
+def wrap_marker_token_html(inner_html: str, line: str, definitions: dict[str, str]) -> str:
+    """Wrap a line-initial marker token of an already-escaped line in a
+    tooltip span carrying the marker's one-line definition (R-11b).
+
+    The wrap applies only when the token survives contiguously at the start
+    of ``inner_html`` — when search-mark or diff markup interrupts the token,
+    the line renders unchanged (a missing tooltip never justifies corrupting
+    highlight markup). ``inner_html`` is escaped upstream; the span only
+    escapes the definition for the title attribute, so output escaping is
+    unchanged and the MDF content itself is never rewritten.
+    """
+    import html as _html
+
+    match = _MDF_LINE_MARKER_RE.match(line)
+    if not match:
+        return inner_html
+    token = match.group("tok")
+    definition = definitions.get(token)
+    if not definition:
+        return inner_html
+    escaped_token = _html.escape("\\" + token)
+    if not inner_html.startswith(escaped_token):
+        return inner_html
+    title = _html.escape(definition)
+    return f'<span class="mdf-marker" title="{title}">{escaped_token}</span>' + inner_html[len(escaped_token) :]
+
+
+def render_marker_reference_link(marker: str, definition: str | None = None) -> None:
+    """Streamlit-native link to a marker's entry on the MDF Reference page.
+
+    ``st.page_link`` navigates in-session to ``/mdf-reference?marker=<key>``
+    — the same deep-link shape the page itself resolves via
+    ``st.query_params``.
+    """
+    from src.services.navigation_service import NavigationService
+
+    st.page_link(
+        NavigationService.PAGE_MDF_REFERENCE,
+        label=f"\\{marker}",
+        query_params={"marker": marker},
+        icon="📖",
+        help=definition or "Opens this marker's entry in the MDF Reference page.",
+    )
+
+
+def render_marker_help_list(markers: list[str], definitions: dict[str, str], empty_message: str) -> None:
+    """List markers with their one-line definitions, each as an MDF Reference
+    deep link; shows ``empty_message`` when no markers were found."""
+    if not markers:
+        st.caption(empty_message)
+        return
+    for marker in markers:
+        definition = definitions.get(marker)
+        link_col, text_col = st.columns([1, 3])
+        with link_col:
+            render_marker_reference_link(marker, definition)
+        with text_col:
+            st.caption(definition if definition else "Not documented in the MDF reference.")
+
+
+def render_marker_help_block(mdf_text: str, context_label: str) -> None:
+    """Per-record marker help: an expander listing the record's line-initial
+    markers with their definitions and deep links to their reference entries.
+
+    Rendered OUTSIDE the ``st.html`` MDF block — Streamlit widgets cannot
+    live inside that iframe, so this native expander is the interactive
+    counterpart to the block's static tooltips (R-11b).
+    """
+    with st.expander(f"📖 Marker help — {context_label}"):
+        render_marker_help_list(
+            extract_mdf_markers(mdf_text),
+            marker_definitions(),
+            "No MDF markers detected in this record.",
+        )
 
 
 # ── Sidebar Utilities ──────────────────────────────────────────────────

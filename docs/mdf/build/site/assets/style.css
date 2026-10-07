@@ -1,0 +1,135 @@
+/* MDF Lexical Fields — static reference site (generated) */
+:root {
+  --cf-green: #067d06;
+  --mono: ui-monospace, "DejaVu Sans Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Noto Serif", Georgia, "Times New Roman", serif;
+  line-height: 1.55;
+  color: #1a1a1a;
+  background: #fff;
+}
+.layout { display: flex; min-height: 100vh; }
+.sidebar {
+  flex: 0 0 300px;
+  width: 300px;
+  padding: 1rem;
+  border-right: 1px solid #ddd;
+  background: #fafaf8;
+  font-size: 0.9rem;
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+.side-title { font-weight: bold; margin: 0 0 0.25rem; }
+.side-title a { text-decoration: none; color: inherit; }
+.side-version { color: #666; font-size: 0.8rem; margin: 0 0 1rem; }
+.search input {
+  width: 100%;
+  padding: 0.4rem;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  font: inherit;
+}
+.search-results {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-top: 0.3rem;
+  background: #fff;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.search-results a {
+  display: block;
+  padding: 0.3rem 0.5rem;
+  text-decoration: none;
+  border-bottom: 1px solid #eee;
+}
+.search-results a:hover { background: #eef6ee; }
+.hit-key { font-family: var(--mono); color: var(--cf-green); margin-right: 0.5em; }
+.hit-heading { color: #333; }
+.search-empty { padding: 0.4rem 0.5rem; color: #666; }
+.nav { list-style: none; margin: 0.75rem 0 0; padding: 0; }
+.nav-chapter { margin: 0.35rem 0; }
+.nav-chapter > a { font-weight: 600; text-decoration: none; color: #1a3a6b; }
+.nav-chapter > ul { list-style: none; margin: 0.15rem 0 0.35rem; padding-left: 1rem; }
+.nav-chapter > ul a {
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: #333;
+}
+.nav a:hover { text-decoration: underline; }
+.nav-home a { text-decoration: none; color: #1a3a6b; font-weight: 600; }
+.nav-group { margin: 0.35rem 0; }
+.nav-group > a { font-weight: 600; text-decoration: none; color: #1a3a6b; }
+.nav-group > ul { list-style: none; margin: 0.15rem 0 0.35rem; padding-left: 1rem; }
+.nav-group > ul a {
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  color: #333;
+}
+.content { margin: 0; padding: 2rem 3rem; max-width: 52rem; }
+.crumbs { font-size: 0.85rem; color: #666; margin-top: 0; }
+.crumbs a { color: #1a3a6b; text-decoration: none; }
+.topic { margin-bottom: 2.5rem; }
+.topic-heading {
+  font-size: 1.35rem;
+  margin: 0;
+  border-bottom: 2px solid #444;
+  padding-bottom: 0.2rem;
+}
+.section-heading { margin: 1.4rem 0 0.4rem; }
+p.cf { color: var(--cf-green); }
+a.cf-link { color: var(--cf-green); }
+a.cf-missing { color: #a00000; border-bottom: 1px dotted #a00000; }
+dl.mdf-cf-list { margin: 0.3rem 0 0.9rem; }
+dl.mdf-cf-list dt { font-weight: bold; }
+dl.mdf-cf-list dd { margin: 0 0 0.25rem 2rem; }
+pre.example {
+  background: #f5f5f2;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.6rem 0.8rem;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+p.note {
+  font-size: 0.85rem;
+  color: #444;
+  border-left: 3px solid #bbb;
+  padding-left: 0.6rem;
+  font-style: italic;
+}
+p.typ { font-size: 0.85rem; color: #555; }
+p.bib { font-size: 0.9rem; padding-left: 2em; text-indent: -2em; }
+ul.nwt-list { list-style: none; padding-left: 1.2rem; }
+.chapter-index ol { padding-left: 1.5rem; }
+.foreword ol { padding-left: 1.5rem; }
+.foreword-link { margin: 0 0 1.5rem; }
+.foreword-link a { color: #1a3a6b; }
+@media (max-width: 900px) {
+  .layout { display: block; }
+  .sidebar {
+    position: static;
+    width: auto;
+    max-height: none;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+  }
+  .content { padding: 1rem; max-width: none; }
+}
+@media print {
+  .sidebar { display: none; }
+  .content { margin: 0; padding: 0; max-width: none; }
+  pre.example { white-space: pre-wrap; border: none; background: none; }
+  p.cf, a.cf-link { color: var(--cf-green); }
+  .crumbs { display: none; }
+  body { font-size: 10.5pt; }
+}

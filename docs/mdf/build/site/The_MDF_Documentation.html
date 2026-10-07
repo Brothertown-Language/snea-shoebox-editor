@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The MDF Documentation — MDF Lexical Fields</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" aria-label="Reference navigation">
+<p class="side-title"><a href="index.html">MDF Lexical Fields</a></p>
+<p class="side-version">draft 1.9a · 2006-05-12</p>
+<div class="search">
+<input id="mdf-search" type="search" placeholder="Search topics…" autocomplete="off" aria-label="Search the reference">
+<div id="mdf-search-results" class="search-results" hidden></div>
+</div>
+<ul class="nav">
+  <li class="nav-foreword"><a href="foreword.html">Foreword</a></li>
+  <li class="nav-home"><a href="index.html">Helps Database for MDF Marker Set</a></li>
+  <li class="nav-chapter"><a href="Introduction.html">Standard Lexical Database Field Markers (for MDF)</a></li>
+  <li class="nav-chapter"><a href="Range_Sets.html">Range Sets</a></li>
+  <li class="nav-chapter"><a href="Order_of_Fields.html">Recommended Field Order</a></li>
+  <li class="nav-chapter"><a href="Character_Style_Codes.html">Character Style Codes</a></li>
+  <li class="nav-chapter"><a href="Summary_of_Fields.html">Summary of Fields (not ordered)</a></li>
+  <li class="nav-chapter"><a href="Punctuation_and_Special_Codes.html">Punctuation</a></li>
+  <li class="nav-chapter"><a href="Sections_in_a_Lexical_Entry.html">Sections in a Lexical Entry</a></li>
+  <li class="nav-chapter"><a href="Printed_Field_Labels.html">Printed Field Labels</a></li>
+  <li class="nav-chapter"><a href="Using_Subentries_or_Lexical_Entries.html">Using Subentries, Lexical Entries, and Minimal Entries</a></li>
+  <li class="nav-chapter"><a href="Unknown_Fields.html">Unknown Fields</a></li>
+  <li class="nav-chapter"><a href="Alternate_Hierarchy.html">A Sense-Oriented Hierarchy</a></li>
+  <li class="nav-chapter"><a href="Formatting_and_Printing.html">Formatting and Printing Your Dictionary and Finderlists</a></li>
+  <li class="nav-chapter"><a href="Free-form_Fields.html">Free-form Fields</a></li>
+  <li class="nav-chapter"><a href="References.html">References</a></li>
+  <li class="nav-chapter"><a href="The_MDF_Documentation.html">The MDF Documentation</a></li>
+  <li class="nav-chapter"><a href="Old_and_Changed_Markers.html">Old and Changed Markers</a>
+    <ul>
+      <li><a href="Old_and_Changed_Markers.html#key-1s-1p-1e-1i-1d-2s-2p-2d-3s-3p-3d-4s-4p-4d">\1s 1p 1e 1i 1d 2s 2p 2d 3s 3p 3d 4s 4p 4d</a></li>
+    </ul>
+  </li>
+  <li class="nav-chapter"><a href="When_MDF_Fails_to_Meet_Your_Requirements.html">When MDF Fails to Meet Your Requirements</a></li>
+  <li class="nav-chapter"><a href="field-marker-reference.html">Field Marker Reference</a>
+    <ul>
+      <li class="nav-group"><a href="field-marker-reference.html#group-record">Record Marker</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-lx">\lx</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-basic">Basic Fields</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-ce">\ce</a></li>
+        <li><a href="field-marker-reference.html#key-cf">\cf</a></li>
+        <li><a href="field-marker-reference.html#key-cn">\cn</a></li>
+        <li><a href="field-marker-reference.html#key-de">\de</a></li>
+        <li><a href="field-marker-reference.html#key-dn">\dn</a></li>
+        <li><a href="field-marker-reference.html#key-dt">\dt</a></li>
+        <li><a href="field-marker-reference.html#key-ge">\ge</a></li>
+        <li><a href="field-marker-reference.html#key-gn">\gn</a></li>
+        <li><a href="field-marker-reference.html#key-nt">\nt</a></li>
+        <li><a href="field-marker-reference.html#key-pn">\pn</a></li>
+        <li><a href="field-marker-reference.html#key-ps">\ps</a></li>
+        <li><a href="field-marker-reference.html#key-re">\re</a></li>
+        <li><a href="field-marker-reference.html#key-rf">\rf</a></li>
+        <li><a href="field-marker-reference.html#key-rn">\rn</a></li>
+        <li><a href="field-marker-reference.html#key-xe">\xe</a></li>
+        <li><a href="field-marker-reference.html#key-xn">\xn</a></li>
+        <li><a href="field-marker-reference.html#key-xv">\xv</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-reserved">Reserved Fields</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-hm">\hm</a></li>
+        <li><a href="field-marker-reference.html#key-lc">\lc</a></li>
+        <li><a href="field-marker-reference.html#key-se">\se</a></li>
+        <li><a href="field-marker-reference.html#key-sn">\sn</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-optional">Optional Fields</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-an">\an</a></li>
+        <li><a href="field-marker-reference.html#key-bb">\bb</a></li>
+        <li><a href="field-marker-reference.html#key-bw">\bw</a></li>
+        <li><a href="field-marker-reference.html#key-cr">\cr</a></li>
+        <li><a href="field-marker-reference.html#key-dr">\dr</a></li>
+        <li><a href="field-marker-reference.html#key-dv">\dv</a></li>
+        <li><a href="field-marker-reference.html#key-ec">\ec</a></li>
+        <li><a href="field-marker-reference.html#key-ee">\ee</a></li>
+        <li><a href="field-marker-reference.html#key-eg">\eg</a></li>
+        <li><a href="field-marker-reference.html#key-en">\en</a></li>
+        <li><a href="field-marker-reference.html#key-er">\er</a></li>
+        <li><a href="field-marker-reference.html#key-es">\es</a></li>
+        <li><a href="field-marker-reference.html#key-et">\et</a></li>
+        <li><a href="field-marker-reference.html#key-ev">\ev</a></li>
+        <li><a href="field-marker-reference.html#key-gr">\gr</a></li>
+        <li><a href="field-marker-reference.html#key-gv">\gv</a></li>
+        <li><a href="field-marker-reference.html#key-is">\is</a></li>
+        <li><a href="field-marker-reference.html#key-le">\le</a></li>
+        <li><a href="field-marker-reference.html#key-lf">\lf</a></li>
+        <li><a href="field-marker-reference.html#key-ln">\ln</a></li>
+        <li><a href="field-marker-reference.html#key-lr">\lr</a></li>
+        <li><a href="field-marker-reference.html#key-lt">\lt</a></li>
+        <li><a href="field-marker-reference.html#key-lv">\lv</a></li>
+        <li><a href="field-marker-reference.html#key-mn">\mn</a></li>
+        <li><a href="field-marker-reference.html#key-mr">\mr</a></li>
+        <li><a href="field-marker-reference.html#key-na">\na</a></li>
+        <li><a href="field-marker-reference.html#key-nd">\nd</a></li>
+        <li><a href="field-marker-reference.html#key-ng">\ng</a></li>
+        <li><a href="field-marker-reference.html#key-np">\np</a></li>
+        <li><a href="field-marker-reference.html#key-nq">\nq</a></li>
+        <li><a href="field-marker-reference.html#key-ns">\ns</a></li>
+        <li><a href="field-marker-reference.html#key-oe">\oe</a></li>
+        <li><a href="field-marker-reference.html#key-on">\on</a></li>
+        <li><a href="field-marker-reference.html#key-or">\or</a></li>
+        <li><a href="field-marker-reference.html#key-ov">\ov</a></li>
+        <li><a href="field-marker-reference.html#key-pc">\pc</a></li>
+        <li><a href="field-marker-reference.html#key-pd">\pd</a></li>
+        <li><a href="field-marker-reference.html#key-pde">\pde</a></li>
+        <li><a href="field-marker-reference.html#key-pdl">\pdl</a></li>
+        <li><a href="field-marker-reference.html#key-pdn">\pdn</a></li>
+        <li><a href="field-marker-reference.html#key-pdr">\pdr</a></li>
+        <li><a href="field-marker-reference.html#key-pdv">\pdv</a></li>
+        <li><a href="field-marker-reference.html#key-ph">\ph</a></li>
+        <li><a href="field-marker-reference.html#key-pl">\pl</a></li>
+        <li><a href="field-marker-reference.html#key-rd">\rd</a></li>
+        <li><a href="field-marker-reference.html#key-rr">\rr</a></li>
+        <li><a href="field-marker-reference.html#key-sc">\sc</a></li>
+        <li><a href="field-marker-reference.html#key-sd">\sd</a></li>
+        <li><a href="field-marker-reference.html#key-sg">\sg</a></li>
+        <li><a href="field-marker-reference.html#key-so">\so</a></li>
+        <li><a href="field-marker-reference.html#key-st">\st</a></li>
+        <li><a href="field-marker-reference.html#key-sy">\sy</a></li>
+        <li><a href="field-marker-reference.html#key-tb">\tb</a></li>
+        <li><a href="field-marker-reference.html#key-th">\th</a></li>
+        <li><a href="field-marker-reference.html#key-ue">\ue</a></li>
+        <li><a href="field-marker-reference.html#key-un">\un</a></li>
+        <li><a href="field-marker-reference.html#key-ur">\ur</a></li>
+        <li><a href="field-marker-reference.html#key-uv">\uv</a></li>
+        <li><a href="field-marker-reference.html#key-va">\va</a></li>
+        <li><a href="field-marker-reference.html#key-ve">\ve</a></li>
+        <li><a href="field-marker-reference.html#key-vn">\vn</a></li>
+        <li><a href="field-marker-reference.html#key-vr">\vr</a></li>
+        <li><a href="field-marker-reference.html#key-we">\we</a></li>
+        <li><a href="field-marker-reference.html#key-wn">\wn</a></li>
+        <li><a href="field-marker-reference.html#key-wr">\wr</a></li>
+        <li><a href="field-marker-reference.html#key-xr">\xr</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-discontinued">Discontinued</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-xg">\xg</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+</nav>
+<main class="content">
+<section class="topic" id="key-The_MDF_Documentation">
+  <h2 class="topic-heading">The MDF Documentation</h2>
+  <p>The original MDF manual,  “Making Dictionaries: A guide to lexicography and the Multi-Dictionary Formatter”, by Coward and Grimes, was published in 1995 and gave instructions for a set of independent CC tables running in the DOS operating system. While still an extremely valuable document, there are parts which are no longer relevant, and some which have been changed.</p>
+  <p>The manual itself is only available as a PDF file, though the revision of chapter two is a Word document. They can be obtained from ...</p>
+  <p>The following are suggestions for reading the manual:</p>
+  <p>Chapter 1 - Skip (specifics of installation of the original DOS version)</p>
+  <p>Chapter 2 - see revised version: MDF-ch2-revised.doc. Has a description of all MDF markers. Ignore references to “older approaches”. The section on gloss vs reversal vs definition is useful.</p>
+  <p>Chapter 3 - Skip. Specifics of running the original DOS version.</p>
+  <p>Chapter 4 Theory, which needs to be considered.</p>
+  <p>Chapter 5 - Read section 5.3 about categories of markers. The rest is mostly about why to use Shoebox instead of Word, and about sorting, which is done differently in Toolbox.</p>
+  <p>Chapter 6 discusses: principles for choosing the headword, example sentences, homonym vs different senses, semantic categories, dialect information. Note, sometimes gives alternative ways to handle the same information. Check with a dictionary consultant if you have doubts.</p>
+  <p>Chapter 7 Various possible lexical function relationships. Usefulness of semantic relationships as an approach for eliciting data.</p>
+  <p>Chapter 8 Lots of good theory on making good entries; good qestions to ask. Special considerations for activities &amp; events, states &amp; processes, loans &amp; etymologies, ritual speech, etc.</p>
+  <p>Chapter 9  Discussion on part of speech.</p>
+  <p>Chapter 10  A dictionary is more than a list of words. Discusses preface material, appendices, etc.</p>
+  <p>Appendices A-E include lists of markers, recommended order of fields, lists of semantic domains and lexical functions, and some commonly used abbreviations.</p>
+  <p>Appendix F-I - Skip. Specific to the original version. Not relevant now.</p>
+</section>
+</main>
+</div>
+<script src="assets/lunr.js"></script>
+<script src="assets/search-index.js"></script>
+<script src="assets/search.js"></script>
+</body>
+</html>

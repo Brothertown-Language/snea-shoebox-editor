@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sections in a Lexical Entry — MDF Lexical Fields</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" aria-label="Reference navigation">
+<p class="side-title"><a href="index.html">MDF Lexical Fields</a></p>
+<p class="side-version">draft 1.9a · 2006-05-12</p>
+<div class="search">
+<input id="mdf-search" type="search" placeholder="Search topics…" autocomplete="off" aria-label="Search the reference">
+<div id="mdf-search-results" class="search-results" hidden></div>
+</div>
+<ul class="nav">
+  <li class="nav-foreword"><a href="foreword.html">Foreword</a></li>
+  <li class="nav-home"><a href="index.html">Helps Database for MDF Marker Set</a></li>
+  <li class="nav-chapter"><a href="Introduction.html">Standard Lexical Database Field Markers (for MDF)</a></li>
+  <li class="nav-chapter"><a href="Range_Sets.html">Range Sets</a></li>
+  <li class="nav-chapter"><a href="Order_of_Fields.html">Recommended Field Order</a></li>
+  <li class="nav-chapter"><a href="Character_Style_Codes.html">Character Style Codes</a></li>
+  <li class="nav-chapter"><a href="Summary_of_Fields.html">Summary of Fields (not ordered)</a></li>
+  <li class="nav-chapter"><a href="Punctuation_and_Special_Codes.html">Punctuation</a></li>
+  <li class="nav-chapter"><a href="Sections_in_a_Lexical_Entry.html">Sections in a Lexical Entry</a></li>
+  <li class="nav-chapter"><a href="Printed_Field_Labels.html">Printed Field Labels</a></li>
+  <li class="nav-chapter"><a href="Using_Subentries_or_Lexical_Entries.html">Using Subentries, Lexical Entries, and Minimal Entries</a></li>
+  <li class="nav-chapter"><a href="Unknown_Fields.html">Unknown Fields</a></li>
+  <li class="nav-chapter"><a href="Alternate_Hierarchy.html">A Sense-Oriented Hierarchy</a></li>
+  <li class="nav-chapter"><a href="Formatting_and_Printing.html">Formatting and Printing Your Dictionary and Finderlists</a></li>
+  <li class="nav-chapter"><a href="Free-form_Fields.html">Free-form Fields</a></li>
+  <li class="nav-chapter"><a href="References.html">References</a></li>
+  <li class="nav-chapter"><a href="The_MDF_Documentation.html">The MDF Documentation</a></li>
+  <li class="nav-chapter"><a href="Old_and_Changed_Markers.html">Old and Changed Markers</a>
+    <ul>
+      <li><a href="Old_and_Changed_Markers.html#key-1s-1p-1e-1i-1d-2s-2p-2d-3s-3p-3d-4s-4p-4d">\1s 1p 1e 1i 1d 2s 2p 2d 3s 3p 3d 4s 4p 4d</a></li>
+    </ul>
+  </li>
+  <li class="nav-chapter"><a href="When_MDF_Fails_to_Meet_Your_Requirements.html">When MDF Fails to Meet Your Requirements</a></li>
+  <li class="nav-chapter"><a href="field-marker-reference.html">Field Marker Reference</a>
+    <ul>
+      <li class="nav-group"><a href="field-marker-reference.html#group-record">Record Marker</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-lx">\lx</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-basic">Basic Fields</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-ce">\ce</a></li>
+        <li><a href="field-marker-reference.html#key-cf">\cf</a></li>
+        <li><a href="field-marker-reference.html#key-cn">\cn</a></li>
+        <li><a href="field-marker-reference.html#key-de">\de</a></li>
+        <li><a href="field-marker-reference.html#key-dn">\dn</a></li>
+        <li><a href="field-marker-reference.html#key-dt">\dt</a></li>
+        <li><a href="field-marker-reference.html#key-ge">\ge</a></li>
+        <li><a href="field-marker-reference.html#key-gn">\gn</a></li>
+        <li><a href="field-marker-reference.html#key-nt">\nt</a></li>
+        <li><a href="field-marker-reference.html#key-pn">\pn</a></li>
+        <li><a href="field-marker-reference.html#key-ps">\ps</a></li>
+        <li><a href="field-marker-reference.html#key-re">\re</a></li>
+        <li><a href="field-marker-reference.html#key-rf">\rf</a></li>
+        <li><a href="field-marker-reference.html#key-rn">\rn</a></li>
+        <li><a href="field-marker-reference.html#key-xe">\xe</a></li>
+        <li><a href="field-marker-reference.html#key-xn">\xn</a></li>
+        <li><a href="field-marker-reference.html#key-xv">\xv</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-reserved">Reserved Fields</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-hm">\hm</a></li>
+        <li><a href="field-marker-reference.html#key-lc">\lc</a></li>
+        <li><a href="field-marker-reference.html#key-se">\se</a></li>
+        <li><a href="field-marker-reference.html#key-sn">\sn</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-optional">Optional Fields</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-an">\an</a></li>
+        <li><a href="field-marker-reference.html#key-bb">\bb</a></li>
+        <li><a href="field-marker-reference.html#key-bw">\bw</a></li>
+        <li><a href="field-marker-reference.html#key-cr">\cr</a></li>
+        <li><a href="field-marker-reference.html#key-dr">\dr</a></li>
+        <li><a href="field-marker-reference.html#key-dv">\dv</a></li>
+        <li><a href="field-marker-reference.html#key-ec">\ec</a></li>
+        <li><a href="field-marker-reference.html#key-ee">\ee</a></li>
+        <li><a href="field-marker-reference.html#key-eg">\eg</a></li>
+        <li><a href="field-marker-reference.html#key-en">\en</a></li>
+        <li><a href="field-marker-reference.html#key-er">\er</a></li>
+        <li><a href="field-marker-reference.html#key-es">\es</a></li>
+        <li><a href="field-marker-reference.html#key-et">\et</a></li>
+        <li><a href="field-marker-reference.html#key-ev">\ev</a></li>
+        <li><a href="field-marker-reference.html#key-gr">\gr</a></li>
+        <li><a href="field-marker-reference.html#key-gv">\gv</a></li>
+        <li><a href="field-marker-reference.html#key-is">\is</a></li>
+        <li><a href="field-marker-reference.html#key-le">\le</a></li>
+        <li><a href="field-marker-reference.html#key-lf">\lf</a></li>
+        <li><a href="field-marker-reference.html#key-ln">\ln</a></li>
+        <li><a href="field-marker-reference.html#key-lr">\lr</a></li>
+        <li><a href="field-marker-reference.html#key-lt">\lt</a></li>
+        <li><a href="field-marker-reference.html#key-lv">\lv</a></li>
+        <li><a href="field-marker-reference.html#key-mn">\mn</a></li>
+        <li><a href="field-marker-reference.html#key-mr">\mr</a></li>
+        <li><a href="field-marker-reference.html#key-na">\na</a></li>
+        <li><a href="field-marker-reference.html#key-nd">\nd</a></li>
+        <li><a href="field-marker-reference.html#key-ng">\ng</a></li>
+        <li><a href="field-marker-reference.html#key-np">\np</a></li>
+        <li><a href="field-marker-reference.html#key-nq">\nq</a></li>
+        <li><a href="field-marker-reference.html#key-ns">\ns</a></li>
+        <li><a href="field-marker-reference.html#key-oe">\oe</a></li>
+        <li><a href="field-marker-reference.html#key-on">\on</a></li>
+        <li><a href="field-marker-reference.html#key-or">\or</a></li>
+        <li><a href="field-marker-reference.html#key-ov">\ov</a></li>
+        <li><a href="field-marker-reference.html#key-pc">\pc</a></li>
+        <li><a href="field-marker-reference.html#key-pd">\pd</a></li>
+        <li><a href="field-marker-reference.html#key-pde">\pde</a></li>
+        <li><a href="field-marker-reference.html#key-pdl">\pdl</a></li>
+        <li><a href="field-marker-reference.html#key-pdn">\pdn</a></li>
+        <li><a href="field-marker-reference.html#key-pdr">\pdr</a></li>
+        <li><a href="field-marker-reference.html#key-pdv">\pdv</a></li>
+        <li><a href="field-marker-reference.html#key-ph">\ph</a></li>
+        <li><a href="field-marker-reference.html#key-pl">\pl</a></li>
+        <li><a href="field-marker-reference.html#key-rd">\rd</a></li>
+        <li><a href="field-marker-reference.html#key-rr">\rr</a></li>
+        <li><a href="field-marker-reference.html#key-sc">\sc</a></li>
+        <li><a href="field-marker-reference.html#key-sd">\sd</a></li>
+        <li><a href="field-marker-reference.html#key-sg">\sg</a></li>
+        <li><a href="field-marker-reference.html#key-so">\so</a></li>
+        <li><a href="field-marker-reference.html#key-st">\st</a></li>
+        <li><a href="field-marker-reference.html#key-sy">\sy</a></li>
+        <li><a href="field-marker-reference.html#key-tb">\tb</a></li>
+        <li><a href="field-marker-reference.html#key-th">\th</a></li>
+        <li><a href="field-marker-reference.html#key-ue">\ue</a></li>
+        <li><a href="field-marker-reference.html#key-un">\un</a></li>
+        <li><a href="field-marker-reference.html#key-ur">\ur</a></li>
+        <li><a href="field-marker-reference.html#key-uv">\uv</a></li>
+        <li><a href="field-marker-reference.html#key-va">\va</a></li>
+        <li><a href="field-marker-reference.html#key-ve">\ve</a></li>
+        <li><a href="field-marker-reference.html#key-vn">\vn</a></li>
+        <li><a href="field-marker-reference.html#key-vr">\vr</a></li>
+        <li><a href="field-marker-reference.html#key-we">\we</a></li>
+        <li><a href="field-marker-reference.html#key-wn">\wn</a></li>
+        <li><a href="field-marker-reference.html#key-wr">\wr</a></li>
+        <li><a href="field-marker-reference.html#key-xr">\xr</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-discontinued">Discontinued</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-xg">\xg</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+</nav>
+<main class="content">
+<section class="topic" id="key-Sections_in_a_Lexical_Entry">
+  <h2 class="topic-heading">Sections in a Lexical Entry</h2>
+  <h3 class="section-heading">(Understanding the hierarchical structure of an entry)</h3>
+  <p>MDF has two built-in hierarchical structures that should be flexible enough to meet most needs. (See “Alternate_Hierarchy” for a discussion of MDF’s other hierarchy.) The field codes that mark the boundaries to lexical subsections are \lx, \ps (\pn), \sn, \se. Each of these sections or subsections can take a full set of field markers (except \lc and  \hm, which should only occur at the top of the record).</p>
+  <h3 class="section-heading">Multiple parts of speech</h3>
+  <p>Multiple parts of speech (\ps) are used to organize sections within an entry. A lexeme that fills more than one syntactic slot (as a noun, verb, etc.) should not be handled as homonyms. This is because the different syntactic functions (e.g. ‘shower’ (n) ‘shower’ (v) are still clearly related to each other in meaning.</p>
+  <pre class="example mdf-example"><code> \lx shower</code></pre>
+  <pre class="example mdf-example"><code> \ps n</code></pre>
+  <pre class="example mdf-example"><code> \de a light rain</code></pre>
+  <pre class="example mdf-example"><code> \ps vt</code></pre>
+  <pre class="example mdf-example"><code> \de to bestow special things on someone
+</code></pre>
+  <p>MDF’s standard printing function starts new \ps fields within an entry on a new line, preceded by an em dash to show that the lexeme form has not changed but its function has.</p>
+  <pre class="example mdf-example"><code>shower   n. a light rain.</code></pre>
+  <pre class="example mdf-example"><code>       --  vt. to bestow special things on someone.
+</code></pre>
+  <h3 class="section-heading">Multiple Senses</h3>
+  <p>MDF allows sense numbers (\sn) to be used as another level of hierarchy within an entry. In the standard hierarchy, the sense number is lower than part of speech, and so multiple senses should be grouped under the relevant parts of speech to denote related but distinct meanings within a particular part of speech. (See “Alternate_Hierarchy” for a discussion of MDF’s other hierarchy.) Multiple senses in each separate part of speech should start with ‘1’ (as seen in the following, more complete entry for ‘shower’):</p>
+  <pre class="example mdf-example"><code> \lx shower</code></pre>
+  <pre class="example mdf-example"><code> \ps n</code></pre>
+  <pre class="example mdf-example"><code> \sn 1</code></pre>
+  <pre class="example mdf-example"><code> \de a light rain</code></pre>
+  <pre class="example mdf-example"><code> \sn 2</code></pre>
+  <pre class="example mdf-example"><code> \de a man-made device for dispensing water in droplets
+     on a person; used for bathing</code></pre>
+  <pre class="example mdf-example"><code> \sn 3</code></pre>
+  <pre class="example mdf-example"><code> \de an event in which gifts are given to someone; 
+     as in baby showers and wedding showers
+</code></pre>
+  <pre class="example mdf-example"><code> \ps v</code></pre>
+  <pre class="example mdf-example"><code> \sn 1</code></pre>
+  <pre class="example mdf-example"><code> \de raining lightly</code></pre>
+  <pre class="example mdf-example"><code> \sn 2</code></pre>
+  <pre class="example mdf-example"><code> \de to bathe using a device which causes water to
+     dispense in droplets on a persons head; usually
+     done standing up</code></pre>
+  <pre class="example mdf-example"><code> \sn 3</code></pre>
+  <pre class="example mdf-example"><code> \de to bestow special things on someone
+</code></pre>
+  <p>This complex record would print as:</p>
+  <pre class="example mdf-example"><code>shower   n. 1)  a light  rain. 2)  a man-made  device for
+         dispensing water  in droplets  on a person; used
+         for bathing.  3) an  event in  which  gifts  are
+         given to someone; as in baby showers and wedding
+         showers.
+     --  v. 1)  raining lightly.  2) to  bathe using  a
+         device  which   causes  water   to  dispense  in
+         droplets  on   a  persons   head;  usually  done
+         standing up.  3) to  bestow  special  things  on
+         someone.
+</code></pre>
+  <p>Some lexicographers want to make fine distinctions between subsenses. These can be handled in MDF in the  \sn field with a, b, c, etc. subcategorization.</p>
+  <pre class="example mdf-example"><code> \lx lexeme</code></pre>
+  <pre class="example mdf-example"><code> \ps n</code></pre>
+  <pre class="example mdf-example"><code> \sn 1a</code></pre>
+  <pre class="example mdf-example"><code> \ge gloss</code></pre>
+  <pre class="example mdf-example"><code> \de definition</code></pre>
+  <pre class="example mdf-example"><code> \sn 1b</code></pre>
+  <pre class="example mdf-example"><code> \ge gloss</code></pre>
+  <pre class="example mdf-example"><code> \de definition</code></pre>
+  <pre class="example mdf-example"><code> \sn 1c</code></pre>
+  <pre class="example mdf-example"><code> \ge gloss</code></pre>
+  <pre class="example mdf-example"><code> \de definition
+</code></pre>
+  <pre class="example mdf-example"><code> \sn 2</code></pre>
+  <pre class="example mdf-example"><code> \ge gloss</code></pre>
+  <pre class="example mdf-example"><code> \de definition
+</code></pre>
+  <pre class="example mdf-example"><code> \sn 3</code></pre>
+  <pre class="example mdf-example"><code> \ge gloss</code></pre>
+  <pre class="example mdf-example"><code> \de definition
+</code></pre>
+  <p>Which would have the general printed structure of:</p>
+  <pre class="example mdf-example"><code>lexeme   n. 1a) definition. 1b) definition. 1c) definition.
+               2) definition. 3) definition.
+</code></pre>
+  <h3 class="section-heading">Using Subentries</h3>
+  <p>Subentries (\se) provide a further level of hierarchy. These are commonly built around polymorphemic forms in a root-based dictionary (see the MDF field manual (Coward and Grimes, 1995) for an extended discussion).</p>
+  <pre class="example mdf-example"><code> \lx bren</code></pre>
+  <pre class="example mdf-example"><code> \ps vi</code></pre>
+  <pre class="example mdf-example"><code> \ge play</code></pre>
+  <pre class="example mdf-example"><code> \ee Implies lack of focus or purpose.
+</code></pre>
+  <pre class="example mdf-example"><code> \se brenak</code></pre>
+  <pre class="example mdf-example"><code> \ps vt</code></pre>
+  <pre class="example mdf-example"><code> \ge play_s.t.</code></pre>
+  <pre class="example mdf-example"><code> \de play a game, or play with s.t.
+</code></pre>
+  <pre class="example mdf-example"><code> \se inabren</code></pre>
+  <pre class="example mdf-example"><code> \ps n</code></pre>
+  <pre class="example mdf-example"><code> \ge recreation ; entertainment
+</code></pre>
+  <pre class="example mdf-example"><code> \se rabrenak</code></pre>
+  <pre class="example mdf-example"><code> \ps n</code></pre>
+  <pre class="example mdf-example"><code> \ge toy</code></pre>
+  <pre class="example mdf-example"><code> \dt 17/Jun/92
+</code></pre>
+  <p>This would print like the following:</p>
+  <pre class="example mdf-example"><code>bren     vi. play. Implies lack of focus or purpose.
+     brenak    vt. play a game, or play with s.t.
+     inabren    n. recreation, entertainment.
+     rabrenak n. toy.
+</code></pre>
+  <p>A more complete example using subentries:</p>
+  <pre class="example mdf-example"><code> \lx bersih</code></pre>
+  <pre class="example mdf-example"><code> \ps adj</code></pre>
+  <pre class="example mdf-example"><code> \sn 1</code></pre>
+  <pre class="example mdf-example"><code> \ge clean</code></pre>
+  <pre class="example mdf-example"><code> \de be clean, not dirty or messy</code></pre>
+  <pre class="example mdf-example"><code> \sn 2</code></pre>
+  <pre class="example mdf-example"><code> \ge innocent</code></pre>
+  <pre class="example mdf-example"><code> \de be innocent, without fault
+</code></pre>
+  <pre class="example mdf-example"><code> \se kebersihan</code></pre>
+  <pre class="example mdf-example"><code> \ps n</code></pre>
+  <pre class="example mdf-example"><code> \ge cleanliness
+</code></pre>
+  <pre class="example mdf-example"><code> \se membersihkan</code></pre>
+  <pre class="example mdf-example"><code> \ps vt</code></pre>
+  <pre class="example mdf-example"><code> \sn 1</code></pre>
+  <pre class="example mdf-example"><code> \ge clean_up</code></pre>
+  <pre class="example mdf-example"><code> \de clean s.t. up</code></pre>
+  <pre class="example mdf-example"><code> \sn 2</code></pre>
+  <pre class="example mdf-example"><code> \ge purify</code></pre>
+  <pre class="example mdf-example"><code> \de purify, repent or renounce immoral actions
+</code></pre>
+  <pre class="example mdf-example"><code> \se pembersih</code></pre>
+  <pre class="example mdf-example"><code> \ps n</code></pre>
+  <pre class="example mdf-example"><code> \sn 1</code></pre>
+  <pre class="example mdf-example"><code> \ge cleanser</code></pre>
+  <pre class="example mdf-example"><code> \sn 2</code></pre>
+  <pre class="example mdf-example"><code> \ge janitor</code></pre>
+  <pre class="example mdf-example"><code> \dt 17/Jun/92
+</code></pre>
+  <p>Which would print as:</p>
+  <pre class="example mdf-example"><code>bersih adj. 1) be clean, not dirty or messy. 2) be innocent, 
+           without fault.
+    kebersihan n. cleanliness.
+    membersihkan vt. 1) clean s.t. up. 2) purify, repent or
+           renounce immoral actions.
+    pembersih n. 1) cleanser. 2) janitor.
+</code></pre>
+  <p>For information on  MDF’s alternate hierarchy, see:</p>
+  <p class="cf"><a class="cf-link" href="Alternate_Hierarchy.html#key-Alternate_Hierarchy">Alternate_Hierarchy</a></p>
+  <p>To continue with the general discussion, jump to:</p>
+  <p class="cf"><a class="cf-link" href="Using_Subentries_or_Lexical_Entries.html#key-Using_Subentries_or_Lexical_Entries">Using_Subentries_or_Lexical_Entries</a></p>
+</section>
+</main>
+</div>
+<script src="assets/lunr.js"></script>
+<script src="assets/search-index.js"></script>
+<script src="assets/search.js"></script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recommended Field Order — MDF Lexical Fields</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" aria-label="Reference navigation">
+<p class="side-title"><a href="index.html">MDF Lexical Fields</a></p>
+<p class="side-version">draft 1.9a · 2006-05-12</p>
+<div class="search">
+<input id="mdf-search" type="search" placeholder="Search topics…" autocomplete="off" aria-label="Search the reference">
+<div id="mdf-search-results" class="search-results" hidden></div>
+</div>
+<ul class="nav">
+  <li class="nav-foreword"><a href="foreword.html">Foreword</a></li>
+  <li class="nav-home"><a href="index.html">Helps Database for MDF Marker Set</a></li>
+  <li class="nav-chapter"><a href="Introduction.html">Standard Lexical Database Field Markers (for MDF)</a></li>
+  <li class="nav-chapter"><a href="Range_Sets.html">Range Sets</a></li>
+  <li class="nav-chapter"><a href="Order_of_Fields.html">Recommended Field Order</a></li>
+  <li class="nav-chapter"><a href="Character_Style_Codes.html">Character Style Codes</a></li>
+  <li class="nav-chapter"><a href="Summary_of_Fields.html">Summary of Fields (not ordered)</a></li>
+  <li class="nav-chapter"><a href="Punctuation_and_Special_Codes.html">Punctuation</a></li>
+  <li class="nav-chapter"><a href="Sections_in_a_Lexical_Entry.html">Sections in a Lexical Entry</a></li>
+  <li class="nav-chapter"><a href="Printed_Field_Labels.html">Printed Field Labels</a></li>
+  <li class="nav-chapter"><a href="Using_Subentries_or_Lexical_Entries.html">Using Subentries, Lexical Entries, and Minimal Entries</a></li>
+  <li class="nav-chapter"><a href="Unknown_Fields.html">Unknown Fields</a></li>
+  <li class="nav-chapter"><a href="Alternate_Hierarchy.html">A Sense-Oriented Hierarchy</a></li>
+  <li class="nav-chapter"><a href="Formatting_and_Printing.html">Formatting and Printing Your Dictionary and Finderlists</a></li>
+  <li class="nav-chapter"><a href="Free-form_Fields.html">Free-form Fields</a></li>
+  <li class="nav-chapter"><a href="References.html">References</a></li>
+  <li class="nav-chapter"><a href="The_MDF_Documentation.html">The MDF Documentation</a></li>
+  <li class="nav-chapter"><a href="Old_and_Changed_Markers.html">Old and Changed Markers</a>
+    <ul>
+      <li><a href="Old_and_Changed_Markers.html#key-1s-1p-1e-1i-1d-2s-2p-2d-3s-3p-3d-4s-4p-4d">\1s 1p 1e 1i 1d 2s 2p 2d 3s 3p 3d 4s 4p 4d</a></li>
+    </ul>
+  </li>
+  <li class="nav-chapter"><a href="When_MDF_Fails_to_Meet_Your_Requirements.html">When MDF Fails to Meet Your Requirements</a></li>
+  <li class="nav-chapter"><a href="field-marker-reference.html">Field Marker Reference</a>
+    <ul>
+      <li class="nav-group"><a href="field-marker-reference.html#group-record">Record Marker</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-lx">\lx</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-basic">Basic Fields</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-ce">\ce</a></li>
+        <li><a href="field-marker-reference.html#key-cf">\cf</a></li>
+        <li><a href="field-marker-reference.html#key-cn">\cn</a></li>
+        <li><a href="field-marker-reference.html#key-de">\de</a></li>
+        <li><a href="field-marker-reference.html#key-dn">\dn</a></li>
+        <li><a href="field-marker-reference.html#key-dt">\dt</a></li>
+        <li><a href="field-marker-reference.html#key-ge">\ge</a></li>
+        <li><a href="field-marker-reference.html#key-gn">\gn</a></li>
+        <li><a href="field-marker-reference.html#key-nt">\nt</a></li>
+        <li><a href="field-marker-reference.html#key-pn">\pn</a></li>
+        <li><a href="field-marker-reference.html#key-ps">\ps</a></li>
+        <li><a href="field-marker-reference.html#key-re">\re</a></li>
+        <li><a href="field-marker-reference.html#key-rf">\rf</a></li>
+        <li><a href="field-marker-reference.html#key-rn">\rn</a></li>
+        <li><a href="field-marker-reference.html#key-xe">\xe</a></li>
+        <li><a href="field-marker-reference.html#key-xn">\xn</a></li>
+        <li><a href="field-marker-reference.html#key-xv">\xv</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-reserved">Reserved Fields</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-hm">\hm</a></li>
+        <li><a href="field-marker-reference.html#key-lc">\lc</a></li>
+        <li><a href="field-marker-reference.html#key-se">\se</a></li>
+        <li><a href="field-marker-reference.html#key-sn">\sn</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-optional">Optional Fields</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-an">\an</a></li>
+        <li><a href="field-marker-reference.html#key-bb">\bb</a></li>
+        <li><a href="field-marker-reference.html#key-bw">\bw</a></li>
+        <li><a href="field-marker-reference.html#key-cr">\cr</a></li>
+        <li><a href="field-marker-reference.html#key-dr">\dr</a></li>
+        <li><a href="field-marker-reference.html#key-dv">\dv</a></li>
+        <li><a href="field-marker-reference.html#key-ec">\ec</a></li>
+        <li><a href="field-marker-reference.html#key-ee">\ee</a></li>
+        <li><a href="field-marker-reference.html#key-eg">\eg</a></li>
+        <li><a href="field-marker-reference.html#key-en">\en</a></li>
+        <li><a href="field-marker-reference.html#key-er">\er</a></li>
+        <li><a href="field-marker-reference.html#key-es">\es</a></li>
+        <li><a href="field-marker-reference.html#key-et">\et</a></li>
+        <li><a href="field-marker-reference.html#key-ev">\ev</a></li>
+        <li><a href="field-marker-reference.html#key-gr">\gr</a></li>
+        <li><a href="field-marker-reference.html#key-gv">\gv</a></li>
+        <li><a href="field-marker-reference.html#key-is">\is</a></li>
+        <li><a href="field-marker-reference.html#key-le">\le</a></li>
+        <li><a href="field-marker-reference.html#key-lf">\lf</a></li>
+        <li><a href="field-marker-reference.html#key-ln">\ln</a></li>
+        <li><a href="field-marker-reference.html#key-lr">\lr</a></li>
+        <li><a href="field-marker-reference.html#key-lt">\lt</a></li>
+        <li><a href="field-marker-reference.html#key-lv">\lv</a></li>
+        <li><a href="field-marker-reference.html#key-mn">\mn</a></li>
+        <li><a href="field-marker-reference.html#key-mr">\mr</a></li>
+        <li><a href="field-marker-reference.html#key-na">\na</a></li>
+        <li><a href="field-marker-reference.html#key-nd">\nd</a></li>
+        <li><a href="field-marker-reference.html#key-ng">\ng</a></li>
+        <li><a href="field-marker-reference.html#key-np">\np</a></li>
+        <li><a href="field-marker-reference.html#key-nq">\nq</a></li>
+        <li><a href="field-marker-reference.html#key-ns">\ns</a></li>
+        <li><a href="field-marker-reference.html#key-oe">\oe</a></li>
+        <li><a href="field-marker-reference.html#key-on">\on</a></li>
+        <li><a href="field-marker-reference.html#key-or">\or</a></li>
+        <li><a href="field-marker-reference.html#key-ov">\ov</a></li>
+        <li><a href="field-marker-reference.html#key-pc">\pc</a></li>
+        <li><a href="field-marker-reference.html#key-pd">\pd</a></li>
+        <li><a href="field-marker-reference.html#key-pde">\pde</a></li>
+        <li><a href="field-marker-reference.html#key-pdl">\pdl</a></li>
+        <li><a href="field-marker-reference.html#key-pdn">\pdn</a></li>
+        <li><a href="field-marker-reference.html#key-pdr">\pdr</a></li>
+        <li><a href="field-marker-reference.html#key-pdv">\pdv</a></li>
+        <li><a href="field-marker-reference.html#key-ph">\ph</a></li>
+        <li><a href="field-marker-reference.html#key-pl">\pl</a></li>
+        <li><a href="field-marker-reference.html#key-rd">\rd</a></li>
+        <li><a href="field-marker-reference.html#key-rr">\rr</a></li>
+        <li><a href="field-marker-reference.html#key-sc">\sc</a></li>
+        <li><a href="field-marker-reference.html#key-sd">\sd</a></li>
+        <li><a href="field-marker-reference.html#key-sg">\sg</a></li>
+        <li><a href="field-marker-reference.html#key-so">\so</a></li>
+        <li><a href="field-marker-reference.html#key-st">\st</a></li>
+        <li><a href="field-marker-reference.html#key-sy">\sy</a></li>
+        <li><a href="field-marker-reference.html#key-tb">\tb</a></li>
+        <li><a href="field-marker-reference.html#key-th">\th</a></li>
+        <li><a href="field-marker-reference.html#key-ue">\ue</a></li>
+        <li><a href="field-marker-reference.html#key-un">\un</a></li>
+        <li><a href="field-marker-reference.html#key-ur">\ur</a></li>
+        <li><a href="field-marker-reference.html#key-uv">\uv</a></li>
+        <li><a href="field-marker-reference.html#key-va">\va</a></li>
+        <li><a href="field-marker-reference.html#key-ve">\ve</a></li>
+        <li><a href="field-marker-reference.html#key-vn">\vn</a></li>
+        <li><a href="field-marker-reference.html#key-vr">\vr</a></li>
+        <li><a href="field-marker-reference.html#key-we">\we</a></li>
+        <li><a href="field-marker-reference.html#key-wn">\wn</a></li>
+        <li><a href="field-marker-reference.html#key-wr">\wr</a></li>
+        <li><a href="field-marker-reference.html#key-xr">\xr</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-discontinued">Discontinued</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-xg">\xg</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+</nav>
+<main class="content">
+<section class="topic" id="key-Order_of_Fields">
+  <h2 class="topic-heading">Recommended Field Order</h2>
+  <p>The following are all of the fields in their recommended order for a lexical entry. The order shown here assumes you are using the standard hierarchy (the alternate hierarchy only varies in the hierarchical order of the \sn, \se, and \ps fields). For more information on the alternate hierarchy, see:</p>
+  <p class="cf"><a class="cf-link" href="Alternate_Hierarchy.html#key-Alternate_Hierarchy">Alternate_Hierarchy</a></p>
+  <p>The field order shown here is nearly identical to the order in which MDF outputs the fields when formatting your lexicon. This needs to be stressed that when MDF formats your lexicon, the fields are rearranged to (nearly) the following order. This is to provide a consistent field sequence to each and every lexical entry (a much desired goal of any published work).</p>
+  <p>The main differences between the recommended order given here and the order in which MDF outputs the fields are as follows:</p>
+  <p>1)  the \lx and \lc fields -- in the database, the \lx field must come first,</p>
+  <p>but for printing, the citation (\lc) field is the first field out (if it exists).</p>
+  <p>2)  the gloss and definition fields -- the gloss field prints only if there</p>
+  <p>is no definition field.</p>
+  <p>3)  the reverse fields and the word gloss fields -- these generally do not</p>
+  <p>print; but if you request them, they print grouped together after the</p>
+  <p>definitions.</p>
+  <p>It is recommended that you use the database template feature of Toolbox to help you maintain a consistent ordering of your fields.</p>
+  <p class="note">Deviating from  this order (especially for the \se, \ps,  \pn, and \sn fields) could foul MDF formatting, since these fields also serve to mark section boundaries. For more on this, see:</p>
+  <p class="cf"><a class="cf-link" href="Sections_in_a_Lexical_Entry.html#key-Sections_in_a_Lexical_Entry">Sections_in_a_Lexical_Entry</a></p>
+  <p>In the following list, the following codes are used:</p>
+  <pre class="example mdf-example"><code>      'B' marks 'Basic' fields (17 total)</code></pre>
+  <pre class="example mdf-example"><code>      'R' marks 'Reserved' fields (4 total)</code></pre>
+  <pre class="example mdf-example"><code>      (all other fields are 'Optional')
+</code></pre>
+  <pre class="example mdf-example"><code>---------------------------------------------------------</code></pre>
+  <pre class="example mdf-example"><code>  \lx  (lexical entry)         ONLY ONE PER LEXICAL ENTRY</code></pre>
+  <pre class="example mdf-example"><code>R \hm  (homonym number)</code></pre>
+  <pre class="example mdf-example"><code>R \lc  (lexical citation)</code></pre>
+  <pre class="example mdf-example"><code>  \ph  (phonetic/phonemic form)
+</code></pre>
+  <pre class="example mdf-example"><code>R \se  (subentry)</code></pre>
+  <pre class="example mdf-example"><code>B \ps  (part of speech)</code></pre>
+  <pre class="example mdf-example"><code>B \pn  (part of speech-national)</code></pre>
+  <pre class="example mdf-example"><code>R \sn  (sense number)
+</code></pre>
+  <pre class="example mdf-example"><code>  \gv  (gloss-vernacular)</code></pre>
+  <pre class="example mdf-example"><code>  \dv  (definition-vernacular)</code></pre>
+  <pre class="example mdf-example"><code>B \ge  (gloss-English)</code></pre>
+  <pre class="example mdf-example"><code>B \re  (reversal form-English)  [default set not to print]</code></pre>
+  <pre class="example mdf-example"><code>  \we  (word gloss-English)     [default set not to print]</code></pre>
+  <pre class="example mdf-example"><code>B \de  (definition-English)</code></pre>
+  <pre class="example mdf-example"><code>B \gn  (gloss-national)</code></pre>
+  <pre class="example mdf-example"><code>B \rn  (reversal form-national) [default set not to print]</code></pre>
+  <pre class="example mdf-example"><code>  \wn  (word gloss-national)    [default set not to print]</code></pre>
+  <pre class="example mdf-example"><code>B \dn  (definition-national)</code></pre>
+  <pre class="example mdf-example"><code>  \gr  (gloss-regional)</code></pre>
+  <pre class="example mdf-example"><code>  \rr  (reversal form-regional) [default set not to print]</code></pre>
+  <pre class="example mdf-example"><code>  \wr  (word gloss-regional)    [default set not to print]</code></pre>
+  <pre class="example mdf-example"><code>  \dr  (definition-regional) 
+</code></pre>
+  <pre class="example mdf-example"><code>  \lt  (literal meaning)</code></pre>
+  <pre class="example mdf-example"><code>  \sc  (scientific name) 
+</code></pre>
+  <pre class="example mdf-example"><code>B \rf  (reference to notebooks, etc.)</code></pre>
+  <pre class="example mdf-example"><code>B \xv  (example-vernacular)</code></pre>
+  <pre class="example mdf-example"><code>B \xe  (example-English)</code></pre>
+  <pre class="example mdf-example"><code>B \xn  (example-national)</code></pre>
+  <pre class="example mdf-example"><code>  \xr  (example-regional)
+</code></pre>
+  <pre class="example mdf-example"><code>  \uv  (usage-vernacular)</code></pre>
+  <pre class="example mdf-example"><code>  \ue  (usage-English)</code></pre>
+  <pre class="example mdf-example"><code>  \un  (usage-national)</code></pre>
+  <pre class="example mdf-example"><code>  \ur  (usage-regional)</code></pre>
+  <pre class="example mdf-example"><code>  \ev  (encyclopedic info.-vernacular)</code></pre>
+  <pre class="example mdf-example"><code>  \ee  (encyclopedic info.-English)</code></pre>
+  <pre class="example mdf-example"><code>  \en  (encyclopedic info.-national)</code></pre>
+  <pre class="example mdf-example"><code>  \er  (encyclopedic info.-regional)</code></pre>
+  <pre class="example mdf-example"><code>  \ov  (only [restrictions]-vernacular)</code></pre>
+  <pre class="example mdf-example"><code>  \oe  (only [restrictions]-English)</code></pre>
+  <pre class="example mdf-example"><code>  \on  (only [restrictions]-national)</code></pre>
+  <pre class="example mdf-example"><code>  \or  (only [restrictions]-regional)
+</code></pre>
+  <pre class="example mdf-example"><code>  \lf  (lexical function label)</code></pre>
+  <pre class="example mdf-example"><code>  \lv  (vernacular lexeme referenced by the lexical function)</code></pre>
+  <pre class="example mdf-example"><code>  \le  (lexical function-English gloss of referenced lexeme)</code></pre>
+  <pre class="example mdf-example"><code>  \ln  (lexical function-national gloss of referenced lexeme)</code></pre>
+  <pre class="example mdf-example"><code>  \lr  (lexical function-regional gloss of referenced lexeme)</code></pre>
+  <pre class="example mdf-example"><code>  \sy  (synonyms)</code></pre>
+  <pre class="example mdf-example"><code>  \an  (antonyms)</code></pre>
+  <pre class="example mdf-example"><code>  \mr  (morphemic representation)</code></pre>
+  <pre class="example mdf-example"><code>B \cf  (confer/cross-reference)</code></pre>
+  <pre class="example mdf-example"><code>B \ce  (cross-reference-English gloss)</code></pre>
+  <pre class="example mdf-example"><code>B \cn  (cross-reference-national gloss)</code></pre>
+  <pre class="example mdf-example"><code>  \cr  (cross-reference-regional gloss)</code></pre>
+  <pre class="example mdf-example"><code>  \mn  (main entry form)</code></pre>
+  <pre class="example mdf-example"><code>  \va  (variant forms, e.g. dialect, etc.)</code></pre>
+  <pre class="example mdf-example"><code>  \ve  (variant forms comment-English)</code></pre>
+  <pre class="example mdf-example"><code>  \vn  (variant forms comment-national)</code></pre>
+  <pre class="example mdf-example"><code>  \vr  (variant forms comment-regional)</code></pre>
+  <pre class="example mdf-example"><code>  \bw  (borrowed word)</code></pre>
+  <pre class="example mdf-example"><code>  \et  (etymology)</code></pre>
+  <pre class="example mdf-example"><code>  \eg  (etymology-gloss)</code></pre>
+  <pre class="example mdf-example"><code>  \es  (etymology-source)   [default set not to print]</code></pre>
+  <pre class="example mdf-example"><code>  \ec  (etymology-comment)  [default set not to print]
+</code></pre>
+  <pre class="example mdf-example"><code>  \pd  (paradigm set)</code></pre>
+  <pre class="example mdf-example"><code>  \pdl (paradigm label)</code></pre>
+  <pre class="example mdf-example"><code>  \pdv (paradigm vernacular form)</code></pre>
+  <pre class="example mdf-example"><code>  \pde (paradigm form-English gloss)</code></pre>
+  <pre class="example mdf-example"><code>  \pdn (paradigm form-national gloss)</code></pre>
+  <pre class="example mdf-example"><code>  \pdr (paradigm form-regional gloss)</code></pre>
+  <pre class="example mdf-example"><code>  \sg  (singular noun form)</code></pre>
+  <pre class="example mdf-example"><code>  \pl  (plural noun form)</code></pre>
+  <pre class="example mdf-example"><code>  \rd  (reduplication forms)</code></pre>
+  <pre class="example mdf-example"><code>  \1s  (1st person singular verb form)</code></pre>
+  <pre class="example mdf-example"><code>  \2s  (2nd person singular verb form)</code></pre>
+  <pre class="example mdf-example"><code>  \3s  (3rd person singular verb form)</code></pre>
+  <pre class="example mdf-example"><code>  \4s  (singular non-human/non-animate verb form)</code></pre>
+  <pre class="example mdf-example"><code>  \1d  (1st person dual verb form)</code></pre>
+  <pre class="example mdf-example"><code>  \2d  (2nd person dual verb form)</code></pre>
+  <pre class="example mdf-example"><code>  \3d  (3rd person dual verb form)</code></pre>
+  <pre class="example mdf-example"><code>  \4d  (dual non-human/non-animate verb form)</code></pre>
+  <pre class="example mdf-example"><code>  \1p  (1st person plural-generic verb form)</code></pre>
+  <pre class="example mdf-example"><code>  \1e  (1st person plural-exclusive verb form)</code></pre>
+  <pre class="example mdf-example"><code>  \1i  (1st person plural-inclusive verb form)</code></pre>
+  <pre class="example mdf-example"><code>  \2p  (2nd person plural verb form)</code></pre>
+  <pre class="example mdf-example"><code>  \3p  (3rd person plural verb form)</code></pre>
+  <pre class="example mdf-example"><code>  \4p  (plural non-human/non-animate verb form)
+ </code></pre>
+  <pre class="example mdf-example"><code>  \tb  (table)
+</code></pre>
+  <pre class="example mdf-example"><code>  \sd  (semantic domain)    [default set not to print]</code></pre>
+  <pre class="example mdf-example"><code>  \is  (index of semantics) [default set not to print]</code></pre>
+  <pre class="example mdf-example"><code>  \th  (thesaurus)          [default set not to print]
+</code></pre>
+  <pre class="example mdf-example"><code>  \bb  (bibliographic reference)</code></pre>
+  <pre class="example mdf-example"><code>  \pc  (picture reference)
+</code></pre>
+  <pre class="example mdf-example"><code>B \nt  (notes, etc.)</code></pre>
+  <pre class="example mdf-example"><code>  \np  (notes on phonology)</code></pre>
+  <pre class="example mdf-example"><code>  \ng  (notes on grammar)</code></pre>
+  <pre class="example mdf-example"><code>  \nd  (notes on discourse)</code></pre>
+  <pre class="example mdf-example"><code>  \na  (notes on anthropology)</code></pre>
+  <pre class="example mdf-example"><code>  \ns  (notes on sociolinguistics)</code></pre>
+  <pre class="example mdf-example"><code>  \nq  (questions)
+</code></pre>
+  <pre class="example mdf-example"><code>  \so  (source of data)     [default set not to print]</code></pre>
+  <pre class="example mdf-example"><code>  \st  (status)             [default set not to print]</code></pre>
+  <pre class="example mdf-example"><code>B \dt  (datestamp)          [default set not to print]</code></pre>
+  <pre class="example mdf-example"><code>--------------------end of example record--------------------
+</code></pre>
+  <p class="note">(To see the description of any particular field, simply right-click on its marker.)</p>
+  <p>To continue this discussion, jump to:</p>
+  <p class="cf"><a class="cf-link" href="Summary_of_Fields.html#key-Summary_of_Fields">Summary_of_Fields</a></p>
+</section>
+</main>
+</div>
+<script src="assets/lunr.js"></script>
+<script src="assets/search-index.js"></script>
+<script src="assets/search.js"></script>
+</body>
+</html>

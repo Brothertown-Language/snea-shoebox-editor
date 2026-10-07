@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Using Subentries, Lexical Entries, and Minimal Entries — MDF Lexical Fields</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" aria-label="Reference navigation">
+<p class="side-title"><a href="index.html">MDF Lexical Fields</a></p>
+<p class="side-version">draft 1.9a · 2006-05-12</p>
+<div class="search">
+<input id="mdf-search" type="search" placeholder="Search topics…" autocomplete="off" aria-label="Search the reference">
+<div id="mdf-search-results" class="search-results" hidden></div>
+</div>
+<ul class="nav">
+  <li class="nav-foreword"><a href="foreword.html">Foreword</a></li>
+  <li class="nav-home"><a href="index.html">Helps Database for MDF Marker Set</a></li>
+  <li class="nav-chapter"><a href="Introduction.html">Standard Lexical Database Field Markers (for MDF)</a></li>
+  <li class="nav-chapter"><a href="Range_Sets.html">Range Sets</a></li>
+  <li class="nav-chapter"><a href="Order_of_Fields.html">Recommended Field Order</a></li>
+  <li class="nav-chapter"><a href="Character_Style_Codes.html">Character Style Codes</a></li>
+  <li class="nav-chapter"><a href="Summary_of_Fields.html">Summary of Fields (not ordered)</a></li>
+  <li class="nav-chapter"><a href="Punctuation_and_Special_Codes.html">Punctuation</a></li>
+  <li class="nav-chapter"><a href="Sections_in_a_Lexical_Entry.html">Sections in a Lexical Entry</a></li>
+  <li class="nav-chapter"><a href="Printed_Field_Labels.html">Printed Field Labels</a></li>
+  <li class="nav-chapter"><a href="Using_Subentries_or_Lexical_Entries.html">Using Subentries, Lexical Entries, and Minimal Entries</a></li>
+  <li class="nav-chapter"><a href="Unknown_Fields.html">Unknown Fields</a></li>
+  <li class="nav-chapter"><a href="Alternate_Hierarchy.html">A Sense-Oriented Hierarchy</a></li>
+  <li class="nav-chapter"><a href="Formatting_and_Printing.html">Formatting and Printing Your Dictionary and Finderlists</a></li>
+  <li class="nav-chapter"><a href="Free-form_Fields.html">Free-form Fields</a></li>
+  <li class="nav-chapter"><a href="References.html">References</a></li>
+  <li class="nav-chapter"><a href="The_MDF_Documentation.html">The MDF Documentation</a></li>
+  <li class="nav-chapter"><a href="Old_and_Changed_Markers.html">Old and Changed Markers</a>
+    <ul>
+      <li><a href="Old_and_Changed_Markers.html#key-1s-1p-1e-1i-1d-2s-2p-2d-3s-3p-3d-4s-4p-4d">\1s 1p 1e 1i 1d 2s 2p 2d 3s 3p 3d 4s 4p 4d</a></li>
+    </ul>
+  </li>
+  <li class="nav-chapter"><a href="When_MDF_Fails_to_Meet_Your_Requirements.html">When MDF Fails to Meet Your Requirements</a></li>
+  <li class="nav-chapter"><a href="field-marker-reference.html">Field Marker Reference</a>
+    <ul>
+      <li class="nav-group"><a href="field-marker-reference.html#group-record">Record Marker</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-lx">\lx</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-basic">Basic Fields</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-ce">\ce</a></li>
+        <li><a href="field-marker-reference.html#key-cf">\cf</a></li>
+        <li><a href="field-marker-reference.html#key-cn">\cn</a></li>
+        <li><a href="field-marker-reference.html#key-de">\de</a></li>
+        <li><a href="field-marker-reference.html#key-dn">\dn</a></li>
+        <li><a href="field-marker-reference.html#key-dt">\dt</a></li>
+        <li><a href="field-marker-reference.html#key-ge">\ge</a></li>
+        <li><a href="field-marker-reference.html#key-gn">\gn</a></li>
+        <li><a href="field-marker-reference.html#key-nt">\nt</a></li>
+        <li><a href="field-marker-reference.html#key-pn">\pn</a></li>
+        <li><a href="field-marker-reference.html#key-ps">\ps</a></li>
+        <li><a href="field-marker-reference.html#key-re">\re</a></li>
+        <li><a href="field-marker-reference.html#key-rf">\rf</a></li>
+        <li><a href="field-marker-reference.html#key-rn">\rn</a></li>
+        <li><a href="field-marker-reference.html#key-xe">\xe</a></li>
+        <li><a href="field-marker-reference.html#key-xn">\xn</a></li>
+        <li><a href="field-marker-reference.html#key-xv">\xv</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-reserved">Reserved Fields</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-hm">\hm</a></li>
+        <li><a href="field-marker-reference.html#key-lc">\lc</a></li>
+        <li><a href="field-marker-reference.html#key-se">\se</a></li>
+        <li><a href="field-marker-reference.html#key-sn">\sn</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-optional">Optional Fields</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-an">\an</a></li>
+        <li><a href="field-marker-reference.html#key-bb">\bb</a></li>
+        <li><a href="field-marker-reference.html#key-bw">\bw</a></li>
+        <li><a href="field-marker-reference.html#key-cr">\cr</a></li>
+        <li><a href="field-marker-reference.html#key-dr">\dr</a></li>
+        <li><a href="field-marker-reference.html#key-dv">\dv</a></li>
+        <li><a href="field-marker-reference.html#key-ec">\ec</a></li>
+        <li><a href="field-marker-reference.html#key-ee">\ee</a></li>
+        <li><a href="field-marker-reference.html#key-eg">\eg</a></li>
+        <li><a href="field-marker-reference.html#key-en">\en</a></li>
+        <li><a href="field-marker-reference.html#key-er">\er</a></li>
+        <li><a href="field-marker-reference.html#key-es">\es</a></li>
+        <li><a href="field-marker-reference.html#key-et">\et</a></li>
+        <li><a href="field-marker-reference.html#key-ev">\ev</a></li>
+        <li><a href="field-marker-reference.html#key-gr">\gr</a></li>
+        <li><a href="field-marker-reference.html#key-gv">\gv</a></li>
+        <li><a href="field-marker-reference.html#key-is">\is</a></li>
+        <li><a href="field-marker-reference.html#key-le">\le</a></li>
+        <li><a href="field-marker-reference.html#key-lf">\lf</a></li>
+        <li><a href="field-marker-reference.html#key-ln">\ln</a></li>
+        <li><a href="field-marker-reference.html#key-lr">\lr</a></li>
+        <li><a href="field-marker-reference.html#key-lt">\lt</a></li>
+        <li><a href="field-marker-reference.html#key-lv">\lv</a></li>
+        <li><a href="field-marker-reference.html#key-mn">\mn</a></li>
+        <li><a href="field-marker-reference.html#key-mr">\mr</a></li>
+        <li><a href="field-marker-reference.html#key-na">\na</a></li>
+        <li><a href="field-marker-reference.html#key-nd">\nd</a></li>
+        <li><a href="field-marker-reference.html#key-ng">\ng</a></li>
+        <li><a href="field-marker-reference.html#key-np">\np</a></li>
+        <li><a href="field-marker-reference.html#key-nq">\nq</a></li>
+        <li><a href="field-marker-reference.html#key-ns">\ns</a></li>
+        <li><a href="field-marker-reference.html#key-oe">\oe</a></li>
+        <li><a href="field-marker-reference.html#key-on">\on</a></li>
+        <li><a href="field-marker-reference.html#key-or">\or</a></li>
+        <li><a href="field-marker-reference.html#key-ov">\ov</a></li>
+        <li><a href="field-marker-reference.html#key-pc">\pc</a></li>
+        <li><a href="field-marker-reference.html#key-pd">\pd</a></li>
+        <li><a href="field-marker-reference.html#key-pde">\pde</a></li>
+        <li><a href="field-marker-reference.html#key-pdl">\pdl</a></li>
+        <li><a href="field-marker-reference.html#key-pdn">\pdn</a></li>
+        <li><a href="field-marker-reference.html#key-pdr">\pdr</a></li>
+        <li><a href="field-marker-reference.html#key-pdv">\pdv</a></li>
+        <li><a href="field-marker-reference.html#key-ph">\ph</a></li>
+        <li><a href="field-marker-reference.html#key-pl">\pl</a></li>
+        <li><a href="field-marker-reference.html#key-rd">\rd</a></li>
+        <li><a href="field-marker-reference.html#key-rr">\rr</a></li>
+        <li><a href="field-marker-reference.html#key-sc">\sc</a></li>
+        <li><a href="field-marker-reference.html#key-sd">\sd</a></li>
+        <li><a href="field-marker-reference.html#key-sg">\sg</a></li>
+        <li><a href="field-marker-reference.html#key-so">\so</a></li>
+        <li><a href="field-marker-reference.html#key-st">\st</a></li>
+        <li><a href="field-marker-reference.html#key-sy">\sy</a></li>
+        <li><a href="field-marker-reference.html#key-tb">\tb</a></li>
+        <li><a href="field-marker-reference.html#key-th">\th</a></li>
+        <li><a href="field-marker-reference.html#key-ue">\ue</a></li>
+        <li><a href="field-marker-reference.html#key-un">\un</a></li>
+        <li><a href="field-marker-reference.html#key-ur">\ur</a></li>
+        <li><a href="field-marker-reference.html#key-uv">\uv</a></li>
+        <li><a href="field-marker-reference.html#key-va">\va</a></li>
+        <li><a href="field-marker-reference.html#key-ve">\ve</a></li>
+        <li><a href="field-marker-reference.html#key-vn">\vn</a></li>
+        <li><a href="field-marker-reference.html#key-vr">\vr</a></li>
+        <li><a href="field-marker-reference.html#key-we">\we</a></li>
+        <li><a href="field-marker-reference.html#key-wn">\wn</a></li>
+        <li><a href="field-marker-reference.html#key-wr">\wr</a></li>
+        <li><a href="field-marker-reference.html#key-xr">\xr</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-discontinued">Discontinued</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-xg">\xg</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+</nav>
+<main class="content">
+<section class="topic" id="key-Using_Subentries_or_Lexical_Entries">
+  <h2 class="topic-heading">Using Subentries, Lexical Entries, and Minimal Entries</h2>
+  <p>A common question that all lexicographers must face when wrestling with complex (polymorphemic) lexemes is whether to incorporate them in the lexicon as subentries under the lexical entry of their root lexeme, or to place them in the lexicon as independent lexical entries. This is not an easy question to answer, but it is addressed in greater detail in Chapter 4 (section 4.6) of the MDF field manual (Coward and Grimes, 1995). For this database, we will summarize the two options below:</p>
+  <h3 class="section-heading">1. Using Subentries and Minimal Entries</h3>
+  <p>If you want to keep all related (root and polymorphemic) lexemes together, use the subentry method shown below (this is a simplified example):</p>
+  <pre class="example mdf-example"><code> \lx bren</code></pre>
+  <pre class="example mdf-example"><code> \ps vi</code></pre>
+  <pre class="example mdf-example"><code> \ge play</code></pre>
+  <pre class="example mdf-example"><code> \ee Implies lack of focus or purpose.
+</code></pre>
+  <pre class="example mdf-example"><code> \se brenak</code></pre>
+  <pre class="example mdf-example"><code> \ps vt</code></pre>
+  <pre class="example mdf-example"><code> \ge play_s.t.</code></pre>
+  <pre class="example mdf-example"><code> \de play a game, or play with s.t.
+</code></pre>
+  <pre class="example mdf-example"><code> \se inabren</code></pre>
+  <pre class="example mdf-example"><code> \ps n</code></pre>
+  <pre class="example mdf-example"><code> \ge recreation ; entertainment
+</code></pre>
+  <pre class="example mdf-example"><code> \se rabrenak</code></pre>
+  <pre class="example mdf-example"><code> \ps n</code></pre>
+  <pre class="example mdf-example"><code> \ge toy</code></pre>
+  <pre class="example mdf-example"><code> \dt 17/Jun/92
+</code></pre>
+  <p>This would print as:</p>
+  <pre class="example mdf-example"><code>bren     vi. play. Implies lack of focus or purpose.
+     brenak    vt. play a game, or play with s.t.
+     inabren    n. recreation, entertainment.
+     rabrenak n. toy.
+</code></pre>
+  <p>This method allows you to see all of the related pieces close together. But you have to know where to look. And this is a major problem; outsiders will not know that to find a discussion of “inabren” they must look under “bren”. To make this easier for new users, we recommend you also make extensive use of “Minimal Entries” (essentially the same as “minor entries”) -- these are lexical entries that have only the most basic fields (maybe a \ps field and a gloss field), but they include the \mn “main entry” field which provides the sign-post back to the lexical entry where more information can be found.</p>
+  <p>The minimal entry for “inabren” might be:</p>
+  <pre class="example mdf-example"><code>  \lx inabren</code></pre>
+  <pre class="example mdf-example"><code>  \ps n</code></pre>
+  <pre class="example mdf-example"><code>  \ge recreation</code></pre>
+  <pre class="example mdf-example"><code>  \mn bren
+</code></pre>
+  <p>When printed the \mn field typically has the label “See main entry:”.</p>
+  <p>That is all there is to this minimal entry. For this reason, it is expected that the subentry for “inabren” would look very much like a full lexical entry; it would contain verbose definitions, have example sentences, multiple senses (if needed), cross-referencing, and any encyclopedic information, notes, or comments that are needed to elucidate this lexeme, i.e. it would be as though a full lexical entry were stuck right inside another lexical entry. (The above example of subentry use obviously falls short of this expectation -- it is merely an example.)</p>
+  <p>But practically speaking, many find it difficult to actually put the same amount of effort into embellishing a subentry as they would into a main lexical entry. For this reason, and for the fact that such embellished records soon become enormous, you might find the alternative way better for you:</p>
+  <h3 class="section-heading">2. Lexical Entries and Cross-referencing</h3>
+  <p>The alternative is nearly the exact opposite: make all lexemes (roots or polymorphemic forms) main lexical entries. But in order to see the relationships between the scattered pieces, you will need to use an extensive cross-referencing system. MDF provides the \cf and the \lf field bundles for this.</p>
+  <p>Again using the above example, the “bren” lexical entry would include the following fields:</p>
+  <pre class="example mdf-example"><code>  \cf brenak</code></pre>
+  <pre class="example mdf-example"><code>  \ce play s.t.
+</code></pre>
+  <pre class="example mdf-example"><code>  \cf inabren</code></pre>
+  <pre class="example mdf-example"><code>  \ce recreation
+</code></pre>
+  <pre class="example mdf-example"><code>  \cf rabrenak</code></pre>
+  <pre class="example mdf-example"><code>  \ce toy
+</code></pre>
+  <p>These \cf fields reference full lexical entries for both “inabren” and for “rabrenak”. If you wish to provide even further information regarding the relationship between the “bren” lexeme and these referenced lexemes, use the \lf field (the \lf labels shown here are not certain):</p>
+  <pre class="example mdf-example"><code>  \lf Vgoal</code></pre>
+  <pre class="example mdf-example"><code>  \lv brenak</code></pre>
+  <pre class="example mdf-example"><code>  \le play s.t.
+</code></pre>
+  <pre class="example mdf-example"><code>  \lf Ngoal</code></pre>
+  <pre class="example mdf-example"><code>  \lv inabren</code></pre>
+  <pre class="example mdf-example"><code>  \le recreation
+</code></pre>
+  <pre class="example mdf-example"><code>  \lf Ninst</code></pre>
+  <pre class="example mdf-example"><code>  \lv rabrenak</code></pre>
+  <pre class="example mdf-example"><code>  \le toy
+</code></pre>
+  <p>This strategy keeps the individual records smaller and still provides a way to see what all the related forms are and their general meanings and relationships. But for more detailed information about a related lexeme requires searching through the lexicon (easy  in Toolbox, but tedious when in book form).</p>
+  <p>You will need to decide which strategy will work best for you.</p>
+  <p>For more information on sections in a lexical entry, see:</p>
+  <p class="cf"><a class="cf-link" href="Sections_in_a_Lexical_Entry.html#key-Sections_in_a_Lexical_Entry">Sections_in_a_Lexical_Entry</a></p>
+  <p class="cf"><a class="cf-link" href="Alternate_Hierarchy.html#key-Alternate_Hierarchy">Alternate_Hierarchy</a></p>
+  <p>For information on related fields, see:</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-mn">\mn</a></dt>
+    <dd>main entry form</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-cf">\cf</a></dt>
+    <dd>general cross-reference</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lf">\lf</a></dt>
+    <dd>lexical function cross-reference</dd>
+</dl>
+  <p>To continue with the general discussion, jump to:</p>
+  <p class="cf"><a class="cf-link" href="Free-form_Fields.html#key-Free-form_Fields">Free-form_Fields</a></p>
+</section>
+</main>
+</div>
+<script src="assets/lunr.js"></script>
+<script src="assets/search-index.js"></script>
+<script src="assets/search.js"></script>
+</body>
+</html>

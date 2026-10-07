@@ -464,8 +464,15 @@ def _render_review_table(batch_id, session_deps):
     from src.database.connection import get_session
     from src.database.models.core import Record, Source
     from src.database.models.workflow import MatchupQueue
-    from src.frontend.ui_utils import compute_mdf_line_diffs, handle_ui_error, render_mdf_block
+    from src.frontend.ui_utils import (
+        compute_mdf_line_diffs,
+        handle_ui_error,
+        marker_definitions,
+        render_marker_reference_link,
+        render_mdf_block,
+    )
     from src.logging_config import get_logger
+    from src.mdf.validator import MDFValidator
     from src.services.preference_service import PreferenceService
     from src.services.upload_service import UploadService
 
@@ -955,6 +962,32 @@ def _render_review_table(batch_id, session_deps):
                     f"{', '.join(conflict_sources)} — mark as 'create new' "
                     f"to avoid cross-source conflict"
                 )
+
+            # SC-12 (R-11c): invalid/unknown-marker diagnostics for this
+            # entry — each flagged marker links to its MDF Reference entry.
+            # Distinct from the cross-source/record-id conflict warnings
+            # above, which remain unchanged.
+            flagged_markers: list[tuple[str, str]] = []
+            seen_tags: set[str] = set()
+            for diagnostic in MDFValidator.diagnose_record(row.mdf_data.split("\n")):
+                tag = diagnostic.get("tag")
+                if tag and diagnostic.get("status") in ("suggestion", "note") and tag not in seen_tags:
+                    seen_tags.add(tag)
+                    flagged_markers.append((tag, diagnostic.get("message", "")))
+            if flagged_markers:
+                _marker_defs = marker_definitions()
+                # Flat siblings (st.warning + caption + link), NOT a `with
+                # st.warning(...)` container: nesting elements inside an alert
+                # container inside the bordered row container silently drops
+                # the alert and its nested elements (verified against live
+                # Streamlit 1.54).
+                st.warning(
+                    "Marker check — this entry uses legacy or unrecognized markers; "
+                    "each link opens that marker's MDF Reference entry."
+                )
+                for tag, message in flagged_markers:
+                    st.caption(message)
+                    render_marker_reference_link(tag, _marker_defs.get(tag))
 
             # D-2: Manual match override
             with st.expander("🔍 Change match", expanded=False):

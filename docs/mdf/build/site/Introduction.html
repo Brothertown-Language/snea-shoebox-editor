@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Standard Lexical Database Field Markers (for MDF) — MDF Lexical Fields</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar" aria-label="Reference navigation">
+<p class="side-title"><a href="index.html">MDF Lexical Fields</a></p>
+<p class="side-version">draft 1.9a · 2006-05-12</p>
+<div class="search">
+<input id="mdf-search" type="search" placeholder="Search topics…" autocomplete="off" aria-label="Search the reference">
+<div id="mdf-search-results" class="search-results" hidden></div>
+</div>
+<ul class="nav">
+  <li class="nav-foreword"><a href="foreword.html">Foreword</a></li>
+  <li class="nav-home"><a href="index.html">Helps Database for MDF Marker Set</a></li>
+  <li class="nav-chapter"><a href="Introduction.html">Standard Lexical Database Field Markers (for MDF)</a></li>
+  <li class="nav-chapter"><a href="Range_Sets.html">Range Sets</a></li>
+  <li class="nav-chapter"><a href="Order_of_Fields.html">Recommended Field Order</a></li>
+  <li class="nav-chapter"><a href="Character_Style_Codes.html">Character Style Codes</a></li>
+  <li class="nav-chapter"><a href="Summary_of_Fields.html">Summary of Fields (not ordered)</a></li>
+  <li class="nav-chapter"><a href="Punctuation_and_Special_Codes.html">Punctuation</a></li>
+  <li class="nav-chapter"><a href="Sections_in_a_Lexical_Entry.html">Sections in a Lexical Entry</a></li>
+  <li class="nav-chapter"><a href="Printed_Field_Labels.html">Printed Field Labels</a></li>
+  <li class="nav-chapter"><a href="Using_Subentries_or_Lexical_Entries.html">Using Subentries, Lexical Entries, and Minimal Entries</a></li>
+  <li class="nav-chapter"><a href="Unknown_Fields.html">Unknown Fields</a></li>
+  <li class="nav-chapter"><a href="Alternate_Hierarchy.html">A Sense-Oriented Hierarchy</a></li>
+  <li class="nav-chapter"><a href="Formatting_and_Printing.html">Formatting and Printing Your Dictionary and Finderlists</a></li>
+  <li class="nav-chapter"><a href="Free-form_Fields.html">Free-form Fields</a></li>
+  <li class="nav-chapter"><a href="References.html">References</a></li>
+  <li class="nav-chapter"><a href="The_MDF_Documentation.html">The MDF Documentation</a></li>
+  <li class="nav-chapter"><a href="Old_and_Changed_Markers.html">Old and Changed Markers</a>
+    <ul>
+      <li><a href="Old_and_Changed_Markers.html#key-1s-1p-1e-1i-1d-2s-2p-2d-3s-3p-3d-4s-4p-4d">\1s 1p 1e 1i 1d 2s 2p 2d 3s 3p 3d 4s 4p 4d</a></li>
+    </ul>
+  </li>
+  <li class="nav-chapter"><a href="When_MDF_Fails_to_Meet_Your_Requirements.html">When MDF Fails to Meet Your Requirements</a></li>
+  <li class="nav-chapter"><a href="field-marker-reference.html">Field Marker Reference</a>
+    <ul>
+      <li class="nav-group"><a href="field-marker-reference.html#group-record">Record Marker</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-lx">\lx</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-basic">Basic Fields</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-ce">\ce</a></li>
+        <li><a href="field-marker-reference.html#key-cf">\cf</a></li>
+        <li><a href="field-marker-reference.html#key-cn">\cn</a></li>
+        <li><a href="field-marker-reference.html#key-de">\de</a></li>
+        <li><a href="field-marker-reference.html#key-dn">\dn</a></li>
+        <li><a href="field-marker-reference.html#key-dt">\dt</a></li>
+        <li><a href="field-marker-reference.html#key-ge">\ge</a></li>
+        <li><a href="field-marker-reference.html#key-gn">\gn</a></li>
+        <li><a href="field-marker-reference.html#key-nt">\nt</a></li>
+        <li><a href="field-marker-reference.html#key-pn">\pn</a></li>
+        <li><a href="field-marker-reference.html#key-ps">\ps</a></li>
+        <li><a href="field-marker-reference.html#key-re">\re</a></li>
+        <li><a href="field-marker-reference.html#key-rf">\rf</a></li>
+        <li><a href="field-marker-reference.html#key-rn">\rn</a></li>
+        <li><a href="field-marker-reference.html#key-xe">\xe</a></li>
+        <li><a href="field-marker-reference.html#key-xn">\xn</a></li>
+        <li><a href="field-marker-reference.html#key-xv">\xv</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-reserved">Reserved Fields</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-hm">\hm</a></li>
+        <li><a href="field-marker-reference.html#key-lc">\lc</a></li>
+        <li><a href="field-marker-reference.html#key-se">\se</a></li>
+        <li><a href="field-marker-reference.html#key-sn">\sn</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-optional">Optional Fields</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-an">\an</a></li>
+        <li><a href="field-marker-reference.html#key-bb">\bb</a></li>
+        <li><a href="field-marker-reference.html#key-bw">\bw</a></li>
+        <li><a href="field-marker-reference.html#key-cr">\cr</a></li>
+        <li><a href="field-marker-reference.html#key-dr">\dr</a></li>
+        <li><a href="field-marker-reference.html#key-dv">\dv</a></li>
+        <li><a href="field-marker-reference.html#key-ec">\ec</a></li>
+        <li><a href="field-marker-reference.html#key-ee">\ee</a></li>
+        <li><a href="field-marker-reference.html#key-eg">\eg</a></li>
+        <li><a href="field-marker-reference.html#key-en">\en</a></li>
+        <li><a href="field-marker-reference.html#key-er">\er</a></li>
+        <li><a href="field-marker-reference.html#key-es">\es</a></li>
+        <li><a href="field-marker-reference.html#key-et">\et</a></li>
+        <li><a href="field-marker-reference.html#key-ev">\ev</a></li>
+        <li><a href="field-marker-reference.html#key-gr">\gr</a></li>
+        <li><a href="field-marker-reference.html#key-gv">\gv</a></li>
+        <li><a href="field-marker-reference.html#key-is">\is</a></li>
+        <li><a href="field-marker-reference.html#key-le">\le</a></li>
+        <li><a href="field-marker-reference.html#key-lf">\lf</a></li>
+        <li><a href="field-marker-reference.html#key-ln">\ln</a></li>
+        <li><a href="field-marker-reference.html#key-lr">\lr</a></li>
+        <li><a href="field-marker-reference.html#key-lt">\lt</a></li>
+        <li><a href="field-marker-reference.html#key-lv">\lv</a></li>
+        <li><a href="field-marker-reference.html#key-mn">\mn</a></li>
+        <li><a href="field-marker-reference.html#key-mr">\mr</a></li>
+        <li><a href="field-marker-reference.html#key-na">\na</a></li>
+        <li><a href="field-marker-reference.html#key-nd">\nd</a></li>
+        <li><a href="field-marker-reference.html#key-ng">\ng</a></li>
+        <li><a href="field-marker-reference.html#key-np">\np</a></li>
+        <li><a href="field-marker-reference.html#key-nq">\nq</a></li>
+        <li><a href="field-marker-reference.html#key-ns">\ns</a></li>
+        <li><a href="field-marker-reference.html#key-oe">\oe</a></li>
+        <li><a href="field-marker-reference.html#key-on">\on</a></li>
+        <li><a href="field-marker-reference.html#key-or">\or</a></li>
+        <li><a href="field-marker-reference.html#key-ov">\ov</a></li>
+        <li><a href="field-marker-reference.html#key-pc">\pc</a></li>
+        <li><a href="field-marker-reference.html#key-pd">\pd</a></li>
+        <li><a href="field-marker-reference.html#key-pde">\pde</a></li>
+        <li><a href="field-marker-reference.html#key-pdl">\pdl</a></li>
+        <li><a href="field-marker-reference.html#key-pdn">\pdn</a></li>
+        <li><a href="field-marker-reference.html#key-pdr">\pdr</a></li>
+        <li><a href="field-marker-reference.html#key-pdv">\pdv</a></li>
+        <li><a href="field-marker-reference.html#key-ph">\ph</a></li>
+        <li><a href="field-marker-reference.html#key-pl">\pl</a></li>
+        <li><a href="field-marker-reference.html#key-rd">\rd</a></li>
+        <li><a href="field-marker-reference.html#key-rr">\rr</a></li>
+        <li><a href="field-marker-reference.html#key-sc">\sc</a></li>
+        <li><a href="field-marker-reference.html#key-sd">\sd</a></li>
+        <li><a href="field-marker-reference.html#key-sg">\sg</a></li>
+        <li><a href="field-marker-reference.html#key-so">\so</a></li>
+        <li><a href="field-marker-reference.html#key-st">\st</a></li>
+        <li><a href="field-marker-reference.html#key-sy">\sy</a></li>
+        <li><a href="field-marker-reference.html#key-tb">\tb</a></li>
+        <li><a href="field-marker-reference.html#key-th">\th</a></li>
+        <li><a href="field-marker-reference.html#key-ue">\ue</a></li>
+        <li><a href="field-marker-reference.html#key-un">\un</a></li>
+        <li><a href="field-marker-reference.html#key-ur">\ur</a></li>
+        <li><a href="field-marker-reference.html#key-uv">\uv</a></li>
+        <li><a href="field-marker-reference.html#key-va">\va</a></li>
+        <li><a href="field-marker-reference.html#key-ve">\ve</a></li>
+        <li><a href="field-marker-reference.html#key-vn">\vn</a></li>
+        <li><a href="field-marker-reference.html#key-vr">\vr</a></li>
+        <li><a href="field-marker-reference.html#key-we">\we</a></li>
+        <li><a href="field-marker-reference.html#key-wn">\wn</a></li>
+        <li><a href="field-marker-reference.html#key-wr">\wr</a></li>
+        <li><a href="field-marker-reference.html#key-xr">\xr</a></li>
+        </ul>
+      </li>
+      <li class="nav-group"><a href="field-marker-reference.html#group-discontinued">Discontinued</a>
+        <ul>
+        <li><a href="field-marker-reference.html#key-xg">\xg</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+</nav>
+<main class="content">
+<section class="topic" id="key-Introduction">
+  <h2 class="topic-heading">Standard Lexical Database Field Markers (for MDF)</h2>
+  <h3 class="section-heading">Introduction</h3>
+  <p>MDF is a set of markers designed for multi-lingual dictionaries. It was created by Grimes and Coward and documented in, “Making Dictionaries”. MDF is also a printing (export) process. Because this printing process was built into the Windows version of Shoebox (now Toolbox), both have spread -- each feeding the popularity of the other. The MDF marker set is now used by linguists worldwide. For further information on the MDF manual itself, see</p>
+  <p class="cf"><a class="cf-link" href="The_MDF_Documentation.html#key-The_MDF_Documentation">The_MDF_Documentation</a></p>
+  <p>This file is designed to be an MDF help file available in Toolbox while you work on your lexicon. Most of the information in this file describes the standardized MDF field markers and their contents (i.e. what kind of information the markers mark).</p>
+  <p>To look up the description of a field marker, use the Toolbox Search command and type the field marker code, (without the backslash  \ character), e.g. for information on the \ps field, search for ‘ps’ (no quotes).</p>
+  <p>Another way to look up a marker is to click the Browse button and scroll down the list of markers until you see what you’re interested in. Browse is also one way to see the titles of information available on other topics. Remember, too, that the “aa” record contains a full list of other topics available.</p>
+  <p>MDF is not perfect and does not fit everyone’s needs. If you need fields that aren’t available, or if the printout is not what you want, read the following:</p>
+  <p class="cf"><a class="cf-link" href="When_MDF_Fails_to_Meet_Your_Requirements.html#key-When_MDF_Fails_to_Meet_Your_Requirements">When_MDF_Fails_to_Meet_Your_Requirements</a></p>
+  <h3 class="section-heading">Organizing the Markers</h3>
+  <p>One problem faced by users of MDF is that of “too many markers”. The following summary is an attempt to make the number seem less threatening.</p>
+  <h4 class="section-heading">... by Language</h4>
+  <p>A large number of markers come in sets of three or four. MDF attemps to generalize  the need for multiple languages by recognizing four possible languages and providing markers for them. Most of the MDF markers are two characters long. The second character is often (not always) a language character.</p>
+  <p>_e   indicates English language markers</p>
+  <p>_n   indicates National language markers</p>
+  <p>_r   indicates Regional language markers</p>
+  <p>_v   indicates Vernacular language markers</p>
+  <p>Some markers have the language assumed. So the lexeme (lx) and subentries (se) are always vernacular language, even though they don’t end with “v” (and even though subentry ends with “e”). Some of these, like the variant (va), have related markers (comments in this case) for the other three languages.</p>
+  <h4 class="section-heading">... by Function</h4>
+  <p>In a real sense, everything in the entry relates to the headword. But some fields are more tightly related than others. Some are more related to the definition, some are your personal notes on different topics, etc. This is an attempt to organize the approximately 100 MDF markers.</p>
+  <p class="note">Note: The following does not give the order in which these fields normally appear in a dictionary.</p>
+  <p class="note">Note: A marker like de* means that there is a set of  language markers beginning with d: dv, dn, dr, de. A right click on such a marker will take you to the one, and the others will be listed there.</p>
+  <h5 class="section-heading">Information Relating Directly to the Headword</h5>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lx">lx</a></dt>
+    <dd>lexeme</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-hm">hm</a></dt>
+    <dd>homonym number</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lc">lc</a></dt>
+    <dd>lexical citation form</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ph">ph</a></dt>
+    <dd>phonetic (pronunciation)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ps">ps</a></dt>
+    <dd>part of speech</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pn">pn</a></dt>
+    <dd>National part of speech</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-sn">sn</a></dt>
+    <dd>sense number</dd>
+</dl>
+  <h5 class="section-heading">Information about the Headword</h5>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-va">va</a></dt>
+    <dd>variant form (also <a class="cf-link" href="field-marker-reference.html#key-ve">ve*</a> comments)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-mr">mr</a></dt>
+    <dd>morphology</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lt">lt</a></dt>
+    <dd>literally</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-sc">sc</a></dt>
+    <dd>scientific name</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-sd">sd</a></dt>
+    <dd>semantic domain</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-is">is</a></dt>
+    <dd>index of semantics</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-th">th</a></dt>
+    <dd>thesaurus</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pd">pd</a></dt>
+    <dd>paradigm class</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdl">pdl</a></dt>
+    <dd>paradigm label (also <a class="cf-link" href="field-marker-reference.html#key-pdv">pdv*</a> paradigm form &amp; glosses)</dd>
+</dl>
+  <h5 class="section-heading">Other forms of the Headword</h5>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-va">va</a></dt>
+    <dd>variant form (also <a class="cf-link" href="field-marker-reference.html#key-ve">ve*</a> comments)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-mr">mr</a></dt>
+    <dd>morphology</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pd">pd</a></dt>
+    <dd>paradigm class</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pdl">pdl</a></dt>
+    <dd>paradigm label (also <a class="cf-link" href="field-marker-reference.html#key-pdv">pdv*</a> paradigm form &amp; glosses)</dd>
+</dl>
+  <h5 class="section-heading">Related entries</h5>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-cf">cf</a></dt>
+    <dd>cross reference</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-mn">mn</a></dt>
+    <dd>main-entry cross reference</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lf">lf</a></dt>
+    <dd>lexical function (like synonym, causal, generic, deverbal noun, locative, etc.) (also <a class="cf-link" href="field-marker-reference.html#key-lv">lv*</a> lexical function form and glosses)</dd>
+</dl>
+  <h5 class="section-heading">Origins</h5>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-bw">bw</a></dt>
+    <dd>borrowed word</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-et">et</a></dt>
+    <dd>etymology (also <a class="cf-link" href="field-marker-reference.html#key-eg">eg</a> gloss, <a class="cf-link" href="field-marker-reference.html#key-es">es</a> source, <a class="cf-link" href="field-marker-reference.html#key-ec">ec</a> comment)</dd>
+</dl>
+  <h5 class="section-heading">Definition and Range of Meaning</h5>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-de">de*</a></dt>
+    <dd>definition</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ee">ee*</a></dt>
+    <dd>encyclopedic information (expanded definition)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ue">ue*</a></dt>
+    <dd>usage</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-oe">oe*</a></dt>
+    <dd>“only” (restrictions)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ge">ge*</a></dt>
+    <dd>gloss (for interlinear)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-re">re*</a></dt>
+    <dd>reversal (for finder lists)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-we">we*</a></dt>
+    <dd>word-level gloss</dd>
+</dl>
+  <h5 class="section-heading">Examples</h5>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-rf">rf</a></dt>
+    <dd>source of example (reference)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-xv">xv*</a></dt>
+    <dd>examples and translations</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-pc">pc</a></dt>
+    <dd>picture snd sound vid video</dd>
+</dl>
+  <h5 class="section-heading">Dialects</h5>
+  <p class="note">There are no specifically “dialect” markers. Various alternative approaches can be used. The revision of Chapter 2 discusses the following as possibilities.</p>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-va">va*</a></dt>
+    <dd>(variant)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-ue">ue*</a></dt>
+    <dd>(usage)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-oe">oe*</a></dt>
+    <dd>(only / restrictions)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-lf">lf</a></dt>
+    <dd>SynD (lexical function: synonym dialect)</dd>
+</dl>
+  <h5 class="section-heading">Miscellany</h5>
+  <dl class="mdf-cf-list">
+    <dt><a class="cf-link" href="field-marker-reference.html#key-tb">tb</a></dt>
+    <dd>table (caption)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-bb">bb</a></dt>
+    <dd>bibliography</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-nt">nt</a></dt>
+    <dd>notes (various kinds)</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-so">so</a></dt>
+    <dd>source of data</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-st">st</a></dt>
+    <dd>status</dd>
+    <dt><a class="cf-link" href="field-marker-reference.html#key-dt">dt</a></dt>
+    <dd>date last edited</dd>
+</dl>
+  <p>If you are unsure which marker to use, first look under ‘Summary_of_Fields’ for the code you want, and then search for that field marker.</p>
+  <h3 class="section-heading">Three Types of Field Markers</h3>
+  <p>In this database, each field marker is describe by of the following categories:</p>
+  <p class="typ">&lt;Basic&gt;</p>
+  <p>This marks all of the “basic” field markers. These are the field markers which will be useful to the most people. Consider including all of the basic field markers in your Toolbox lexical database template, so they will be inserted automatically into each of your new records. Leaving a basic field empty is okay.</p>
+  <p class="typ">&lt;Reserved&gt;</p>
+  <p>This marks the “reserved” fields, meaning, these fields serve a crucial function in the MDF formatting process and so should be used only if needed. These are the \lc, \hm, \se, and  \sn fields. Empty reserved fields should not be included in your records, i.e. if present, they should contain data.</p>
+  <p class="typ">&lt;Optional&gt;</p>
+  <p>This marks the “optional” fields. These are the more technical fields given to cover just about every topic. You may want to include some of these in your database template as well. And no doubt, some of these optional fields will be of no use to you. Like with basic fields, leaving an optional field empty is okay.</p>
+  <h3 class="section-heading">Multiple Fields</h3>
+  <p>The number of occurrences of any given field is not restricted. But in printing through the standard MDF export process, multiple occurrences of a given field will be concatenated within a hierarchical section, e.g. with a sense, or if there is no sense, then within a part of speech section, or subentry section, etc. Multiple occurrences within the same record but in separate sections (sense, part of speech, or subentry) are kept separate.</p>
+  <p>To continue this discussion, jump to:</p>
+  <p class="cf"><a class="cf-link" href="Order_of_Fields.html#key-Order_of_Fields">Order_of_Fields</a></p>
+</section>
+</main>
+</div>
+<script src="assets/lunr.js"></script>
+<script src="assets/search-index.js"></script>
+<script src="assets/search.js"></script>
+</body>
+</html>

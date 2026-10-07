@@ -18,6 +18,9 @@ PAGE_DIRECT_ENTRY = st.Page(
     "src/frontend/pages/direct_entry.py", title="Direct Entry", icon="⌨️", url_path="direct-entry"
 )
 PAGE_UPLOAD = st.Page("src/frontend/pages/upload_mdf.py", title="Upload MDF", icon="📤", url_path="upload")
+PAGE_MDF_REFERENCE = st.Page(
+    "src/frontend/pages/mdf_reference.py", title="MDF Reference", icon="📖", url_path="mdf-reference"
+)
 PAGE_BATCH_ROLLBACK = st.Page(
     "src/frontend/pages/batch_rollback.py", title="Batch Rollback", icon="🔙", url_path="rollback"
 )
@@ -40,6 +43,7 @@ class NavigationService:
     PAGE_RECORDS = PAGE_RECORDS
     PAGE_DIRECT_ENTRY = PAGE_DIRECT_ENTRY
     PAGE_UPLOAD = PAGE_UPLOAD
+    PAGE_MDF_REFERENCE = PAGE_MDF_REFERENCE
     PAGE_BATCH_ROLLBACK = PAGE_BATCH_ROLLBACK
     PAGE_TABLE_MAINTENANCE = PAGE_TABLE_MAINTENANCE
     PAGE_LOGOUT = PAGE_LOGOUT
@@ -61,7 +65,13 @@ class NavigationService:
         if logged_in:
             logger.debug("Returning authenticated navigation tree for role: %s", user_role)
             nav_tree = {
-                "Main": [cls.PAGE_HOME, cls.PAGE_RECORDS, cls.PAGE_DIRECT_ENTRY, cls.PAGE_UPLOAD],
+                "Main": [
+                    cls.PAGE_HOME,
+                    cls.PAGE_RECORDS,
+                    cls.PAGE_DIRECT_ENTRY,
+                    cls.PAGE_UPLOAD,
+                    cls.PAGE_MDF_REFERENCE,
+                ],
                 "System": [cls.PAGE_STATUS],
             }
 
@@ -83,6 +93,7 @@ class NavigationService:
                 cls.PAGE_RECORDS,
                 cls.PAGE_DIRECT_ENTRY,
                 cls.PAGE_UPLOAD,
+                cls.PAGE_MDF_REFERENCE,
                 cls.PAGE_BATCH_ROLLBACK,
                 cls.PAGE_STATUS,
                 cls.PAGE_TABLE_MAINTENANCE,

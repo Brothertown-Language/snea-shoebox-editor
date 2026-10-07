@@ -4,7 +4,12 @@ import datetime
 
 import streamlit as st
 
-from src.frontend.ui_utils import apply_standard_layout_css
+from src.frontend.ui_utils import (
+    apply_standard_layout_css,
+    extract_mdf_markers,
+    marker_definitions,
+    render_marker_help_list,
+)
 from src.logging_config import get_logger
 from src.mdf.parser import parse_mdf
 from src.services.identity_service import IdentityService
@@ -24,6 +29,15 @@ def direct_entry():
     Enter MDF records manually below. Each field can contain one or more records.
     Multiple records in a single field will be automatically split using the `\\lx` marker.
     """)
+
+    # SC-12 (R-11a): a static hook to the reference home, next to the fields
+    # every marker is typed into.
+    st.page_link(
+        NavigationService.PAGE_MDF_REFERENCE,
+        label="Open the MDF Reference",
+        query_params={"marker": "aa"},
+        icon="📖",
+    )
 
     # --- Sidebar Configuration ---
     st.sidebar.header("Configuration")
@@ -84,6 +98,20 @@ def direct_entry():
         submit_col1, submit_col2 = st.columns([1, 4])
         with submit_col1:
             submitted = st.form_submit_button("Submit Records", type="primary")
+
+    # SC-12 (R-11a): per-field reference hooks. Streamlit form widgets only
+    # publish their typed values on submit, so these expanders (outside the
+    # form) read the synced field state — the markers typed into a field
+    # become live deep links on the render following the form submission
+    # (an invalid submission keeps the user here with the text preserved).
+    _marker_defs = marker_definitions()
+    for i in range(num_fields):
+        with st.expander(f"📖 Marker reference — Record(s) {i + 1}"):
+            render_marker_help_list(
+                extract_mdf_markers(st.session_state.get(f"direct_entry_val_{i}", "")),
+                _marker_defs,
+                "No MDF markers detected in this field yet.",
+            )
 
     if submitted:
         all_parsed_records = []
