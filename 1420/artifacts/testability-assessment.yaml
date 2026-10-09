@@ -1,0 +1,156 @@
+# Testability assessment for #1420
+# Generated: 2026-10-09T22:50:04Z by pre-analysis `analyze` task
+# Source: .issues/1420/spec.md
+
+generator: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
+issue_number: 1420
+generated_at: 2026-10-09T22:50:04Z
+spec_path: .issues/1420/spec.md
+
+sc_evidence_types:
+  - sc: SC-1
+    evidence_type: behavioral
+    verification_method: >
+      Start the live app locally (:8501); GET /api/v1/records with no
+      credentials; assert HTTP 401 with the JSON error shape; correlate with
+      the bolt self-check log line from the same process
+    testability: high
+    note: plain HTTP check once the app is running; no special fixtures
+  - sc: SC-2
+    evidence_type: behavioral
+    verification_method: Start the app; capture logs; assert the self-check line lists /api/v1/records ahead of the /api/.* catch-all and includes both version numbers
+    testability: high
+    note: log capture only
+  - sc: SC-3
+    evidence_type: behavioral
+    verification_method: >
+      Unit-exercise the registrar against a structure-less Application fixture
+      (assert loud log + no exception); Playwright against the live app
+      asserting normal UI operation
+    testability: high
+    note: >
+      the failure-mode branch is designed to be unit-testable (pure registrar
+      logic, no live server needed for the fixture half)
+  - sc: SC-4
+    evidence_type: behavioral
+    verification_method: >
+      Unit-test: invoke the registrar repeatedly against the same Application
+      fixture and assert the rule count is unchanged after the first bolt;
+      corroborate with the self-check log across two distinct browser sessions
+    testability: high
+    note: idempotency is deterministic and unit-testable by design (latch + structural scan)
+  - sc: SC-5
+    evidence_type: behavioral
+    verification_method: >
+      HTTP-level test suite against the live app with seeded keys covering the
+      full matrix (valid 200; unknown key 401; wrong secret 401 uniform;
+      disabled 403; revoked 403; missing headers 401; POST 405; unknown path
+      JSON 404); assert status codes, the uniform 401 message, and JSON bodies
+    testability: high
+    note: >
+      requires a seeded-key fixture — keys created via api_key_service
+      directly (not through the UI) for determinism, including one disabled
+      and one revoked key
+  - sc: SC-6
+    evidence_type: behavioral
+    verification_method: >
+      Query the DB for live records; fetch the endpoint with a valid pair;
+      compare every record field against DB values; assert each record's
+      field-key set equals the closed 15-field whitelist; count equals live
+      count
+    testability: high
+    note: >
+      local database MUST be re-synced from production first per the
+      repository regression-test protocol (bash scripts/sync_prod_to_local.sh
+      from the feature branch under test); current replica: 7,753 total /
+      7,750 live
+  - sc: SC-7
+    evidence_type: behavioral
+    verification_method: >
+      Playwright real-browser tests against the live app per
+      docs/development/ui_testing_standard.md with the established SNEA_E2E=1
+      role-selection sessions (admin / editor / viewer); assert gating and
+      each lifecycle action's observable behavior
+    testability: medium
+    note: >
+      real-browser standard of record — streamlit.testing AppTest is NOT
+      sufficient evidence for this user-visible-behavior SC; SNEA_E2E=1
+      bypass-authenticated sessions on :8501 (headless enforced via
+      .streamlit/config.toml); role variants via the established
+      SNEA_SIMULATE_AUTH hook; screenshots under tmp/<issue>/artifacts/ for
+      vision review; playwright_e2e-marked tests skip without SNEA_E2E=1 —
+      skipping is by design and never silently treated as PASS
+  - sc: SC-8
+    evidence_type: behavioral
+    verification_method: >
+      Issue a key with a known secret; query the api_keys table (full-table
+      scan); assert the plaintext appears nowhere and every secret_hash
+      matches pbkdf2_sha256$...; verify the known secret authenticates
+    testability: high
+    note: direct DB inspection + auth roundtrip
+  - sc: SC-9
+    evidence_type: behavioral
+    verification_method: >
+      Perform each lifecycle operation and trigger failed auths; query
+      system_event_log; assert event types (api_key_created/regenerated/
+      enabled/disabled/revoked, api_auth_failure) and that no secret value
+      appears in any event row
+    testability: high
+    note: direct table query via EventLogService.get_events or SQL
+  - sc: SC-10
+    evidence_type: behavioral
+    verification_method: >
+      Configure a low test limit (api.rate_limit_per_minute); burst requests
+      with one key past the window; assert 429 + Retry-After and that a
+      second key's concurrent requests still succeed
+    testability: medium
+    note: >
+      the secrets override makes the limit testable without waiting out a
+      60-second window; limiter is in-memory per process — tests must run
+      against one app process (no multi-worker assumptions)
+  - sc: SC-11
+    evidence_type: behavioral
+    verification_method: >
+      Fetch the endpoint; assert Content-Type application/json; charset=utf-8;
+      select records known to contain IPA/diacritics (ə, ŋ, ã, ꝏ) and compare
+      raw response bytes against database values
+    testability: high
+    note: byte-level comparison; replica contains real Unicode data to test against
+  - sc: SC-12
+    evidence_type: string + behavioral
+    verification_method: >
+      Unit-assert every error formatter's output against a blocklist pattern
+      set (postgres://, host/port tokens, traceback markers); live spot-checks
+      of 401/404/429 bodies
+    testability: high
+    note: formatters are pure functions; live spot-checks piggyback on the SC-5 suite
+
+testability_notes:
+  - >
+    All 12 SCs are testable locally; none requires external SaaS or CI-only
+    infrastructure. SC-1/SC-2/SC-5/SC-6/SC-10/SC-11 need the live app on
+    :8501 with the local DB re-synced per the regression protocol (the sync
+    script must be the one from the feature branch under test).
+  - >
+    SC-7 is the only medium-rated SC: it needs real-browser Playwright runs
+    with role-variant sessions and vision review of screenshots — per the UI
+    testing standard, AppTest in-process checks may complement but never
+    substitute.
+  - >
+    Seeded-key fixtures (via api_key_service, not the UI) are the shared
+    prerequisite for SC-5/SC-6/SC-10/SC-11; a deterministic fixture helper is
+    the highest-leverage test-infrastructure item in the plan.
+  - >
+    Unit-test surface is strong by design: registrar (latch, structural scan,
+    failure branch), PBKDF2 hashing/storage discipline, error-formatter
+    blocklist, and the rate limiter are all exercisable without a live
+    server — matching the existing test/ SC-named pytest convention
+    (playwright_e2e marker registered in pyproject; pythonpath=["."]).
+  - >
+    No EVIDENCE_TYPE_MISMATCH: every declared evidence type (behavioral, or
+    string + behavioral for SC-12) matches the spec's verification-method
+    column and is implementable as written.
+  - >
+    Timing-sensitive verification: SC-10 (window expiry) and SC-4 (two
+    distinct browser sessions) need deliberate test design — a configurable
+    low limit and session-isolated Playwright contexts respectively.
