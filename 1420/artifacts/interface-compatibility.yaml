@@ -1,0 +1,159 @@
+# Interface compatibility for #1420
+# Generated: 2026-10-09T22:50:04Z by pre-analysis `analyze` task
+# Source: .issues/1420/spec.md
+
+generator: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
+issue_number: 1420
+generated_at: 2026-10-09T22:50:04Z
+spec_path: .issues/1420/spec.md
+
+interfaces:
+  - id: I1
+    name: streamlit_app.py -> registrar
+    producer: streamlit_app.py main() (call site after _initialize_database(), line 291)
+    consumer: src/api/registrar.py
+    contract: >
+      One in-process invocation per script run; registrar never raises into
+      the script path (R-4); no-op when already bolted (R-3); invoked after
+      database initialization so the engine/session factory is usable
+    compatibility: >
+      main() reruns on every session — the call executes repeatedly against a
+      @st.cache_resource one-time DB init; idempotency is load-bearing, not
+      defensive
+  - id: I2
+    name: registrar -> Streamlit's Tornado Application (INTERNAL API)
+    producer: src/api/registrar.py
+    consumer: tornado.web.Application / wildcard_router.rules (Streamlit 1.54.0 internal)
+    contract: >
+      gc-find instance(s); prepend Rule(PathMatches) entries — /api/v1/records
+      first, /api/.* catch-all second — ahead of Streamlit's catch-all; log
+      self-check (patterns, order, counts, both versions); on structure
+      mismatch log loudly, disable API, never crash the UI
+    compatibility: >
+      wildcard_router is internal and unpinned by any Streamlit public API —
+      compatibility is pinned by uv.lock (streamlit 1.54.0, tornado 6.5.4,
+      verified live) plus the Phase 0 probe re-verification gate; any Streamlit
+      upgrade re-risks this interface and is exactly what SC-3's failure mode
+      contains
+  - id: I3
+    name: HTTP API surface (external consumers)
+    producer: bolted Tornado handlers (src/api/routes/*)
+    consumer: agents in other projects
+    contract: >
+      GET /api/v1/records with X-API-Key + X-API-Secret headers -> single JSON
+      dump ({"count", "records"}), Content-Type application/json; charset=utf-8,
+      ensure_ascii=False, ISO 8601 UTC timestamps; error contract
+      {"error":{code,message}} for 401/403/404/405/429/503; 429 carries
+      Retry-After; unexpected query parameters ignored; uniform 401 message
+      never distinguishing unknown key from bad secret
+    compatibility: >
+      Served on the Streamlit server's own port; HTTPS terminated by the
+      platform (Community Cloud) so header credentials travel encrypted; no
+      pagination in v1 (single response at ~7,750 live records); the /api/v1
+      prefix leaves room for future endpoints without path ambiguity
+  - id: I4
+    name: admin view -> key service
+    producer: src/frontend/pages/api_keys.py
+    consumer: src/services/api_key_service.py
+    contract: >
+      create / regenerate-secret / enable / disable / revoke; plaintext
+      secret returned exactly once at create/regenerate for one-time display;
+      list shows label, key identifier, created, last used, status
+    compatibility: >
+      Page self-gates on user_role == "admin" following the established
+      in-page guard pattern (batch_rollback.py:292-296,
+      table_maintenance.py:127-130); the unauthenticated nav tree lists all
+      pages by design, so gating lives in the page, not the tree
+  - id: I5
+    name: key service / auth -> EventLogService (audit sink)
+    producer: src/services/api_key_service.py, src/api/auth.py
+    consumer: EventLogService.log_event -> system_event_log (existing #1332)
+    contract: >
+      Event types api_key_created / api_key_regenerated / api_key_enabled /
+      api_key_disabled / api_key_revoked / api_auth_failure; details JSONB
+      identifying key + acting admin (lifecycle) or presented key identifier +
+      outcome + client address (auth failures); never secret material
+    compatibility: >
+      Zero changes to EventLogService — its static error-safe log_event
+      signature (event_type, severity, message, source, details, session)
+      already covers every call shape; DB write failures are swallowed and
+      logged, so audit writes never break request handling
+  - id: I6
+    name: API handlers -> shared database engine/session factory
+    producer: bolted handlers (outside script-runner context)
+    consumer: src/database/connection.py get_engine/get_session
+    contract: >
+      Handlers access the DB ONLY through the shared engine/session factory
+      (R-2); no st.* calls, no session state; pool_size=0 + max_overflow=10
+      is the shared budget with the UI
+    compatibility: >
+      Verified live: engine config at connection.py:629-630 caps total
+      concurrent connections at 10; a full-dump serialization holds one
+      connection for its duration — concurrent dumps plus UI traffic can
+      exhaust the budget and fail closed (503 per the error contract); the
+      pool_pre_ping behavior ties DB-down to the 503 path on both auth lookup
+      and record query
+  - id: I7
+    name: dump endpoint -> records/sources/record_languages/languages ORM
+    producer: src/api/routes/records.py
+    consumer: src/database/models/core.py (read-only)
+    contract: >
+      Live records (is_deleted = false) ordered by ascending id; 13 row-fields
+      whitelisted; source resolved from sources.name; languages from
+      record_languages ordered primary-first (is_primary); the 8 excluded
+      columns (embedding, lock state x4, updated_by, reviewed_at, reviewed_by)
+      are never selected into the payload
+    compatibility: >
+      Verified live against the production replica: 7,753 total / 7,750 live
+      rows; the DB's 21 records columns match the ORM exactly; Unicode is
+      preserved byte-exact (no normalization — lessons-learned constraint);
+      TIMESTAMP(timezone=True) updated_at serializes as ISO 8601 UTC
+  - id: I8
+    name: rate-limit configuration source
+    producer: st.secrets["api"]["rate_limit_per_minute"] (optional override)
+    consumer: registrar at bolt time -> in-memory limiter state
+    contract: >
+      Default 60 requests / 60 s when the key is absent; read ONCE at bolt
+      time inside the script context and handed to handler state, because
+      handlers cannot use st.* APIs (R-2)
+    compatibility: >
+      Optional-with-default — must NOT be added to .streamlit/required_secrets.yaml
+      (the startup preflight would then fail deployments that omit it);
+      manifest currently lists 12 unrelated paths (verified)
+  - id: I9
+    name: api_keys migration -> MigrationManager versioned stack
+    producer: src/database/migrations.py registry append
+    consumer: MigrationManager.run_all() at init_db()
+    contract: >
+      New tuple (version, "_migrate_create_api_keys", description) with
+      version in YYYYMMDDSSSSS format reflecting actual add-time and value
+      > 20261005131326 (current registry maximum); registry stays append-only,
+      no renumbering (migrations.py:107-113 directive)
+    compatibility: >
+      Version gating skips migrations <= current, so the append is inert on
+      already-migrated replicas until the new version; _reset_sequences
+      auto-covers the new integer-id table via Base.metadata.sorted_tables
+      once the model is registered
+
+compatibility_notes:
+  - note: >
+      No new runtime dependencies — implementation is stdlib (gc, hashlib,
+      hmac, secrets, json) + Tornado already present via Streamlit; uv.lock
+      requires no change (pins verified: streamlit 1.54.0, tornado 6.5.4)
+  - note: >
+      Streamlit's own routes and every existing page are untouched — the only
+      navigation change is one Admin-section entry for admins; the
+      unauthenticated tree lists all pages by design (deep-link capture), so
+      the new page appears there too and self-gates
+  - note: >
+      init_db()'s explicit model-import list (src/database/connection.py:678-687)
+      is a required registration touchpoint for ApiKeys that the spec's
+      Affected Files does not name — flagged for the plan
+  - note: >
+      handlers cannot read st.secrets at request time (outside script
+      context) — any request-time configuration must be captured at bolt time
+      or via non-st sources
+  - note: >
+      the API adds no DB exposure — no connection strings, hosts, ports, or
+      sockets cross the HTTP boundary; other projects consume only the API
+      with issued keys (developer security directive)
