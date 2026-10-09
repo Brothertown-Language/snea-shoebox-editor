@@ -1,0 +1,117 @@
+# Cross-cutting matrix for #1420
+# Generated: 2026-10-09T22:50:04Z by pre-analysis `analyze` task
+# Source: .issues/1420/spec.md
+
+generator: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
+issue_number: 1420
+generated_at: 2026-10-09T22:50:04Z
+spec_path: .issues/1420/spec.md
+
+cross_cutting_scs:
+  - sc: SC-1
+    spans_concerns: [C1, C6]
+    description: >
+      The bolt (C1) must land the endpoint rule AND the /api/.* catch-all in
+      the correct order; the 401 body observed proves the error contract (C6)
+      is served by the bolted route, not Streamlit's catch-all
+  - sc: SC-2
+    spans_concerns: [C1]
+    description: Confined to the registrar's self-check logging (C1)
+  - sc: SC-3
+    spans_concerns: [C1]
+    description: >
+      Registrar failure mode (C1); corroborated by a Playwright UI check
+      proving the UI is decoupled from the API's fate
+  - sc: SC-4
+    spans_concerns: [C1]
+    description: Confined to idempotency (C1) — latch + structural scan
+  - sc: SC-5
+    spans_concerns: [C2, C4, C6]
+    description: >
+      Credential scheme (C2) decides 200/401/403; failed attempts feed the
+      audit trail (C4); method/path scoping and JSON bodies come from the
+      hardening contract (C6)
+  - sc: SC-6
+    spans_concerns: [C5]
+    description: >
+      Payload scoping (C5) — whitelist, live filter, resolution, ordering —
+      read against the shared DB (pool budget is a shared-resource risk)
+  - sc: SC-7
+    spans_concerns: [C2, C3]
+    description: >
+      Admin view (C3) exercises every service lifecycle operation (C2);
+      one-time secret display is a C2+C3 joint invariant
+  - sc: SC-8
+    spans_concerns: [C2]
+    description: Confined to key storage/hashing discipline (C2)
+  - sc: SC-9
+    spans_concerns: [C2, C4]
+    description: >
+      Lifecycle events (C2 operations) + auth-failure events (C4/SC-5
+      outcomes) land in the same sink and are verified in one query
+  - sc: SC-10
+    spans_concerns: [C6, C2]
+    description: >
+      Rate limiter (C6) keys off the api_keys identity (C2); per-key
+      isolation requires the limiter to bind to the authenticated key
+  - sc: SC-11
+    spans_concerns: [C5]
+    description: Response encoding discipline (C5)
+  - sc: SC-12
+    spans_concerns: [C6, C1]
+    description: >
+      Every error path (C6) — including the catch-all 404 whose rule placement
+      is a C1 ordering concern — must carry only the generic JSON shape
+
+shared_artifacts:
+  - artifact: wildcard_router.rules (Streamlit's internal Tornado router)
+    shared_by: [SC-1, SC-2, SC-3, SC-4, SC-5]
+    note: >
+      The single ordering-sensitive shared structure; every API request and
+      Streamlit's own routes traverse it. Guarded by the structural check,
+      self-check logging, and the documented disable-not-crash failure mode.
+  - artifact: shared SQLAlchemy engine/session factory (pool_size=0, max_overflow=10)
+    shared_by: [SC-5, SC-6, SC-8, SC-9]
+    note: >
+      API handlers share the connection budget with the UI; the dump holds
+      one connection for the full ~7,750-record serialization while auth
+      lookups, audit writes, and admin-view operations each take short-lived
+      sessions (get_session per operation, matching EventLogService/AuditService patterns)
+  - artifact: api_keys table
+    shared_by: [SC-5, SC-7, SC-8, SC-10]
+    note: >
+      Key state (enabled/revoked_at/last_used_at) drives 403 semantics, the
+      admin list display, at-rest verification, and limiter keying
+  - artifact: system_event_log table + EventLogService
+    shared_by: [SC-9]
+    note: >
+      Existing #1332 infrastructure reused unmodified for both lifecycle and
+      auth-failure events
+  - artifact: module-level latch in the registrar
+    shared_by: [SC-2, SC-4]
+    note: >
+      Bolts once per process regardless of how many sessions rerun main();
+      the self-check log (SC-2) and idempotency assertion (SC-4) both observe it
+  - artifact: closed 15-field whitelist definition
+    shared_by: [SC-6, SC-11, SC-12]
+    note: >
+      The whitelist is the entire data surface; SC-6 asserts exact field sets,
+      SC-11 asserts byte-exact encoding of those fields, SC-12 relies on the
+      surface staying closed
+
+cross_cutting_risks:
+  - risk: >
+      A defect in C1 (bolt) is visible to every other concern at once — a
+      mis-ordered prepend can shadow Streamlit's own routes; the catch-all
+      MUST be inserted after the endpoint rule and both ahead of the
+      existing catch-all
+  - risk: >
+      Connection-budget contention: a dump request holds a pooled connection
+      for the entire serialization; concurrent dumps + UI traffic could
+      exhaust max_overflow=10 and produce 503s (fail-closed per spec, but a
+      service-quality risk worth a plan note)
+  - risk: >
+      Unicode integrity is a cross-cutting invariant (R-10, SC-11) anchored
+      by docs/lessons-learned/2026-06-13-regex-linguistic-characters.md and
+      2026-06-13-infinity-symbol-normalization.md — any accidental
+      normalization/encoding step in C5 violates the data-integrity rules
