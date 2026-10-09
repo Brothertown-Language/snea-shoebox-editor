@@ -1,0 +1,46 @@
+# Analysis summary for #1420
+# Generated: 2026-10-09T22:50:04Z by pre-analysis `analyze` task
+# Source: .issues/1420/spec.md
+
+generator: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
+issue_number: 1420
+generated_at: 2026-10-09T22:50:04Z
+spec_path: .issues/1420/spec.md
+sc_count: 12
+artifact_status:
+  blast-radius.yaml: fresh
+  concern-map.yaml: fresh
+  code-path-inventory.yaml: fresh
+  cross-cutting-matrix.yaml: fresh
+  interface-compatibility.yaml: fresh
+  state-analysis.yaml: fresh
+  testability-assessment.yaml: fresh
+
+scope_summary: >
+  The spec adds an agent-facing read-only HTTP API bolted into the Streamlit
+  server's own Tornado application (no sidecar): a registrar gc-finds the live
+  tornado.web.Application at first script run and prepends routing rules into
+  wildcard_router.rules ahead of Streamlit's catch-all; GET /api/v1/records
+  serves the live linguistic records as a single UTF-8 JSON dump under
+  X-API-Key/X-API-Secret auth; a new api_keys table + service manage key+secret
+  pairs (PBKDF2-hashed secrets, one-time display) through a new admin-gated
+  admin view; key lifecycle and failed-auth events audit into the existing
+  system_event_log via EventLogService; per-key fixed-window rate limiting and
+  a closed JSON error contract complete the surface. 12 success criteria
+  across 5 implementation phases (Phase 0 probe re-verification gate).
+
+data_verification_notes:
+  - src/api/ does NOT exist — every src/api/* file in the spec is genuinely new (verified via ls)
+  - No existing tornado, gc, or wildcard_router usage anywhere in src/ or streamlit_app.py (grep clean) — the bolt mechanism introduces an entirely new integration surface
+  - uv.lock pins verified live: streamlit 1.54.0, tornado 6.5.4 — exactly the versions the spec's probe evidence was grounded on
+  - Local DB (production replica, accepting connections) verified read-only: 7753 total records, 7750 live (is_deleted = false) — the spec's "~7,753 records" example matches the TOTAL; the dump will serve 7750
+  - Zero api* tables exist in the local replica — api_keys is a genuinely new table; the new migration must version > 20261005131326 (latest registry entry, the #1332 system_event_log migration), in YYYYMMDDSSSSS format
+  - records table has exactly 21 columns in the DB matching the ORM: 13 whitelisted row-fields (id, lx, sort_lx, hm, ps, ge, source_id, source_page, status, mdf_data, current_version, is_deleted, updated_at) + 2 resolved fields (source via sources.name, languages via record_languages/languages primary-first) = the closed 15-field whitelist; 8 columns excluded by design (embedding, is_locked, locked_by, locked_at, lock_note, updated_by, reviewed_at, reviewed_by)
+  - EventLogService interface verified: static log_event(event_type, severity, message, source, details, session) with error-safe commit — directly reusable as the audit sink without modification
+  - Admin gating pattern verified in existing pages (batch_rollback.py, table_maintenance.py): st.session_state.get("user_role") != "admin" -> st.error + return; Admin section entry point is navigation_service.py:79-80
+  - init_db() at src/database/connection.py:678-687 explicitly imports every model to register it with Base.metadata — the new ApiKeys model MUST be added to this import list (a touchpoint the spec's Affected Files does NOT name; flagged as files_outside_plan_scope)
+  - Engine pool config verified: pool_size=0, max_overflow=10 (src/database/connection.py:629-630) — the API handlers share this budget with the UI; a full dump holds one connection for the entire serialization
+  - _initialize_database() is @st.cache_resource (runs once per process) but main() runs on every script rerun — a registrar call placed after it executes repeatedly, making the R-3 idempotency latch load-bearing, not defensive
+  - .streamlit/required_secrets.yaml lists 12 required paths; api.rate_limit_per_minute is an optional override with a default and must NOT be added to the manifest (adding it would fail startup preflight on deployments that omit it)
+  - No plan.md exists yet for #1420 (pre-analysis precedes planning); links.yaml and comments.yaml are empty — no sub-issues
+  - System status page has no event-log coupling (grep clean) — new audit events require no dashboard change
