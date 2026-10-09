@@ -1,0 +1,112 @@
+# Code path inventory for #1420
+# Generated: 2026-10-09T22:50:04Z by pre-analysis `analyze` task
+# Source: .issues/1420/spec.md
+
+generator: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
+issue_number: 1420
+generated_at: 2026-10-09T22:50:04Z
+spec_path: .issues/1420/spec.md
+
+code_paths:
+  - sc: SC-1
+    path: >
+      agent/curl -> GET :8501/api/v1/records -> tornado.web.Application (gc-found)
+      -> wildcard_router.rules[0] RecordsHandler (prepended) -> no credentials ->
+      401 {"error":{...}} served by the same process, ahead of Streamlit's catch-all
+    description: >
+      Proves the bolted route is live on the Streamlit server's port; the
+      registrar's self-check log line from the same process correlates the
+      bolt with the served response
+  - sc: SC-2
+    path: >
+      streamlit_app.py main() -> _initialize_database() (st.cache_resource,
+      once per process) -> registrar invocation -> gc-find Application ->
+      prepend rules -> self-check log (patterns in order, rule counts,
+      instance count, Streamlit 1.54.0 + Tornado 6.5.4)
+    description: >
+      Startup self-check naming /api/v1/records ahead of /api/.* plus both
+      version numbers, captured from the startup log
+  - sc: SC-3
+    path: >
+      unit fixture: structure-less Application -> registrar -> loud error log
+      naming the mismatch, "API disabled", no exception; Playwright: live app
+      -> normal UI operation with API disabled
+    description: >
+      The failure path is exercised both directions: registrar never raises
+      into the script path, and the UI is unaffected when the bolt fails
+  - sc: SC-4
+    path: >
+      unit: registrar invoked repeatedly against one Application fixture ->
+      rule count unchanged after first bolt; live: two distinct browser
+      sessions rerun main() -> module-level latch + structural route-presence
+      scan -> no duplicate rules
+    description: >
+      Idempotency holds across reruns, sessions, and module reloads because
+      session_state guards are per-browser-session and insufficient alone
+  - sc: SC-5
+    path: >
+      HTTP request -> X-API-Key + X-API-Secret headers -> auth.py: lookup by
+      key -> enabled/revoked check -> hmac.compare_digest(presented-secret
+      PBKDF2 hash, stored hash) -> 200 / 401 (uniform) / 403; POST to the
+      route -> 405; unknown /api/ path -> JSON 404 catch-all
+    description: >
+      Full auth + method matrix asserted status-by-status with JSON error
+      bodies against the live app with seeded keys
+  - sc: SC-6
+    path: >
+      GET /api/v1/records with valid pair -> session query records WHERE
+      is_deleted = false ORDER BY id ASC -> join sources.name +
+      record_languages/is_primary -> languages primary-first -> serialize
+      exactly the 15-field whitelist -> {"count": N, "records": [...]}
+    description: >
+      Every record field compared against DB values; each record's field-key
+      set asserted equal to the closed whitelist; count equals live-record
+      count (7750 in the current replica)
+  - sc: SC-7
+    path: >
+      Playwright (SNEA_E2E=1, :8501, headless) -> login as admin -> nav Admin
+      section -> api_keys page renders; create -> secret shown once;
+      regenerate -> new secret shown once; enable/disable/revoke -> list
+      reflects state; login as editor/viewer -> page blocked
+    description: >
+      Real-browser role-variant suite per docs/development/ui_testing_standard.md;
+      screenshots under tmp/<issue>/artifacts/ for vision review
+  - sc: SC-8
+    path: >
+      create key -> api_key_service: secrets.token_urlsafe(32) -> pbkdf2_hmac
+      sha256, 600k iterations, per-secret salt -> versioned secret_hash
+      stored -> DB full-table scan: plaintext absent, every secret_hash
+      matches pbkdf2_sha256$ format -> known secret authenticates (200)
+    description: >
+      At-rest storage discipline verified directly against the api_keys table
+  - sc: SC-9
+    path: >
+      lifecycle ops + failed auths -> EventLogService.log_event(event_type=
+      api_key_created|api_key_regenerated|api_key_enabled|api_key_disabled|
+      api_key_revoked|api_auth_failure) -> system_event_log rows; query the
+      table; assert event types, key identifiers, no secret material
+    description: >
+      Audit trail verified by direct system_event_log inspection; the sink
+      (EventLogService) is existing unmodified #1332 infrastructure
+  - sc: SC-10
+    path: >
+      configure low api.rate_limit_per_minute -> burst with key A past the
+      window -> 429 + Retry-After; key B concurrent requests -> 200
+      (in-memory per-key fixed-window limiter)
+    description: >
+      Per-key isolation and configured-limit fidelity asserted by burst test
+  - sc: SC-11
+    path: >
+      GET /api/v1/records -> assert Content-Type application/json;
+      charset=utf-8 -> select records containing ə, ŋ, ã, ꝏ -> compare raw
+      response bytes against DB values (no \u escapes, no normalization)
+    description: >
+      Byte-identical Unicode preservation per the project data-integrity
+      lessons (regex-linguistic-characters, infinity-symbol-normalization)
+  - sc: SC-12
+    path: >
+      unit: every error formatter output asserted against blocklist patterns
+      (postgres://, host/port tokens, traceback markers); live spot-checks of
+      401/404/429 bodies -> only {"error":{code,message}} generic shapes
+    description: >
+      No-leak guarantee asserted formatter-by-formatter plus live spot checks
