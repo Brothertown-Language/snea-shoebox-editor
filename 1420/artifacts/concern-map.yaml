@@ -1,0 +1,129 @@
+# Concern map for #1420
+# Generated: 2026-10-09T22:50:04Z by pre-analysis `analyze` task
+# Source: .issues/1420/spec.md
+
+generator: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
+issue_number: 1420
+generated_at: 2026-10-09T22:50:04Z
+spec_path: .issues/1420/spec.md
+
+concerns:
+  - id: C1
+    name: Route bolt mechanism (registrar)
+    description: >
+      gc-find the running tornado.web.Application instance(s) at first script
+      run; prepend tornado.web.Rule(PathMatches) entries to
+      wildcard_router.rules ahead of Streamlit's catch-all — /api/v1/records
+      first, then the /api/.* JSON-404 catch-all; module-level latch PLUS
+      structural route-presence scan for rerun/session/reload idempotency;
+      self-check log line naming patterns in order + rule counts + Application
+      instance count + Streamlit/Tornado versions; failure mode = loud error
+      log, API disabled, UI continues, no exception into the script path.
+      Handlers run outside the script-runner context: no st.* APIs, no
+      session state; DB access only through the shared engine/session factory.
+    scs: [SC-1, SC-2, SC-3, SC-4]
+    phase: Phase 0 (probe re-verification gate) + Phase 1
+    key_files: [src/api/registrar.py, src/api/routes/api_not_found.py, streamlit_app.py]
+  - id: C2
+    name: Key storage + credential scheme (auth model)
+    description: >
+      api_keys table (model + migration on the existing versioned stack) with
+      id, key (unique, snea_ prefix + token_urlsafe(16)), secret_hash, label,
+      created_by, created_at, enabled, revoked_at, last_used_at. Secrets:
+      stdlib secrets.token_urlsafe(32) (>=256-bit), stored ONLY as
+      PBKDF2-HMAC-SHA256 hashes — per-secret random salt, 600,000 iterations,
+      versioned string pbkdf2_sha256$<iterations>$<salt_b64>$<hash_b64>;
+      plaintext displayed exactly once and never persisted/logged/audited.
+      Service lifecycle: create / regenerate-secret (old secret invalid
+      immediately) / enable / disable / revoke (soft mark via revoked_at, rows
+      retained). Verification: lookup by key then hmac.compare_digest of the
+      PBKDF2 hash; 401 uniform message for missing/unknown/wrong; 403 for
+      known-but-disabled-or-revoked; last_used_at updated on success.
+    scs: [SC-5, SC-8, SC-9]
+    phase: Phase 2 (storage) + Phase 3 (request verification)
+    key_files: [src/database/models/api_keys.py, src/database/migrations.py, src/services/api_key_service.py, src/api/auth.py]
+  - id: C3
+    name: Admin view (key management UI)
+    description: >
+      New page src/frontend/pages/api_keys.py registered in the Admin section
+      of the navigation tree (admin-gated like batch_rollback/table_maintenance:
+      user_role != "admin" -> error + return). Key list (label, key identifier,
+      created, last used, status); create pair with one-time secret display;
+      regenerate secret with one-time display; enable/disable; revoke with
+      confirmation. Never redisplay an existing secret.
+    scs: [SC-7]
+    phase: Phase 2
+    key_files: [src/frontend/pages/api_keys.py, src/services/navigation_service.py]
+  - id: C4
+    name: Audit trail (lifecycle + auth failures)
+    description: >
+      All key lifecycle operations audited into system_event_log via the
+      existing #1332 EventLogService with event types api_key_created,
+      api_key_regenerated, api_key_enabled, api_key_disabled, api_key_revoked
+      (details identify key + acting admin, never secret material). Every
+      failed authentication attempt (401 and 403 outcomes) logged as
+      api_auth_failure with the presented key identifier (if parseable),
+      outcome, and client address — never the presented secret.
+    scs: [SC-9]
+    phase: Phase 2 (lifecycle events) + Phase 4 (auth-failure events)
+    key_files: [src/services/api_key_service.py, src/api/auth.py, src/services/event_log_service.py]
+  - id: C5
+    name: Records-only dump scoping (endpoint payload)
+    description: >
+      GET /api/v1/records serves live records (is_deleted = false) as a single
+      JSON response ordered by ascending id. CLOSED 15-field whitelist: id,
+      lx, sort_lx, hm, ps, ge, source_id, source_page, status, mdf_data,
+      current_version, is_deleted, updated_at + resolved source (sources.name)
+      + languages (codes ordered primary-first via record_languages.is_primary).
+      Excluded by design: embedding, is_locked, locked_by, locked_at,
+      lock_note, updated_by, reviewed_at, reviewed_by. Serialization with
+      ensure_ascii=False — Unicode (ə, ŋ, ã, č, ꝏ, combining diacritics)
+      byte-exact from the database, never \u-escaped, never normalized (per
+      docs/lessons-learned Unicode-integrity lessons); timestamps ISO 8601
+      UTC; count equals records in response.
+    scs: [SC-6, SC-11]
+    phase: Phase 3
+    key_files: [src/api/routes/records.py]
+  - id: C6
+    name: Request hardening + error contract
+    description: >
+      JSON error contract for 401/403/404/405/429/503 — shape
+      {"error": {"code", "message"}} with static generic messages, Content-Type
+      application/json; charset=utf-8; never DB connection details, hosts,
+      SQL, or stack traces. Non-GET on defined API routes -> 405; unknown
+      paths under /api/ -> JSON 404 catch-all (never the UI 404 page);
+      Streamlit's own routes unchanged behind the prepended block. Per-key
+      fixed-window rate limit (default 60 req/60 s, overridable via
+      api.rate_limit_per_minute secrets key) -> 429 + Retry-After, in-memory
+      per process. Database unavailable -> 503 fail-closed (auth lookup and
+      record query both).
+    scs: [SC-5, SC-10, SC-12]
+    phase: Phase 1 (error formatters/catch-all) + Phase 3 (405/scoping) + Phase 4 (rate limiter)
+
+phase_boundaries:
+  - concern: C1
+    boundary: >
+      Phase 0 gate (probe re-verified against pinned versions before any
+      implementation) -> Phase 1 produces the bolted routes with self-check;
+      Phases 2-4 bolt into the already-verified mechanism
+  - concern: C2
+    boundary: >
+      Phase 2 delivers table + hashing + service; Phase 3 consumes it at
+      request time (lookup + compare_digest); the 401/403 status semantics
+      straddle both and are verified together in SC-5
+  - concern: C3
+    boundary: >
+      Phase 2 -> Phase 4: page functional + gated before the Playwright E2E
+      suite runs against it (SC-7)
+  - concern: C4
+    boundary: >
+      Lifecycle events land in Phase 2 (SC-9 partial), auth-failure events in
+      Phase 4 (SC-9 completion) — same sink, same verification query
+  - concern: C5
+    boundary: >
+      Phase 3 -> Phase 4 full re-run: dump payload verified against the
+      re-synced local replica (regression protocol) in SC-6/SC-11
+  - concern: C6
+    boundary: >
+      Error formatters exist from Phase 1 (SC-12 blocklist), 405/catch-all
+      wiring in Phase 3, rate limiter in Phase 4 (SC-10)
