@@ -1,0 +1,172 @@
+# Blast-radius analysis for #1420
+# Generated: 2026-10-09T22:50:04Z by pre-analysis `analyze` task
+# Source: .issues/1420/spec.md
+
+generator: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
+issue_number: 1420
+generated_at: 2026-10-09T22:50:04Z
+spec_path: .issues/1420/spec.md
+
+affected_files:
+  - path: streamlit_app.py
+    status: modified
+    exists: true
+    blast_radius: high
+    consumers: [SC-1, SC-2]
+    note: >
+      One registrar invocation added in main() after _initialize_database()
+      (line 291). Highest-risk existing-file edit in the change: the call site
+      sits in the every-rerun UI script path, so the registrar must never
+      raise into it (R-4 failure mode). _initialize_database() is
+      @st.cache_resource (once per process) while main() reruns per session —
+      the invocation executes on every rerun, exercising idempotency on every
+      page load.
+  - path: src/api/__init__.py
+    status: new
+    exists: false
+    blast_radius: high
+    consumers: [SC-1]
+    note: parent package marker (R-1 — all API code under one parent)
+  - path: src/api/registrar.py
+    status: new
+    exists: false
+    blast_radius: high
+    consumers: [SC-1, SC-2, SC-3, SC-4]
+    note: >
+      gc-find + bolt + module-level latch + structural route-presence check +
+      self-check logging + failure mode. The single most defect-sensitive new
+      module: wrong prepends break Streamlit's own routing (SC-1 catch-all
+      invariant), missing idempotency stacks duplicate rules (SC-4).
+  - path: src/api/auth.py
+    status: new
+    exists: false
+    blast_radius: high
+    consumers: [SC-5, SC-9, SC-10, SC-12]
+    note: >
+      X-API-Key/X-API-Secret verification, constant-time comparison, 401/403
+      semantics, last_used_at update, auth-failure audit, per-key rate
+      limiter. Auth-bypass defects surface here.
+  - path: src/api/routes/__init__.py
+    status: new
+    exists: false
+    blast_radius: medium
+    consumers: [SC-1]
+  - path: src/api/routes/records.py
+    status: new
+    exists: false
+    blast_radius: high
+    consumers: [SC-6, SC-11]
+    note: >
+      Dump endpoint: closed 15-field whitelist, is_deleted=false filter,
+      ascending id order, resolved source name + primary-first language codes,
+      ensure_ascii=False UTF-8. Over-exposure (any excluded column) or Unicode
+      corruption surfaces here.
+  - path: src/api/routes/api_not_found.py
+    status: new
+    exists: false
+    blast_radius: medium
+    consumers: [SC-5, SC-12]
+    note: /api/.* JSON 404 catch-all — ordering after the endpoint rule, before Streamlit's catch-all
+  - path: src/database/models/api_keys.py
+    status: new
+    exists: false
+    blast_radius: high
+    consumers: [SC-8]
+    note: ApiKeys model (id, key unique, secret_hash, label, created_by, created_at, enabled, revoked_at, last_used_at)
+  - path: src/database/migrations.py
+    status: modified
+    exists: true
+    blast_radius: high
+    consumers: [SC-8]
+    note: >
+      Append-only registry edit: new (version, "_migrate_create_api_keys",
+      description) tuple with version > 20261005131326 in YYYYMMDDSSSSS
+      format (AI AGENT DIRECTIVE at migrations.py:108-113 forbids renumbering
+      and incremental values). Registry drift or a mis-ordered version breaks
+      migration gating on every environment.
+  - path: src/database/connection.py
+    status: modified
+    exists: true
+    blast_radius: medium
+    consumers: [SC-8]
+    note: >
+      DISCOVERED OUTSIDE SPEC'S AFFECTED FILES. init_db() (lines 678-687)
+      imports every model explicitly to register it with Base.metadata before
+      create_all; the ApiKeys model must be added to that import list or the
+      table is invisible to create_all on fresh databases. One-line, low-risk
+      edit but easy to miss; _reset_sequences auto-covers the new integer-id
+      table via Base.metadata.sorted_tables once registered.
+  - path: src/services/api_key_service.py
+    status: new
+    exists: false
+    blast_radius: high
+    consumers: [SC-7, SC-8, SC-9]
+    note: >
+      create / regenerate-secret / enable / disable / revoke; stdlib secrets
+      generation (>=256-bit); PBKDF2-HMAC-SHA256 600k versioned hash format;
+      plaintext never persisted/logged/audited; lifecycle audit events via
+      EventLogService.
+  - path: src/frontend/pages/api_keys.py
+    status: new
+    exists: false
+    blast_radius: high
+    consumers: [SC-7]
+    note: >
+      Admin-gated page following the established guard pattern
+      (user_role != "admin" -> error + return, as in batch_rollback.py /
+      table_maintenance.py). Secret displayed exactly once at
+      create/regenerate; never redisplayed.
+  - path: src/services/navigation_service.py
+    status: modified
+    exists: true
+    blast_radius: medium
+    consumers: [SC-7]
+    note: >
+      New PAGE_API_KEYS st.Page registration + Admin-section entry (line
+      79-80). Note: the unauthenticated tree (lines 90-102) lists ALL pages
+      by design for deep-link capture — the new page will appear there too;
+      page-level self-gating is the established and sufficient mechanism.
+  - path: test/ (new unit test files)
+    status: new
+    exists: false
+    blast_radius: medium
+    consumers: [SC-3, SC-4, SC-8, SC-10, SC-12]
+    note: >
+      registrar idempotency + failure-mode fixture, hashing/storage
+      discipline, error-formatter exposure blocklist, rate limiter.
+      pytest (>=9.0.2 in dev deps), pythonpath=["."], existing SC-named
+      convention (test_<topic>_sc<N>.py).
+  - path: test/ui/ (new Playwright E2E files)
+    status: new
+    exists: false
+    blast_radius: medium
+    consumers: [SC-7]
+    note: >
+      Admin view E2E, playwright_e2e-marked, SNEA_E2E=1 gate on :8501,
+      headless enforced by .streamlit/config.toml, screenshots under
+      tmp/<issue>/artifacts/ per docs/development/ui_testing_standard.md and
+      test/ui/AGENTS.md.
+
+read_only_consumers:
+  - path: uv.lock
+    note: pins verified (streamlit 1.54.0, tornado 6.5.4) — no change; stdlib-only implementation adds no dependency
+  - path: .streamlit/required_secrets.yaml
+    note: no change — api.rate_limit_per_minute is optional-with-default; adding it to the required manifest would fail preflight on deployments omitting it
+  - path: src/database/models/core.py (Record, Source, Language, RecordLanguage)
+    note: read-only query targets for the dump endpoint; 21 columns verified live; whitelist maps 13 + 2 resolved
+  - path: src/database/models/event_log.py (SystemEventLog)
+    note: reused as-is; audit sink table already present (verified in local replica)
+  - path: src/services/event_log_service.py (EventLogService)
+    note: reused as-is — static error-safe log_event matches every audit need (R-7, R-13); no modification required
+  - path: src/database/connection.py::get_engine/get_session
+    note: shared engine/session factory used by handlers outside script context (R-2); no signature change
+
+scope_summary: >
+  Blast radius is bounded by the single-process design: all API code is new
+  (src/api/ package, api_keys model/service/page) plus four modified existing
+  files (streamlit_app.py one-line wiring, migrations.py append-only registry
+  entry, navigation_service.py Admin entry, connection.py init_db model
+  registration — the last discovered beyond the spec's Affected Files list).
+  Streamlit's own routes, all existing pages, and the search/FTS/normalization
+  infrastructure are untouched; the only ordering-sensitive shared structure
+  is wildcard_router.rules, guarded by the structural check and self-check.
