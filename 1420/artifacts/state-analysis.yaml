@@ -1,0 +1,156 @@
+# State analysis for #1420
+# Generated: 2026-10-09T22:50:04Z by pre-analysis `analyze` task
+# Source: .issues/1420/spec.md
+
+generator: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
+issue_number: 1420
+generated_at: 2026-10-09T22:50:04Z
+spec_path: .issues/1420/spec.md
+
+state_machines:
+  - machine: API key lifecycle
+    states:
+      - absent (no row)
+      - created/enabled (enabled = true, revoked_at = null)
+      - disabled (enabled = false, revoked_at = null)  # reversible
+      - revoked (revoked_at set; row retained for audit)  # terminal
+    transitions:
+      - from: absent
+        to: created/enabled
+        via: create (label, acting admin) — secret generated and displayed exactly once
+        audit: api_key_created
+      - from: created/enabled
+        to: created/enabled
+        via: regenerate-secret — same key identifier, new secret_hash; old secret invalid immediately
+        audit: api_key_regenerated
+      - from: created/enabled
+        to: disabled
+        via: disable
+        audit: api_key_disabled
+      - from: disabled
+        to: created/enabled
+        via: enable
+        audit: api_key_enabled
+      - from: created/enabled (or disabled)
+        to: revoked
+        via: revoke (with UI confirmation) — soft mark via revoked_at, row retained
+        audit: api_key_revoked
+    request_time_effects:
+      - enabled + valid secret -> 200
+      - disabled or revoked -> 403 key_disabled (known key)
+      - revoked mid-request -> next request fails closed; auth decisions never cached beyond the request
+      - last_used_at updated on successful authentication only
+
+  - machine: bolt state (per process)
+    states:
+      - unbolted (before first script run completes)
+      - bolted (rules prepended, module latch set)
+      - disabled (structure missing/changed; loud error logged; UI unaffected)
+    transitions:
+      - from: unbolted
+        to: bolted
+        via: registrar gc-find + prepend + self-check log (patterns in order, counts, versions)
+      - from: bolted
+        to: bolted
+        via: any rerun / second session / module reload — module-level latch + structural route-presence scan = no-op (SC-4)
+      - from: unbolted
+        to: disabled
+        via: Application or wildcard_router.rules not found — log loudly naming the mismatch, raise nothing
+      - from: disabled
+        to: disabled
+        via: subsequent runs re-attempt discovery (no latch on failure) but never crash the UI
+
+  - machine: per-key rate-limit window (in-memory, per process)
+    states:
+      - under limit (requests in current fixed window < configured cap)
+      - limited (window cap reached)
+    transitions:
+      - under limit -> under limit: each authenticated request increments the key's window counter
+      - under limit -> limited: cap (default 60/60s, api.rate_limit_per_minute override) exceeded -> 429 + Retry-After
+      - limited -> under limit: fixed window expires and the counter resets
+    notes: per-key isolation is asserted by SC-10 (second key unaffected); state is in-memory per process, consistent with single-process hosting
+
+  - machine: server/database availability (request-time)
+    states:
+      - db_up
+      - db_down
+    transitions:
+      - db_up: auth lookup and record query succeed -> 200 path
+      - db_down: both fail closed -> 503 service_unavailable JSON; failure logged
+    notes: pool_pre_ping on the shared engine detects a down/restarting DB and feeds the 503 path; error bodies stay generic (SC-12)
+
+state_transitions:
+  - sc: SC-1
+    from: unbolted Streamlit server (no /api/ routes)
+    to: bolted server serving /api/v1/records on its own port
+    transition: main() script run -> registrar bolt -> wildcard_router.rules prepend
+    verification: unauthenticated GET returns 401 with the JSON error shape; correlated with the same-process self-check log
+  - sc: SC-2
+    from: silent bolt
+    to: logged route-presence assertion
+    transition: registrar self-check after bolting
+    verification: startup log lists /api/v1/records ahead of /api/.* plus Streamlit 1.54.0 and Tornado 6.5.4
+  - sc: SC-3
+    from: structure-less Application fixture / structure change
+    to: API disabled state, UI unaffected
+    transition: registrar failure branch (loud log, no exception)
+    verification: unit fixture asserts log + no raise; Playwright asserts normal UI operation
+  - sc: SC-4
+    from: bolted once
+    to: still exactly one rule per API pattern
+    transition: repeated registrar invocations across reruns/sessions/reloads
+    verification: rule count unchanged after first bolt in unit; self-check log across two distinct browser sessions
+  - sc: SC-5
+    from: request with any credential/method/path combination
+    to: 200 | 401 (uniform) | 403 | 405 | JSON 404
+    transition: auth pipeline + method scoping + catch-all
+    verification: HTTP matrix suite with seeded keys; uniform 401 message asserted; JSON bodies asserted
+  - sc: SC-6
+    from: 7,753 total rows (7,750 live) in the records table
+    to: >
+      {"count": 7750, "records": [...]} — exactly the 15 whitelisted fields per record
+    transition: live-filter query -> whitelist serialization
+    verification: field-by-field DB comparison; field-key set equality; ascending id order
+  - sc: SC-7
+    from: key absent -> created -> possibly disabled/regenerated -> revoked
+    to: list reflects every transition; secrets shown exactly once each
+    transition: admin view actions -> api_key_service operations
+    verification: Playwright role-variant suite (admin sees/actions; editor/viewer blocked)
+  - sc: SC-8
+    from: plaintext secret (memory only, one-time display)
+    to: pbkdf2_sha256$<iterations>$<salt_b64>$<hash_b64> at rest
+    transition: PBKDF2-HMAC-SHA256, 600k iterations, per-secret salt
+    verification: full-table scan finds no plaintext; format asserted; known secret authenticates
+  - sc: SC-9
+    from: lifecycle actions + failed auth attempts
+    to: system_event_log rows with api_key_* / api_auth_failure event types
+    transition: EventLogService.log_event (existing sink)
+    verification: direct table query; event types + key identifiers present; no secret material anywhere
+  - sc: SC-10
+    from: per-key counters under a low configured limit
+    to: 429 + Retry-After for the exhausted key; concurrent second key unaffected
+    transition: in-memory fixed-window limiter
+    verification: burst test with configured low limit; limit value fidelity asserted
+  - sc: SC-11
+    from: Unicode-bearing DB values (ə, ŋ, ã, ꝏ)
+    to: raw UTF-8 response bytes, byte-identical
+    transition: ensure_ascii=False serialization, charset=utf-8
+    verification: Content-Type asserted; raw-byte comparison against DB values
+  - sc: SC-12
+    from: any error condition (401/403/404/405/429/503)
+    to: generic {"error":{code,message}} body only
+    transition: shared error formatters
+    verification: blocklist unit assertions (postgres://, host/port tokens, traceback markers) + live spot checks
+
+edge_case_states:
+  - 'empty database / zero live records -> 200 with {"count": 0, "records": []}'
+  - soft-deleted records: never served — the is_deleted filter is in the query, not the payload (current replica has 3 soft-deleted of 7,753)
+  - multiple Application instances found by gc: every instance exposing wildcard_router.rules is bolted; instance count logged in the self-check
+  - duplicate bolt attempts (rerun, second session, module reload): no-op via module latch + structural scan
+  - missing headers / unknown key / wrong secret: uniform 401, logged as api_auth_failure; response never distinguishes the cause
+  - header edge cases: values compared as received; no trimming or case normalization; empty header values fail as missing
+  - unexpected query parameters: ignored (dump semantics; no 400 path)
+  - key revoked mid-request: next request fails closed; no caching of auth decisions
+  - database unavailable after the bolt: 503 fail-closed on both auth lookup and record query; logged
+  - bolt-structure change on Streamlit upgrade: loud error, API disabled, UI unaffected, no crash
+  - audit-write failure during a request: swallowed and logged by EventLogService — request handling is never interrupted by a failed event write
