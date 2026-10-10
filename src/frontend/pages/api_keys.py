@@ -29,6 +29,22 @@ def _acting_admin() -> str:
     return user_info.get("login") or st.session_state.get("user_email") or "unknown"
 
 
+def _api_base_url() -> str:
+    """Best-effort base URL for the copyable request example.
+
+    Derived from the browser request's Host header (what the admin actually
+    used to reach the app), with the protocol taken from the platform's
+    forwarded-proto header when present (HTTPS on Community Cloud) — so the
+    generated command is correct both locally and in production.
+    """
+    try:
+        host = st.context.headers.get("Host") or "localhost:8501"
+        proto = st.context.headers.get("X-Forwarded-Proto") or "http"
+        return f"{proto}://{host}"
+    except Exception:
+        return "http://localhost:8501"
+
+
 def _status_of(row: ApiKeys) -> str:
     if row.revoked_at is not None:
         return "revoked"
@@ -61,6 +77,12 @@ def main():
         key, secret = pending
         st.success(f"New secret issued for `{key}`. **Copy it now — it will never be shown again.**")
         st.code(secret, language=None)
+        st.caption("Copyable request (same one-time display — the command embeds the secret):")
+        st.code(
+            f'curl -sS -H "X-API-Key: {key}" -H "X-API-Secret: {secret}" '
+            f'"{_api_base_url()}/api/v1/records" -o records.json',
+            language="bash",
+        )
         if st.button("I have stored the secret", key="api_keys_ack_secret"):
             del st.session_state[_SESSION_NEW_SECRET]
             st.rerun()
