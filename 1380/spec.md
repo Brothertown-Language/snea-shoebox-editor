@@ -36,7 +36,7 @@ Each entry point is independently loadable — an agent reads only what its inte
 2. **Per-entry files**: Each `\key` entry gets its own file under `markers/` for atomic loading, named for the entry's first code; a multi-code entry is one entry whose file covers all its codes, with the frontmatter `marker` field listing them
 3. **Bidirectional cross-refs**: `\cf` references become forward links in the referencing entry's detail file + a backlinks section in the target entry's detail file
 4. **Frontmatter YAML**: Every entry file includes `marker`, `category`, `hierarchy_level`, `concerns`, `cross_refs`, `tokens_estimate` for agent parsing
-5. **Token budgets**: Each chunk < 4k tokens; Level 1 index < 2k tokens. Token counts throughout this spec are measured as ⌈bytes ÷ 4⌉ (`wc -c` / 4)
+5. **Token budgets**: Each generated file < 4k tokens; Level 1 index < 2k tokens. Token counts throughout this spec are measured as ⌈bytes ÷ 4⌉ (`wc -c` / 4)
 6. **Static source, Markdown as source of truth**: The source is frozen (authoritative last-modified 2006-05-12 per `docs/mdf/SOURCE-PROVENANCE.md`); content is migrated once during implementation; after migration the Markdown files are edited directly, and the Toolbox original remains in-repo as frozen provenance, never written to
 7. **Separation-of-concerns axis**: Concern views (`structure`, `semantics`, `presentation`, `data-handling`) associate entries by the job the documentation content performs, independent of the semantic grouping in `topics/`; concern membership is declared in frontmatter and verified for consistency
 
@@ -53,7 +53,7 @@ Each entry point is independently loadable — an agent reads only what its inte
 
 **Content units.** A `\key` entry block is its `\key` line through the line preceding the next line beginning with `\key`, continuation lines included. A `\cf` field and an `\ftx` field each comprise their marker line plus the immediately following non-blank lines that do not begin with `\`. The file preamble is every line before the first `\key` line. Content comparisons normalize horizontal whitespace runs to single spaces; every other character compares exactly.
 
-**Cross-reference derivation.** A `\cf` field's whitespace-separated tokens name cross-reference targets as follows:
+**Cross-reference derivation.** The whitespace-separated tokens following a `\cf` field's `\cf` marker name cross-reference targets as follows:
 
 1. A token beginning with `\` names the `\key` entry whose code equals the token with its leading `\` and trailing punctuation removed.
 2. A token containing `*` names the marker family listed for it in the star-family table below; a `*` token not listed there names nothing.
@@ -76,7 +76,7 @@ Each entry point is independently loadable — an agent reads only what its inte
 | `we*` | we, wn, wr |
 | `xv*` | xe, xn, xr, xv |
 
-Measured token composition across the 297 `\cf` fields (marker lines plus continuations, 1,018 tokens): 298 backslash-prefixed, 16 `*`-family occurrences across the 12 listed families, 106 bare references, 598 prose tokens; no token combines the backslash and `*` forms, and every backslash and family token resolves to at least one `\key` code.
+Measured token composition across the 297 `\cf` fields (tokens following the `\cf` markers, continuation lines included; 1,018 tokens): 298 backslash-prefixed, 16 `*`-family occurrences across the 12 listed families, 107 bare references, 597 prose tokens; no token combines the backslash and `*` forms, and every backslash and family token resolves to at least one `\key` code.
 
 ## Output Structure
 
@@ -124,13 +124,14 @@ The project-local entry-point card `docs/agents/mdf-progressive.md` routes agent
 | SC-1 | Every `\key` entry in the source file has an individual detail file under `markers/` — named for the entry's first `\key` code, with frontmatter containing `marker` (the entry's code or codes), `category`, `hierarchy_level`, `concerns`, `cross_refs`, and `tokens_estimate` | `structural` | Mechanical comparison: the set of detail files equals the set of `\key` entries extracted from the source file (file name = entry's first code); each file parses as valid YAML frontmatter carrying all 6 required fields |
 | SC-2 | Level 1 `index.md` loads in < 2,000 tokens under the token measure defined in Key Decisions | `string` | Token measure (⌈bytes ÷ 4⌉) of `index.md` < 2,000 tokens |
 | SC-3 | Every cross-reference derived from the source's `\cf` fields under the Cross-reference derivation rule is resolved bidirectionally: the referencing entry's detail file contains a forward link resolving to the target entry's detail file, and the target entry's detail file contains a `## Backlinks` section listing the referencing entry | `structural` | Mechanical comparison with no hardcoded totals: extract the (source entry → target entry) pair set from the source's `\cf` fields per the Cross-reference derivation rule (a reference to any of an entry's codes targets that entry); extract the forward-link pair set by resolving every markdown link in each `markers/*.md` outside its `## Backlinks` section to the entry whose detail file it names; extract the backlink pair set from each file's `## Backlinks` section; the source pair set must equal the forward-link set, and the backlink set must equal its inverse |
-| SC-4 | Token estimates in frontmatter (`tokens_estimate`) are within ±20% of the file's actual token count under the token measure defined in Key Decisions, for every generated file | `structural` | Mechanical check over every generated file under `docs/mdf/ai-progressive/`: compute the token measure (⌈bytes ÷ 4⌉) and verify `tokens_estimate` is within ±20% of it for each file; no sampling |
+| SC-4 | Token estimates in frontmatter (`tokens_estimate`) are within ±20% of the file's actual token count under the token measure defined in Key Decisions, for every entry detail file | `structural` | Mechanical check over every entry detail file under `docs/mdf/ai-progressive/markers/`: compute the token measure (⌈bytes ÷ 4⌉) and verify `tokens_estimate` is within ±20% of it for each file; no sampling |
 | SC-5 | Migration acceptance (one-time, performed during implementation): the migrated Markdown faithfully captures the source — a fresh-context reviewer compares a minimum of 15 `\key` entries sampled across the source file, each between its `markers/{code}.md` and the corresponding source entry block (definition text, hierarchy placement, `\ftx` examples, `\cf` cross-references), and reports no content divergence; and the source file is left unmodified (git diff over `MDFields19a_UTF8.txt` is empty) | `semantic` | Fresh-context acceptance review with the stated sample minimum, plus a git-diff check confirming the source file unmodified |
 | SC-6 | Zero JSON files in `docs/mdf/ai-progressive/` — all navigation via markdown links and frontmatter | `string` | `find docs/mdf/ai-progressive/ -name '*.json'` returns empty |
 | SC-7 | All generated Markdown files are written to `docs/mdf/ai-progressive/`: `index.md`, one `markers/{code}.md` per `\key` entry in the source, the four `concerns/` views, the `topics/` files listed in Output Structure, and `README.md` | `structural` | The `markers/` file set equals the set of `\key` entries extracted from the source (file name = entry's first code); `index.md`, the four `concerns/` files, the enumerated `topics/` files, and `README.md` exist on disk |
 | SC-8 | The output directory `docs/mdf/ai-progressive/` is committed to the repository (not gitignored) so that other specs can reference individual entry files as artifacts | `structural` | `git ls-files docs/mdf/ai-progressive/` lists every generated file: the tracked file set equals the generated on-disk file set, with no generated file ignored or untracked |
 | SC-9 | Concern-view consistency: `concerns/` contains exactly `structure.md`, `semantics.md`, `presentation.md`, and `data-handling.md`; for every concern, the set of entries listed in the view equals the set of entries whose frontmatter `concerns` field includes that concern; and every concern-view link into an entry file resolves to that entry file and to a section corresponding to a concern the entry declares | `structural` | Mechanical comparison over the generated Markdown with no hardcoded totals: extract concern membership from entry frontmatter and from each view's entry list; the two sets must be equal per concern; verify every view link target exists and its anchor corresponds to a declared concern section of the target entry |
 | SC-10 | Entry-point card: `docs/agents/mdf-progressive.md` exists, is tracked in git, and every concrete repository path it references exists | `structural` | `git ls-files docs/agents/mdf-progressive.md` lists the file; extract every concrete repo-relative path referenced in the card (brace pattern notation such as `markers/{code}.md` is not a concrete path) and verify each exists on disk |
+| SC-11 | Every generated file under `docs/mdf/ai-progressive/` is < 4,000 tokens under the token measure defined in Key Decisions | `structural` | Mechanical check: compute the token measure (⌈bytes ÷ 4⌉) of every generated file and verify each is < 4,000 tokens |
 
 ## Implementation Phases
 
@@ -152,7 +153,7 @@ The project-local entry-point card `docs/agents/mdf-progressive.md` routes agent
 ### Phase 4: Concern Views & Topic Files
 - Generate the four concern views under `concerns/` and the topic files under `topics/`
 - Compute and embed `tokens_estimate` in frontmatter
-- Verify SC-4 (token estimate accuracy) and SC-9 (concern-view consistency)
+- Verify SC-4 (token estimate accuracy), SC-9 (concern-view consistency), and SC-11 (per-file token budget)
 
 ### Phase 5: Migration Acceptance Review
 - Fresh-context acceptance review per SC-5: sampled entry comparison against the frozen source; source-file-unmodified check
@@ -171,13 +172,14 @@ The project-local entry-point card `docs/agents/mdf-progressive.md` routes agent
 | Every `\key` entry has an individual detail file with frontmatter | SC-1 | Phase 2 |
 | Level 1 index loads in < 2,000 tokens | SC-2 | Phase 1 |
 | Every `\cf` cross-reference resolved bidirectionally | SC-3 | Phase 3 |
-| Token estimates within ±20% of actual for every generated file | SC-4 | Phase 4 |
+| Token estimates within ±20% of actual for every entry detail file | SC-4 | Phase 4 |
 | One-time migration acceptance; source left unmodified | SC-5 | Phase 5 |
 | Zero JSON files in output directory | SC-6 | Phase 6 |
 | All generated files written to `docs/mdf/ai-progressive/` | SC-7 | Phase 6 |
 | Output directory committed to repository (not gitignored) | SC-8 | Phase 6 |
 | Concern views consistent with declared frontmatter membership | SC-9 | Phase 4 |
 | Entry-point card present, tracked, with resolving path references | SC-10 | Phase 6 |
+| Every generated file loads in < 4,000 tokens | SC-11 | Phase 4 |
 
 ## Type
 
@@ -193,5 +195,6 @@ SPEC (AI agent documentation format — markdown native)
 | 2026-10-10 | Count-independent criteria: SC-3 and SC-5 redefined to derive completeness from the source data (set/multiset equality between source-derived extractions and output content) instead of hardcoded totals; same instrument normalization applied to SC-1, SC-7, SC-8; source facts corrected to measured values (130,520 bytes, 108 \key, 297 \cf, 425 \ftx) with explicit measurement definitions; added Cross-reference derivation rule for `*` family patterns; synced spec.md artifact with issue body | Spec audit FAIL: count-dependent instruments are false measures; artifact divergence (spec.md superseded by issue body) | Developer direction on audit findings |
 | 2026-10-10 | Static-source reframe: Key Decision 6 replaced — Markdown is the post-migration source of truth, source frozen at 2006-05-12 per `docs/mdf/SOURCE-PROVENANCE.md`; SC-5 reframed from standing round-trip conversion check to one-time migration acceptance review (with source-unmodified check); reverse-converter removed from Phases; Phase 1 reframed as one-time migration with no delivered conversion program; added separation-of-concerns axis (`concerns/` views, `concerns` frontmatter field, per-concern `##` sections) with SC-9; added entry-point card `docs/agents/mdf-progressive.md` with SC-10; noted 11 empty `\ftx` fields; converter pipeline recorded as rejected alternative | Developer direction: MDF documentation is static legacy (last published 2006-05-12) — no conversion machinery; association by separation of concerns; single intent-based entry-point card | Developer direction |
 | 2026-10-10 | Validation remediation: Cross-reference derivation rule completed — backslash-prefixed token form made explicit (298 occurrences, the dominant reference form), star-family enumeration pinned to 12 families with `lv*` (source-notation-derived, all family codes verified present), bare-token reference positions defined (line-initial, ≥2-space column break, comma-preceded, or code-equal inside a comma-containing parenthetical) with the 7 prose false-positives (`or`, `on` in running text) excluded; token measure pinned to ⌈bytes ÷ 4⌉ throughout, removing the tokenizer-or-heuristic either/or; SC-4 reclassified from sampled semantic check to per-file structural check (no sampling); entry-block/field/preamble Content units definitions added (field continuations carry cross-reference tokens, e.g. `lv*`); multi-code entry fact added (108 entries, 121 codes; verb paradigm entry carries 14 codes) with file-naming by first code in SC-1/SC-7; marker inventory extended (`\shd2`, `\shd3`, `\shd4`, `\nwt`, `\bib`); SC-10 concrete-path clarification | Validation FAIL: SC-3 ambiguous (class 4), SC-4 misclassified evidence (class 5); live source verification during validation | Validation findings, developer-directed revision |
+| 2026-10-10 | Re-audit remediation: derivation rule scoped to tokens following the `\cf` marker (the marker token itself derives no self-reference — 92 spurious pairs eliminated); `\cf` token-composition facts corrected to the rule-measured values (107 bare references, 597 prose tokens) with the measurement basis stated; SC-4 scoped to entry detail files, matching the Key Decision 4 frontmatter scope; added SC-11 (every generated file < 4,000 tokens) verifying the Key Decision 5 budget, with Key Decision 5 wording aligned to generated files | Re-audit FAIL: `\cf` marker token derived spurious self-references (class 4); Key Decision 5 chunk budget unverified (class 2); Key Decision 4 frontmatter scope two-readable (class 4) | Re-audit findings, developer direction to iterate to clean pass |
 
 🤖 Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)

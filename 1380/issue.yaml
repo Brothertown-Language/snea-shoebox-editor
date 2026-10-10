@@ -93,8 +93,8 @@ body: '# SPEC: AI Agent Ready Progressive Read Markdown Format for MDF Master Do
   4. **Frontmatter YAML**: Every entry file includes `marker`, `category`, `hierarchy_level`,
   `concerns`, `cross_refs`, `tokens_estimate` for agent parsing
 
-  5. **Token budgets**: Each chunk < 4k tokens; Level 1 index < 2k tokens. Token counts
-  throughout this spec are measured as ⌈bytes ÷ 4⌉ (`wc -c` / 4)
+  5. **Token budgets**: Each generated file < 4k tokens; Level 1 index < 2k tokens.
+  Token counts throughout this spec are measured as ⌈bytes ÷ 4⌉ (`wc -c` / 4)
 
   6. **Static source, Markdown as source of truth**: The source is frozen (authoritative
   last-modified 2006-05-12 per `docs/mdf/SOURCE-PROVENANCE.md`); content is migrated
@@ -143,8 +143,8 @@ body: '# SPEC: AI Agent Ready Progressive Read Markdown Format for MDF Master Do
   to single spaces; every other character compares exactly.
 
 
-  **Cross-reference derivation.** A `\cf` field''s whitespace-separated tokens name
-  cross-reference targets as follows:
+  **Cross-reference derivation.** The whitespace-separated tokens following a `\cf`
+  field''s `\cf` marker name cross-reference targets as follows:
 
 
   1. A token beginning with `\` names the `\key` entry whose code equals the token
@@ -196,11 +196,11 @@ body: '# SPEC: AI Agent Ready Progressive Read Markdown Format for MDF Master Do
   | `xv*` | xe, xn, xr, xv |
 
 
-  Measured token composition across the 297 `\cf` fields (marker lines plus continuations,
-  1,018 tokens): 298 backslash-prefixed, 16 `*`-family occurrences across the 12 listed
-  families, 106 bare references, 598 prose tokens; no token combines the backslash
-  and `*` forms, and every backslash and family token resolves to at least one `\key`
-  code.
+  Measured token composition across the 297 `\cf` fields (tokens following the `\cf`
+  markers, continuation lines included; 1,018 tokens): 298 backslash-prefixed, 16
+  `*`-family occurrences across the 12 listed families, 107 bare references, 597 prose
+  tokens; no token combines the backslash and `*` forms, and every backslash and family
+  token resolves to at least one `\key` code.
 
 
   ## Output Structure
@@ -319,9 +319,10 @@ body: '# SPEC: AI Agent Ready Progressive Read Markdown Format for MDF Master Do
 
   | SC-4 | Token estimates in frontmatter (`tokens_estimate`) are within ±20% of the
   file''s actual token count under the token measure defined in Key Decisions, for
-  every generated file | `structural` | Mechanical check over every generated file
-  under `docs/mdf/ai-progressive/`: compute the token measure (⌈bytes ÷ 4⌉) and verify
-  `tokens_estimate` is within ±20% of it for each file; no sampling |
+  every entry detail file | `structural` | Mechanical check over every entry detail
+  file under `docs/mdf/ai-progressive/markers/`: compute the token measure (⌈bytes
+  ÷ 4⌉) and verify `tokens_estimate` is within ±20% of it for each file; no sampling
+  |
 
   | SC-5 | Migration acceptance (one-time, performed during implementation): the migrated
   Markdown faithfully captures the source — a fresh-context reviewer compares a minimum
@@ -366,6 +367,11 @@ body: '# SPEC: AI Agent Ready Progressive Read Markdown Format for MDF Master Do
   repo-relative path referenced in the card (brace pattern notation such as `markers/{code}.md`
   is not a concrete path) and verify each exists on disk |
 
+  | SC-11 | Every generated file under `docs/mdf/ai-progressive/` is < 4,000 tokens
+  under the token measure defined in Key Decisions | `structural` | Mechanical check:
+  compute the token measure (⌈bytes ÷ 4⌉) of every generated file and verify each
+  is < 4,000 tokens |
+
 
   ## Implementation Phases
 
@@ -409,7 +415,8 @@ body: '# SPEC: AI Agent Ready Progressive Read Markdown Format for MDF Master Do
 
   - Compute and embed `tokens_estimate` in frontmatter
 
-  - Verify SC-4 (token estimate accuracy) and SC-9 (concern-view consistency)
+  - Verify SC-4 (token estimate accuracy), SC-9 (concern-view consistency), and SC-11
+  (per-file token budget)
 
 
   ### Phase 5: Migration Acceptance Review
@@ -446,7 +453,7 @@ body: '# SPEC: AI Agent Ready Progressive Read Markdown Format for MDF Master Do
 
   | Every `\cf` cross-reference resolved bidirectionally | SC-3 | Phase 3 |
 
-  | Token estimates within ±20% of actual for every generated file | SC-4 | Phase
+  | Token estimates within ±20% of actual for every entry detail file | SC-4 | Phase
   4 |
 
   | One-time migration acceptance; source left unmodified | SC-5 | Phase 5 |
@@ -462,6 +469,8 @@ body: '# SPEC: AI Agent Ready Progressive Read Markdown Format for MDF Master Do
 
   | Entry-point card present, tracked, with resolving path references | SC-10 | Phase
   6 |
+
+  | Every generated file loads in < 4,000 tokens | SC-11 | Phase 4 |
 
 
   ## Type
@@ -532,9 +541,20 @@ body: '# SPEC: AI Agent Ready Progressive Read Markdown Format for MDF Master Do
   misclassified evidence (class 5); live source verification during validation | Validation
   findings, developer-directed revision |
 
+  | 2026-10-10 | Re-audit remediation: derivation rule scoped to tokens following
+  the `\cf` marker (the marker token itself derives no self-reference — 92 spurious
+  pairs eliminated); `\cf` token-composition facts corrected to the rule-measured
+  values (107 bare references, 597 prose tokens) with the measurement basis stated;
+  SC-4 scoped to entry detail files, matching the Key Decision 4 frontmatter scope;
+  added SC-11 (every generated file < 4,000 tokens) verifying the Key Decision 5 budget,
+  with Key Decision 5 wording aligned to generated files | Re-audit FAIL: `\cf` marker
+  token derived spurious self-references (class 4); Key Decision 5 chunk budget unverified
+  (class 2); Key Decision 4 frontmatter scope two-readable (class 4) | Re-audit findings,
+  developer direction to iterate to clean pass |
+
 
   🤖 Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
 
   '
-updated_at: '2026-10-10T19:17:15+00:00'
+updated_at: '2026-10-10T19:23:30+00:00'
 github_url: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1380
