@@ -24,6 +24,28 @@ _CONTACT_FALLBACK_PATH = "contact.mastodon_url"
 _CONTACT_LABEL_PATH = "contact.maintainer_label"
 
 
+def _api_session_factory():
+    """Build the DB session factory handed to the bolted API handlers (#1420).
+
+    Called once at bolt time (inside the script thread). The returned
+    ``sessionmaker`` is bound to the shared engine so handlers create
+    sessions without touching any ``st.*`` API at request time (R-2).
+    """
+    from sqlalchemy.orm import sessionmaker
+
+    from src.database.connection import get_engine
+
+    return sessionmaker(bind=get_engine())
+
+
+def _api_rate_limit_per_minute() -> int | None:
+    """Per-key API rate limit from secrets (R-14); default when unset."""
+    try:
+        return int(st.secrets.get("api", {}).get("rate_limit_per_minute", 60))
+    except Exception:
+        return None
+
+
 def _path_present(store: dict, dotted_path: str) -> bool:
     node: object = store
     for seg in dotted_path.split("."):
@@ -199,6 +221,13 @@ def _initialize_database():
 
                 # 3. Schema initialization
                 init_db()
+
+                # 4. Bolt agent-facing API routes into the running Tornado
+                # app (#1420) — idempotent, never raises into the UI path.
+                from src.api.registrar import install_api_routes
+
+                install_api_routes(_api_session_factory(), _api_rate_limit_per_minute())
+
                 status.empty()
                 return  # success
             except Exception as e:

@@ -27,6 +27,9 @@ PAGE_BATCH_ROLLBACK = st.Page(
 PAGE_TABLE_MAINTENANCE = st.Page(
     "src/frontend/pages/table_maintenance.py", title="Table Maintenance", icon="🛠️", url_path="maintenance"
 )
+PAGE_API_KEYS = st.Page(
+    "src/frontend/pages/api_keys.py", title="API Keys", icon="🔑", url_path="api-keys"
+)
 PAGE_LOGOUT = st.Page("src/frontend/pages/logout.py", title="Logout", icon="🚪", url_path="logout")
 
 
@@ -46,6 +49,7 @@ class NavigationService:
     PAGE_MDF_REFERENCE = PAGE_MDF_REFERENCE
     PAGE_BATCH_ROLLBACK = PAGE_BATCH_ROLLBACK
     PAGE_TABLE_MAINTENANCE = PAGE_TABLE_MAINTENANCE
+    PAGE_API_KEYS = PAGE_API_KEYS
     PAGE_LOGOUT = PAGE_LOGOUT
 
     @classmethod
@@ -77,7 +81,7 @@ class NavigationService:
 
             # Admin section
             if user_role == "admin":
-                nav_tree["Admin"] = [cls.PAGE_BATCH_ROLLBACK, cls.PAGE_TABLE_MAINTENANCE]
+                nav_tree["Admin"] = [cls.PAGE_BATCH_ROLLBACK, cls.PAGE_TABLE_MAINTENANCE, cls.PAGE_API_KEYS]
 
             nav_tree["Account"] = [cls.PAGE_USER, cls.PAGE_LOGOUT]
 
@@ -97,6 +101,7 @@ class NavigationService:
                 cls.PAGE_BATCH_ROLLBACK,
                 cls.PAGE_STATUS,
                 cls.PAGE_TABLE_MAINTENANCE,
+                cls.PAGE_API_KEYS,
                 cls.PAGE_USER,
                 cls.PAGE_LOGOUT,
             ]
