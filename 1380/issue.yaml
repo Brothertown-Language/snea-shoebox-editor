@@ -150,8 +150,9 @@ body: '# SPEC: AI Agent Ready Progressive Read Markdown Format for MDF Master Do
   1. A token beginning with `\` names the `\key` entry whose code equals the token
   with its leading `\` and trailing punctuation removed.
 
-  2. A token containing `*` names the marker family listed for it in the star-family
-  table below; a `*` token not listed there names nothing.
+  2. A token containing `*` names the marker family listed for the token with its
+  surrounding punctuation removed; a `*` token whose punctuation-stripped form is
+  not listed there names nothing.
 
   3. A bare token — no `\`, no `*` — names the `\key` entry whose code equals the
   token with its surrounding punctuation removed only when it stands at a reference
@@ -312,11 +313,13 @@ body: '# SPEC: AI Agent Ready Progressive Read Markdown Format for MDF Master Do
   referencing entry | `structural` | Mechanical comparison with no hardcoded totals:
   extract the (source entry → target entry) pair set from the source''s `\cf` fields
   per the Cross-reference derivation rule (a reference to any of an entry''s codes
-  targets that entry); extract the forward-link pair set by resolving every markdown
-  link in each `markers/*.md` outside its `## Backlinks` section to the entry whose
-  detail file it names; extract the backlink pair set from each file''s `## Backlinks`
-  section; the source pair set must equal the forward-link set, and the backlink set
-  must equal its inverse |
+  targets that entry); extract the forward-link pair set from every markdown link
+  in each `markers/*.md`, outside its `## Backlinks` section, whose target is an entry
+  detail file under `markers/`, resolved to the entry whose detail file it names;
+  extract the backlink pair set from each entry file''s `## Backlinks` section (an
+  entry file with no `## Backlinks` section contributes no backlinks); the source
+  pair set must equal the forward-link set, and the backlink set must equal its inverse
+  |
 
   | SC-4 | Token estimates in frontmatter (`tokens_estimate`) are within ±20% of the
   file''s actual token count under the token measure defined in Key Decisions, for
@@ -471,7 +474,7 @@ body: '# SPEC: AI Agent Ready Progressive Read Markdown Format for MDF Master Do
   | Entry-point card present, tracked, with resolving path references | SC-10 | Phase
   6 |
 
-  | Every generated file loads in < 4,000 tokens | SC-11 | Phase 4 |
+  | Every generated file loads in < 4,000 tokens | SC-11 | Phase 4, 6 |
 
 
   ## Type
@@ -553,9 +556,19 @@ body: '# SPEC: AI Agent Ready Progressive Read Markdown Format for MDF Master Do
   (class 2); Key Decision 4 frontmatter scope two-readable (class 4) | Re-audit findings,
   developer direction to iterate to clean pass |
 
+  | 2026-10-10 | Pre-audit tightening: SC-3 forward-link extraction scoped to links
+  whose target is an entry detail file under `markers/` (navigation links to concerns/topics/index
+  are outside the cross-reference pair set) and backlink extraction pinned for entries
+  with no `## Backlinks` section (absence contributes no backlinks); derivation clause
+  2 star lookup keyed on the punctuation-stripped token (no punctuation-attached `*`
+  tokens exist in the source); SC-11 traceability phase corrected to Phase 4, 6 (full
+  file set exists only after Phase 6) | Developer direction: revise and re-audit until
+  clean pass; determinism tightenings ahead of the untainted validation dispatch |
+  Developer direction |
+
 
   🤖 Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
 
   '
-updated_at: '2026-10-10T19:24:57+00:00'
+updated_at: '2026-10-10T23:50:41+00:00'
 github_url: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1380
