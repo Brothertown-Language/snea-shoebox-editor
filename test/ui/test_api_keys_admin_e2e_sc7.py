@@ -81,10 +81,21 @@ def _restart_app(role: str | None) -> None:
     with open(log_path, "w") as log_fh:
         subprocess.Popen(
             [
-                "uv", "run", "--extra", "local", "python", "-m", "streamlit",
-                "run", "streamlit_app.py",
-                "--server.address", "0.0.0.0", "--server.port", E2E_PORT,
-                "--server.headless", "true",
+                "uv",
+                "run",
+                "--extra",
+                "local",
+                "python",
+                "-m",
+                "streamlit",
+                "run",
+                "streamlit_app.py",
+                "--server.address",
+                "0.0.0.0",
+                "--server.port",
+                E2E_PORT,
+                "--server.headless",
+                "true",
             ],
             env=env,
             stdout=log_fh,
@@ -187,11 +198,25 @@ def test_sc7_admin_full_lifecycle():
                 page.wait_for_selector("text=Create key pair", timeout=90_000)
                 page.wait_for_timeout(1000)
 
+                # The hidden nav is replaced by a titled sidebar rail carrying
+                # the back-to-main affordance (never a blank left pane).
+                back_btn = page.get_by_role("button", name="Back to Main Menu")
+                assert back_btn.count() > 0, "sidebar rail must carry the back-to-main button"
+                assert back_btn.first.is_visible(), "back-to-main button must be visible"
+
                 # ── Create: label + Create → secret shown exactly once ──
                 page.fill('input[aria-label="Label"]', KEY_LABEL)
                 page.get_by_role("button", name="Create", exact=True).click()
                 secret1 = _extract_one_time_secret(page)
                 page.screenshot(path=os.path.join(ARTIFACTS_DIR, "sc7-01-created.png"))
+
+                # Copyable curl example: same one-time display, embeds the
+                # key + secret and the records endpoint (follow-up request).
+                curl_text = page.locator("code.language-bash").first.inner_text()
+                assert "curl" in curl_text, "one-time display must include a copyable curl command"
+                assert "X-API-Key" in curl_text and "X-API-Secret" in curl_text
+                assert "/api/v1/records" in curl_text
+                assert secret1 in curl_text, "the curl command must embed the issued secret"
 
                 # Ack → the secret display disappears (never redisplayed)
                 page.get_by_role("button", name="I have stored the secret").click()
@@ -200,6 +225,9 @@ def test_sc7_admin_full_lifecycle():
                     "secret must not remain displayed after acknowledgement"
                 )
                 assert secret1 not in page.inner_text("body"), "secret must be gone from the DOM"
+                assert "curl -sS" not in page.inner_text("body"), (
+                    "the curl example embeds the secret and must vanish with it"
+                )
 
                 # ── The key row lists the key with status enabled ──
                 page.wait_for_selector(f"text={KEY_LABEL}", timeout=15000)
