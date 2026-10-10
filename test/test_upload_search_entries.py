@@ -177,7 +177,7 @@ class TestUploadSearchEntriesEmbeddingSC8(unittest.TestCase):
     # REAL synced record ids (verified live on the synced local DB):
     #   5    lx='ayhkôsu-'      ge='he works'
     #   15   lx='-côq'          ge='DEP soul, spirit of a living person …'
-    #   6832 lx='|nashqunánum|' ge='(with |n∞tau|) `he kindles' (a fire)'  (∞ is a valid letter)
+    #   6832 lx='|nashqunánum|' ge='(with |nꝏtau|) `he kindles' (a fire)'  (ꝏ is the remediated oo-ligature, #1411)
     REAL_RECORD_IDS = [5, 15, 6832]
 
     @classmethod
@@ -305,7 +305,14 @@ class TestUploadSearchEntriesEmbeddingSC8(unittest.TestCase):
 
     def test_sc8_unicode_preserved_exactly_on_real_records(self):
         """SC-8: Unicode preserved exactly — gloss term round-trips verbatim
-        from real synced records (ô, á, ∞ etc.)."""
+        from real synced records (ô, á, ꝏ etc.).
+
+        The expected term is parsed from the synced record's mdf_data with
+        parse_mdf — the same source of truth the ingestion pipeline uses —
+        not from the denormalized records.ge column, which can lag behind
+        mdf_data remediation (#1421)."""
+        from src.mdf.parser import parse_mdf
+
         record_ids, _ = self._fixture_records()
         self.usvc.UploadService.populate_search_entries(record_ids)
         from src.database.models.search import GlossSearchEntry
@@ -313,9 +320,11 @@ class TestUploadSearchEntriesEmbeddingSC8(unittest.TestCase):
         real_ge_by_id = {}
         with self.engine.connect() as probe:
             for rid in self.REAL_RECORD_IDS:
-                real_ge_by_id[rid] = (
-                    probe.execute(self.sa_text[0]("SELECT ge FROM records WHERE id = :rid"), {"rid": rid}).scalar()
-                )
+                mdf = probe.execute(
+                    self.sa_text[0]("SELECT mdf_data FROM records WHERE id = :rid"), {"rid": rid}
+                ).scalar()
+                parsed = parse_mdf(mdf)
+                real_ge_by_id[rid] = parsed[0].get("ge", "") if parsed else ""
         new_to_real = dict(zip(record_ids, self.REAL_RECORD_IDS, strict=False))
         rows = self.session.query(GlossSearchEntry).filter(GlossSearchEntry.record_id.in_(record_ids)).all()
         by_record = {}
