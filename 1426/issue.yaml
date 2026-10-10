@@ -3,6 +3,32 @@ title: 'Full test suite: order-dependent DB contamination after prod sync — mi
 status: open
 labels:
 - needs-approval
-body: ''
+body: "body: |\n  ## Summary\n\n  After `scripts/sync_prod_to_local.sh`, a full `uv\
+  \ run pytest -q --ignore=tmp` run shows **158 failed, 709 passed, 111 skipped**\
+  \ — identical on `main` (verified 2026-10-10, tip `1f0f9ff`). The suite is order-dependent:\
+  \ schema/migration tests recreate DB objects mid-suite, so later tests that read\
+  \ real synced data (e.g. `test/test_upload_search_entries.py` SC-8 fixtures, which\
+  \ require records 5/15/6832 to exist) fail with `real synced record N must exist\
+  \ in synced DB`. Individual test files pass in isolation.\n\n  Two distinct failure\
+  \ classes observed:\n  1. `psycopg2.errors.ForeignKeyViolation: matchup_queue_source_id_fkey`\
+  \ — staged fixture rows reference sources the synced schema/data no longer has.\n\
+  \  2. Schema teardown by migration tests (`tests/database/test_migration_manager.py`\
+  \ recreate path) leaves later DB-backed tests against an empty/replaced dataset.\n\
+  \n  Run-to-run failure count also varies (158 vs 153), consistent with ordering-dependent\
+  \ contamination (cf. #36 artifacts: shared pgserver tmp-dir lifecycle, order-dependent\
+  \ cross-test contamination).\n\n  ## Evidence\n\n  - Full-suite run: `uv run pytest\
+  \ -q --ignore=tmp` → `158 failed, 709 passed, 111 skipped` (twice, 2026-10-10).\n\
+  \  - Same run on unmodified `main`: identical `158 failed, 709 passed` — pre-existing,\
+  \ not introduced by #1421's fix branch.\n  - `uv run pytest test/test_upload_search_entries.py`\
+  \ in isolation: **8 passed** on the #1421 branch.\n  - Failure mode for SC-8 in\
+  \ suite context: `AssertionError: unexpectedly None : real synced record 5 must\
+  \ exist in synced DB`.\n\n  ## Proposed direction\n\n  Give migration/schema tests\
+  \ an isolated temporary database (or make them restore state) so they cannot clobber\
+  \ the synced local dataset mid-suite; separately, fixture tests that depend on synced\
+  \ production records should either create their own scoped data or tolerate schema\
+  \ recreation.\n\n  Discovered during #1421 (stale SC-8 unicode expectation); filed\
+  \ as disposition for the pre-existing suite failures so #1421's PR boundary is not\
+  \ blocked by them.\n"
 created_at: '2026-10-10T18:56:33+00:00'
-updated_at: '2026-10-10T18:56:33+00:00'
+updated_at: '2026-10-10T18:56:41+00:00'
+github_url: '1426'
