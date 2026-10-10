@@ -62,7 +62,15 @@ def main():
 
     hide_sidebar_nav()
     apply_standard_layout_css()
-    render_back_to_main_button()
+
+    # ── Sidebar: header and back navigation ───────────────────────
+    # Established admin-page pattern (batch_rollback, system_status): the
+    # hidden nav is replaced by a titled sidebar rail carrying the back
+    # button — never a blank left pane.
+    with st.sidebar:
+        st.markdown("**API Keys**")
+        st.divider()
+        render_back_to_main_button()
 
     st.title("🔑 API Keys")
     st.caption(

@@ -198,6 +198,12 @@ def test_sc7_admin_full_lifecycle():
                 page.wait_for_selector("text=Create key pair", timeout=90_000)
                 page.wait_for_timeout(1000)
 
+                # The hidden nav is replaced by a titled sidebar rail carrying
+                # the back-to-main affordance (never a blank left pane).
+                back_btn = page.get_by_role("button", name="Back to Main Menu")
+                assert back_btn.count() > 0, "sidebar rail must carry the back-to-main button"
+                assert back_btn.first.is_visible(), "back-to-main button must be visible"
+
                 # ── Create: label + Create → secret shown exactly once ──
                 page.fill('input[aria-label="Label"]', KEY_LABEL)
                 page.get_by_role("button", name="Create", exact=True).click()
