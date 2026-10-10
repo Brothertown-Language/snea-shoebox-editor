@@ -1,6 +1,6 @@
 title: 'SPEC: Agent-facing read-only records API — bolted-in GET endpoints with admin-issued
   key+secret auth'
-status: open
+status: closed
 labels:
 - needs-approval
 - spec
@@ -483,5 +483,7 @@ body: "# SPEC: Agent-facing read-only records API — bolted-in GET endpoints wi
   \ / Tornado 6.5.4 | Feature request with binding design decisions from the 2026-10-07\
   \ discussion | Developer (Michael Conrad) |\n"
 created_at: '2026-10-07T22:45:25+00:00'
-updated_at: '2026-10-07T22:46:42+00:00'
+updated_at: '2026-10-10T02:35:41+00:00'
 github_url: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1420
+closed_at: '2026-10-10T02:35:41+00:00'
+close_reason: completed
