@@ -57,7 +57,7 @@ Each entry point is independently loadable — an agent reads only what its inte
 
 1. A token beginning with `\` names the `\key` entry whose code equals the token with its leading `\` and trailing punctuation removed.
 2. A token containing `*` names the marker family listed for it in the star-family table below; a `*` token not listed there names nothing.
-3. A bare token — no `\`, no `*` — names the `\key` entry whose code equals the token with its surrounding punctuation removed only when it stands at a reference position: a token that begins its line within the field, a token preceded by a whitespace run of two or more characters, a token immediately preceded by a comma, or a code-equal token inside a parenthetical that itself contains a comma. Code-equal bare tokens elsewhere are description prose and name nothing.
+3. A bare token — no `\`, no `*` — names the `\key` entry whose code equals the token with its surrounding punctuation removed only when it stands at a reference position: a token that begins its line within the field, a token whose preceding characters end with a comma (intervening whitespace ignored), a token preceded by a whitespace run of two or more characters, or a code-equal token inside a parenthetical that itself contains a comma. Code-equal bare tokens elsewhere are description prose and name nothing.
 
 **Star families.** Families follow the source's own notation note (a starred marker denotes the set of language markers for the same field across language variants — the note documents `de*` as `dv`, `dn`, `dr`, `de`) and the marker series the source's entries present:
 

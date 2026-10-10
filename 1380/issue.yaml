@@ -155,10 +155,11 @@ body: '# SPEC: AI Agent Ready Progressive Read Markdown Format for MDF Master Do
 
   3. A bare token — no `\`, no `*` — names the `\key` entry whose code equals the
   token with its surrounding punctuation removed only when it stands at a reference
-  position: a token that begins its line within the field, a token preceded by a whitespace
-  run of two or more characters, a token immediately preceded by a comma, or a code-equal
-  token inside a parenthetical that itself contains a comma. Code-equal bare tokens
-  elsewhere are description prose and name nothing.
+  position: a token that begins its line within the field, a token whose preceding
+  characters end with a comma (intervening whitespace ignored), a token preceded by
+  a whitespace run of two or more characters, or a code-equal token inside a parenthetical
+  that itself contains a comma. Code-equal bare tokens elsewhere are description prose
+  and name nothing.
 
 
   **Star families.** Families follow the source''s own notation note (a starred marker
@@ -556,5 +557,5 @@ body: '# SPEC: AI Agent Ready Progressive Read Markdown Format for MDF Master Do
   🤖 Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
 
   '
-updated_at: '2026-10-10T19:23:30+00:00'
+updated_at: '2026-10-10T19:24:57+00:00'
 github_url: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1380
