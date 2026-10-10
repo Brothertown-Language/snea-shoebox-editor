@@ -1,0 +1,8 @@
+title: 'Full test suite: order-dependent DB contamination after prod sync — migration/schema
+  tests wipe synced records, later real-record tests find them missing'
+status: open
+labels:
+- needs-approval
+body: ''
+created_at: '2026-10-10T18:56:33+00:00'
+updated_at: '2026-10-10T18:56:33+00:00'
