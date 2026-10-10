@@ -191,6 +191,11 @@ class MigrationManager:
             "_migrate_create_system_event_log",
             "Create system_event_log table for persistent system event logging",
         ),
+        (
+            2026100979333,
+            "_migrate_create_api_keys",
+            "Create api_keys table for agent-facing API credentials (#1420)",
+        ),
     ]
 
     def __init__(self, engine):
@@ -1274,5 +1279,74 @@ class MigrationManager:
                     "ALTER TABLE system_event_log ADD COLUMN IF NOT EXISTS "
                     "created_at TIMESTAMP WITH TIME ZONE DEFAULT now();"
                 )
+            )
+            conn.commit()
+
+    def _migrate_create_api_keys(self):
+        """Migration 2026100979333: Create api_keys table mirroring the ORM.
+
+        Column layout matches ApiKeys in src/database/models/api_keys.py:
+        id autoincrement, key VARCHAR UNIQUE NOT NULL, secret_hash VARCHAR
+        NOT NULL (PBKDF2 versioned hash — plaintext secrets are never
+        stored), label VARCHAR, created_by VARCHAR,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT now(), enabled BOOLEAN
+        NOT NULL DEFAULT true, revoked_at TIMESTAMP WITH TIME ZONE,
+        last_used_at TIMESTAMP WITH TIME ZONE.
+
+        Reversible with:
+            DROP TABLE IF EXISTS api_keys;
+        """
+        with self._engine.connect() as conn:
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS api_keys (
+                    id SERIAL PRIMARY KEY,
+                    key VARCHAR NOT NULL UNIQUE,
+                    secret_hash VARCHAR NOT NULL,
+                    label VARCHAR,
+                    created_by VARCHAR,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+                    enabled BOOLEAN NOT NULL DEFAULT true,
+                    revoked_at TIMESTAMP WITH TIME ZONE,
+                    last_used_at TIMESTAMP WITH TIME ZONE
+                );
+            """)
+            )
+            # Idempotent column guards for prod-sync-drifted replicas (same
+            # rationale as _migrate_create_system_event_log).
+            conn.execute(text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS key VARCHAR;"))
+            conn.execute(
+                text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS secret_hash VARCHAR;")
+            )
+            conn.execute(text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS label VARCHAR;"))
+            conn.execute(
+                text("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS created_by VARCHAR;")
+            )
+            conn.execute(
+                text(
+                    "ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS "
+                    "created_at TIMESTAMP WITH TIME ZONE DEFAULT now();"
+                )
+            )
+            conn.execute(
+                text(
+                    "ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS "
+                    "enabled BOOLEAN NOT NULL DEFAULT true;"
+                )
+            )
+            conn.execute(
+                text(
+                    "ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS "
+                    "revoked_at TIMESTAMP WITH TIME ZONE;"
+                )
+            )
+            conn.execute(
+                text(
+                    "ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS "
+                    "last_used_at TIMESTAMP WITH TIME ZONE;"
+                )
+            )
+            conn.execute(
+                text("CREATE UNIQUE INDEX IF NOT EXISTS uq_api_keys_key ON api_keys (key);")
             )
             conn.commit()

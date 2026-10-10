@@ -678,6 +678,7 @@ def _reset_sequences(engine) -> None:
 def init_db():
     """Initialize the database schema."""
     from .base import Base  # lazy import — avoids circular init
+    from .models.api_keys import ApiKeys  # noqa: F401 — register model with Base.metadata
     from .models.core import Language, Record, RecordLanguage, Source  # noqa: F401 — register models with Base.metadata
     from .models.event_log import SystemEventLog  # noqa
     from .models.identity import Permission, User, UserActivityLog, UserPreference  # noqa
