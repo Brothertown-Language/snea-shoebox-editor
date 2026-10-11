@@ -4,8 +4,16 @@ import os
 import sys
 from pathlib import Path
 
+import pytest
+
 # Add src to sys.path
 sys.path.append(str(Path(__file__).parent.parent))
+
+# Isolation via the `private_db` fixture (tests/conftest.py) — see #1426:
+# the historic in-test `os.environ["OPENCODE"] = "1"` relied on the import-time
+# leak from other modules; the fixture scopes the private scratch DB to this
+# module instead of redirecting the whole session.
+pytestmark = pytest.mark.usefixtures("private_db")
 
 from src.database.connection import get_session, init_db
 from src.database.models.iso639 import ISO639_3
@@ -14,8 +22,7 @@ from src.database.models.iso639 import ISO639_3
 def test_iso639_seeding():
     print("Starting ISO 639-3 seeding test...")
 
-    # Ensure we are using the private database
-    os.environ["OPENCODE"] = "1"
+    # The `private_db` fixture provides the isolated private scratch database.
 
     # Initialize the database (this should trigger seeding)
     engine = init_db()

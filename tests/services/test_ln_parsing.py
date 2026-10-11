@@ -9,6 +9,7 @@ from src.database.base import Base
 from src.database.models import meta as _meta  # noqa: F401 — register SchemaVersion with Base.metadata
 from src.database.models.core import Language, Record, RecordLanguage, Source
 from src.database.models.identity import User
+from src.database.models.iso639 import ISO639_3  # noqa: F401 — must be imported BEFORE create_all so iso_639_3 is created
 from src.database.models.workflow import MatchupQueue
 from src.services.upload_service import UploadService
 

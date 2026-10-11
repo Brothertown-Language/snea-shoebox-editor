@@ -3,18 +3,34 @@
 import unittest
 import uuid
 
+import pytest
+
 from src.database.connection import get_session
 from src.database.models.core import Source
 from src.database.models.identity import User
 from src.database.models.workflow import MatchupQueue
 from src.services.upload_service import UploadService
 
+# Isolation via the `private_db` fixture (tests/conftest.py) — see #1426:
+# this module historically relied on the import-time `OPENCODE=1` leak from
+# other modules ("We assume tests are run with OPENCODE=1"); the fixture scopes
+# the private scratch DB to this module instead of redirecting the whole session.
+pytestmark = pytest.mark.usefixtures("private_db")
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _init_private_db(private_db):
+    """Initialize the private scratch DB schema for this module's tests."""
+    from src.database.connection import init_db
+
+    init_db()
+
 
 class TestUploadDownloadPending(unittest.TestCase):
     def setUp(self):
-        # We assume tests are run with OPENCODE=1
+        # Isolation comes from the module-scoped `private_db` fixture
+        # (see module comment above).
         pass
-
     def test_get_pending_batch_mdf(self):
         """Test retrieving pending records for a batch as MDF text."""
         session = get_session()

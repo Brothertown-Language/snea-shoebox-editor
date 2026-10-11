@@ -1,11 +1,26 @@
 import unittest
 
+import pytest
 from sqlalchemy import text
 
 from src.database.connection import get_session
 from src.database.models.core import Record, Source
 from src.database.models.identity import User
 from src.services.linguistic_service import LinguisticService
+
+# Isolation via the `private_db` fixture (tests/conftest.py) — see #1426:
+# this module TRUNCATEs records/sources/users CASCADE — on the shared synced
+# replica that wiped the real dataset for all later modules. The fixture
+# scopes it to a fresh private scratch DB instead.
+pytestmark = pytest.mark.usefixtures("private_db")
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _init_private_db(private_db):
+    """Initialize the private scratch DB schema for this module's tests."""
+    from src.database.connection import init_db
+
+    init_db()
 
 
 class TestRecordLocking(unittest.TestCase):
