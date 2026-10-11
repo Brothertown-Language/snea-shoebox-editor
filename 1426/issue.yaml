@@ -3,6 +3,7 @@ title: 'Full test suite: order-dependent DB contamination after prod sync — mi
 status: open
 labels:
 - needs-approval
+- spec-draft
 body: "body: |\n  ## Summary\n\n  After `scripts/sync_prod_to_local.sh`, a full `uv\
   \ run pytest -q --ignore=tmp` run shows **158 failed, 709 passed, 111 skipped**\
   \ — identical on `main` (verified 2026-10-10, tip `1f0f9ff`). The suite is order-dependent:\
@@ -30,5 +31,5 @@ body: "body: |\n  ## Summary\n\n  After `scripts/sync_prod_to_local.sh`, a full 
   \ as disposition for the pre-existing suite failures so #1421's PR boundary is not\
   \ blocked by them.\n"
 created_at: '2026-10-10T18:56:33+00:00'
-updated_at: '2026-10-10T18:56:41+00:00'
+updated_at: '2026-10-11T03:26:48+00:00'
 github_url: '1426'
