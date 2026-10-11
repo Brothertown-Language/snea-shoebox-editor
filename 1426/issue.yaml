@@ -13,7 +13,7 @@ body: '# Test-suite order independence — DB-backed tests must not contaminate 
 
   After a fresh `scripts/sync_prod_to_local.sh` sync, the full suite `uv run pytest
   -q --ignore=tmp` SHALL complete with **0 failed** (designed skips permitted). Pinned
-  as four behavioral success criteria in the authoritative spec (`.issues/1426/spec.md`,
+  as four behavioral success criteria in the authoritative spec ([`.issues/1426/spec.md`](https://github.com/Brothertown-Language/snea-shoebox-editor/blob/issues-data/1426/spec.md),
   `issues-data` branch):
 
 
@@ -99,5 +99,5 @@ body: '# Test-suite order independence — DB-backed tests must not contaminate 
 
   '
 created_at: '2026-10-10T18:56:33+00:00'
-updated_at: '2026-10-11T03:31:44+00:00'
+updated_at: '2026-10-11T03:41:47+00:00'
 github_url: '1426'

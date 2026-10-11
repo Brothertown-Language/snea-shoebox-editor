@@ -1,4 +1,4 @@
-> **Full spec and artifacts: [`.issues/1426/`](https://github.com/Brothertown-Language/snea-shoebox-editor/tree/issues-data/.issues/1426)** — authoritative spec record for Issue #1426; the GitHub issue body is a condensed exec summary.
+> **Full spec and artifacts: [`.issues/1426/`](https://github.com/Brothertown-Language/snea-shoebox-editor/tree/issues-data/1426)** — authoritative spec record for Issue #1426; the GitHub issue body is a condensed exec summary.
 
 # Spec: Test-suite order independence — DB-backed tests must not contaminate or be contaminated by execution order against the synced production-replica database
 
