@@ -3,7 +3,7 @@
 """MDF Reference — in-app browser for the MDF 1.9a lexical-fields reference.
 
 Renders all keyed topics from ``docs/mdf/build/master.json`` (schema
-``snea-mdf-master/1``) with the source's own navigation model: the home/TOC
+``snea-mdf-master/2``) with the source's own navigation model: the home/TOC
 entry (``\\key aa``), the 17 chapter-topic groups in the home TOC order with
 ``\\shd2`` subsections nested, then the terminal "Field Marker Reference"
 section grouping the marker-definition topics (Record Marker / Basic Fields /
@@ -423,7 +423,9 @@ def _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, navi
         chapter_topic = topics_by_key[chapter_key]
         st.markdown(f"### {md_escape(topic_display_heading(chapter_topic))}")
         if st.button(
-            chapter_key,
+            # The chapter's committed display label (#1431): the \shd heading
+            # text ("Range Sets", …) — no raw key, no render-time munging.
+            chapter_topic["display_label"],
             key=f"mdf-topic-{chapter_key}",
             use_container_width=True,
             type="primary" if selected == chapter_key else "secondary",
@@ -433,7 +435,10 @@ def _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, navi
         for i, block in enumerate(chapter_topic["blocks"]):
             if block["marker"] != "shd2":
                 continue
-            label = "▸ " + strip_marker(block["text"]).strip()
+            # The block's committed display text (#1431): the shd2 display
+            # field carries the exception-resolved label, so no render-time
+            # string surgery happens here.
+            label = "▸ " + block["display_text"]
             if st.button(
                 label,
                 key=f"mdf-shd2-{chapter_key}-{i}",
@@ -444,7 +449,9 @@ def _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, navi
         # Member topics belonging to this chapter, in source order.
         for member in members:
             if st.button(
-                member["key"],
+                # Committed display label (#1431): the stub's \shd heading
+                # ("Old verb paradigm markers"), not the raw multi-token key.
+                member["display_label"],
                 key=f"mdf-topic-{member['key']}",
                 use_container_width=True,
                 type="primary" if selected == member["key"] else "secondary",
@@ -454,7 +461,7 @@ def _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, navi
     # the 1.9a source) — no topic is dropped from the browser.
     for topic in structure["residual"]:
         if st.button(
-            topic["key"],
+            topic["display_label"],
             key=f"mdf-topic-{topic['key']}",
             use_container_width=True,
             type="primary" if selected == topic["key"] else "secondary",
@@ -468,7 +475,9 @@ def _render_browser_tree(st, topics, topics_by_key, chapter_keys, selected, navi
             st.markdown(f"#### {md_escape(REFERENCE_GROUP_TITLES[group])}")
             for entry in entries:
                 if st.button(
-                    entry["key"],
+                    # Committed display label (#1431): marker token + marker
+                    # name from the topic's own \shd heading — no bare keys.
+                    entry["display_label"],
                     key=f"mdf-topic-{entry['key']}",
                     use_container_width=True,
                     type="primary" if selected == entry["key"] else "secondary",
@@ -998,8 +1007,9 @@ def mdf_reference():
             for match in matches:
                 # The home topic's chip reads plain "Home" (2026-10-06
                 # directive: the bare key is never user-facing); every other
-                # chip keeps its bare marker key — that IS the lookup key.
-                label = "Home" if match["key"] == home_key else match["key"]
+                # chip reads its committed display label (#1431) — the same
+                # data the unfiltered rail renders, verbatim.
+                label = "Home" if match["key"] == home_key else match["display_label"]
                 if st.button(
                     label,
                     key=f"mdf-topic-{match['key']}",

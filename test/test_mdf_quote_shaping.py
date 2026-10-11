@@ -229,7 +229,7 @@ def test_latex_ligatures_survive_escaping():
 
 def minimal_document(blocks):
     return {
-        "schema": "snea-mdf-master/1",
+        "schema": "snea-mdf-master/2",
         "generator": "test",
         "source": {"path": "t.txt", "sha256": "0", "bytes": 0, "lines": 1, "git_last_modified": "2026-01-01"},
         "document_header": {"preamble": [], "title": "1.9a test", "blocks": []},
