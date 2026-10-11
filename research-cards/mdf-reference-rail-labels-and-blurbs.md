@@ -93,5 +93,17 @@ Reference browser rail). Root causes traced; no code changed.
 - Any label change should respect the recorded #1379/#1417 design intent —
   the new directive supersedes, but the spec should say so explicitly.
 
+## Published-editions map (verified 2026-10-11, for the #1433 follow-up)
+
+| Element | HTML | PDF | Compliance with #1431's regime |
+|---|---|---|---|
+| Chapter/topic titles | human `\shd` headings (nav, pages) | human `\shd` headings (`\chapter`, ToC) | compliant already |
+| Field Marker Reference entries | `h4` topic headings carry token+name | `\subsection{...\lx  lexeme...}` token+name | compliant already |
+| HTML search hit headings | `doc.heading` = token+name | n/a | compliant already |
+| HTML nav marker entries | bare `\ce`-style tokens, no names | n/a | gap → #1433 SC-1 |
+| HTML nav multi-key stub | raw `\1s 1p 1e ...` string | n/a | gap → #1433 SC-1 |
+| `\shd2` headings | source-verbatim `h3` (paren-wrapped one present) | source-verbatim `\section` (paren-wrapped one present, enters print ToC) | gap → #1433 SC-2 |
+| `\cf` links | source tokens raw | source tokens raw | unchanged by design (uniform with app detail pane) |
+
 Confidence: high — all claims verified against the live files listed above,
 2026-10-11.
