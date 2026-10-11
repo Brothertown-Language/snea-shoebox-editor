@@ -91,7 +91,7 @@
 | Migration test module | code | `tests/database/test_migration_manager.py` (module-import `os.environ["OPENCODE"] = "1"`, module-scoped engine via `init_db()`, `MigrationManager(engine).run_all()`) | Direct read, 2026-10-10 |
 | Database connection layer | code | `src/database/connection.py` (`OPENCODE`-gated private-DB path selection, `_start_pgserver_core`, `_stop_local_db`, `is_production`) | Direct read of pattern anchors, 2026-10-10 |
 | Sync script | code | `scripts/sync_prod_to_local.py` (faithful-exact-copy mandate; schema replication strategy) | Direct read of header/mandate, 2026-10-10 |
-| Both test trees | code | `test/` and `tests/` both exist; `matchup_queue` staging sites in `tests/database/test_crud.py`, `tests/integration/test_mdf_upload_locking.py`, `tests/integration/test_upload_e2e.py`, `tests/frontend/test_upload_review_d1.py` | Verified by content search, 2026-10-10 |
+| Both test trees | code | `test/` and `tests/` both exist; `matchup_queue` DB staging in `tests/database/test_crud.py`, `tests/integration/test_mdf_upload_locking.py`, `tests/integration/test_upload_e2e.py`; mocked queue-row construction without DB writes in `tests/frontend/test_upload_review_d1.py` | Verified by content search and direct reads, 2026-10-10 |
 
 ## 9. Enforcement Gate
 
