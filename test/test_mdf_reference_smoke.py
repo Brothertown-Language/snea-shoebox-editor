@@ -1,4 +1,4 @@
-"""In-process smoke tests for the MDF Reference page (.issues/1379 Phase 5).
+"""In-process smoke tests for the MDF Reference page (issue #1379 Phase 5).
 
 Serverless checks of the page module's pure helpers (master.json loader,
 hierarchy data, deep-link resolution) and the navigation registration.
@@ -177,54 +177,57 @@ def test_smoke_cf_pair_gloss_renders_in_gloss_mentions_as_deep_links():
     assert mentions == 9
 
 
-def test_smoke_sc9_filter_matches_keys_case_insensitively():
-    """SC-9: an uppercase query matches the lowercase topic key (substring
-    over definition text may also legitimately match other topics that
-    mention the marker)."""
+def test_smoke_sc9_search_matches_keys_case_insensitively():
+    """SC-9 / #1417: an uppercase query matches the lowercase topic key —
+    tokens are lowercased, exact Unicode (ranked search since #1417)."""
     mod = _page_module()
     master = mod.load_master(REPO_ROOT)
     topics = master["topics"]
-    keys = [t["key"] for t in mod.filter_topics(topics, "LX")]
-    assert "lx" in keys, "the lowercase key must match the uppercase query"
+    keys = [key for key, _score in mod.search_topics(topics, "LX")]
+    assert keys[0] == "lx", "the lowercase key must match the uppercase query"
 
 
-def test_smoke_sc9_filter_matches_definition_text():
-    """SC-9: a query term occurring only in definition text (not the key)
-    matches the topics whose text contains it."""
+def test_smoke_sc9_search_matches_definition_text():
+    """SC-9 / #1417: a query term occurring only in definition text (not the
+    key) matches the topics whose text contains it."""
     mod = _page_module()
     master = mod.load_master(REPO_ROOT)
     topics = master["topics"]
-    matches = [t["key"] for t in mod.filter_topics(topics, "interlinear morpheme-level glossing")]
+    matches = [
+        key
+        for key, _score in mod.search_topics(topics, "interlinear morpheme-level glossing")
+    ]
     assert "ge" in matches, "the ge definition contains 'interlinear morpheme-level glossing'"
 
 
-def test_smoke_sc9_filter_matches_accented_source_content():
-    """SC-9: accented source content (á, é) matches losslessly — plain
-    substring on raw text, no normalization stripping the diacritics."""
+def test_smoke_sc9_search_matches_accented_source_content():
+    """SC-9 / #1417: accented source content (á, é) matches losslessly —
+    tokens are exact Unicode, no normalization stripping the diacritics."""
     mod = _page_module()
     master = mod.load_master(REPO_ROOT)
     topics = master["topics"]
-    assert [t["key"] for t in mod.filter_topics(topics, "adá")] == ["Alternate_Hierarchy"]
-    assert [t["key"] for t in mod.filter_topics(topics, "léwat")] == ["lc"]
+    assert [k for k, _ in mod.search_topics(topics, "adá")] == ["Alternate_Hierarchy"]
+    assert [k for k, _ in mod.search_topics(topics, "léwat")] == ["lc"]
     # Case-insensitivity must also hold for the accented query term itself.
-    keys = [t["key"] for t in mod.filter_topics(topics, "ADÁ")]
+    keys = [k for k, _ in mod.search_topics(topics, "ADÁ")]
     assert keys == ["Alternate_Hierarchy"]
 
 
-def test_smoke_sc9_filter_does_not_normalize():
-    """SC-9: matching operates on raw text — a NFD-decomposed query must NOT
-    match the source's precomposed á (normalization is out of scope by spec)."""
+def test_smoke_sc9_search_does_not_normalize():
+    """SC-9 / #1417: matching operates on exact Unicode tokens — an
+    NFD-decomposed query must NOT match the source's precomposed á."""
     mod = _page_module()
     master = mod.load_master(REPO_ROOT)
-    decomposed = "ad\u0301a" if False else "ada\u0301"  # 'a' + combining acute + 'a'
-    assert mod.filter_topics(master["topics"], decomposed) == []
+    decomposed = "ada\u0301"  # 'a' + combining acute + 'a'
+    assert mod.search_topics(master["topics"], decomposed) == []
 
 
-def test_smoke_sc9_filter_empty_query_returns_all_topics():
-    """SC-9: an empty query yields the full topic list (browser tree mode)."""
+def test_smoke_sc9_empty_query_matches_nothing_tree_renders():
+    """SC-9 / #1417: an empty query matches nothing — the page renders the
+    browser tree for the empty query (the caller's empty-query branch)."""
     mod = _page_module()
     master = mod.load_master(REPO_ROOT)
-    assert len(mod.filter_topics(master["topics"], "")) == 108
+    assert mod.search_topics(master["topics"], "") == []
 
 
 def test_smoke_sc7_browser_structure_derives_reference_groups():
