@@ -4,6 +4,33 @@ status: open
 labels:
 - needs-approval
 - bug
-body: ''
+body: '## Problem
+
+  `test/ui/test_mdf_reference_e2e.py::test_split_independent_scrolling_on_navigation`
+  is flaky (~50% on repeated runs). The rail''s scroll position reads 0 immediately
+  after the test sets `el.scrollTop = el.scrollHeight` and waits 400 ms — consistent
+  with a Streamlit rerun replacing the DOM between the scroll set and the read.
+
+
+  ## Evidence
+
+  - Reproduced on `main` (1be2185) with the #1431/#1433 feature work stashed: 2 failures
+  in 4 runs — not caused by that change.
+
+  - Also intermittent with the change applied (passes and fails across repeated single-test
+  runs).
+
+
+  ## Disposition
+
+  Filed during the #1431/#1433 PR cycle as the required disposition for a red-in-history
+  suite run; that PR cycle reruns to green and does not depend on this test''s flake.
+  Fix direction: await script-idle before the scroll assertion, or retry-once on scroll
+  reset.
+
+
+  🤖 Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
+
+  '
 created_at: '2026-10-11T23:35:12+00:00'
-updated_at: '2026-10-11T23:35:12+00:00'
+updated_at: '2026-10-11T23:35:13+00:00'
