@@ -9,13 +9,13 @@
 - **Approach Chosen:** Requirements state invariants on observable outcomes — the full suite is green after a fresh sync, the synced dataset survives a full-suite run intact, and synced-data-dependent modules behave identically in suite context and in isolation. The isolation mechanism (dedicated temporary database, state restore/teardown discipline, or environment scoping) is an implementation decision, fixed by diagnosis of the actual mechanism.
 - **Alternatives Considered & Why Discarded:** Pinning a specific isolation mechanism into the requirements (e.g. "give migration tests a temporary database" or "make them restore state") was discarded — the deliverable's requirement is the invariant, which any correct isolation approach satisfies; naming one technique would over-constrain the implementation or admit an unfixed branch.
 - **Key Design Decisions:** D1 — requirements state invariants on observable outcomes; the isolation technique is an implementation decision. D2 — both observed failure classes are in scope; whether they share one root cause or two, the invariants cover both. D3 — resolution must be genuine: suppressing failures with new skip/xfail masks does not satisfy this spec. D4 — the sync script's faithful-exact-copy mandate (`scripts/sync_prod_to_local.py`) is untouched; production is the source of truth and remains so.
-- **User Intent / Original Prompt:** Issue #1426 (filed 2026-10-10), filed as the disposition for the pre-existing suite failures so #1421's PR boundary is not blocked by them; discovered during #1421 (stale SC-8 unicode expectation).
+- **User Intent / Original Prompt:** Issue #1426 (filed 2026-10-10) — the disposition for the pre-existing suite failures, filed so the suite's pre-existing state does not block feature-PR boundaries. This spec formalizes that ticket's problem, evidence, and decided requirements.
 
 ## 2. Not Included
 
 - **Production database and deployment** — production is read by the sync script only; nothing in this spec touches production.
 - **Sync script behavior** — `scripts/sync_prod_to_local.py` keeps its faithful-exact-copy mandate byte-for-byte; no sync-logic changes.
-- **SC-8 fixture semantics** — the fixtures' contract (transaction-scoped copies of REAL synced records; the `REAL_RECORD_IDS` set, currently 5/15/6832; unicode round-trip parsed from `mdf_data` per #1421's fix) is unchanged; this spec makes the suite honor that contract in every run order, it does not weaken it.
+- **SC-8 fixture semantics** — the fixtures' contract (transaction-scoped copies of REAL synced records; the `REAL_RECORD_IDS` set, currently 5/15/6832; unicode round-trip parsed from `mdf_data`, the current fixture behavior) is unchanged; this spec makes the suite honor that contract in every run order, it does not weaken it.
 - **Existing skip guards** — `playwright_e2e` / `SNEA_E2E` gating and other designed skips are unchanged; designed skips remain permitted under SC-1.
 - **Application runtime behavior** — the fix is expected in test infrastructure; any change to `src/` (e.g. `src/database/connection.py`) must preserve current app-facing behavior (production detection, pgserver auto-start, socket/TCP handling) unchanged.
 
@@ -67,7 +67,6 @@
 | `tests/database/test_migration_manager.py` (module-import `OPENCODE` env set, module-scoped `init_db` engine, `MigrationManager.run_all()`) | Named adjacency in the recorded reproducer; verified 2026-10-10 | Satisfied |
 | `src/database/connection.py` (`OPENCODE` → private-DB path selection, pgserver lifecycle, `is_production`) | Order-coupling surface named in the problem analysis; verified 2026-10-10 | Satisfied |
 | `scripts/sync_prod_to_local.py` (faithful-exact-copy mandate; local-only schema changes via MigrationManager) | Precondition provider for SC-1/SC-2; mandate constrains C-2 | Satisfied |
-| Issue #1421 / PR #1427 (SC-8 unicode expectation fix, merged `d411a76`) | Discovery context; fixture contract provenance | Satisfied |
 
 ## 7. Traceability
 
@@ -103,7 +102,7 @@ Cost is measured in defect-discovery-latency, not tool calls. Correctness is the
 
 - **SC-1:** Running the full suite against a fresh sync costs minutes of execution time. Skipping costs the recorded 158-failure state shipping undetected — every DB-backed test result becomes untrustworthy after merge, and the next feature branch inherits the same blocked-PR disposition this issue was filed to end.
 - **SC-2:** Querying three record ids after the suite run costs seconds. Skipping costs silent dataset destruction — a suite run that wipes synced records would leave every subsequent real-data verification session (and the stakeholder's local workflow) broken with no test evidence pointing at the cause.
-- **SC-3:** Comparing two executed module outcomes costs minutes. Skipping costs order-dependent test results — a module that passes alone and fails in the suite is exactly the failure mode that made #1421's PR boundary unjudgeable.
+- **SC-3:** Comparing two executed module outcomes costs minutes. Skipping costs order-dependent test results — a module that passes alone and fails in the suite is exactly the recorded failure mode this spec exists to eliminate.
 - **SC-4:** Running the two-module targeted invocation costs seconds to minutes. Skipping costs loss of the cheapest reproducer — without it, every future regression of this class requires a full-suite bisect instead of a targeted diagnosis.
 
 ## 11. Edge Cases
