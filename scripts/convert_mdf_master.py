@@ -1165,7 +1165,13 @@ def latex_topic(
         if marker == "shd":
             continue
         if marker in ("shd2", "shd3", "shd4"):
-            heading = latex_escape(shape_quotes(join_prose(block_lines(block)), "latex"))
+            # shd2 display text comes from the committed data (#1431/#1433);
+            # shd3/4 keep the source-verbatim rendering (no display field).
+            if marker == "shd2":
+                heading_text_ = block["display_text"]
+            else:
+                heading_text_ = join_prose(block_lines(block))
+            heading = latex_escape(shape_quotes(heading_text_, "latex"))
             depth = int(marker[3]) - 2
             command = LATEX_HEADING_LADDER[min(level + 1 + depth, len(LATEX_HEADING_LADDER) - 1)]
             out.append(command + "{" + heading + "}\n")
@@ -1602,7 +1608,13 @@ def html_topic(
             continue
         if marker in HTML_SECTION_MARKERS:
             level = html_heading_tag(int(marker[3]) + 1 + offset)
-            heading = html_escape(shape_quotes(join_prose(block_lines(block)), "unicode"))
+            # shd2 display text comes from the committed data (#1431/#1433);
+            # shd3/4 keep the source-verbatim rendering (no display field).
+            if marker == "shd2":
+                heading_text_ = block["display_text"]
+            else:
+                heading_text_ = join_prose(block_lines(block))
+            heading = html_escape(shape_quotes(heading_text_, "unicode"))
             out.append(f'  <{level} class="section-heading">{heading}</{level}>')
         elif marker == "txt":
             text = join_prose(block_lines(block))
@@ -1681,7 +1693,11 @@ def html_nav(document: dict, page_by_key: dict[str, str], slugs: dict[str, str])
         label = html_escape(chapter["heading"] or chapter["key"])
         if members:
             inner = "\n".join(
-                f'      <li><a href="{page}#key-{slugs[m["key"]]}">\\{html_escape(m["key"])}</a></li>' for m in members
+                # Nav label from the committed display data (#1433 SC-1): the
+                # multi-key stub's display label ("Old verb paradigm markers"),
+                # rendered plainly like the chapter labels.
+                f'      <li><a href="{page}#key-{slugs[m["key"]]}">{html_escape(m["display_label"])}</a></li>'
+                for m in members
             )
             items.append(
                 f'  <li class="nav-chapter"><a href="{page}">{label}</a>\n    <ul>\n{inner}\n    </ul>\n  </li>'
@@ -1692,7 +1708,10 @@ def html_nav(document: dict, page_by_key: dict[str, str], slugs: dict[str, str])
         group_items = []
         for group, entries in structure["reference"].items():
             entry_links = "\n".join(
-                f'        <li><a href="{REFERENCE_PAGE}#key-{slugs[e["key"]]}">\\{html_escape(e["key"])}</a></li>'
+                # Nav label from the committed display data (#1433 SC-1): the
+                # backslash prefix is this edition's typographic presentation
+                # of the marker token; the content is the committed label.
+                f'        <li><a href="{REFERENCE_PAGE}#key-{slugs[e["key"]]}">\\{html_escape(e["display_label"])}</a></li>'
                 for e in entries
             )
             group_items.append(
