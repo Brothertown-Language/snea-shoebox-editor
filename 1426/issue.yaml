@@ -4,32 +4,100 @@ status: open
 labels:
 - needs-approval
 - spec-draft
-body: "body: |\n  ## Summary\n\n  After `scripts/sync_prod_to_local.sh`, a full `uv\
-  \ run pytest -q --ignore=tmp` run shows **158 failed, 709 passed, 111 skipped**\
-  \ — identical on `main` (verified 2026-10-10, tip `1f0f9ff`). The suite is order-dependent:\
-  \ schema/migration tests recreate DB objects mid-suite, so later tests that read\
-  \ real synced data (e.g. `test/test_upload_search_entries.py` SC-8 fixtures, which\
-  \ require records 5/15/6832 to exist) fail with `real synced record N must exist\
-  \ in synced DB`. Individual test files pass in isolation.\n\n  Two distinct failure\
-  \ classes observed:\n  1. `psycopg2.errors.ForeignKeyViolation: matchup_queue_source_id_fkey`\
-  \ — staged fixture rows reference sources the synced schema/data no longer has.\n\
-  \  2. Schema teardown by migration tests (`tests/database/test_migration_manager.py`\
-  \ recreate path) leaves later DB-backed tests against an empty/replaced dataset.\n\
-  \n  Run-to-run failure count also varies (158 vs 153), consistent with ordering-dependent\
-  \ contamination (cf. #36 artifacts: shared pgserver tmp-dir lifecycle, order-dependent\
-  \ cross-test contamination).\n\n  ## Evidence\n\n  - Full-suite run: `uv run pytest\
-  \ -q --ignore=tmp` → `158 failed, 709 passed, 111 skipped` (twice, 2026-10-10).\n\
-  \  - Same run on unmodified `main`: identical `158 failed, 709 passed` — pre-existing,\
-  \ not introduced by #1421's fix branch.\n  - `uv run pytest test/test_upload_search_entries.py`\
-  \ in isolation: **8 passed** on the #1421 branch.\n  - Failure mode for SC-8 in\
-  \ suite context: `AssertionError: unexpectedly None : real synced record 5 must\
-  \ exist in synced DB`.\n\n  ## Proposed direction\n\n  Give migration/schema tests\
-  \ an isolated temporary database (or make them restore state) so they cannot clobber\
-  \ the synced local dataset mid-suite; separately, fixture tests that depend on synced\
-  \ production records should either create their own scoped data or tolerate schema\
-  \ recreation.\n\n  Discovered during #1421 (stale SC-8 unicode expectation); filed\
-  \ as disposition for the pre-existing suite failures so #1421's PR boundary is not\
-  \ blocked by them.\n"
+body: '# Test-suite order independence — DB-backed tests must not contaminate or depend
+  on execution order against the synced production-replica database
+
+
+  ## Decision (what is required)
+
+
+  After a fresh `scripts/sync_prod_to_local.sh` sync, the full suite `uv run pytest
+  -q --ignore=tmp` SHALL complete with **0 failed** (designed skips permitted). Pinned
+  as four behavioral success criteria in the authoritative spec (`.issues/1426/spec.md`,
+  `issues-data` branch):
+
+
+  | SC | Requirement | Evidence |
+
+  |----|-------------|----------|
+
+  | SC-1 | Full suite completes 0 failed after fresh sync | Executed full-suite pytest
+  run, summary line captured |
+
+  | SC-2 | Synced dataset intact after a full-suite run — the SC-8 fixture''s `REAL_RECORD_IDS`
+  (currently 5/15/6832) all present | Post-run database queries |
+
+  | SC-3 | Synced-data-dependent modules behave identically in suite context and isolation
+  | `test/test_upload_search_entries.py`: 8/8 isolation == suite-context outcome |
+
+  | SC-4 | The migration↔synced-data adjacency resolves: `tests/database/test_migration_manager.py`
+  + `test/test_upload_search_entries.py` in one pytest session leaves the synced-record
+  assertions passing | Executed targeted invocation, RED pre-fix / GREEN post-fix
+  |
+
+
+  Mechanism-agnostic by decision: no requirement names an isolation technique — temp-DB
+  vs state-restore vs environment scoping is an implementation decision fixed by diagnosis.
+  The ticket''s original either/or phrasing ("isolated temporary database (or make
+  them restore state)"; fixtures "either create their own scoped data or tolerate
+  schema recreation") is superseded by these invariants and is deleted here.
+
+
+  ## Verified evidence
+
+
+  - Full-suite run twice on 2026-10-10: `158 failed, 709 passed, 111 skipped`; identical
+  on unmodified `main` at tip `1f0f9ff` — pre-existing, not introduced by #1421''s
+  branch (merged as PR #1427, `d411a76`).
+
+  - `uv run pytest test/test_upload_search_entries.py` in isolation: **8 passed**.
+
+  - Suite-context failure mode: `AssertionError: unexpectedly None : real synced record
+  5 must exist in synced DB`.
+
+  - Second recorded class: `psycopg2.errors.ForeignKeyViolation: matchup_queue_source_id_fkey`
+  — staged fixture rows reference sources absent from the schema/data in effect (`matchup_queue`
+  staging verified in `tests/database/test_crud.py`, `tests/integration/test_mdf_upload_locking.py`,
+  `tests/integration/test_upload_e2e.py`, `tests/frontend/test_upload_review_d1.py`).
+
+
+  ## Candidate mechanism — to confirm by diagnosis, not asserted
+
+
+  Direct read 2026-10-10: `tests/database/test_migration_manager.py` sets `os.environ["OPENCODE"]
+  = "1"` at module import — a process-global that redirects database selection in
+  `src/database/connection.py` to the private OpenCode path, while the SC-8 fixtures
+  target the synced local replica the sync script produces. This is one confirmed
+  order-coupling; whether it accounts for both recorded failure classes is an implementation-phase
+  diagnosis obligation. The original body''s attribution ("schema teardown by migration
+  tests ... leaves later DB-backed tests against an empty/replaced dataset") is retained
+  as a candidate, not a verified cause. Run-to-run variance (158 vs 153 failed) is
+  consistent with order-dependent contamination.
+
+
+  ## Scope boundaries
+
+
+  - `scripts/sync_prod_to_local.py` keeps its faithful-exact-copy mandate; production
+  is untouched.
+
+  - The SC-8 fixture contract is unchanged — real synced records as the test basis,
+  unicode round-trip parsed from `mdf_data` (per #1421''s fix). No synthetic substitutes.
+
+  - Failures are resolved genuinely — no new skip/xfail masks on DB-backed tests;
+  existing designed skip guards (`playwright_e2e`/`SNEA_E2E`) unaffected.
+
+  - Any `src/` change preserves app-facing runtime behavior (production detection,
+  pgserver auto-start) unchanged.
+
+
+  Discovered during #1421 (stale SC-8 unicode expectation); filed as the disposition
+  for the pre-existing suite failures so #1421''s PR boundary is not blocked by them.
+
+
+  🤖 Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
+
+  '
 created_at: '2026-10-10T18:56:33+00:00'
-updated_at: '2026-10-11T03:26:48+00:00'
+updated_at: '2026-10-11T03:31:44+00:00'
 github_url: '1426'
