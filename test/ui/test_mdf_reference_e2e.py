@@ -534,7 +534,11 @@ def test_filter_home_topic_chip_reads_home():
 
     def flow():
         home_key = _master_topics()["home_key"]
-        state = _filter_flow("Helps Database", os.path.join("vision3", "09-home-label-plain.png"))
+        # #1417 W3: the filter is now ranked full-text search, so the
+        # home-only query is a token unique to the home topic ("green" — the
+        # home text's mention of the green cross-reference convention; the
+        # old "Helps Database" phrase now legitimately matches other topics).
+        state = _filter_flow("green", os.path.join("vision3", "09-home-label-plain.png"))
         # The left browser column also carries the rail controls (download,
         # back-to-main) — assert on the topic-match chips only, as in SC-9.
         rail_controls = ("Download the MDF reference (PDF)", "Back to Main Menu")

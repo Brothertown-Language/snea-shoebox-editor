@@ -37,9 +37,12 @@ shd4 groups); bare-target cf blocks keep the caption + button grid.
 Deep-linking: ``?marker=<topic-key>`` selects a topic; an unknown key falls
 back to the home entry with a visible notice.
 
-Unicode-first: any future filtering stays plain case-insensitive substring
-matching on raw text (``str.lower()``) — no normalization, no stripping; the
-source's accented content (á, ñ, é) must match losslessly (R-10).
+Search (#1417): the rail's filter input performs ranked full-text search —
+in-process Okapi BM25 over the corpus with the seeded vocabulary table
+(``src/services/mdf_search*``). Unicode-first: tokens are exact Unicode word
+characters, lowercased — no normalization, no stripping, no stemming, no stop
+words; the source's accented content (á, ñ, é) matches losslessly and a
+decomposed query does not silently match precomposed text.
 """
 
 import json
@@ -238,32 +241,40 @@ def md_escape(text: str) -> str:
     return _MD_PUNCT_RE.sub(r"\\\1", text)
 
 
-def topic_search_text(topic: dict) -> str:
-    """The raw text a filter query matches against: key, heading, preamble,
-    and every block's raw content — nothing normalized, nothing stripped."""
-    parts = [topic["key"], topic.get("heading") or ""]
-    parts.extend(topic.get("preamble") or [])
-    parts.extend(block.get("text", "") for block in topic.get("blocks", []))
-    return "\n".join(parts)
+def search_topics(topics: list[dict], query: str) -> list[tuple[str, float]]:
+    """The page's search entry point: ranked full-text search over the
+    reference corpus (#1417).
 
-
-def filter_topics(topics: list[dict], query: str) -> list[dict]:
-    """Case-insensitive, Unicode-preserving substring match over keys and
-    definition text (R-10).
-
-    Plain ``str.lower()`` substring only — no unicode normalization, no
-    stripping: the source's accented content (á, ñ, é) matches losslessly,
-    and a decomposed query does not silently match precomposed text. Ranked
-    full-text search is out of scope (deferred to #1417).
+    Routes to the in-process BM25 scorer (``src.services.mdf_search``) with
+    the seeded vocabulary table (``src.services.mdf_search_vocabulary``):
+    multi-term matching, relevance ranking, Unicode-exact tokens (no
+    normalization, no stemming, no stop words). The v1 substring matching
+    left the filter path when #1417 landed. An empty (or punctuation-only)
+    query matches nothing — the caller renders the chapter tree for an empty
+    query and the standard empty-state banner for a no-match query.
     """
-    needle = (query or "").lower()
-    if not needle:
-        return list(topics)
-    return [
-        topic
-        for topic in topics
-        if needle in topic["key"].lower() or needle in topic_search_text(topic).lower()
-    ]
+    from src.services.mdf_search import search_mdf
+    from src.services.mdf_search_vocabulary import ALIAS_ENTRIES
+
+    return search_mdf(_index_for(topics), query, aliases=ALIAS_ENTRIES)
+
+
+# Single-slot cache for the built search index (spec: index built at page
+# load and cached). Keyed by the topics list object; rebuilt when the page
+# loads a fresh master (a Streamlit rerun re-reads the file).
+_SEARCH_INDEX_CACHE: tuple[list[dict], object] | None = None
+
+
+def _index_for(topics: list[dict]):
+    global _SEARCH_INDEX_CACHE
+    if _SEARCH_INDEX_CACHE is not None and _SEARCH_INDEX_CACHE[0] is topics:
+        return _SEARCH_INDEX_CACHE[1]
+    from src.services.mdf_search import build_search_index
+    from src.services.mdf_search_vocabulary import VARIANT_ENTRIES
+
+    index = build_search_index(topics, variants=VARIANT_ENTRIES)
+    _SEARCH_INDEX_CACHE = (topics, index)
+    return index
 
 
 def topic_display_heading(topic: dict) -> str:
@@ -974,12 +985,13 @@ def mdf_reference():
                 use_container_width=True,
             )
         query = st.text_input(
-            "Filter topics (substring, case-insensitive)",
+            "Filter topics (full-text search, ranked)",
             key="mdf_filter",
         )
         query = (query or "").strip()
         if query:
-            matches = filter_topics(topics, query)
+            results = search_topics(topics, query)
+            matches = [topics_by_key[key] for key, _score in results]
             st.caption(f"{len(matches)} matching topics")
             if not matches:
                 st.info("No topics match your filter. Clear the filter to see the full chapter list.")
