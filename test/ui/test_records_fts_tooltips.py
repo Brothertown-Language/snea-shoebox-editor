@@ -36,21 +36,42 @@ mock_validator = MagicMock()
 mock_validator.diagnose_record.return_value = None
 
 import sys
-sys.modules["src.services.linguistic_service"] = MagicMock()
-sys.modules["src.services.linguistic_service"].LinguisticService = mock_linguistic
-sys.modules["src.services.preference_service"] = MagicMock()
-sys.modules["src.services.preference_service"].PreferenceService = mock_preference
-sys.modules["src.services.identity_service"] = MagicMock()
-sys.modules["src.services.identity_service"].IdentityService = mock_identity
-sys.modules["src.services.navigation_service"] = MagicMock()
-sys.modules["src.services.navigation_service"].NavigationService = mock_nav
-sys.modules["src.services.upload_service"] = MagicMock()
-sys.modules["src.services.upload_service"].UploadService = mock_upload
-sys.modules["src.mdf.validator"] = MagicMock()
-sys.modules["src.mdf.validator"].MDFValidator = mock_validator
 
-from src.frontend.pages.records import records
-records()
+# Insert-only containment: save pre-existing entries, restore at scope-exit.
+# Without this, the MagicMock swap leaks process-wide and later modules'
+# mock.patch("src.services.upload_service.get_session") targets the mock while
+# the real module (held by earlier imports) executes unpatched (#1426).
+_MOCK_MODULE_PATHS = [
+    "src.services.linguistic_service",
+    "src.services.preference_service",
+    "src.services.identity_service",
+    "src.services.navigation_service",
+    "src.services.upload_service",
+    "src.mdf.validator",
+]
+_saved_modules = {p: sys.modules.get(p) for p in _MOCK_MODULE_PATHS}
+try:
+    sys.modules["src.services.linguistic_service"] = MagicMock()
+    sys.modules["src.services.linguistic_service"].LinguisticService = mock_linguistic
+    sys.modules["src.services.preference_service"] = MagicMock()
+    sys.modules["src.services.preference_service"].PreferenceService = mock_preference
+    sys.modules["src.services.identity_service"] = MagicMock()
+    sys.modules["src.services.identity_service"].IdentityService = mock_identity
+    sys.modules["src.services.navigation_service"] = MagicMock()
+    sys.modules["src.services.navigation_service"].NavigationService = mock_nav
+    sys.modules["src.services.upload_service"] = MagicMock()
+    sys.modules["src.services.upload_service"].UploadService = mock_upload
+    sys.modules["src.mdf.validator"] = MagicMock()
+    sys.modules["src.mdf.validator"].MDFValidator = mock_validator
+
+    from src.frontend.pages.records import records
+    records()
+finally:
+    for _path, _saved in _saved_modules.items():
+        if _saved is not None:
+            sys.modules[_path] = _saved
+        else:
+            del sys.modules[_path]
 """
 
 

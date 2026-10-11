@@ -6,14 +6,15 @@
 Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)
 """
 
-import os
-
 import pytest
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
-os.environ["OPENCODE"] = "1"
+# Isolation via the `private_db` fixture (tests/conftest.py) — see #1426:
+# the historic import-time `os.environ["OPENCODE"] = "1"` leaked into the
+# whole pytest session and redirected other modules' DB selection away from
+# the synced local replica.
 
 from src.database.connection import init_db
 from src.database.migrations import MigrationManager
@@ -25,7 +26,7 @@ UNIQUE_INDEX_NAME = "uq_search_entries_record_term_type"
 
 
 @pytest.fixture(scope="module")
-def engine():
+def engine(private_db):
     """Provide a database engine initialized via init_db."""
     return init_db()
 

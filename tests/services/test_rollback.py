@@ -3,12 +3,26 @@ import unittest
 import uuid
 from datetime import UTC
 
+import pytest
+
 from src.database.connection import get_session, init_db
 from src.database.models.core import Language, Record, Source
 from src.database.models.identity import User
 from src.database.models.search import GlossSearchEntry, HeadwordSearchEntry, SearchEntry
 from src.database.models.workflow import EditHistory
 from src.services.upload_service import UploadService
+
+# Isolation via the `private_db` fixture (tests/conftest.py) — see #1426:
+# this module deletes every Record in whatever database it runs against; on
+# the shared synced replica that destroyed the real dataset for all later
+# modules. The fixture scopes it to a fresh private scratch DB instead.
+pytestmark = pytest.mark.usefixtures("private_db")
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _init_private_db(private_db):
+    """Initialize the private scratch DB schema for this module's tests."""
+    init_db()
 
 
 class TestRollbackService(unittest.TestCase):

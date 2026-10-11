@@ -474,7 +474,7 @@ class TestLinguisticService(unittest.TestCase):
         se = SearchEntry(record_id=record.id, term="nup", normalized_term="nup", entry_type="lx")
         hse_lx = HeadwordSearchEntry(record_id=record.id, term="nup", normalized_term="nup", entry_type="lx")
         hse_va = HeadwordSearchEntry(record_id=record.id, term="nut", normalized_term="nut", entry_type="va")
-        gse = GlossSearchEntry(record_id=record.id, term="die", normalized_term="die")
+        gse = GlossSearchEntry(record_id=record.id, entry_type="ge", term="die", normalized_term="die")
         self.session.add_all([se, hse_lx, hse_va, gse])
         self.session.commit()
 
@@ -538,7 +538,7 @@ class TestLinguisticService(unittest.TestCase):
 
         hse_lx = HeadwordSearchEntry(record_id=record.id, term="wôpan", normalized_term="wopan", entry_type="lx")
         hse_va = HeadwordSearchEntry(record_id=record.id, term="wôpanâk", normalized_term="wopanak", entry_type="va")
-        gse = GlossSearchEntry(record_id=record.id, term="light", normalized_term="light")
+        gse = GlossSearchEntry(record_id=record.id, entry_type="ge", term="light", normalized_term="light")
         self.session.add_all([hse_lx, hse_va, gse])
         self.session.commit()
 
@@ -596,7 +596,7 @@ class TestLinguisticService(unittest.TestCase):
 
         hse_lx = HeadwordSearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
         hse_va = HeadwordSearchEntry(record_id=r1.id, term="wampu", normalized_term="wampu", entry_type="va")
-        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        gse = GlossSearchEntry(record_id=r1.id, entry_type="ge", term="round object", normalized_term="round object")
         self.session.add_all([hse_lx, hse_va, gse])
         self.session.commit()
 
@@ -619,7 +619,7 @@ class TestLinguisticService(unittest.TestCase):
 
         hse_lx = HeadwordSearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
         hse_va = HeadwordSearchEntry(record_id=r1.id, term="wampu", normalized_term="wampu", entry_type="va")
-        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        gse = GlossSearchEntry(record_id=r1.id, entry_type="ge", term="round object", normalized_term="round object")
         self.session.add_all([hse_lx, hse_va, gse])
         self.session.commit()
 
@@ -655,7 +655,7 @@ class TestLinguisticService(unittest.TestCase):
         self.session.add(r1)
         self.session.commit()
 
-        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        gse = GlossSearchEntry(record_id=r1.id, entry_type="ge", term="round object", normalized_term="round object")
         self.session.add(gse)
         self.session.commit()
 
@@ -676,7 +676,7 @@ class TestLinguisticService(unittest.TestCase):
         self.session.add(r1)
         self.session.commit()
 
-        gse = GlossSearchEntry(record_id=r1.id, term="something", normalized_term="something")
+        gse = GlossSearchEntry(record_id=r1.id, entry_type="ge", term="something", normalized_term="something")
         self.session.add(gse)
         self.session.commit()
 
@@ -692,7 +692,7 @@ class TestLinguisticService(unittest.TestCase):
         self.session.commit()
 
         hse = HeadwordSearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
-        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        gse = GlossSearchEntry(record_id=r1.id, entry_type="ge", term="round object", normalized_term="round object")
         self.session.add_all([hse, gse])
         self.session.commit()
 
@@ -747,7 +747,7 @@ class TestLinguisticService(unittest.TestCase):
 
         hse_lx = HeadwordSearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
         hse_va = HeadwordSearchEntry(record_id=r1.id, term="wampu", normalized_term="wampu", entry_type="va")
-        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        gse = GlossSearchEntry(record_id=r1.id, entry_type="ge", term="round object", normalized_term="round object")
         se = SearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
         self.session.add_all([hse_lx, hse_va, gse, se])
         self.session.commit()
@@ -808,7 +808,7 @@ class TestLinguisticService(unittest.TestCase):
 
         hse_lx = HeadwordSearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
         hse_va = HeadwordSearchEntry(record_id=r1.id, term="wampu", normalized_term="wampu", entry_type="va")
-        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        gse = GlossSearchEntry(record_id=r1.id, entry_type="ge", term="round object", normalized_term="round object")
         self.session.add_all([hse_lx, hse_va, gse])
         self.session.commit()
 
@@ -823,7 +823,7 @@ class TestLinguisticService(unittest.TestCase):
         self.session.add(r1)
         self.session.commit()
 
-        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        gse = GlossSearchEntry(record_id=r1.id, entry_type="ge", term="round object", normalized_term="round object")
         self.session.add(gse)
         self.session.commit()
 
@@ -876,7 +876,7 @@ class TestLinguisticService(unittest.TestCase):
 
         hse_lx = HeadwordSearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
         hse_va = HeadwordSearchEntry(record_id=r1.id, term="wampu", normalized_term="wampu", entry_type="va")
-        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        gse = GlossSearchEntry(record_id=r1.id, entry_type="ge", term="round object", normalized_term="round object")
         self.session.add_all([hse_lx, hse_va, gse])
         self.session.commit()
 
@@ -899,7 +899,7 @@ class TestLinguisticService(unittest.TestCase):
         self.session.add(r1)
         self.session.commit()
 
-        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        gse = GlossSearchEntry(record_id=r1.id, entry_type="ge", term="round object", normalized_term="round object")
         self.session.add(gse)
         self.session.commit()
 

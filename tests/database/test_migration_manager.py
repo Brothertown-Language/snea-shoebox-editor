@@ -4,8 +4,12 @@ import os
 
 import pytest
 
-# Ensure private database is used
-os.environ["OPENCODE"] = "1"
+# Isolation is provided by the `private_db` fixture (tests/conftest.py):
+# a freshly created private scratch DB scoped to this module. The historic
+# module-import `os.environ["OPENCODE"] = "1"` leaked the process-global into
+# the whole pytest session (pytest imports every test module during
+# collection) and redirected other modules' DB selection away from the synced
+# local replica — issue #1426.
 
 from sqlalchemy.orm import sessionmaker
 
@@ -16,7 +20,7 @@ from src.database.models.meta import SchemaVersion
 
 
 @pytest.fixture(scope="module")
-def engine():
+def engine(private_db):
     """Provide a database engine initialized via init_db."""
     return init_db()
 

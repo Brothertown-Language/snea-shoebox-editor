@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import pytest
 import streamlit as st
 
 # Add src to sys.path
@@ -13,6 +14,12 @@ sys.path.append(str(Path(__file__).parent.parent))
 # Mock streamlit session state
 if "session_state" not in st.__dict__:
     st.session_state = {}
+
+# Isolation via the `private_db` fixture (tests/conftest.py) — see #1426:
+# the historic in-test `os.environ["OPENCODE"] = "1"` relied on the import-time
+# leak from other modules; the fixture scopes the private scratch DB to this
+# module instead of redirecting the whole session.
+pytestmark = pytest.mark.usefixtures("private_db")
 
 from src.database.connection import get_session, init_db
 from src.database.models.core import Source
@@ -23,8 +30,7 @@ from src.services.security_manager import SecurityManager
 def test_security_manager():
     print("Starting SecurityManager test...")
 
-    # Ensure we are using the private database
-    os.environ["OPENCODE"] = "1"
+    # The `private_db` fixture provides the isolated private scratch database.
 
     # Initialize the database
     engine = init_db()
