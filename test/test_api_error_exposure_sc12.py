@@ -18,6 +18,8 @@ import unittest
 import urllib.error
 import urllib.request
 
+from api_e2e_gate import require_bolted_api
+
 from src.api.errors import MESSAGES, error_body
 
 BASE = os.environ.get("SNEA_E2E_BASE_URL", "http://localhost:8501")
@@ -73,6 +75,10 @@ class ErrorFormatterExposureTests(unittest.TestCase):
 
 @unittest.skipIf(os.environ.get("SNEA_E2E", "") != "1" or not _live_app_up(), "live spot-checks need the app up")
 class LiveErrorSpotChecks(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:  # noqa: N802
+        require_bolted_api(BASE)
+
     def test_401_body_is_generic(self):
         try:
             urllib.request.urlopen(BASE + "/api/v1/records", timeout=10)

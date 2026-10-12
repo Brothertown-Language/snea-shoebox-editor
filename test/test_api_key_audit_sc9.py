@@ -18,6 +18,7 @@ import unittest
 import urllib.error
 import urllib.request
 
+from api_e2e_gate import require_bolted_api
 from sqlalchemy import text
 
 from src.database.models.api_keys import ApiKeys
@@ -157,6 +158,7 @@ class AuthFailureAuditTests(unittest.TestCase):
         cls.disabled_key, cls.disabled_secret = ApiKeyService.create_key("sc9-authfail-disabled", "sc9-test-admin")
         cls.created_keys.append(cls.disabled_key)
         ApiKeyService.set_enabled(cls.disabled_key, False, "sc9-test-admin")
+        require_bolted_api(BASE)
 
     @classmethod
     def tearDownClass(cls):  # noqa: N802

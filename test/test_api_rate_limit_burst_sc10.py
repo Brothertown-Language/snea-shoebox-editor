@@ -20,6 +20,8 @@ import unittest
 import urllib.error
 import urllib.request
 
+from api_e2e_gate import require_bolted_api
+
 pytestmark_skip = os.environ.get("SNEA_E2E", "") != "1"
 
 BASE = os.environ.get("SNEA_E2E_BASE_URL", "http://localhost:8501")
@@ -52,6 +54,7 @@ class LiveBurstTests(unittest.TestCase):
     def setUpClass(cls):  # noqa: N802
         if not _app_healthy():
             raise unittest.SkipTest("live app not healthy on " + BASE)
+        require_bolted_api(BASE)
         from src.database.connection import init_db
         from src.services.api_key_service import ApiKeyService
 
