@@ -1,1 +1,46 @@
-comments: []
+comments:
+- type: internal
+  body: 'Triage verdict (2026-10-12, pre-spec): both failure classes root-caused;
+    the issue body''s hypothesized mechanism is REFUTED.
+
+
+    Class 1 — API auth-matrix 200s (18 tests incl. test_api_records_dump_sc6.py, not
+    enumerated in body): NOT the SNEA_E2E bypass. The bypass writes only st.session_state
+    (src/services/security_manager.py:85-146); API auth is header+DB only (src/api/auth.py:98-117),
+    no session coupling. Real mechanism: the agent-facing API is a Tornado bolt installed
+    on the app''s FIRST browser script run (streamlit_app.py ~225-229 inside _initialize_database;
+    src/api/registrar.py:108). Full-suite collection runs test/test_api_* BEFORE test/ui/
+    Playwright warmup; headless app (config.toml headless=true) never auto-connects;
+    /_stcore/health passes without any script run. Unbolted app serves /api/* from
+    Streamlit''s static catch-all (index.html, 200 text/html). Fingerprints: .pytest_cache/v/cache/lastfailed
+    shows test_valid_pair_returns_200 FAILED (a bypass-authenticating-everything run
+    would make it pass), and encoding 3-of-4 pattern matches index.html byte content.
+    The body''s fix directions (a) env scrub, (b) scope bypass away from API auth
+    are not viable — (a) can''t affect the separate app process / would just flip
+    skipIfs, (b) no code path exists to change. Viable directions: F1 gate live API
+    tests on bolt presence (probe 401 JSON, fail loudly); F2 executable warmup in
+    new test/conftest.py (session-scoped, Playwright first-script-run trigger); F3
+    decouple bolt from browser sessions (app-side, high blast radius, crosses no-edits-without-plan
+    on registrar/context); F4 playwright_e2e marker alignment (doesn''t fix race alone).
+
+
+    Class 2 — semantic zero-result E2E (3 tests): NOT a flake, NOT load, NOT #1431/#1434.
+    Spec-vs-spec conflict: #1413 relocation (commit 2fa1a36, Oct 5) deliberately removed
+    the pager from empty/zero-result paths (call sites records.py:875/1121 inside
+    non-empty else branch; #1413 SC-8 test test_records_pagination_empty_sc8.py asserts
+    NO pager on empty + AST-pins the call sites). The #1385 flow suite (last touched
+    Oct 3) asserts pager-present-after-zero-result as its responsiveness probe — unsatisfiable
+    post-#1413. Green screenshots pre-Oct 5 (tmp/issue-1385, tmp/1400) confirm. Fix
+    is test-side re-anchor: probe app responsiveness via the zero-result st.info ("No
+    records scored above the semantic threshold", already asserted and passing at
+    line 528 before line 531 fails) instead of the pager; _click_next/_click_prev
+    must stop scoping buttons to stSidebar. Load sensitivity (5→23 count variation)
+    is explained by class-1 count arithmetic + settle-detector timing, not by these
+    three.
+
+
+    Scope note: lastfailed includes test_api_records_dump_sc6.py (4 failures) — same
+    class-1 mechanism, should join the fix scope. Triage question for spec slice:
+    one spec vs split; and for class 1, whether full-suite SNEA_E2E=1 becomes a supported
+    invocation (F2) or fails loudly as unsupported (F1/F4).'
+  timestamp: '2026-10-12T04:41:33+00:00'
