@@ -16,7 +16,8 @@ Parsing semantics (deterministic, line-anchored):
   continuation content (SC-13 malformed path).
 - Zero "\\key" entries is a fatal error (R-8 fail-fast); no output file.
 
-JSON schema (snea-mdf-master/1):
+JSON schema (snea-mdf-master/2 — adds per-topic display_label and per-shd2
+block display_text, #1431):
 - source: path/sha256/bytes/lines provenance of the parsed file, plus
   `git_last_modified` (the tracked transcription file's last-modified commit
   date as YYYY-MM-DD, from `git log -1 --format=%cs`; provenance record only —
@@ -134,7 +135,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-SCHEMA = "snea-mdf-master/1"
+SCHEMA = "snea-mdf-master/2"
 GENERATOR = "scripts/convert_mdf_master.py"
 DEFAULT_SOURCE = "docs/mdf/MDFields19a_UTF8.txt"
 DEFAULT_OUT = "docs/mdf/build/master.json"
@@ -161,6 +162,69 @@ MARKERS = frozenset(
 )
 TARGET_STRIP_CHARS = "*.,;:"
 HOME_KEY = "aa"
+
+# Display data (issue #1431) — the committed exception inventory. Build-side
+# data only: each entry states the topic key, the block locator (source line),
+# the display text that replaces the marker-stripped source text, and the
+# reason for the deviation. The inventory grows by data, never by renderer
+# code; renderers read the resolved fields from master.json verbatim.
+SHD2_DISPLAY_EXCEPTIONS: dict[tuple[str, int], dict[str, str]] = {
+    ("Sections_in_a_Lexical_Entry", 2387): {
+        "text": "Understanding the hierarchical structure of an entry",
+        "reason": (
+            "The source wraps this \\shd2 heading in parentheses — the only "
+            "fully paren-wrapped \\shd2 in the document; as a navigation label "
+            "the wrapping parentheses are noise (issue #1431 SC-2)."
+        ),
+    },
+}
+
+
+def marker_name_from_heading(heading: str, key: str) -> str | None:
+    """A single-marker topic's marker name (#1431): the \\shd heading text minus
+    the leading backslash-marker token and the following whitespace run,
+    preserved byte-for-byte thereafter. None when the heading does not begin
+    with this topic's own token (no derivation is invented in that case)."""
+    if not heading.startswith("\\"):
+        return None
+    rest = heading[1:]
+    end = 0
+    while end < len(rest) and not rest[end].isspace():
+        end += 1
+    if rest[:end] != key:
+        return None
+    j = end
+    while j < len(rest) and rest[j].isspace():
+        j += 1
+    return rest[j:]
+
+
+def derive_display_label(topic: dict, home_key: str | None) -> str:
+    """The topic's user-facing rail label (#1431), derived at build time from
+    the topic's own data: chapters and the multi-key stub carry their \\shd
+    heading text; single-marker reference entries carry the marker token
+    together with its marker name (single-space separator — the within-label
+    separator is a presentation decision, the name itself is source bytes);
+    a topic with no \\shd heading falls back to its key (e.g. References)."""
+    key = topic["key"]
+    heading = topic.get("heading")
+    if heading is None:
+        return key
+    if key != home_key and is_reference_entry(topic, home_key):
+        name = marker_name_from_heading(heading, key)
+        if name is not None:
+            return f"{key} {name}"
+    return heading
+
+
+def derive_shd2_display_text(topic_key: str, block: dict) -> str:
+    """A \\shd2 block's display text (#1431): the marker-stripped source text,
+    except where the exception inventory overrides it. Surrounding whitespace
+    is stripped — the label context renders it as one line."""
+    exc = SHD2_DISPLAY_EXCEPTIONS.get((topic_key, block["line"]))
+    if exc is not None:
+        return exc["text"]
+    return field_payload(first_line(block["text"]), "shd2").strip()
 
 
 def marker_token(line: str) -> str | None:
@@ -359,6 +423,7 @@ def parse_mdf_text(text: str, source_path: str, git_last_modified: str | None = 
                 "line": topic["line"],
                 "index": index,
                 "heading": heading,
+                "display_label": None,
                 "is_chapter": is_chapter,
                 "chapter": chapter,
                 "occurrence": topic["occurrence"],
@@ -367,6 +432,11 @@ def parse_mdf_text(text: str, source_path: str, git_last_modified: str | None = 
                 "blocks": topic["blocks"],
             }
         )
+        topics[-1]["display_label"] = derive_display_label(topics[-1], home["key"] if home else None)
+    for topic in topics:
+        for block in topic["blocks"]:
+            if block["marker"] == "shd2":
+                block["display_text"] = derive_shd2_display_text(topic["key"], block)
 
     title = next(
         (field_payload(first_line(block["text"]), "_sh") for block in header_blocks if block["marker"] == "_sh"),
@@ -1095,7 +1165,13 @@ def latex_topic(
         if marker == "shd":
             continue
         if marker in ("shd2", "shd3", "shd4"):
-            heading = latex_escape(shape_quotes(join_prose(block_lines(block)), "latex"))
+            # shd2 display text comes from the committed data (#1431/#1433);
+            # shd3/4 keep the source-verbatim rendering (no display field).
+            if marker == "shd2":
+                heading_text_ = block["display_text"]
+            else:
+                heading_text_ = join_prose(block_lines(block))
+            heading = latex_escape(shape_quotes(heading_text_, "latex"))
             depth = int(marker[3]) - 2
             command = LATEX_HEADING_LADDER[min(level + 1 + depth, len(LATEX_HEADING_LADDER) - 1)]
             out.append(command + "{" + heading + "}\n")
@@ -1532,7 +1608,13 @@ def html_topic(
             continue
         if marker in HTML_SECTION_MARKERS:
             level = html_heading_tag(int(marker[3]) + 1 + offset)
-            heading = html_escape(shape_quotes(join_prose(block_lines(block)), "unicode"))
+            # shd2 display text comes from the committed data (#1431/#1433);
+            # shd3/4 keep the source-verbatim rendering (no display field).
+            if marker == "shd2":
+                heading_text_ = block["display_text"]
+            else:
+                heading_text_ = join_prose(block_lines(block))
+            heading = html_escape(shape_quotes(heading_text_, "unicode"))
             out.append(f'  <{level} class="section-heading">{heading}</{level}>')
         elif marker == "txt":
             text = join_prose(block_lines(block))
@@ -1611,7 +1693,11 @@ def html_nav(document: dict, page_by_key: dict[str, str], slugs: dict[str, str])
         label = html_escape(chapter["heading"] or chapter["key"])
         if members:
             inner = "\n".join(
-                f'      <li><a href="{page}#key-{slugs[m["key"]]}">\\{html_escape(m["key"])}</a></li>' for m in members
+                # Nav label from the committed display data (#1433 SC-1): the
+                # multi-key stub's display label ("Old verb paradigm markers"),
+                # rendered plainly like the chapter labels.
+                f'      <li><a href="{page}#key-{slugs[m["key"]]}">{html_escape(m["display_label"])}</a></li>'
+                for m in members
             )
             items.append(
                 f'  <li class="nav-chapter"><a href="{page}">{label}</a>\n    <ul>\n{inner}\n    </ul>\n  </li>'
@@ -1622,7 +1708,10 @@ def html_nav(document: dict, page_by_key: dict[str, str], slugs: dict[str, str])
         group_items = []
         for group, entries in structure["reference"].items():
             entry_links = "\n".join(
-                f'        <li><a href="{REFERENCE_PAGE}#key-{slugs[e["key"]]}">\\{html_escape(e["key"])}</a></li>'
+                # Nav label from the committed display data (#1433 SC-1): the
+                # backslash prefix is this edition's typographic presentation
+                # of the marker token; the content is the committed label.
+                f'        <li><a href="{REFERENCE_PAGE}#key-{slugs[e["key"]]}">\\{html_escape(e["display_label"])}</a></li>'
                 for e in entries
             )
             group_items.append(

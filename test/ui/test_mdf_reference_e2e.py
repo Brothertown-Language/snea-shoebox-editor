@@ -73,6 +73,20 @@ def _master_topics():
     return master
 
 
+def _master_topics_label(key: str) -> str:
+    """The committed display label of a topic (#1431) — what rail buttons
+    render instead of the bare key. Whitespace-normalized to match DOM
+    innerText, which collapses runs (the source's ``is  index  of  semantics``
+    renders with single spaces)."""
+    master = _master_topics()
+    label = next(t["display_label"] for t in master["topics"] if t["key"] == key)
+    return " ".join(label.split())
+
+
+def _norm(text: str) -> str:
+    return " ".join(text.split())
+
+
 def _open_mdf_page():
     """Fresh browser context (SNEA_E2E bypass authenticates it) on the MDF
     Reference page; yields (pw, browser, page) — caller closes the browser.
@@ -117,22 +131,77 @@ def test_sc7_renders_108_topics_17_chapters_lands_on_aa():
                 f"terminal reference section header missing: {h3_texts}"
             )
 
-            # All 108 topic browser nodes present: topic keys render as bare
-            # button labels; the home/TOC entry is labeled plain "Home" for
-            # users (2026-10-06 directive: no bare aa in any user-facing
-            # label) and is asserted by its user label.
+            # All 108 topic browser nodes present: each rail button renders
+            # its committed display label (#1431) — chapter \shd headings,
+            # the stub's heading, marker token + marker name entries; the
+            # home/TOC entry is labeled plain "Home" for users (2026-10-06
+            # directive) and is asserted by its user label.
             home_key = master["home_key"]
+            expected_labels = {
+                t["key"]: _norm(t["display_label"])
+                for t in master["topics"]
+                if t["key"] != home_key
+            }
             labels = page.eval_on_selector_all(
                 "button", "els => els.map(e => e.innerText.trim())"
             )
-            missing = [k for k in keys if k != home_key and k not in labels]
+            norm_labels = [_norm(l) for l in labels]
+            missing = [k for k, lbl in expected_labels.items() if lbl not in norm_labels]
             assert not missing, f"{len(missing)} topic browser nodes missing: {missing[:10]}"
+            # SC-1: no underscore and no bare key in any RAIL label. Scoped to
+            # the browser column — the detail pane's \cf buttons carry the
+            # source's raw tokens by design (#1433 out of scope).
+            rail_labels = [
+                _norm(l)
+                for l in page.locator('[data-testid="stColumn"]')
+                .nth(0)
+                .locator("button")
+                .all_inner_texts()
+            ]
+            assert not [l for l in rail_labels if "_" in l], f"underscore rail labels: {rail_labels}"
             assert "Home" in labels, (
                 f"the home/TOC entry button must read plain Home; labels head: {labels[:10]}"
             )
             assert f"Home ({home_key})" not in labels, (
                 "the parenthesized bare key must not render in the home button label"
             )
+
+            # SC-1: the three underscore-keyed chapters render their \shd
+            # headings as the chapter button labels.
+            by_key = {t["key"]: t for t in master["topics"]}
+            for chapter_key in ("Range_Sets", "Order_of_Fields", "Sections_in_a_Lexical_Entry"):
+                assert _norm(by_key[chapter_key]["display_label"]) in norm_labels, (
+                    f"chapter {chapter_key} must render its \\shd heading "
+                    f"{by_key[chapter_key]['display_label']!r}"
+                )
+            # SC-3: every Field Marker Reference entry renders its marker
+            # token together with its marker name (committed display label).
+            marker_entries = [
+                t
+                for t in master["topics"]
+                if t["key"] != home_key
+                and not t["is_chapter"]
+                and " " not in t["key"].strip()
+            ]
+            assert len(marker_entries) == 89
+            for topic in marker_entries:
+                assert _norm(topic["display_label"]) in norm_labels, (
+                    f"marker entry {topic['key']} must render token+name "
+                    f"{topic['display_label']!r}"
+                )
+            # SC-2: the paren-wrapped \shd2 renders its display text — the
+            # source's wrapping parentheses dropped by the single exception.
+            shd2_labels = [
+                _norm("▸ " + b["display_text"])
+                for t in master["topics"]
+                if t["is_chapter"]
+                for b in t["blocks"]
+                if b["marker"] == "shd2"
+            ]
+            for lbl in shd2_labels:
+                assert lbl in norm_labels, f"shd2 label missing: {lbl!r}"
+            assert "▸ (Understanding the hierarchical structure of an entry)" not in norm_labels
+            assert "▸ Understanding the hierarchical structure of an entry" in norm_labels
 
             # Single left rail (vision-review remediation): the global sidebar
             # nav stays hidden and the standard back-to-main affordance rides
@@ -221,23 +290,34 @@ def test_sc7_reference_section_structure_and_chapter_members():
                 f"reference section must be the terminal group; h3 tail: {headers_h3[-3:]}"
             )
 
-            assert group_slice("Record Marker", "H4", {"H3", "H4"}) == ["lx"]
+            master = _master_topics()
+            label_of = {t["key"]: _norm(t["display_label"]) for t in master["topics"]}
+            assert group_slice("Record Marker", "H4", {"H3", "H4"}) == [label_of["lx"]]
             basic = group_slice("Basic Fields", "H4", {"H3", "H4"})
-            assert len(basic) == 17 and basic == sorted(basic) and "lx" not in basic, (
+            assert len(basic) == 17 and basic == sorted(basic) and label_of["lx"] not in basic, (
                 f"Basic Fields must hold its 17 entries alphabetical: {basic}"
             )
-            assert group_slice("Reserved Fields", "H4", {"H3", "H4"}) == ["hm", "lc", "se", "sn"]
+            assert group_slice("Reserved Fields", "H4", {"H3", "H4"}) == [
+                label_of["hm"],
+                label_of["lc"],
+                label_of["se"],
+                label_of["sn"],
+            ]
             optional = group_slice("Optional Fields", "H4", {"H3", "H4"})
             assert len(optional) == 66 and optional == sorted(optional), (
                 f"Optional Fields must hold 66 entries alphabetical: {optional[:5]}…"
             )
-            assert group_slice("Discontinued", "H4", {"H3", "H4"}) == ["xg"]
+            assert group_slice("Discontinued", "H4", {"H3", "H4"}) == [label_of["xg"]]
 
             # The multi-key verb-paradigm stub stays inside its chapter group
             # (source-directed via its own \\cf), and no marker-definition
-            # topic renders inside any chapter group anymore.
+            # topic renders inside any chapter group anymore. With #1431 the
+            # rail buttons carry committed display labels, so the membership
+            # census runs on those.
             stub_key = "1s 1p 1e 1i 1d 2s 2p 2d 3s 3p 3d 4s 4p 4d"
-            reference_keys = {"lx", "hm", "lc", "se", "sn", "xg"} | set(basic) | set(optional)
+            reference_labels = {
+                label_of[k] for k in ("lx", "hm", "lc", "se", "sn", "xg")
+            } | set(basic) | set(optional)
             chapter_slices = []
             current_header, current_labels = None, []
             for tag, text in scan:
@@ -251,12 +331,12 @@ def test_sc7_reference_section_structure_and_chapter_members():
                     current_labels.append(text)
             chapter_slices.append((current_header, current_labels))
             by_chapter = dict(chapter_slices)
-            assert stub_key in by_chapter.get("Old and Changed Markers", []), (
+            assert label_of[stub_key] in by_chapter.get("Old and Changed Markers", []), (
                 f"numeric stub must render under Old and Changed Markers; "
                 f"that chapter's buttons: {by_chapter.get('Old and Changed Markers')}"
             )
             for header, labels in chapter_slices:
-                stray = [lbl for lbl in labels if lbl in reference_keys]
+                stray = [lbl for lbl in labels if lbl in reference_labels]
                 assert not stray, f"marker-definition topics leaked into chapter {header!r}: {stray}"
 
             with open(os.path.join(ARTIFACTS_DIR, "sc7-structure-result.json"), "w") as fh:
@@ -345,6 +425,8 @@ def test_sc8_cf_target_button_navigates_from_marker_entry():
             page.goto(f"{MDF_URL}?marker=lx")
             page.wait_for_selector("text=lexeme or headword", timeout=60_000)
             main_col = page.locator('[data-testid="stColumn"]').nth(1)
+            # The detail pane's cf-pair-row buttons carry the source's raw
+            # tokens (unchanged by #1433 — raw cf labels in every edition).
             main_col.get_by_role("button", name="lc", exact=True).first.click()
             # lx's own body text mentions "lexical citation", so a plain text
             # wait would pass before navigation — scope to the detail h2.
@@ -504,7 +586,9 @@ def test_sc9_filter_matches_accented_definition_text():
     topic_labels = [
         lbl for lbl in state["labels"] if not any(control in lbl for control in rail_controls)
     ]
-    assert topic_labels == ["lc"], f"expected only lc for 'léwat'; got {topic_labels}"
+    assert topic_labels == [_master_topics_label("lc")], (
+        f"expected only lc for 'léwat'; got {topic_labels}"
+    )
     assert state["h3_count"] == 0, "filter mode must replace the chapter tree (no h3 headers)"
 
 
@@ -512,7 +596,7 @@ def test_sc9_filter_case_insensitive_accented_query():
     """SC-9: an uppercase accented query ('ADÁ') matches the lowercase source
     content in the Alternate_Hierarchy chapter topic."""
     state = _run_in_worker_thread(lambda: _filter_flow("ADÁ", "sc9-02-accented-ADÁ.png"))
-    assert "Alternate_Hierarchy" in state["labels"], (
+    assert _master_topics_label("Alternate_Hierarchy") in state["labels"], (
         f"uppercase accented query must match; got {state['labels']}"
     )
 
@@ -529,8 +613,8 @@ def test_sc9_filter_no_matches_shows_info_banner():
 def test_filter_home_topic_chip_reads_home():
     """2026-10-06 directive: the filter-mode chip for the home topic reads
     plain "Home" — no bare aa in any user-facing label (all other matching
-    chips stay as their bare marker keys). Deep-link navigation by the aa
-    key itself is unaffected."""
+    chips carry their committed display labels, #1431). Deep-link navigation
+    by the aa key itself is unaffected."""
 
     def flow():
         home_key = _master_topics()["home_key"]
@@ -656,7 +740,7 @@ def test_split_drag_resizes_rail_and_persists_across_rerun():
             assert w1 >= w0 + 140, f"dragging +150px must widen the rail: {w0:.0f} -> {w1:.0f}"
             page.screenshot(path=os.path.join(ARTIFACTS_DIR, "vision3", "split-a-dragged.png"))
             # Persistence: a topic click reruns the app; the width must hold.
-            rail.get_by_role("button", name="ge", exact=True).first.click()
+            rail.get_by_role("button", name=_master_topics_label("ge"), exact=True).first.click()
             page.wait_for_url("**marker=ge*", timeout=30_000)
             page.wait_for_timeout(800)
             w2 = rail.bounding_box()["width"]
@@ -682,7 +766,7 @@ def test_split_independent_scrolling_on_navigation():
             s0 = rail.evaluate("el => el.scrollTop")
             assert s0 > 400, f"the rail must be its own scroll container (scrolled to {s0})"
             # The terminal Discontinued topic (xg) sits at the rail's bottom.
-            rail.get_by_role("button", name="xg", exact=True).first.click()
+            rail.get_by_role("button", name=_master_topics_label("xg"), exact=True).first.click()
             page.wait_for_selector('h2:has-text("(discontinued field)")', timeout=30_000)
             page.wait_for_timeout(1500)  # let the scroll-to-top settle window elapse
             s1 = rail.evaluate("el => el.scrollTop")

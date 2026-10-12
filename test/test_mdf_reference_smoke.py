@@ -46,7 +46,7 @@ def test_smoke_sc7_loader_reads_master_with_108_topics():
     mod = _page_module()
     master = mod.load_master(REPO_ROOT)
     assert master is not None, "master.json must load from the repo root"
-    assert master["schema"] == "snea-mdf-master/1"
+    assert master["schema"] == "snea-mdf-master/2"
     topics = master["topics"]
     assert len(topics) == EXPECTED_TOPIC_COUNT
     assert len(master["chapter_keys"]) == EXPECTED_CHAPTER_COUNT

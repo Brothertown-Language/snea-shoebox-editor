@@ -1,5 +1,5 @@
 {
-  "schema": "snea-mdf-master/1",
+  "schema": "snea-mdf-master/2",
   "generator": "scripts/convert_mdf_master.py",
   "source": {
     "path": "docs/mdf/MDFields19a_UTF8.txt",
@@ -47,6 +47,7 @@
       "line": 3,
       "index": 0,
       "heading": "Helps Database for MDF Marker Set",
+      "display_label": "Helps Database for MDF Marker Set",
       "is_chapter": false,
       "chapter": null,
       "occurrence": 1,
@@ -279,6 +280,7 @@
       "line": 33,
       "index": 1,
       "heading": "A Sense-Oriented Hierarchy",
+      "display_label": "A Sense-Oriented Hierarchy",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -428,6 +430,7 @@
       "line": 156,
       "index": 2,
       "heading": "\\an  antonym",
+      "display_label": "an antonym",
       "is_chapter": false,
       "chapter": "Alternate_Hierarchy",
       "occurrence": 1,
@@ -527,6 +530,7 @@
       "line": 181,
       "index": 3,
       "heading": "\\bb  bibliographic reference",
+      "display_label": "bb bibliographic reference",
       "is_chapter": false,
       "chapter": "Alternate_Hierarchy",
       "occurrence": 1,
@@ -556,6 +560,7 @@
       "line": 188,
       "index": 4,
       "heading": "\\bw  borrowed word",
+      "display_label": "bw borrowed word",
       "is_chapter": false,
       "chapter": "Alternate_Hierarchy",
       "occurrence": 1,
@@ -600,6 +605,7 @@
       "line": 201,
       "index": 5,
       "heading": "\\ce  cross-reference (English gloss)",
+      "display_label": "ce cross-reference (English gloss)",
       "is_chapter": false,
       "chapter": "Alternate_Hierarchy",
       "occurrence": 1,
@@ -675,6 +681,7 @@
       "line": 213,
       "index": 6,
       "heading": "\\cf  confer/cross-reference",
+      "display_label": "cf confer/cross-reference",
       "is_chapter": false,
       "chapter": "Alternate_Hierarchy",
       "occurrence": 1,
@@ -896,6 +903,7 @@
       "line": 281,
       "index": 7,
       "heading": "Character Style Codes",
+      "display_label": "Character Style Codes",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -955,7 +963,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Basic Language and Character Codes",
-          "line": 311
+          "line": 311,
+          "display_text": "Basic Language and Character Codes"
         },
         {
           "marker": "ftx",
@@ -1010,7 +1019,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Other Character Codes",
-          "line": 325
+          "line": 325,
+          "display_text": "Other Character Codes"
         },
         {
           "marker": "ftx",
@@ -1030,7 +1040,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Explicit Font Codes",
-          "line": 342
+          "line": 342,
+          "display_text": "Explicit Font Codes"
         },
         {
           "marker": "txt",
@@ -1185,6 +1196,7 @@
       "line": 390,
       "index": 8,
       "heading": "\\cn  cross-reference (national gloss)",
+      "display_label": "cn cross-reference (national gloss)",
       "is_chapter": false,
       "chapter": "Character_Style_Codes",
       "occurrence": 1,
@@ -1260,6 +1272,7 @@
       "line": 403,
       "index": 9,
       "heading": "\\cr  cross-reference (regional gloss)",
+      "display_label": "cr cross-reference (regional gloss)",
       "is_chapter": false,
       "chapter": "Character_Style_Codes",
       "occurrence": 1,
@@ -1335,6 +1348,7 @@
       "line": 416,
       "index": 10,
       "heading": "\\de  definition (English)",
+      "display_label": "de definition (English)",
       "is_chapter": false,
       "chapter": "Character_Style_Codes",
       "occurrence": 1,
@@ -1369,7 +1383,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Hint ",
-          "line": 422
+          "line": 422,
+          "display_text": "Hint"
         },
         {
           "marker": "txt",
@@ -1478,6 +1493,7 @@
       "line": 450,
       "index": 11,
       "heading": "\\dn  definition (national)",
+      "display_label": "dn definition (national)",
       "is_chapter": false,
       "chapter": "Character_Style_Codes",
       "occurrence": 1,
@@ -1611,6 +1627,7 @@
       "line": 468,
       "index": 12,
       "heading": "\\dr  definition (regional)",
+      "display_label": "dr definition (regional)",
       "is_chapter": false,
       "chapter": "Character_Style_Codes",
       "occurrence": 1,
@@ -1749,6 +1766,7 @@
       "line": 490,
       "index": 13,
       "heading": "\\dt  datestamp",
+      "display_label": "dt datestamp",
       "is_chapter": false,
       "chapter": "Character_Style_Codes",
       "occurrence": 1,
@@ -1783,6 +1801,7 @@
       "line": 501,
       "index": 14,
       "heading": "\\dv  definition (vernacular)",
+      "display_label": "dv definition (vernacular)",
       "is_chapter": false,
       "chapter": "Character_Style_Codes",
       "occurrence": 1,
@@ -1882,6 +1901,7 @@
       "line": 516,
       "index": 15,
       "heading": "\\ec  etymology-comment",
+      "display_label": "ec etymology-comment",
       "is_chapter": false,
       "chapter": "Character_Style_Codes",
       "occurrence": 1,
@@ -1941,6 +1961,7 @@
       "line": 530,
       "index": 16,
       "heading": "\\ee  encyclopedic information (English)",
+      "display_label": "ee encyclopedic information (English)",
       "is_chapter": false,
       "chapter": "Character_Style_Codes",
       "occurrence": 1,
@@ -1985,7 +2006,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Tip",
-          "line": 554
+          "line": 554,
+          "display_text": "Tip"
         },
         {
           "marker": "txt",
@@ -2103,6 +2125,7 @@
       "line": 583,
       "index": 17,
       "heading": "\\eg  etymology-gloss",
+      "display_label": "eg etymology-gloss",
       "is_chapter": false,
       "chapter": "Character_Style_Codes",
       "occurrence": 1,
@@ -2152,6 +2175,7 @@
       "line": 592,
       "index": 18,
       "heading": "\\en  encyclopedic information (national)",
+      "display_label": "en encyclopedic information (national)",
       "is_chapter": false,
       "chapter": "Character_Style_Codes",
       "occurrence": 1,
@@ -2238,6 +2262,7 @@
       "line": 607,
       "index": 19,
       "heading": "\\er  encyclopedic information (regional)",
+      "display_label": "er encyclopedic information (regional)",
       "is_chapter": false,
       "chapter": "Character_Style_Codes",
       "occurrence": 1,
@@ -2329,6 +2354,7 @@
       "line": 625,
       "index": 20,
       "heading": "\\es  etymology-source",
+      "display_label": "es etymology-source",
       "is_chapter": false,
       "chapter": "Character_Style_Codes",
       "occurrence": 1,
@@ -2383,6 +2409,7 @@
       "line": 636,
       "index": 21,
       "heading": "\\et  etymology",
+      "display_label": "et etymology",
       "is_chapter": false,
       "chapter": "Character_Style_Codes",
       "occurrence": 1,
@@ -2522,6 +2549,7 @@
       "line": 670,
       "index": 22,
       "heading": "\\ev  encyclopedic information (vernacular)",
+      "display_label": "ev encyclopedic information (vernacular)",
       "is_chapter": false,
       "chapter": "Character_Style_Codes",
       "occurrence": 1,
@@ -2609,6 +2637,7 @@
       "line": 684,
       "index": 23,
       "heading": "Formatting and Printing Your Dictionary and Finderlists",
+      "display_label": "Formatting and Printing Your Dictionary and Finderlists",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -2628,7 +2657,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Specifying the Options",
-          "line": 692
+          "line": 692,
+          "display_text": "Specifying the Options"
         },
         {
           "marker": "txt",
@@ -2648,7 +2678,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Open the RTF file in Word ",
-          "line": 710
+          "line": 710,
+          "display_text": "Open the RTF file in Word"
         },
         {
           "marker": "txt",
@@ -2658,7 +2689,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Finish the process of exporting from Toolbox       ",
-          "line": 715
+          "line": 715,
+          "display_text": "Finish the process of exporting from Toolbox"
         },
         {
           "marker": "txt",
@@ -2683,7 +2715,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Print it ",
-          "line": 733
+          "line": 733,
+          "display_text": "Print it"
         },
         {
           "marker": "txt",
@@ -2778,6 +2811,7 @@
       "line": 755,
       "index": 24,
       "heading": "Free-form Fields",
+      "display_label": "Free-form Fields",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -2902,6 +2936,7 @@
       "line": 801,
       "index": 25,
       "heading": "\\ge  gloss (English)",
+      "display_label": "ge gloss (English)",
       "is_chapter": false,
       "chapter": "Free-form_Fields",
       "occurrence": 1,
@@ -3021,6 +3056,7 @@
       "line": 844,
       "index": 26,
       "heading": "\\gn  gloss (national)",
+      "display_label": "gn gloss (national)",
       "is_chapter": false,
       "chapter": "Free-form_Fields",
       "occurrence": 1,
@@ -3120,6 +3156,7 @@
       "line": 872,
       "index": 27,
       "heading": "\\gr  gloss (regional)",
+      "display_label": "gr gloss (regional)",
       "is_chapter": false,
       "chapter": "Free-form_Fields",
       "occurrence": 1,
@@ -3224,6 +3261,7 @@
       "line": 905,
       "index": 28,
       "heading": "\\gv  gloss (vernacular)",
+      "display_label": "gv gloss (vernacular)",
       "is_chapter": false,
       "chapter": "Free-form_Fields",
       "occurrence": 1,
@@ -3273,6 +3311,7 @@
       "line": 920,
       "index": 29,
       "heading": "\\hm  homonym number",
+      "display_label": "hm homonym number",
       "is_chapter": false,
       "chapter": "Free-form_Fields",
       "occurrence": 1,
@@ -3357,6 +3396,7 @@
       "line": 945,
       "index": 30,
       "heading": "Standard Lexical Database Field Markers (for MDF)",
+      "display_label": "Standard Lexical Database Field Markers (for MDF)",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -3371,7 +3411,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Introduction",
-          "line": 948
+          "line": 948,
+          "display_text": "Introduction"
         },
         {
           "marker": "txt",
@@ -3431,7 +3472,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Organizing the Markers",
-          "line": 977
+          "line": 977,
+          "display_text": "Organizing the Markers"
         },
         {
           "marker": "txt",
@@ -4008,7 +4050,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Three Types of Field Markers",
-          "line": 1054
+          "line": 1054,
+          "display_text": "Three Types of Field Markers"
         },
         {
           "marker": "txt",
@@ -4048,7 +4091,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Multiple Fields",
-          "line": 1075
+          "line": 1075,
+          "display_text": "Multiple Fields"
         },
         {
           "marker": "txt",
@@ -4088,6 +4132,7 @@
       "line": 1087,
       "index": 31,
       "heading": "\\is  index  of  semantics",
+      "display_label": "is index  of  semantics",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -4187,6 +4232,7 @@
       "line": 1112,
       "index": 32,
       "heading": "\\lc  lexical citation",
+      "display_label": "lc lexical citation",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -4226,6 +4272,7 @@
       "line": 1131,
       "index": 33,
       "heading": "\\le  lexical function (English gloss)",
+      "display_label": "le lexical function (English gloss)",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -4336,6 +4383,7 @@
       "line": 1147,
       "index": 34,
       "heading": "\\lf  lexical function label",
+      "display_label": "lf lexical function label",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -4636,6 +4684,7 @@
       "line": 1217,
       "index": 35,
       "heading": "\\ln  lexical function (national gloss)",
+      "display_label": "ln lexical function (national gloss)",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -4746,6 +4795,7 @@
       "line": 1233,
       "index": 36,
       "heading": "\\lr  lexical function (regional gloss)",
+      "display_label": "lr lexical function (regional gloss)",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -4856,6 +4906,7 @@
       "line": 1249,
       "index": 37,
       "heading": "\\lt  literal meaning",
+      "display_label": "lt literal meaning",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -4915,6 +4966,7 @@
       "line": 1265,
       "index": 38,
       "heading": "\\lv  vernacular lexeme referenced by the lexical function",
+      "display_label": "lv vernacular lexeme referenced by the lexical function",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -5061,6 +5113,7 @@
       "line": 1295,
       "index": 39,
       "heading": "\\lx  lexeme or headword of the lexical entry",
+      "display_label": "lx lexeme or headword of the lexical entry",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -5115,6 +5168,7 @@
       "line": 1310,
       "index": 40,
       "heading": "\\mn  main entry form",
+      "display_label": "mn main entry form",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -5214,6 +5268,7 @@
       "line": 1342,
       "index": 41,
       "heading": "\\mr  morphemic representation",
+      "display_label": "mr morphemic representation",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -5263,6 +5318,7 @@
       "line": 1358,
       "index": 42,
       "heading": "\\na  notes  on   anthropology",
+      "display_label": "na notes  on   anthropology",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -5359,6 +5415,7 @@
       "line": 1378,
       "index": 43,
       "heading": "\\nd  notes on discourse",
+      "display_label": "nd notes on discourse",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -5418,6 +5475,7 @@
       "line": 1392,
       "index": 44,
       "heading": "\\ng  notes on grammar",
+      "display_label": "ng notes on grammar",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -5477,6 +5535,7 @@
       "line": 1405,
       "index": 45,
       "heading": "\\np  notes on phonology",
+      "display_label": "np notes on phonology",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -5536,6 +5595,7 @@
       "line": 1418,
       "index": 46,
       "heading": "\\nq  questions",
+      "display_label": "nq questions",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -5595,6 +5655,7 @@
       "line": 1431,
       "index": 47,
       "heading": "\\ns  notes on sociolinguistics",
+      "display_label": "ns notes on sociolinguistics",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -5735,6 +5796,7 @@
       "line": 1448,
       "index": 48,
       "heading": "\\nt  notes, etc.",
+      "display_label": "nt notes, etc.",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -5894,6 +5956,7 @@
       "line": 1466,
       "index": 49,
       "heading": "\\oe  only [restrictions] (English)",
+      "display_label": "oe only [restrictions] (English)",
       "is_chapter": false,
       "chapter": "Introduction",
       "occurrence": 1,
@@ -6011,6 +6074,7 @@
       "line": 1491,
       "index": 50,
       "heading": "Old and Changed Markers",
+      "display_label": "Old and Changed Markers",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -6165,6 +6229,7 @@
       "line": 1529,
       "index": 51,
       "heading": "\\on  only [restrictions] (national)",
+      "display_label": "on only [restrictions] (national)",
       "is_chapter": false,
       "chapter": "Old_and_Changed_Markers",
       "occurrence": 1,
@@ -6271,6 +6336,7 @@
       "line": 1549,
       "index": 52,
       "heading": "\\or  only [restrictions] (regional)",
+      "display_label": "or only [restrictions] (regional)",
       "is_chapter": false,
       "chapter": "Old_and_Changed_Markers",
       "occurrence": 1,
@@ -6362,6 +6428,7 @@
       "line": 1567,
       "index": 53,
       "heading": "Recommended Field Order",
+      "display_label": "Recommended Field Order",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -7041,6 +7108,7 @@
       "line": 1727,
       "index": 54,
       "heading": "\\ov  only   [restrictions]   (vernacular)",
+      "display_label": "ov only   [restrictions]   (vernacular)",
       "is_chapter": false,
       "chapter": "Order_of_Fields",
       "occurrence": 1,
@@ -7148,6 +7216,7 @@
       "line": 1746,
       "index": 55,
       "heading": "\\pc  picture",
+      "display_label": "pc picture",
       "is_chapter": false,
       "chapter": "Order_of_Fields",
       "occurrence": 1,
@@ -7207,6 +7276,7 @@
       "line": 1776,
       "index": 56,
       "heading": "\\pd  paradigm set",
+      "display_label": "pd paradigm set",
       "is_chapter": false,
       "chapter": "Order_of_Fields",
       "occurrence": 1,
@@ -7361,6 +7431,7 @@
       "line": 1810,
       "index": 57,
       "heading": "\\pde  paradigm form (English gloss)",
+      "display_label": "pde paradigm form (English gloss)",
       "is_chapter": false,
       "chapter": "Order_of_Fields",
       "occurrence": 1,
@@ -7515,6 +7586,7 @@
       "line": 1839,
       "index": 58,
       "heading": "\\pdl  paradigm label",
+      "display_label": "pdl paradigm label",
       "is_chapter": false,
       "chapter": "Order_of_Fields",
       "occurrence": 1,
@@ -7719,6 +7791,7 @@
       "line": 1883,
       "index": 59,
       "heading": "\\pdn  paradigm form (national gloss)",
+      "display_label": "pdn paradigm form (national gloss)",
       "is_chapter": false,
       "chapter": "Order_of_Fields",
       "occurrence": 1,
@@ -7833,6 +7906,7 @@
       "line": 1899,
       "index": 60,
       "heading": "\\pdr  paradigm form (regional gloss)",
+      "display_label": "pdr paradigm form (regional gloss)",
       "is_chapter": false,
       "chapter": "Order_of_Fields",
       "occurrence": 1,
@@ -7947,6 +8021,7 @@
       "line": 1915,
       "index": 61,
       "heading": "\\pdv  paradigm vernacular form",
+      "display_label": "pdv paradigm vernacular form",
       "is_chapter": false,
       "chapter": "Order_of_Fields",
       "occurrence": 1,
@@ -8081,6 +8156,7 @@
       "line": 1939,
       "index": 62,
       "heading": "\\ph  phonetic/phonemic form",
+      "display_label": "ph phonetic/phonemic form",
       "is_chapter": false,
       "chapter": "Order_of_Fields",
       "occurrence": 1,
@@ -8135,6 +8211,7 @@
       "line": 1957,
       "index": 63,
       "heading": "\\pl  plural form",
+      "display_label": "pl plural form",
       "is_chapter": false,
       "chapter": "Order_of_Fields",
       "occurrence": 1,
@@ -8289,6 +8366,7 @@
       "line": 1979,
       "index": 64,
       "heading": "\\pn  part of speech (national)",
+      "display_label": "pn part of speech (national)",
       "is_chapter": false,
       "chapter": "Order_of_Fields",
       "occurrence": 1,
@@ -8383,6 +8461,7 @@
       "line": 2004,
       "index": 65,
       "heading": "Printed Field Labels",
+      "display_label": "Printed Field Labels",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -8562,6 +8641,7 @@
       "line": 2066,
       "index": 66,
       "heading": "\\ps  part of speech",
+      "display_label": "ps part of speech",
       "is_chapter": false,
       "chapter": "Printed_Field_Labels",
       "occurrence": 1,
@@ -8626,6 +8706,7 @@
       "line": 2079,
       "index": 67,
       "heading": "Punctuation",
+      "display_label": "Punctuation",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -8770,6 +8851,7 @@
       "line": 2108,
       "index": 68,
       "heading": "Range Sets",
+      "display_label": "Range Sets",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -9019,7 +9101,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Changing Range Set Labels (for the \\ps, \\lf, and \\pdl fields)",
-          "line": 2145
+          "line": 2145,
+          "display_text": "Changing Range Set Labels (for the \\ps, \\lf, and \\pdl fields)"
         },
         {
           "marker": "txt",
@@ -9134,6 +9217,7 @@
       "line": 2185,
       "index": 69,
       "heading": "\\rd  reduplication form(s)",
+      "display_label": "rd reduplication form(s)",
       "is_chapter": false,
       "chapter": "Range_Sets",
       "occurrence": 1,
@@ -9294,6 +9378,7 @@
       "line": 2211,
       "index": 70,
       "heading": "\\re  reversal form (English)",
+      "display_label": "re reversal form (English)",
       "is_chapter": false,
       "chapter": "Range_Sets",
       "occurrence": 1,
@@ -9363,6 +9448,7 @@
       "line": 2236,
       "index": 71,
       "heading": null,
+      "display_label": "References",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -9399,6 +9485,7 @@
       "line": 2248,
       "index": 72,
       "heading": "\\rf  reference to notebooks, texts, etc.",
+      "display_label": "rf reference to notebooks, texts, etc.",
       "is_chapter": false,
       "chapter": "References",
       "occurrence": 1,
@@ -9513,6 +9600,7 @@
       "line": 2285,
       "index": 73,
       "heading": "\\rn  reversal form (national)",
+      "display_label": "rn reversal form (national)",
       "is_chapter": false,
       "chapter": "References",
       "occurrence": 1,
@@ -9587,6 +9675,7 @@
       "line": 2301,
       "index": 74,
       "heading": "\\rr  reversal form (regional)",
+      "display_label": "rr reversal form (regional)",
       "is_chapter": false,
       "chapter": "References",
       "occurrence": 1,
@@ -9621,6 +9710,7 @@
       "line": 2312,
       "index": 75,
       "heading": "\\sc  scientific name",
+      "display_label": "sc scientific name",
       "is_chapter": false,
       "chapter": "References",
       "occurrence": 1,
@@ -9655,6 +9745,7 @@
       "line": 2323,
       "index": 76,
       "heading": "\\sd  semantic domain",
+      "display_label": "sd semantic domain",
       "is_chapter": false,
       "chapter": "References",
       "occurrence": 1,
@@ -9729,6 +9820,7 @@
       "line": 2340,
       "index": 77,
       "heading": "\\se  subentry (a polymorphemic form or a phrase)",
+      "display_label": "se subentry (a polymorphemic form or a phrase)",
       "is_chapter": false,
       "chapter": "References",
       "occurrence": 1,
@@ -9888,6 +9980,7 @@
       "line": 2385,
       "index": 78,
       "heading": "Sections in a Lexical Entry",
+      "display_label": "Sections in a Lexical Entry",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -9902,7 +9995,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 (Understanding the hierarchical structure of an entry)\n",
-          "line": 2387
+          "line": 2387,
+          "display_text": "Understanding the hierarchical structure of an entry"
         },
         {
           "marker": "txt",
@@ -9912,7 +10006,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Multiple parts of speech",
-          "line": 2395
+          "line": 2395,
+          "display_text": "Multiple parts of speech"
         },
         {
           "marker": "txt",
@@ -9962,7 +10057,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Multiple Senses",
-          "line": 2414
+          "line": 2414,
+          "display_text": "Multiple Senses"
         },
         {
           "marker": "txt",
@@ -10157,7 +10253,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Using Subentries",
-          "line": 2484
+          "line": 2484,
+          "display_text": "Using Subentries"
         },
         {
           "marker": "txt",
@@ -10447,6 +10544,7 @@
       "line": 2563,
       "index": 79,
       "heading": "\\sg  singular form",
+      "display_label": "sg singular form",
       "is_chapter": false,
       "chapter": "Sections_in_a_Lexical_Entry",
       "occurrence": 1,
@@ -10601,6 +10699,7 @@
       "line": 2586,
       "index": 80,
       "heading": "\\sn  sense number",
+      "display_label": "sn sense number",
       "is_chapter": false,
       "chapter": "Sections_in_a_Lexical_Entry",
       "occurrence": 1,
@@ -10700,6 +10799,7 @@
       "line": 2610,
       "index": 81,
       "heading": "\\so  source of data",
+      "display_label": "so source of data",
       "is_chapter": false,
       "chapter": "Sections_in_a_Lexical_Entry",
       "occurrence": 1,
@@ -10739,6 +10839,7 @@
       "line": 2621,
       "index": 82,
       "heading": "\\st  status",
+      "display_label": "st status",
       "is_chapter": false,
       "chapter": "Sections_in_a_Lexical_Entry",
       "occurrence": 1,
@@ -10798,6 +10899,7 @@
       "line": 2639,
       "index": 83,
       "heading": "Summary of Fields (not ordered)",
+      "display_label": "Summary of Fields (not ordered)",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -10867,6 +10969,7 @@
       "line": 2709,
       "index": 84,
       "heading": "\\sy  synonym",
+      "display_label": "sy synonym",
       "is_chapter": false,
       "chapter": "Summary_of_Fields",
       "occurrence": 1,
@@ -10997,6 +11100,7 @@
       "line": 2749,
       "index": 85,
       "heading": "\\tb  table",
+      "display_label": "tb table",
       "is_chapter": false,
       "chapter": "Summary_of_Fields",
       "occurrence": 1,
@@ -11091,6 +11195,7 @@
       "line": 2789,
       "index": 86,
       "heading": "\\th  thesaurus",
+      "display_label": "th thesaurus",
       "is_chapter": false,
       "chapter": "Summary_of_Fields",
       "occurrence": 1,
@@ -11165,6 +11270,7 @@
       "line": 2805,
       "index": 87,
       "heading": "The MDF Documentation",
+      "display_label": "The MDF Documentation",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -11259,6 +11365,7 @@
       "line": 2855,
       "index": 88,
       "heading": "\\ue  usage (English)",
+      "display_label": "ue usage (English)",
       "is_chapter": false,
       "chapter": "The_MDF_Documentation",
       "occurrence": 1,
@@ -11361,6 +11468,7 @@
       "line": 2878,
       "index": 89,
       "heading": "\\un  usage (national)",
+      "display_label": "un usage (national)",
       "is_chapter": false,
       "chapter": "The_MDF_Documentation",
       "occurrence": 1,
@@ -11488,6 +11596,7 @@
       "line": 2899,
       "index": 90,
       "heading": "Unknown Fields",
+      "display_label": "Unknown Fields",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -11552,6 +11661,7 @@
       "line": 2921,
       "index": 91,
       "heading": "\\ur  usage (regional)",
+      "display_label": "ur usage (regional)",
       "is_chapter": false,
       "chapter": "Unknown_Fields",
       "occurrence": 1,
@@ -11664,6 +11774,7 @@
       "line": 2940,
       "index": 92,
       "heading": "Using Subentries, Lexical Entries, and Minimal Entries",
+      "display_label": "Using Subentries, Lexical Entries, and Minimal Entries",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -11683,7 +11794,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 1. Using Subentries and Minimal Entries",
-          "line": 2951
+          "line": 2951,
+          "display_text": "1. Using Subentries and Minimal Entries"
         },
         {
           "marker": "txt",
@@ -11823,7 +11935,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 2. Lexical Entries and Cross-referencing",
-          "line": 3009
+          "line": 3009,
+          "display_text": "2. Lexical Entries and Cross-referencing"
         },
         {
           "marker": "txt",
@@ -12043,6 +12156,7 @@
       "line": 3062,
       "index": 93,
       "heading": "\\uv usage (vernacular)",
+      "display_label": "uv usage (vernacular)",
       "is_chapter": false,
       "chapter": "Using_Subentries_or_Lexical_Entries",
       "occurrence": 1,
@@ -12177,6 +12291,7 @@
       "line": 3083,
       "index": 94,
       "heading": "\\va  variant forms",
+      "display_label": "va variant forms",
       "is_chapter": false,
       "chapter": "Using_Subentries_or_Lexical_Entries",
       "occurrence": 1,
@@ -12288,6 +12403,7 @@
       "line": 3109,
       "index": 95,
       "heading": "\\ve  variant comment (English)",
+      "display_label": "ve variant comment (English)",
       "is_chapter": false,
       "chapter": "Using_Subentries_or_Lexical_Entries",
       "occurrence": 1,
@@ -12368,6 +12484,7 @@
       "line": 3124,
       "index": 96,
       "heading": "\\vn  variant comment (national)",
+      "display_label": "vn variant comment (national)",
       "is_chapter": false,
       "chapter": "Using_Subentries_or_Lexical_Entries",
       "occurrence": 1,
@@ -12448,6 +12565,7 @@
       "line": 3139,
       "index": 97,
       "heading": "\\vr  variant comment (regional)",
+      "display_label": "vr variant comment (regional)",
       "is_chapter": false,
       "chapter": "Using_Subentries_or_Lexical_Entries",
       "occurrence": 1,
@@ -12528,6 +12646,7 @@
       "line": 3155,
       "index": 98,
       "heading": "\\we  word-level gloss (English)",
+      "display_label": "we word-level gloss (English)",
       "is_chapter": false,
       "chapter": "Using_Subentries_or_Lexical_Entries",
       "occurrence": 1,
@@ -12588,6 +12707,7 @@
       "line": 3166,
       "index": 99,
       "heading": "When MDF Fails to Meet Your Requirements",
+      "display_label": "When MDF Fails to Meet Your Requirements",
       "is_chapter": true,
       "chapter": null,
       "occurrence": 1,
@@ -12609,7 +12729,8 @@
         {
           "marker": "shd2",
           "text": "\\shd2 Typical problems",
-          "line": 3172
+          "line": 3172,
+          "display_text": "Typical problems"
         },
         {
           "marker": "txt",
@@ -12689,6 +12810,7 @@
       "line": 3240,
       "index": 100,
       "heading": "\\wn  word-level gloss (national)",
+      "display_label": "wn word-level gloss (national)",
       "is_chapter": false,
       "chapter": "When_MDF_Fails_to_Meet_Your_Requirements",
       "occurrence": 1,
@@ -12749,6 +12871,7 @@
       "line": 3251,
       "index": 101,
       "heading": "\\wr  word-level gloss (regional)",
+      "display_label": "wr word-level gloss (regional)",
       "is_chapter": false,
       "chapter": "When_MDF_Fails_to_Meet_Your_Requirements",
       "occurrence": 1,
@@ -12809,6 +12932,7 @@
       "line": 3262,
       "index": 102,
       "heading": "\\xe  translation of example (English)",
+      "display_label": "xe translation of example (English)",
       "is_chapter": false,
       "chapter": "When_MDF_Fails_to_Meet_Your_Requirements",
       "occurrence": 1,
@@ -12904,6 +13028,7 @@
       "line": 3277,
       "index": 103,
       "heading": "\\xg  (discontinued field)",
+      "display_label": "xg (discontinued field)",
       "is_chapter": false,
       "chapter": "When_MDF_Fails_to_Meet_Your_Requirements",
       "occurrence": 1,
@@ -12953,6 +13078,7 @@
       "line": 3289,
       "index": 104,
       "heading": "\\xn  translation of example (national)",
+      "display_label": "xn translation of example (national)",
       "is_chapter": false,
       "chapter": "When_MDF_Fails_to_Meet_Your_Requirements",
       "occurrence": 1,
@@ -13048,6 +13174,7 @@
       "line": 3304,
       "index": 105,
       "heading": "\\xr  translation of example (regional)",
+      "display_label": "xr translation of example (regional)",
       "is_chapter": false,
       "chapter": "When_MDF_Fails_to_Meet_Your_Requirements",
       "occurrence": 1,
@@ -13148,6 +13275,7 @@
       "line": 3322,
       "index": 106,
       "heading": "\\xv  example sentence (vernacular)",
+      "display_label": "xv example sentence (vernacular)",
       "is_chapter": false,
       "chapter": "When_MDF_Fails_to_Meet_Your_Requirements",
       "occurrence": 1,
@@ -13244,6 +13372,7 @@
       "line": 3345,
       "index": 107,
       "heading": "Old verb paradigm markers",
+      "display_label": "Old verb paradigm markers",
       "is_chapter": false,
       "chapter": "When_MDF_Fails_to_Meet_Your_Requirements",
       "occurrence": 1,

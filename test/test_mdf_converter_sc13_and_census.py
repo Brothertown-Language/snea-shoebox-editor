@@ -1,4 +1,4 @@
-"""Phase 1 tests for the MDF Toolbox-marker converter (.issues/1379, R-1/R-2/R-8, SC-13).
+"""Phase 1 tests for the MDF Toolbox-marker converter (issue #1379, R-1/R-2/R-8, SC-13).
 
 Co-authored with AI: OpenCode (huggingface/zai-org/GLM-5.3-Flash)
 """
@@ -317,3 +317,113 @@ class TestDeterministicOutput:
     def test_parse_is_stable_across_runs(self, document):
         again = convert_mdf_master.parse_mdf_text(source_text(), "docs/mdf/MDFields19a_UTF8.txt")
         assert again == document
+
+
+# ---------------------------------------------------------------------------
+# Display data (issue #1431 — schema snea-mdf-master/2): per-topic
+# display_label and per-shd2-block display_text, derived at build time from
+# the topic's own data, with the single committed exception inventory entry.
+# ---------------------------------------------------------------------------
+
+
+def _marker_name(heading: str, key: str) -> str | None:
+    """Independent derivation of #1431's marker name: the heading minus the
+    leading \\token and following whitespace run."""
+    if not heading.startswith("\\"):
+        return None
+    rest = heading[1:]
+    end = 0
+    while end < len(rest) and not rest[end].isspace():
+        end += 1
+    if rest[:end] != key:
+        return None
+    j = end
+    while j < len(rest) and rest[j].isspace():
+        j += 1
+    return rest[j:]
+
+
+class TestDisplayLabelCensus:
+    def test_schema_version_bumped(self, document):
+        assert document["schema"] == "snea-mdf-master/2"
+
+    def test_every_topic_carries_a_nonempty_display_label(self, document):
+        for topic in document["topics"]:
+            assert topic["display_label"], f"topic {topic['key']} has an empty display label"
+
+    def test_no_display_label_contains_an_underscore(self, document):
+        offenders = [t["key"] for t in document["topics"] if "_" in t["display_label"]]
+        assert offenders == []
+
+    def test_chapter_labels_are_their_shd_headings(self, document):
+        by_key = {t["key"]: t for t in document["topics"]}
+        for key in EXPECTED_CHAPTER_KEYS:
+            expected = by_key[key]["heading"] or key  # References has no \shd heading
+            assert by_key[key]["display_label"] == expected
+
+    def test_multi_key_stub_label_is_its_heading(self, document):
+        stub = document["topics"][-1]
+        assert stub["key"] == "1s 1p 1e 1i 1d 2s 2p 2d 3s 3p 3d 4s 4p 4d"
+        assert stub["display_label"] == "Old verb paradigm markers"
+
+    def test_all_89_marker_entries_are_token_plus_name(self, document):
+        home_key = document["home_key"]
+        entries = [t for t in document["topics"] if convert_mdf_master.is_reference_entry(t, home_key)]
+        assert len(entries) == 89
+        for topic in entries:
+            name = _marker_name(topic["heading"], topic["key"])
+            assert name is not None, f"{topic['key']} heading does not carry its own token"
+            assert name, f"{topic['key']} marker name is empty"
+            assert topic["display_label"] == f"{topic['key']} {name}"
+
+    def test_marker_name_whitespace_runs_are_source_bytes(self, document):
+        by_key = {t["key"]: t for t in document["topics"]}
+        assert by_key["is"]["display_label"] == "is index  of  semantics"
+        assert by_key["xg"]["display_label"] == "xg (discontinued field)"
+        assert by_key["ce"]["display_label"] == "ce cross-reference (English gloss)"
+
+    def test_home_label_is_its_heading(self, document):
+        home = next(t for t in document["topics"] if t["key"] == document["home_key"])
+        assert home["display_label"] == home["heading"]
+
+    def test_keys_are_unchanged_by_display_data(self, document):
+        assert [t["key"] for t in document["topics"]] == [
+            t["key"] for t in convert_mdf_master.parse_mdf_text(source_text(), "x.txt")["topics"]
+        ]
+
+
+class TestShd2DisplayTextCensus:
+    def test_every_shd2_block_carries_display_text(self, document):
+        blocks = [
+            (topic, block)
+            for topic in document["topics"]
+            for block in topic["blocks"]
+            if block["marker"] == "shd2"
+        ]
+        assert len(blocks) == 21
+        assert all("display_text" in block for _, block in blocks)
+
+    def test_exactly_one_exception_and_it_drops_wrapping_parens(self, document):
+        inventory = convert_mdf_master.SHD2_DISPLAY_EXCEPTIONS
+        assert len(inventory) == 1
+        (topic_key, line), entry = next(iter(inventory.items()))
+        assert (topic_key, line) == ("Sections_in_a_Lexical_Entry", 2387)
+        assert entry["text"] == "Understanding the hierarchical structure of an entry"
+        assert entry["reason"], "exception inventory entry must state its reason"
+        source_line = source_text().split("\n")[line - 1]
+        assert source_line.startswith("\\shd2 (") and source_line.rstrip().endswith(")")
+
+    def test_every_other_shd2_display_text_is_marker_stripped_source(self, document):
+        deviations = []
+        for topic in document["topics"]:
+            for block in topic["blocks"]:
+                if block["marker"] != "shd2":
+                    continue
+                if (topic["key"], block["line"]) in convert_mdf_master.SHD2_DISPLAY_EXCEPTIONS:
+                    continue
+                expected = convert_mdf_master.field_payload(
+                    convert_mdf_master.first_line(block["text"]), "shd2"
+                ).strip()
+                if block["display_text"] != expected:
+                    deviations.append((topic["key"], block["line"]))
+        assert deviations == []
