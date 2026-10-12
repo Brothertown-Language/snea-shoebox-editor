@@ -338,16 +338,18 @@ def _page_label(page: Page) -> str:
 
 
 def _click_next(page: Page):
-    sb = page.locator('[data-testid="stSidebar"]')
-    nxt = sb.locator("button").filter(has_text="▶️")
+    # Issue #1413 (R-1): pagination lives in the main panel's twin
+    # navigation rows — the sidebar page-level pager was removed.
+    nxt = page.locator("button").filter(has_text="▶️")
     assert nxt.count() > 0, "Next pagination button not found"
     nxt.last.click()
     page.wait_for_timeout(2000)
 
 
 def _click_prev(page: Page):
-    sb = page.locator('[data-testid="stSidebar"]')
-    prev = sb.locator("button").filter(has_text="◀️")
+    # Issue #1413 (R-1): pagination lives in the main panel's twin
+    # navigation rows — the sidebar page-level pager was removed.
+    prev = page.locator("button").filter(has_text="◀️")
     assert prev.count() > 0, "Prev pagination button not found"
     prev.last.click()
     page.wait_for_timeout(2000)
@@ -528,7 +530,8 @@ def _sc6_flow(page: Page):
     assert "No records scored above the semantic threshold" in body, (
         f"Zero-result informational state not rendered; body tail: {body[-600:]!r}"
     )
-    assert _page_label(page), "App not responsive after zero-result search (pager label missing)"
+    # Issue #1413: zero-result paths render no pager — the informational
+    # st.info above is the responsiveness probe (a live rerun produced it).
     page.screenshot(path=os.path.join(ARTIFACTS_DIR, "e2e-sc6-empty-states.png"), full_page=True)
 
     # Restore the shared per-user threshold so later tests / the developer's
@@ -587,7 +590,12 @@ def _sc10_flow(page: Page):
         f"but record cards were served: {record_cards[:5]} "
         f"(the default floor 0.93 must NOT silently replace the override)"
     )
-    assert _page_label(page), "App not responsive after override search (pager label missing)"
+    assert "No records scored above the semantic threshold" in body, (
+        "App not responsive after override search — the zero-result "
+        f"informational state did not render; body tail: {body[-600:]!r}"
+    )
+    # Issue #1413: zero-result paths render no pager — the informational
+    # st.info above is the responsiveness probe (a live rerun produced it).
 
     # The override must persist in the control — not be reset to the default
     # by the search rerun. The widget formats the value (e.g. "1.00"), so
