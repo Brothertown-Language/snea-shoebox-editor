@@ -1,10 +1,10 @@
 title: 'HTML and PDF label parity with the committed display data (child of #1431)'
-status: open
+status: closed
 labels:
 - needs-approval
 - enhancement
 - pending
 body: ''
 created_at: '2026-10-11T22:58:21+00:00'
-updated_at: '2026-10-11T22:58:25+00:00'
+updated_at: '2026-10-12T02:13:59+00:00'
 github_url: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1433
