@@ -18,6 +18,7 @@ import threading
 import time
 
 import pytest
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
 # App port parameterized (SNEA_E2E_PORT) so the harness can run against a
@@ -752,6 +753,64 @@ def test_split_drag_resizes_rail_and_persists_across_rerun():
     _run_in_worker_thread(flow)
 
 
+# Closed-loop rail-scroll establishment (#1434): a Streamlit rerun landing
+# between the scroll set and the read-back replaces the rail element and the
+# read returns 0 — the app's restoreRailScroll cannot rescue a position that
+# was never committed (its 120 ms debounce is preempted by the replacement).
+# Each attempt sets the scroll plus a per-attempt probe on the element, waits
+# for the set position to persist on that same element across a stability
+# window, then reads back; an observed reset — a failed window or a mismatched
+# read-back — re-establishes, bounded.
+_RAIL_SELECTOR = '[data-testid="stColumn"]'
+_SET_SCROLL_JS = """(el, attempt) => {
+    el.scrollTop = el.scrollHeight;
+    el.__mdfScrollProbe = attempt;
+    window.__mdfScrollTarget = el.scrollTop;
+    window.__mdfStableSince = null;
+    return el.scrollTop;
+}"""
+_SCROLL_STABILITY_JS = f"""attempt => {{
+    const rail = document.querySelectorAll('{_RAIL_SELECTOR}')[0];
+    if (!rail || rail.__mdfScrollProbe !== attempt
+            || rail.scrollTop !== window.__mdfScrollTarget) {{
+        window.__mdfStableSince = null;
+        return false;
+    }}
+    if (!window.__mdfStableSince) {{
+        window.__mdfStableSince = Date.now();
+        return false;
+    }}
+    return Date.now() - window.__mdfStableSince >= 500;
+}}"""
+_READ_SCROLL_JS = """(el, attempt) => [el.scrollTop, el.__mdfScrollProbe === attempt]"""
+
+
+def _establish_rail_scroll_bottom(rail, page, attempts: int = 3):
+    """Scroll the rail to its bottom, closed-loop (#1434): set + per-attempt
+    probe, stability-gated read-back, bounded re-establishment on an observed
+    reset (initial attempt + at most `attempts - 1` re-sets), loud failure at
+    the bound. Returns the persisted scroll position."""
+    last_reset = None
+    for attempt in range(attempts):
+        expected = rail.evaluate(_SET_SCROLL_JS, attempt)
+        try:
+            page.wait_for_function(_SCROLL_STABILITY_JS, arg=attempt, timeout=3_000)
+        except PlaywrightTimeoutError:
+            # A rerun landing inside the stability window replaces the rail
+            # element, so the probe never matches again within this attempt
+            # — the timeout IS the observed reset; re-establish and retry.
+            last_reset = {"attempt": attempt, "phase": "stability-window"}
+            continue
+        pos, ours = rail.evaluate(_READ_SCROLL_JS, attempt)
+        if ours and pos == expected:
+            return pos
+        last_reset = {"attempt": attempt, "phase": "read-back", "read_back": pos}
+    raise AssertionError(
+        f"rail scroll establishment failed after {attempts} attempts "
+        f"(1 initial + {attempts - 1} re-sets); last reset: {last_reset}"
+    )
+
+
 def test_split_independent_scrolling_on_navigation():
     """(b) with the rail scrolled deep down, navigating to a topic found
     there shows it in the detail pane AT ITS TOP while the rail keeps its
@@ -761,9 +820,7 @@ def test_split_independent_scrolling_on_navigation():
         pw, browser, page = _open_mdf_page()
         try:
             rail, detail = _split_panes(page)
-            rail.evaluate("el => { el.scrollTop = el.scrollHeight; }")
-            page.wait_for_timeout(400)
-            s0 = rail.evaluate("el => el.scrollTop")
+            s0 = _establish_rail_scroll_bottom(rail, page)
             assert s0 > 400, f"the rail must be its own scroll container (scrolled to {s0})"
             # The terminal Discontinued topic (xg) sits at the rail's bottom.
             rail.get_by_role("button", name=_master_topics_label("xg"), exact=True).first.click()
