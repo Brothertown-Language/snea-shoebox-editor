@@ -83,6 +83,16 @@ Before making changes to search infrastructure, text normalization, FTS configur
 | `docs/lessons-learned/2026-06-13-simple-vs-english-tsconfig.md` | Live PG verification evidence |
 | `docs/lessons-learned/2026-07-16-local-postgresql-setup.md` | Local PostgreSQL instance management and query patterns |
 
+### Cross-Reference: MDF Field Documentation
+
+Before answering any MDF field-fact question (field multiplicity, hierarchy placement, marker semantics, `\key` entries), consult the maintained progressive documentation — NOT the frozen Toolbox original `docs/mdf/MDFields19a_UTF8.txt` (which is frozen provenance only, consumed programmatically at build time by `scripts/build_mdf_docs.sh` and `scripts/convert_mdf_master.py`):
+
+| Path | Role |
+|------|------|
+| `docs/agents/mdf-progressive.md` | Agent routing card (intent-based routes) |
+| `docs/mdf/ai-progressive/index.md` | Entry point — full field index |
+| `docs/mdf/ai-progressive/markers/{code}.md` | One file per `\key` entry |
+
 ## Release PR Version Bump Protocol
 
 When creating a release PR that includes a version bump, the agent MUST discover all version-bearing locations through live project analysis — never use a static list.
